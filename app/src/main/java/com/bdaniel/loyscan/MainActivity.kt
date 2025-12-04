@@ -4,39 +4,50 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.bdaniel.loyscan.ui.theme.LoyScanTheme
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             LoyScanTheme {
-                AppNavigation()
+                SharedTransitionLayout {
+                    AppNavigation()
+                }
             }
         }
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun AppNavigation() {
+fun SharedTransitionScope.AppNavigation(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
-    NavHost(
-            navController = navController,
-            startDestination = "list"
-    ) {
+    NavHost(navController = navController, startDestination = "list", modifier = modifier) {
         composable("list") {
-            ListScreen(onItemClick = { item ->
-                navController.navigate("detail/$item")
-            })
+            ListScreen(
+                animatedVisibilityScope = this,
+                onItemClick = { item ->
+                    navController.navigate("detail/$item")
+                }
+            )
         }
         composable("detail/{item}") { backStackEntry ->
             val item = backStackEntry.arguments?.getString("item")
-            DetailScreen(item = item ?: "")
+            DetailScreen(
+                animatedVisibilityScope = this,
+                item = item ?: ""
+            )
         }
     }
 }

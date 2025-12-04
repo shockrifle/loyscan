@@ -1,5 +1,8 @@
 package com.bdaniel.loyscan
 
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -20,9 +23,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
-fun ListScreen(onItemClick: (String) -> Unit) {
+fun SharedTransitionScope.ListScreen(
+    animatedVisibilityScope: AnimatedVisibilityScope,
+    onItemClick: (String) -> Unit
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -43,7 +49,14 @@ fun ListScreen(onItemClick: (String) -> Unit) {
         ) {
             items(100) { index ->
                 val item = "Item ${index + 1}"
-                CardItem(item = item, onClick = { onItemClick(item) })
+                CardItem(
+                    item = item,
+                    onClick = { onItemClick(item) },
+                    modifier = Modifier.sharedElement(
+                        sharedContentState = rememberSharedContentState(key = "item/$item"),
+                        animatedVisibilityScope = animatedVisibilityScope
+                    )
+                )
             }
         }
     }
