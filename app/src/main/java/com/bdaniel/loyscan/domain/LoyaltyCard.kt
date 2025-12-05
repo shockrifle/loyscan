@@ -3,7 +3,7 @@ package com.bdaniel.loyscan.domain
 data class LoyaltyCard(
     val id: Int,
     val name: String,
-    val brand: String,
+    val brand: Brand,
     val cardNumber: String,
     val barcodeType: String
 )

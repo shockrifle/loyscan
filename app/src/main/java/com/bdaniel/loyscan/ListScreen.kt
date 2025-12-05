@@ -76,7 +76,7 @@ fun CardItem(card: LoyaltyCard, onClick: () -> Unit, modifier: Modifier = Modifi
         .clickable(onClick = onClick)) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(text = card.name)
-            Text(text = card.brand)
+            Text(text = card.brand.name)
         }
     }
 }
