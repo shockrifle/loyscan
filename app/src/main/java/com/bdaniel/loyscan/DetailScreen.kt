@@ -9,26 +9,35 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun SharedTransitionScope.DetailScreen(
         animatedVisibilityScope: AnimatedVisibilityScope,
-        item: String,
-        modifier: Modifier = Modifier
+        modifier: Modifier = Modifier,
+        viewModel: DetailViewModel = viewModel()
 ) {
+    val card by viewModel.card.collectAsState()
+
     Card(
             modifier = modifier
                     .fillMaxSize()
                     .sharedElement(
-                            sharedContentState = rememberSharedContentState(key = "item/$item"),
+                            sharedContentState = rememberSharedContentState(key = "item/${card?.id}"),
                             animatedVisibilityScope = animatedVisibilityScope
                     )
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = "Details for $item")
+            card?.let {
+                Text(text = it.name)
+                Text(text = it.brand)
+                Text(text = it.cardNumber)
+            }
         }
     }
 }

@@ -37,16 +37,14 @@ fun SharedTransitionScope.AppNavigation(modifier: Modifier = Modifier) {
         composable("list") {
             ListScreen(
                 animatedVisibilityScope = this,
-                onItemClick = { item ->
-                    navController.navigate("detail/$item")
+                    onItemClick = { cardId ->
+                        navController.navigate("detail/${cardId}")
                 }
             )
         }
-        composable("detail/{item}") { backStackEntry ->
-            val item = backStackEntry.arguments?.getString("item")
+        composable("detail/{cardId}") { backStackEntry ->
             DetailScreen(
-                animatedVisibilityScope = this,
-                item = item ?: ""
+                    animatedVisibilityScope = this
             )
         }
     }
