@@ -13,14 +13,14 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun SharedTransitionScope.DetailScreen(
         animatedVisibilityScope: AnimatedVisibilityScope,
         modifier: Modifier = Modifier,
-        viewModel: DetailViewModel = viewModel()
+        viewModel: DetailViewModel = hiltViewModel()
 ) {
     val card by viewModel.card.collectAsState()
 

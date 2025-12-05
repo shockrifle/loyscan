@@ -13,19 +13,13 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Card
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.bdaniel.loyscan.domain.LoyaltyCard
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
@@ -33,7 +27,7 @@ import com.bdaniel.loyscan.domain.LoyaltyCard
 fun SharedTransitionScope.ListScreen(
     animatedVisibilityScope: AnimatedVisibilityScope,
     onItemClick: (Int) -> Unit,
-    viewModel: ListViewModel = viewModel()
+    viewModel: ListViewModel = hiltViewModel()
 ) {
     val cards by viewModel.cards.collectAsState()
 
@@ -72,8 +66,8 @@ fun SharedTransitionScope.ListScreen(
 @Composable
 fun CardItem(card: LoyaltyCard, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Card(modifier = modifier
-        .fillMaxWidth()
-        .clickable(onClick = onClick)) {
+            .fillMaxWidth()
+            .clickable(onClick = onClick)) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(text = card.name)
             Text(text = card.brand.name)

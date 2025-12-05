@@ -3,10 +3,13 @@ package com.bdaniel.loyscan
 import androidx.lifecycle.ViewModel
 import com.bdaniel.loyscan.domain.Brand
 import com.bdaniel.loyscan.domain.LoyaltyCard
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import javax.inject.Inject
 
-class ListViewModel : ViewModel() {
+@HiltViewModel
+class ListViewModel @Inject constructor() : ViewModel() {
 
     private val _cards = MutableStateFlow<List<LoyaltyCard>>(emptyList())
     val cards: StateFlow<List<LoyaltyCard>> = _cards
