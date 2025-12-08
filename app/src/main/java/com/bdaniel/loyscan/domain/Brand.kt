@@ -5,4 +5,8 @@ data class Brand(
     val name: String,
     val color: String,
     val logo: String
-)
+) {
+    companion object {
+        val EMPTY = Brand(0, "", "", "")
+    }
+}

@@ -22,6 +22,6 @@ data class LoyaltyCardEntity(
         val id: Int = 0,
         val name: String,
         val brandId: Int,
-        val cardNumber: String,
-        val barcodeType: String
+        val code: String,
+        val barcodeFormat: String
 )

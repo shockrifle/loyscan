@@ -33,10 +33,10 @@ fun SharedTransitionScope.DetailScreen(
                     )
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            card?.let {
+            card.let {
                 Text(text = it.name)
                 Text(text = it.brand.name)
-                Text(text = it.cardNumber)
+                Text(text = it.code)
             }
         }
     }

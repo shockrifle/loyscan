@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "9f8940b7fea992ec6bda6ddccef4f273",
+    "identityHash": "e87b4ff0f1a720d9b5a4d599e743a138",
     "entities": [
       {
         "tableName": "brands",
@@ -42,7 +42,7 @@
       },
       {
         "tableName": "loyalty_cards",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `brandId` INTEGER NOT NULL, `cardNumber` TEXT NOT NULL, `barcodeType` TEXT NOT NULL, FOREIGN KEY(`brandId`) REFERENCES `brands`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `brandId` INTEGER NOT NULL, `code` TEXT NOT NULL, `barcodeFormat` TEXT NOT NULL, FOREIGN KEY(`brandId`) REFERENCES `brands`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -63,14 +63,14 @@
             "notNull": true
           },
           {
-            "fieldPath": "cardNumber",
-            "columnName": "cardNumber",
+            "fieldPath": "code",
+            "columnName": "code",
             "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "barcodeType",
-            "columnName": "barcodeType",
+            "fieldPath": "barcodeFormat",
+            "columnName": "barcodeFormat",
             "affinity": "TEXT",
             "notNull": true
           }
@@ -109,7 +109,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '9f8940b7fea992ec6bda6ddccef4f273')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'e87b4ff0f1a720d9b5a4d599e743a138')"
     ]
   }
 }
