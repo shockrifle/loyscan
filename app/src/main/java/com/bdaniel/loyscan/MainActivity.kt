@@ -35,18 +35,17 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun SharedTransitionScope.AppNavigation(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = "list", modifier = modifier) {
-        composable("list") {
+    NavHost(navController = navController, startDestination = List, modifier = modifier) {
+        composable<List> {
             ListScreen(
-                animatedVisibilityScope = this,
-                    onItemClick = { cardId ->
-                        navController.navigate("detail/${cardId}")
-                }
+                    animatedVisibilityScope = this,
+                    directions = navController.listDirections()
             )
         }
-        composable("detail/{cardId}") { backStackEntry ->
+        composable<Detail> {
             DetailScreen(
-                    animatedVisibilityScope = this
+                    animatedVisibilityScope = this,
+                    directions = navController.detailDirections()
             )
         }
     }

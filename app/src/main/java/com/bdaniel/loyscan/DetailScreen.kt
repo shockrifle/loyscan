@@ -20,6 +20,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 fun SharedTransitionScope.DetailScreen(
         animatedVisibilityScope: AnimatedVisibilityScope,
         modifier: Modifier = Modifier,
+        directions: DetailDirections,
         viewModel: DetailViewModel = hiltViewModel()
 ) {
     val card by viewModel.card.collectAsState()

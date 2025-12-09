@@ -3,6 +3,7 @@ package com.bdaniel.loyscan
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.bdaniel.loyscan.data.repository.LoyaltyCardRepository
 import com.bdaniel.loyscan.domain.LoyaltyCard
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,10 +19,10 @@ class DetailViewModel @Inject constructor(
     loyaltyCardRepository: LoyaltyCardRepository
 ) : ViewModel() {
 
-    private val cardId: StateFlow<Int> = savedStateHandle.getStateFlow("cardId", 0)
+    private val cardId = savedStateHandle.toRoute<Detail>().cardId
 
     val card: StateFlow<LoyaltyCard> =
-        loyaltyCardRepository.getByIdWithBrand(cardId.value)
+        loyaltyCardRepository.getByIdWithBrand(cardId)
             .filterNotNull()
             .stateIn(
                 scope = viewModelScope,

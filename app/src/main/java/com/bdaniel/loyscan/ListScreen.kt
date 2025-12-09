@@ -25,7 +25,7 @@ import com.bdaniel.loyscan.ui.theme.icons.Icons
 @Composable
 fun SharedTransitionScope.ListScreen(
     animatedVisibilityScope: AnimatedVisibilityScope,
-    onItemClick: (Int) -> Unit,
+    directions: ListDirections,
     viewModel: ListViewModel = hiltViewModel()
 ) {
     val cards by viewModel.cards.collectAsState()
@@ -51,7 +51,7 @@ fun SharedTransitionScope.ListScreen(
             items(cards) { card ->
                 CardItem(
                     card = card,
-                    onClick = { onItemClick(card.id) },
+                    onClick = { directions.toCard(card.id) },
                     modifier = Modifier.sharedElement(
                         sharedContentState = rememberSharedContentState(key = "item/${card.id}"),
                         animatedVisibilityScope = animatedVisibilityScope
