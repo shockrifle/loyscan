@@ -9,26 +9,26 @@ object List
 
 @Immutable
 data class ListDirections(
-        val toCard: (id: Int) -> Unit,
-        val toBack: () -> Unit
+    val toCard: (id: Int, color: String) -> Unit,
+    val toBack: () -> Unit
 )
 
 fun NavController.listDirections() = ListDirections(
-        toCard = {
-            navigate(Detail(it))
-        },
-        toBack = { navigateUp() }
+    toCard = { id, color ->
+        navigate(Detail(id, color))
+    },
+    toBack = { navigateUp() }
 )
 
 
 @Serializable
-data class Detail(val cardId: Int)
+data class Detail(val cardId: Int, val color: String)
 
 @Immutable
 data class DetailDirections(
-        val toBack: () -> Unit
+    val toBack: () -> Unit
 )
 
 fun NavController.detailDirections() = DetailDirections(
-        toBack = { navigateUp() }
+    toBack = { navigateUp() }
 )
