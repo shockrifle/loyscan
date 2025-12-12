@@ -24,15 +24,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.toColorInt
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import coil.EventListener
 import coil.compose.AsyncImage
-import coil.decode.SvgDecoder
+import com.bdaniel.loyscan.ui.hiltImageLoader
 import com.bdaniel.loyscan.ui.theme.icons.Icons
-import timber.log.Timber
 
 
 @OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3Api::class)
@@ -84,20 +81,10 @@ fun SharedTransitionScope.DetailScreen(
                 contentAlignment = Alignment.Center
             ) {
                 if (card.brand.logo.isNotBlank()) {
-                    val imageLoader = coil.ImageLoader.Builder(LocalContext.current)
-                        .components {
-                            add(SvgDecoder.Factory())
-                        }
-                        .eventListener(object : EventListener {
-                            override fun onError(request: coil.request.ImageRequest, result: coil.request.ErrorResult) {
-                                Timber.e(result.throwable, "Image loading failed for: ${request.data}")
-                            }
-                        })
-                        .build()
                     AsyncImage(
                         model = card.brand.logo,
                         contentDescription = card.brand.name,
-                        imageLoader = imageLoader,
+                        imageLoader = hiltImageLoader(),
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(16.dp)
