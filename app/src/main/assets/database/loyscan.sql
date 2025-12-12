@@ -1,8 +1,8 @@
-INSERT INTO brands (id, name, color, logo) VALUES (1, 'Brand A', '#FF0000', '');
-INSERT INTO brands (id, name, color, logo) VALUES (2, 'Brand B', '#00FF00', '');
-INSERT INTO brands (id, name, color, logo) VALUES (3, 'Brand C', '#0000FF', '');
-INSERT INTO brands (id, name, color, logo) VALUES (4, 'Brand D', '#FFFF00', '');
-INSERT INTO brands (id, name, color, logo) VALUES (5, 'Brand E', '#FF00FF', '');
+INSERT INTO brands (id, name, color, logo) VALUES (1, 'Brand A', '#FF0000', 'https://picsum.photos/seed/1/200');
+INSERT INTO brands (id, name, color, logo) VALUES (2, 'Brand B', '#00FF00', 'https://picsum.photos/seed/2/200');
+INSERT INTO brands (id, name, color, logo) VALUES (3, 'Brand C', '#0000FF', 'https://picsum.photos/seed/3/200');
+INSERT INTO brands (id, name, color, logo) VALUES (4, 'Brand D', '#FFFF00', 'https://picsum.photos/seed/4/200');
+INSERT INTO brands (id, name, color, logo) VALUES (5, 'Brand E', '#FF00FF', 'https://picsum.photos/seed/5/200');
 
 INSERT INTO loyalty_cards (id, name, brandId, code, barcodeFormat) VALUES (1, 'Card A', 1, '123456789', 'EAN_13');
 INSERT INTO loyalty_cards (id, name, brandId, code, barcodeFormat) VALUES (2, 'Card B', 2, '987654321', 'EAN_13');
