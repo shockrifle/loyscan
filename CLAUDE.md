@@ -36,4 +36,5 @@ type-safe route/Directions). Use it as the template.
 - Build: `./gradlew assembleDebug` · install: `./gradlew installDebug`. Versions live in `gradle/libs.versions.toml`.
   From a terminal, set `JAVA_HOME` to Android Studio's JBR 21 first (`/c/Program Files/Android/Android Studio/jbr`),
   otherwise the build fails with a JVM-target mismatch — see `wiki/runbooks/cli-build-jvm-target-mismatch.md`.
-- No git remote / PR host yet; history is local `git log` only.
+- Remote: GitHub `shockrifle/loyscan` (`origin`, SSH). Commit directly to `master`. The repo-local
+  `core.sshCommand` points at the user's SSH key, so plain `git push` / `git pull` work.
