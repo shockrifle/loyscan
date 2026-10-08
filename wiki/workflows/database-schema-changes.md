@@ -22,6 +22,6 @@ migration (or a wipe) exists.
 
 ## History
 
-- `c67011e` (2025-12-08) created schema v1. `f9d8195` later renamed `cardNumber`→`code` and
+- `4969a2b` (2025-12-08) created schema v1. `4cbc71d` later renamed `cardNumber`→`code` and
   `barcodeType`→`barcodeFormat` and rewrote `1.json` **without** bumping the version. That was fine only
   because nothing had been released.

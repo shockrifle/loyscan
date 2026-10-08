@@ -1,8 +1,8 @@
 # Detail screen colorless during the shared-element transition
 
-**Fixed in:** `669149e` · **Date:** 2025-12-12 · **Area:** [[card-transition]], [[card-detail]]
+**Fixed in:** `45a33e1` · **Date:** 2025-12-12 · **Area:** [[card-transition]], [[card-detail]]
 
-Reconstructed from the diff of `669149e` ("transition fixes"); the commit message has no detail.
+Reconstructed from the diff of `45a33e1` ("transition fixes"); the commit message has no detail.
 
 ## Symptom
 Going from the list to a card's detail, the destination's top bar and header started **transparent** and only

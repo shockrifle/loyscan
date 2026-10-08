@@ -23,10 +23,10 @@ Also travels in the `Detail` route — see [[2025-12-12-brand-color-in-route]].
 **Brand logo** — `Brand.logo`, an image URL (seed uses `https://picsum.photos/seed/<n>/200`). Blank means
 "show the brand name as text instead". Loaded with Coil — [[coil-image-loading]].
 
-**Card code** — `LoyaltyCard.code`: the membership number the barcode would encode. Was `cardNumber` before `f9d8195`.
+**Card code** — `LoyaltyCard.code`: the membership number the barcode would encode. Was `cardNumber` before `4cbc71d`.
 
 **`card/{id}`** — The shared-content key that links a list tile to the detail screen in the shared-element transition.
-Was `item/{id}` before `669149e`.
+Was `item/{id}` before `45a33e1`.
 
 **DAO** — Room data-access interface in `data/local/db/dao/`. Reads return `Flow`.
 
@@ -46,7 +46,7 @@ Was `item/{id}` before `669149e`.
 **hiltImageLoader()** — Composable in `ui/ImageLoader.kt` that returns the app-wide Coil `ImageLoader` from Hilt
 via `ImageLoaderEntryPoint`. See [[2025-12-12-singleton-image-loader]].
 
-**KSP** — Kotlin Symbol Processing; runs the Hilt and Room compilers. Replaced kapt in `b305034` —
+**KSP** — Kotlin Symbol Processing; runs the Hilt and Room compilers. Replaced kapt in `ae2118e` —
 [[2025-12-08-ksp-instead-of-kapt]].
 
 **List** — Navigation route `object List` (`Navigation.kt:7-8`), the start destination. **Shadows

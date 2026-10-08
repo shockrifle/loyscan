@@ -1,6 +1,6 @@
 # Type-safe routes + per-screen Directions objects
 
-**Status:** Active · **Date:** 2025-12-09 · **Commits:** `b91d813` (refactor), `669149e` (`color` added to `Detail`)
+**Status:** Active · **Date:** 2025-12-09 · **Commits:** `a33481a` (refactor), `45a33e1` (`color` added to `Detail`)
 
 ## Context
 Navigation started with string routes (`"list"`, `"detail/{cardId}"`) and lambdas like `onItemClick: (Int) -> Unit`

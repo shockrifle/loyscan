@@ -11,7 +11,7 @@ while the same project builds fine in Android Studio. Found 2026-10-08.
 ## Cause
 
 `app/build.gradle.kts` sets Java `sourceCompatibility/targetCompatibility = 21` but sets no Kotlin `jvmTarget` or
-`jvmToolchain`. The `kotlinOptions { jvmTarget = "11" }` block was removed in `ad96b80`. Kotlin therefore targets
+`jvmToolchain`. The `kotlinOptions { jvmTarget = "11" }` block was removed in `d0d171a`. Kotlin therefore targets
 the JDK that runs Gradle. Android Studio runs Gradle on its bundled JBR 21 (`.idea/gradle.xml` →
 `#GRADLE_LOCAL_JAVA_HOME`), so the two targets match there. A terminal uses `JAVA_HOME`/`PATH` — on the main dev
 machine that's JDK 19.0.1 — so they don't.

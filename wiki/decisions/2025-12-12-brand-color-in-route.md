@@ -1,6 +1,6 @@
 # Pass the brand color through the `Detail` route
 
-**Status:** Active · **Date:** 2025-12-12 · **Commits:** `669149e`
+**Status:** Active · **Date:** 2025-12-12 · **Commits:** `45a33e1`
 
 ## Context
 `DetailScreen` derived its header/top-bar color from `DetailViewModel.card`, which is `LoyaltyCard.EMPTY` until

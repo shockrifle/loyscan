@@ -1,6 +1,6 @@
 # Line-based SQL seed "parser"
 
-**Status:** Active · **Since:** 2025-12-09 (`0da60e3`) · **Where:**
+**Status:** Active · **Since:** 2025-12-09 (`01e3480`) · **Where:**
 `app/src/main/java/com/bdaniel/loyscan/di/DatabaseModule.kt:29-37`
 
 ## What

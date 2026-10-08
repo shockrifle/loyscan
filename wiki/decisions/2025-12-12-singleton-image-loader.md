@@ -1,9 +1,9 @@
 # One app-wide Coil `ImageLoader`, provided by Hilt
 
-**Status:** Active · **Date:** 2025-12-12 · **Commits:** `0f9ea48` (inline loader), `8e944c4` (extracted)
+**Status:** Active · **Date:** 2025-12-12 · **Commits:** `c4d6bdc` (inline loader), `3401694` (extracted)
 
 ## Context
-`0f9ea48` built a `coil.ImageLoader` (with `SvgDecoder` and a Timber error listener) **inline in
+`c4d6bdc` built a `coil.ImageLoader` (with `SvgDecoder` and a Timber error listener) **inline in
 `DetailScreen`'s composition** — a new loader, with its own memory cache, on every recomposition.
 
 ## Options considered

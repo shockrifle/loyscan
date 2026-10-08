@@ -1,11 +1,11 @@
 # Hand-written `ImageVector` icons instead of Material icons
 
-**Status:** Active · **Date:** 2025-12-08 · **Commits:** `ad96b80` (Settings), `a20dfb7` (ArrowBack, Edit)
+**Status:** Active · **Date:** 2025-12-08 · **Commits:** `d0d171a` (Settings), `dd9c1fd` (ArrowBack, Edit)
 
 ## Context
 `ListScreen` imported `androidx.compose.material.icons.Icons` / `filled.Settings`. The project never declared a
 `material-icons-*` dependency; the icons came in transitively through `material3` under Compose BOM
-`2024.09.00`. The library upgrade in `ad96b80` (BOM → `2025.12.00`) is titled "updated libraries **fixed build
+`2024.09.00`. The library upgrade in `d0d171a` (BOM → `2025.12.00`) is titled "updated libraries **fixed build
 errors**", and it removed those imports.
 
 ## Options considered

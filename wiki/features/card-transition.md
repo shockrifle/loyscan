@@ -12,14 +12,14 @@ in `app/src/main/java/com/bdaniel/loyscan/DetailScreen.kt:68-71`.
 
 - `AppNavigation`, `ListScreen`, `CardItem` and `DetailScreen` are all extensions on `SharedTransitionScope`;
   each `composable<Route> { }` block passes `this` as the `AnimatedVisibilityScope`.
-- Key format: `card/{id}` (was `item/{id}` until `669149e`).
+- Key format: `card/{id}` (was `item/{id}` until `45a33e1`).
 - The detail screen takes its color from the route, so the destination is correctly colored from the first
   frame ([[2025-12-12-brand-color-in-route]], [[2025-12-12-detail-color-flash-on-transition]]).
 
 ## History
 
-- `9ee1947` (2025-12-04) — first implementation: shared element on the list tile and on the detail `Card`.
-- `669149e` (2025-12-12) — "transition fixes": the shared element moved to the tile's colored box ↔ the
+- `1ea9fe0` (2025-12-04) — first implementation: shared element on the list tile and on the detail `Card`.
+- `45a33e1` (2025-12-12) — "transition fixes": the shared element moved to the tile's colored box ↔ the
   detail `Scaffold`, the key was renamed to `card/{id}`, and the brand color was passed through the route.
 - 2026-10-08 — transparent screens + one app-level background (see below).
 

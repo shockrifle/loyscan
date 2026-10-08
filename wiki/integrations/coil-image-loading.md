@@ -1,7 +1,7 @@
 # Coil image loading (brand logos)
 
 Brand logos are remote URLs loaded with **Coil 2.7.0** (`io.coil-kt:coil-compose`, `coil-svg`). The seed data
-points every logo at **picsum.photos** placeholders (`https://picsum.photos/seed/<n>/200`, since `0f9ea48`).
+points every logo at **picsum.photos** placeholders (`https://picsum.photos/seed/<n>/200`, since `c4d6bdc`).
 This requires `android.permission.INTERNET`.
 
 ## Contract

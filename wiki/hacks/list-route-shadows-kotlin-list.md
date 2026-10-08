@@ -1,6 +1,6 @@
 # The `List` route shadows `kotlin.collections.List`
 
-**Status:** Active · **Since:** 2025-12-09 (`b91d813`) · **Where:**
+**Status:** Active · **Since:** 2025-12-09 (`a33481a`) · **Where:**
 `app/src/main/java/com/bdaniel/loyscan/Navigation.kt:7-8`
 
 ## What
@@ -8,7 +8,7 @@ The start-destination route is `@Serializable object List` in package `com.bdani
 an unqualified `List<…>` resolves to the route object, not the collection type, and fails to compile.
 
 ## Why it exists
-`b91d813` introduced the route and, in the same commit, removed the explicit type
+`a33481a` introduced the route and, in the same commit, removed the explicit type
 `StateFlow<List<LoyaltyCard>>` from `ListViewModel.cards`, relying on inference instead
 (`app/src/main/java/com/bdaniel/loyscan/ListViewModel.kt:16`). Dropping the annotation is the workaround (inferred
 from the diff).

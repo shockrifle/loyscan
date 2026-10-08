@@ -22,8 +22,8 @@ locally. There are no real tests yet — [[no-automated-tests]].
 All versions live in `gradle/libs.versions.toml`. Constraints that have bitten before:
 
 - **The KSP version must match the Kotlin version line.** Kotlin `2.2.21` ↔ KSP `2.3.3` (changed together in
-  `ad96b80`). See [[2025-12-08-ksp-instead-of-kapt]].
-- Compose libraries come from the Compose BOM. The BOM bump in `ad96b80` removed the transitive Material
+  `d0d171a`). See [[2025-12-08-ksp-instead-of-kapt]].
+- Compose libraries come from the Compose BOM. The BOM bump in `d0d171a` removed the transitive Material
   icons — [[2025-12-08-hand-rolled-icons]].
 - The `kotlinSerialization` plugin version is pinned to the Kotlin version (`2.2.21`). It's needed for the
   type-safe navigation routes.

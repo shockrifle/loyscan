@@ -1,6 +1,6 @@
 # An empty or invalid brand color crashes the detail screen
 
-**Status:** Open (latent) · **Since:** 2025-12-12 (`669149e`) · **Where:**
+**Status:** Open (latent) · **Since:** 2025-12-12 (`45a33e1`) · **Where:**
 `app/src/main/java/com/bdaniel/loyscan/DetailScreen.kt:64` and the header `Box` background / text color below it
 
 ## What

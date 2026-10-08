@@ -5,7 +5,7 @@ When `loyscan.db` is first created, the app inserts 5 brands and 11 loyalty card
 add-card UI.
 
 **Entry point:** `RoomDatabase.Callback.onCreate` in
-`app/src/main/java/com/bdaniel/loyscan/di/DatabaseModule.kt:26-39` (added in `0da60e3`).
+`app/src/main/java/com/bdaniel/loyscan/di/DatabaseModule.kt:26-39` (added in `01e3480`).
 
 ## Contract of `loyscan.sql`
 
@@ -15,7 +15,7 @@ add-card UI.
 - It must use the **current** table and column names (`brands(id, name, color, logo)`,
   `loyalty_cards(id, name, brandId, code, barcodeFormat)`). The script is not versioned with the schema.
 - Explicit ids are used so the `brandId` foreign keys line up.
-- Brand logos point at `picsum.photos` placeholder images (since `0f9ea48`) — [[coil-image-loading]].
+- Brand logos point at `picsum.photos` placeholder images (since `c4d6bdc`) — [[coil-image-loading]].
 
 ## Behavior to know
 

@@ -15,9 +15,9 @@ versionName `1.0` (versionCode 1). minSdk 29, target/compileSdk 36, Java/JVM 21 
 
 ## Manifest facts
 
-- `android.permission.INTERNET` — added in `0f9ea48` for brand logos ([[coil-image-loading]]).
+- `android.permission.INTERNET` — added in `c4d6bdc` for brand logos ([[coil-image-loading]]).
 - `allowBackup="true"` with the template `backup_rules.xml` / `data_extraction_rules.xml` (unchanged since
-  `d5affac`), so `loyscan.db` may be included in Android auto-backup.
+  `00933cd`), so `loyscan.db` may be included in Android auto-backup.
 
 ## Theme
 

@@ -18,7 +18,7 @@ Shows one card: a top bar and a 200dp header in the brand color with the brand l
   `/* TODO */`).
 - The whole `Scaffold` is the shared element `card/{id}` — [[card-transition]].
 
-## Not implemented (as of 669149e)
+## Not implemented (as of 45a33e1)
 
 - The barcode itself: `barcodeFormat` and `code` are stored, but only `code` is shown, as text. No barcode
   library is a dependency.

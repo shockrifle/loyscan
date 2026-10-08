@@ -1,6 +1,6 @@
 # No automated tests
 
-**Status:** Open · **Since:** 2025-12-03 (`d5affac`) · **Where:** `app/src/test/…/ExampleUnitTest.kt`,
+**Status:** Open · **Since:** 2025-12-03 (`00933cd`) · **Where:** `app/src/test/…/ExampleUnitTest.kt`,
 `app/src/androidTest/…/ExampleInstrumentedTest.kt` (Android Studio templates only)
 
 ## What

@@ -1,6 +1,6 @@
 # List tiles don't use the app's ImageLoader
 
-**Status:** Open · **Since:** 2025-12-12 (`669149e`) · **Where:** `CardItem` in
+**Status:** Open · **Since:** 2025-12-12 (`45a33e1`) · **Where:** `CardItem` in
 `app/src/main/java/com/bdaniel/loyscan/ListScreen.kt` (`AsyncImage(model = card.brand.logo, …)` with no
 `imageLoader`)
 
@@ -8,7 +8,7 @@
 `DetailScreen` passes `imageLoader = hiltImageLoader()`; `CardItem` does not, so it uses Coil's default singleton.
 
 ## Why it exists
-`669149e` added logos to the tiles after `8e944c4` had extracted the shared loader; the parameter was most likely
+`45a33e1` added logos to the tiles after `3401694` had extracted the shared loader; the parameter was most likely
 just missed.
 
 ## Risk / impact

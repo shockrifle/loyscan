@@ -1,10 +1,10 @@
 # Seed the database from a SQL asset in `RoomDatabase.Callback.onCreate`
 
-**Status:** Active · **Date:** 2025-12-09 · **Commits:** `0da60e3` (seed), `f9d8195` (repositories replaced the
+**Status:** Active · **Date:** 2025-12-09 · **Commits:** `01e3480` (seed), `4cbc71d` (repositories replaced the
 in-ViewModel dummy lists)
 
 ## Context
-Until `f9d8195`, the ViewModels held hard-coded `dummyCards` lists. Once the screens read from Room, the DB
+Until `4cbc71d`, the ViewModels held hard-coded `dummyCards` lists. Once the screens read from Room, the DB
 needed demo content, and there is no add-card UI.
 
 ## Options considered

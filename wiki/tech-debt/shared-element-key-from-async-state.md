@@ -1,7 +1,7 @@
 # Detail shared-element key depends on async-loaded data
 
-**Status:** Open — **suspected, not verified on a device** · **Since:** 2025-12-04 (`9ee1947`), still present at
-`669149e` · **Where:** `app/src/main/java/com/bdaniel/loyscan/DetailScreen.kt:69`
+**Status:** Open — **suspected, not verified on a device** · **Since:** 2025-12-04 (`1ea9fe0`), still present at
+`45a33e1` · **Where:** `app/src/main/java/com/bdaniel/loyscan/DetailScreen.kt:69`
 
 ## What
 The detail `Scaffold`'s shared key is `"card/${card.id}"`, where `card` comes from `DetailViewModel.card`, which is
@@ -10,7 +10,7 @@ The detail `Scaffold`'s shared key is `"card/${card.id}"`, where `card` comes fr
 route (`Detail.cardId`).
 
 ## Why it exists
-`669149e` fixed the same first-frame problem for the **color** by moving it into the route
+`45a33e1` fixed the same first-frame problem for the **color** by moving it into the route
 ([[2025-12-12-brand-color-in-route]]) but left the key on the ViewModel.
 
 ## Risk / impact
