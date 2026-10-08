@@ -1,0 +1,2 @@
+# Wiki changelog is append-only, one self-contained line per entry; union-merge concurrent appends.
+wiki/_log.md merge=union
