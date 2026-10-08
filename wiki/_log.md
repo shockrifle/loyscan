@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-08 · moved backlog to GitHub Issues (#1–#23, 3 milestones) · CLAUDE (new "GitHub Issues vs this wiki" section + checklist items), /CLAUDE.md, tech-debt/* (5) and hacks/* (2) Status lines link their issues · user decision to track work in GitHub
 - 2026-10-08 · history rewritten (commit email → personal), cited SHAs remapped · 24 pages with short SHAs · force-push before going public; old SHAs no longer exist
 - 2026-10-08 · GitHub remote added · CLAUDE (schema sources section), /CLAUDE.md quick facts · `origin` = shockrifle/loyscan, master pushed
 - 2026-10-08 · transparent Scaffolds + app-level Surface background · features/card-transition, apps/android-app, architecture; MainActivity line refs updated in glossary, decisions/2025-12-12-brand-color-in-route, tech-debt/shared-element-key-from-async-state · commit with the ListScreen/DetailScreen/MainActivity changes

@@ -75,8 +75,24 @@ Treat this as a checklist at the end of every non-trivial task:
 - [ ] **Incident handled / recurring failure found** → `runbooks/`.
 - [ ] **Files dropped in `assets/`** → compile them into the right pages; note the source file name.
 - [ ] **A tech-debt / hack item was paid down** → move it to the Resolved/Removed section of its
-      `_index.md` and add a "Resolved" line with the commit SHA to the page.
+      `_index.md` and add a "Resolved" line with the commit SHA to the page; the commit closes its issue.
+- [ ] **New tech-debt / hack page** → also open a GitHub issue (label `tech-debt` / `hack`) and put its
+      link in the page's Status line.
 - [ ] **Always** append one line to [[_log]].
+
+## GitHub Issues vs this wiki
+
+Work is tracked in GitHub Issues on `shockrifle/loyscan` (use `gh`). The split:
+
+- **Issue = what and whether.** Scope, acceptance criteria, status, milestone. Labels: `feature`, `bug`,
+  `tech-debt`, `hack`. Milestones: `v1 – core cards`, `v1 – extras`, `Later`.
+- **Wiki = why and how.** Decisions, architecture, feature docs, postmortems, runbooks. Wiki pages don't hold
+  backlogs or TODO lists; issues don't hold design rationale (link to the wiki page instead).
+- **Linking.** Commits reference the issue (`Fixes #N` closes it on push to `master`). Wiki pages that
+  correspond to an issue (tech-debt, hacks, features in progress) link it; issues link the wiki page with a full
+  `https://github.com/shockrifle/loyscan/blob/master/wiki/...` URL.
+- **Public-safe.** The repo is private but is treated as public: no local absolute paths, personal data,
+  credentials, or third-party proprietary material in issues, commits or wiki pages.
 
 ## When NOT to update
 

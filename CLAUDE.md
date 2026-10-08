@@ -38,3 +38,6 @@ type-safe route/Directions). Use it as the template.
   otherwise the build fails with a JVM-target mismatch — see `wiki/runbooks/cli-build-jvm-target-mismatch.md`.
 - Remote: GitHub `shockrifle/loyscan` (`origin`, SSH). Commit directly to `master`. The repo-local
   `core.sshCommand` points at the user's SSH key, so plain `git push` / `git pull` work.
+- Work is tracked in GitHub Issues + milestones (`gh issue list`); reference issues in commits (`Fixes #N`).
+  Issues hold what/status, the wiki holds why/how — see "GitHub Issues vs this wiki" in `wiki/CLAUDE.md`.
+  The repo is private but treated as public: nothing personal or third-party-proprietary in issues/commits.

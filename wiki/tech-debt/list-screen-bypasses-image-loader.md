@@ -1,6 +1,6 @@
 # List tiles don't use the app's ImageLoader
 
-**Status:** Open · **Since:** 2025-12-12 (`45a33e1`) · **Where:** `CardItem` in
+**Status:** Open · **Issue:** [#15](https://github.com/shockrifle/loyscan/issues/15) · **Since:** 2025-12-12 (`45a33e1`) · **Where:** `CardItem` in
 `app/src/main/java/com/bdaniel/loyscan/ListScreen.kt` (`AsyncImage(model = card.brand.logo, …)` with no
 `imageLoader`)
 
