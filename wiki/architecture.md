@@ -62,7 +62,7 @@ This traces one feature through every layer. **Use it as the template for new fe
    `directions.toCard(card.id, card.brand.color)` ([[card-list]]).
 7. **Navigation.** `NavController.listDirections().toCard` → `navigate(Detail(id, color))`
    (`Navigation.kt:16-21, 24-25`). `AppNavigation` maps `composable<Detail>` to `DetailScreen`, pulling
-   `color` out of the route and passing it as a plain parameter (`MainActivity.kt:50-57`).
+   `color` out of the route and passing it as a plain parameter (`MainActivity.kt:60-67`).
 8. **Detail ViewModel.** `DetailViewModel` reads `savedStateHandle.toRoute<Detail>().cardId`, then
    `repository.getByIdWithBrand(cardId).filterNotNull().stateIn(…, initialValue = LoyaltyCard.EMPTY)`
    (`DetailViewModel.kt:22-31`).
@@ -78,7 +78,8 @@ This traces one feature through every layer. **Use it as the template for new fe
 3. `@HiltViewModel` exposing `StateFlow` via `stateIn(viewModelScope, WhileSubscribed(5_000), <EMPTY/initial>)`.
 4. `@Serializable` route + `*Directions` data class + `NavController.*Directions()` factory in `Navigation.kt`;
    register `composable<Route>` in `AppNavigation`.
-5. Screen composable as `SharedTransitionScope.XScreen(animatedVisibilityScope, directions, viewModel = hiltViewModel())`.
+5. Screen composable as `SharedTransitionScope.XScreen(animatedVisibilityScope, directions, viewModel = hiltViewModel())`,
+   with `Scaffold(containerColor = Color.Transparent)` — the app background comes from `MainActivity` ([[card-transition]]).
 6. Anything the first frame needs (e.g. colors for a transition) goes in the route, not just the ViewModel.
 7. Images: always pass `imageLoader = hiltImageLoader()` to `AsyncImage`.
 8. Update this wiki per [[CLAUDE]].

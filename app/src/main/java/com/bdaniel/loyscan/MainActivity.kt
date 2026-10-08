@@ -7,6 +7,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
@@ -24,8 +27,15 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             LoyScanTheme {
-                SharedTransitionLayout {
-                    AppNavigation()
+                // Screens use transparent Scaffolds so shared elements morph cleanly;
+                // the single theme-aware background lives here instead.
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    SharedTransitionLayout {
+                        AppNavigation()
+                    }
                 }
             }
         }

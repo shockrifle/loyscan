@@ -6,7 +6,7 @@ Alphabetical.
 **AnimatedVisibilityScope** — Compose scope passed from each `composable<Route> { }` block (`this`) into a screen;
 required by `Modifier.sharedElement`. See [[card-transition]].
 
-**AppNavigation** — The `NavHost` composable, defined in `MainActivity.kt:37-59`, that maps routes to screens.
+**AppNavigation** — The `NavHost` composable, defined in `MainActivity.kt:45-69`, that maps routes to screens.
 
 **Barcode format** — `LoyaltyCard.barcodeFormat` / column `loyalty_cards.barcodeFormat`: a free-form string
 naming the barcode symbology (`EAN_13`, `EAN_8`, `CODE_128`, `CODE_39`, `QR_CODE`, `AZTEC`, `DATA_MATRIX`,
@@ -72,7 +72,7 @@ See [[seed-data]], [[line-based-sql-seed-parser]].
 
 **Shared element** — Compose `Modifier.sharedElement(rememberSharedContentState(key), animatedVisibilityScope)`
 — the same key on two destinations animates bounds between them. Requires the `SharedTransitionLayout` set up in
-`MainActivity.kt:27`. See [[card-transition]].
+`MainActivity.kt:36`. See [[card-transition]].
 
 **SharedTransitionScope** — Receiver of `AppNavigation`, `ListScreen`, `DetailScreen`, `CardItem`, so they can call
 `sharedElement`. Experimental API (`@OptIn(ExperimentalSharedTransitionApi::class)`).

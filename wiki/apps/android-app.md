@@ -8,8 +8,9 @@ versionName `1.0` (versionCode 1). minSdk 29, target/compileSdk 36, Java/JVM 21 
 - `LoyScanApplication` (`@HiltAndroidApp`) — plants Timber `DebugTree` in debug builds only
   (`app/src/main/java/com/bdaniel/loyscan/LoyScanApplication.kt:7-14`).
 - `MainActivity` (`@AndroidEntryPoint`, launcher) — `enableEdgeToEdge()`, then
-  `LoyScanTheme { SharedTransitionLayout { AppNavigation() } }`
-  (`app/src/main/java/com/bdaniel/loyscan/MainActivity.kt:20-33`).
+  `LoyScanTheme { Surface(background) { SharedTransitionLayout { AppNavigation() } } }` — the `Surface` is the
+  only opaque app background; screens are transparent ([[card-transition]])
+  (`app/src/main/java/com/bdaniel/loyscan/MainActivity.kt:22-43`).
 - `AppNavigation` — start destination [[card-list]], second destination [[card-detail]].
 
 ## Manifest facts

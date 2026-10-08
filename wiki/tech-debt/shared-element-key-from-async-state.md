@@ -19,5 +19,5 @@ mis-animate on fast taps. The size of the effect depends on how quickly Room emi
 emulator before treating this as a bug.
 
 ## How to pay it down
-Pass `cardId` (from `toRoute<Detail>()`, as is already done for `color` in `MainActivity.kt:51`) into
+Pass `cardId` (from `toRoute<Detail>()`, as is already done for `color` in `MainActivity.kt:61`) into
 `DetailScreen` and build the key from it. If it fixes a visible glitch, write a `bugs/` page.

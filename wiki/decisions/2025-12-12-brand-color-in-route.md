@@ -15,7 +15,7 @@ Room emits. During the list → detail shared-element transition, the first fram
 ## Decision
 `Detail(val cardId: Int, val color: String)` (`app/src/main/java/com/bdaniel/loyscan/Navigation.kt:24-25`).
 `ListDirections.toCard(id, color)` passes `card.brand.color`; `AppNavigation` extracts it with `toRoute<Detail>()`
-and hands it to `DetailScreen(color, …)` (`MainActivity.kt:50-57`), which uses it for the top bar, header
+and hands it to `DetailScreen(color, …)` (`MainActivity.kt:60-67`), which uses it for the top bar, header
 background and header text contrast.
 
 ## Why

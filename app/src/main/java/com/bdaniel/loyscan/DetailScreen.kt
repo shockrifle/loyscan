@@ -68,7 +68,8 @@ fun SharedTransitionScope.DetailScreen(
         modifier = Modifier.sharedElement(
             sharedContentState = rememberSharedContentState(key = "card/${card.id}"),
             animatedVisibilityScope = animatedVisibilityScope
-        )
+        ),
+        containerColor = Color.Transparent
     ) { paddingValues ->
         Column(
             modifier = modifier

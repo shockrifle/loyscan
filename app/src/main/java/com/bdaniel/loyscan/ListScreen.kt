@@ -57,6 +57,7 @@ fun SharedTransitionScope.ListScreen(
                 }
             )
         },
+        containerColor = Color.Transparent
     ) { innerPadding ->
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
