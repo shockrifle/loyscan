@@ -20,9 +20,13 @@ data class CardNumberRule(
     val charset: Charset = Charset.DIGITS,
     val minLength: Int = 1,
     val maxLength: Int = Int.MAX_VALUE,
-    val case: LetterCase = LetterCase.UPPER,
-    /** Characters removed from user input before validation (spaces are always removed). */
-    val separators: String = "-",
+    /** Letter case applied to user input. Barcodes are case-sensitive, so a rule opts in to changing it. */
+    val case: LetterCase = LetterCase.NONE,
+    /**
+     * Characters removed from user input before validation (spaces are always removed). With charset ANY nothing
+     * is removed by default, since any character may be part of the number.
+     */
+    val separators: String = if (charset == Charset.ANY) "" else "-",
     val prefix: String = "",
     val suffix: String = "",
     val padLength: Int = 0,

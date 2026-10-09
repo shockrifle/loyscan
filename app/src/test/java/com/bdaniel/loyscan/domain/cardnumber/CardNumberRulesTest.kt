@@ -51,12 +51,18 @@ class CardNumberRulesTest {
         val rule = CardNumberRules.parse("""[{ "id": "plain", "format": "CODE_128" }]""").single()
         assertEquals(CardNumberRule(id = "plain", format = BarcodeFormat.CODE_128), rule)
         assertEquals("0012", CardNumberEngine.barcodeContent("00 12", rule))
+        assertEquals(CardNumberRule.LetterCase.NONE, rule.case)
+        assertEquals("-", rule.separators)
+        val any = CardNumberRules.parse("""[{ "id": "any", "format": "QR_CODE", "charset": "ANY" }]""").single()
+        assertEquals("", any.separators)
     }
 
     @Test
     fun toJson_roundTrips() {
         val rules = listOf(
-            CardNumberRule(id = "a", format = BarcodeFormat.QR_CODE, charset = CardNumberRule.Charset.ANY, separators = ""),
+            CardNumberRule(id = "a", format = BarcodeFormat.QR_CODE, charset = CardNumberRule.Charset.ANY),
+            CardNumberRule(id = "a2", format = BarcodeFormat.QR_CODE, charset = CardNumberRule.Charset.ANY, separators = "-"),
+            CardNumberRule(id = "a3", format = BarcodeFormat.CODE_128, separators = ""),
             CardNumberRule(
                 id = "b", format = BarcodeFormat.EAN_8, minLength = 7, maxLength = 7,
                 checkDigit = CheckDigit(CheckDigitAlgorithm.GTIN_MOD10, CheckDigit.Mode.APPEND),

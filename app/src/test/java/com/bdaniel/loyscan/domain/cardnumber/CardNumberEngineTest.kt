@@ -27,11 +27,12 @@ class CardNumberEngineTest {
         display = Display(pattern = "### ### ###"),
     )
 
-    /** Alphanumeric, zero-padded to 10 behind an "LC" prefix. */
+    /** Alphanumeric, upper-cased, zero-padded to 10 behind an "LC" prefix. */
     private val paddedCode128 = CardNumberRule(
         id = "padded-code128",
         format = BarcodeFormat.CODE_128,
         charset = CardNumberRule.Charset.ALPHANUMERIC,
+        case = CardNumberRule.LetterCase.UPPER,
         minLength = 4,
         maxLength = 10,
         prefix = "LC",
@@ -84,6 +85,14 @@ class CardNumberEngineTest {
         assertEquals(Validation.Valid("4111111111111111"), validate("4111 1111 1111 1111", luhnVerified))
         assertEquals(setOf(Error.BAD_CHECK_DIGIT), (validate("4111111111111112", luhnVerified) as Validation.Invalid).errors)
         assertEquals(setOf(Error.TOO_SHORT), (validate("411", luhnVerified) as Validation.Invalid).errors)
+    }
+
+    @Test
+    fun validate_defaultsKeepCase_andAnyCharsetKeepsHyphens() {
+        val alnum = CardNumberRule(id = "alnum", format = BarcodeFormat.CODE_128, charset = CardNumberRule.Charset.ALPHANUMERIC)
+        assertEquals(Validation.Valid("Ab12"), validate("Ab-12", alnum))
+        val any = CardNumberRule(id = "any", format = BarcodeFormat.QR_CODE, charset = CardNumberRule.Charset.ANY)
+        assertEquals("AB-1234xy", barcodeContent(" AB-1234xy ", any))
     }
 
     // --- barcode content ---

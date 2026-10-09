@@ -26,6 +26,10 @@ The store catalogue ([#3](https://github.com/shockrifle/loyscan/issues/3)) has t
 - Barcode content = `prefix + core.padStart(padLength, padChar) + suffix`, plus a check digit computed over all
   of that when the mode is `APPEND`. `VERIFY` means the core's last digit is already a check digit over the rest
   of the core, so it is validated but nothing is added.
+- Defaults never rewrite content silently. `case` defaults to `NONE` because barcodes are case-sensitive, so a rule
+  opts in to `UPPER` or `LOWER`. `separators` defaults to `"-"`, or to `""` for charset `ANY`, where a hyphen may be
+  part of the number. The default is an expression on `charset`, and kotlinx-serialization handles it in both
+  directions (round-trip test).
 - `CardNumberEngine` provides `normalize`, `validate`, `barcodeContent`, `displayNumber` and `match`.
   A `null` rule means "no rule": the barcode content is the trimmed raw number.
 - `barcodeContent` falls back to the normalised input when validation fails, so "save anyway" cards still render.
