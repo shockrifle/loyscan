@@ -17,6 +17,7 @@ kotlinSerialization = "2.2.21"
 timber = "5.0.1"
 coil = "2.7.0"
 kotlinxSerializationJson = "1.9.0"
+kover = "0.9.10"
 # Test-only. coroutinesTest matches the kotlinx-coroutines-core version the app resolves.
 coroutinesTest = "1.9.0"
 turbine = "1.2.1"
@@ -66,3 +67,4 @@ kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "ko
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlinSerialization" }
 hilt-android-plugin = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 kotlin-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }

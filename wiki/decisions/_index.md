@@ -14,6 +14,7 @@ inferred.
 - [[2025-12-12-singleton-image-loader]] — one Hilt-provided Coil loader via an EntryPoint
 - [[2025-12-12-brand-color-in-route]] — first-frame data goes in the route
 - [[2026-10-09-card-number-rule-engine]] — own card-number rule engine; rules are JSON data
+- [[2026-10-09-coverage-gate-kover]] — Kover line-coverage gate starting at the baseline, only ever raised
 
 ## Superseded
 

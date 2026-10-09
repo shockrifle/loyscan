@@ -11,6 +11,8 @@ Progress (2026-10-09):
 - Test infrastructure is in place (#26): every kind of test runs on the JVM, and there is one example test per
   kind (DAO, ViewModel, Compose screen). See [[build-and-run]] → Tests. The Android Studio template tests were
   removed.
+- Coverage is measured and gated (#27): `koverVerify` fails below the minimum, which started at the 63 % baseline
+  and only goes up — [[2026-10-09-coverage-gate-kover]].
 
 ## Why it exists
 Early prototype phase (20 commits, 2025-12-03 → 2025-12-12).
@@ -20,5 +22,5 @@ Regressions in the hand-written `JOIN` + `brand_` aliasing (`LoyaltyCardDao.kt:3
 only caught by running the app.
 
 ## How to pay it down
-Tracked as sub-issues of #13: a coverage gate (#27), tests for the seed SQL, mapper and screens (#30), and the
-test-first workflow (#28) and CI (#29) that keep it paid down.
+Tracked as sub-issues of #13: tests for the seed SQL, mapper and screens (#30), raising the coverage minimum as
+they land, and the test-first workflow (#28) and CI (#29) that keep it paid down.

@@ -1,6 +1,6 @@
 # Build and run
 
-A standard Gradle-wrapper project with no custom tasks or scripts.
+A standard Gradle-wrapper project with no custom tasks or scripts; coverage tasks come from the Kover plugin.
 
 **From a terminal, Gradle must run on JDK 21** (Android Studio's bundled JBR), or the Kotlin compile fails with a
 JVM-target mismatch — [[cli-build-jvm-target-mismatch]].
@@ -12,6 +12,9 @@ export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"   # see the runbo
 adb shell am start -n com.bdaniel.loyscan/.MainActivity
 ./gradlew testDebugUnitTest                                          # every test, on the JVM
 ./gradlew testDebugUnitTest --tests "com.bdaniel.loyscan.ListViewModelTest"   # one class (wildcards work)
+./gradlew koverHtmlReportDebug                                       # coverage report (also koverXmlReportDebug)
+./gradlew koverVerifyDebug                                           # fail if line coverage is below the minimum
+./gradlew check                                                      # tests + lint + coverage gate
 ```
 
 On Windows, use `gradlew.bat` or Git Bash. `local.properties` (the SDK path) is git-ignored and must exist
@@ -20,7 +23,11 @@ locally.
 ## Tests
 
 All tests are in `app/src/test/` and run on the JVM; there is no `androidTest` source set, so no emulator is
-needed. HTML report: `app/build/reports/tests/testDebugUnitTest/index.html`.
+needed. Only the debug variant has unit tests (release ones are turned off in `app/build.gradle.kts`,
+`androidComponents`). HTML report: `app/build/reports/tests/testDebugUnitTest/index.html`.
+
+Coverage report: `app/build/reports/kover/htmlDebug/index.html`. The gate's minimum, its exclusions and the rule
+for raising it: [[2026-10-09-coverage-gate-kover]].
 
 - Plain JUnit for pure Kotlin (domain logic) and for ViewModels that don't read a route (`ListViewModelTest`).
 - `@RunWith(AndroidJUnit4::class)` runs a class on **Robolectric**. Use it for Room (`LoyaltyCardDaoTest`),

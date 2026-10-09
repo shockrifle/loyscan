@@ -53,7 +53,8 @@ Tests run on the JVM (`./gradlew testDebugUnitTest`, see [[build-and-run]]); sha
 
 Version catalog `gradle/libs.versions.toml`; KSP (not kapt) for Hilt + Room ([[2025-12-08-ksp-instead-of-kapt]]);
 Room schemas exported to `app/schemas/` (`app/build.gradle.kts:27-29`); Java/JVM target 21; minSdk 29,
-target/compileSdk 36. See [[android-app]] and [[build-and-run]].
+target/compileSdk 36. Kover gates line coverage ([[2026-10-09-coverage-gate-kover]]). See [[android-app]] and
+[[build-and-run]].
 
 ## Worked example: tap a card → see its details
 

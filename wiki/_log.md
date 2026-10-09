@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-09 · add coverage-gate decision; Kover commands, debug-only unit tests · decisions/2026-10-09-coverage-gate-kover, decisions/_index, workflows/build-and-run, tech-debt/no-automated-tests, architecture · #27 Kover coverage gate
 - 2026-10-09 · documented JVM test setup (Robolectric, fakes, repository interface seam) · workflows/build-and-run, architecture, glossary, features/card-detail, tech-debt/no-automated-tests · #26 test infrastructure
 - 2026-10-09 · review build check also covers new untracked schema exports · workflows/code-review · follow-up review of the review commands
 - 2026-10-09 · added the local code-review loop (/review-changes, /review-fix) · workflows/code-review, workflows/_index, index · review of the review commands
