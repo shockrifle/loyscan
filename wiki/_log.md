@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-09 · added the local code-review loop (/review-changes, /review-fix) · workflows/code-review, workflows/_index, index · review of the review commands
 - 2026-10-09 · documented that fallback barcode content may not fit the rule format · decisions/2026-10-09-card-number-rule-engine · review fix on the #2 engine
 - 2026-10-09 · rules rejected at load when their content cannot fit the barcode format · decisions/2026-10-09-card-number-rule-engine · review fix on the #2 engine
 - 2026-10-09 · rule defaults no longer rewrite content (case NONE, no separators for ANY) · decisions/2026-10-09-card-number-rule-engine · review fix on the #2 engine

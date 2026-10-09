@@ -13,7 +13,8 @@ The review is input to check, not a list of orders. Reviewers (human or AI) misr
 
 ## 1. Establish the scope
 
-- This project has no feature branches — work is committed directly to `master`. By default the review is about the local work not yet on GitHub: unpushed commits (`git log origin/master..HEAD`, `git diff origin/master...HEAD`) plus uncommitted changes (`git status`, `git diff HEAD`).
+- Run `git fetch origin` first so `origin/master` is current; if it fails (offline), say so and continue with the last-known `origin/master`.
+- Work is committed directly to `master` (root `CLAUDE.md`). By default the review is about the local work not yet on GitHub: unpushed commits (`git log origin/master..HEAD`, `git diff origin/master...HEAD`) plus uncommitted changes (`git status`, `git diff HEAD`).
 - If the review names a commit, a commit range, a PR (`gh pr view <n>`, `gh pr diff <n>`) or an issue, use that instead; if it is unclear which revision was reviewed, ask.
 - Split the review into individual, numbered claims. A comment that makes several points becomes several claims.
 
@@ -72,7 +73,7 @@ Then:
 - set `JAVA_HOME` to Android Studio's JBR first (see root `CLAUDE.md`), then run `./gradlew testDebugUnitTest` and `./gradlew assembleDebug` and make sure both pass
 - update the wiki pages from the plan in the same commit as the code, and append a line to `wiki/_log.md`
 - commit locally on `master`; do not push, do not comment on the PR or issue, and do not create, edit or close GitHub issues — report back and I will answer the reviewer myself. Out-of-scope findings go in the report as suggested follow-up issues.
-- keep commits public-safe: no local absolute paths, personal data or third-party proprietary material
+- keep commits within the "Public-safe" rule in `wiki/CLAUDE.md`
 
 ## 6. Draft the reply to the reviewer
 

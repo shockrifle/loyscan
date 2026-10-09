@@ -5,25 +5,27 @@ argument-hint: "[commit | range | PR #n | issue #n] [focus notes]"
 
 Review this LoyScan change and report verified findings. Target / notes: `$ARGUMENTS`
 
-This is a read-only review: **do not edit files, commit, push, or post anything to GitHub.** The output is a
-report I can act on, or feed into `/review-fix`.
+This is a read-only review: **do not edit files, commit, push, or post anything to GitHub.** The only writes
+are the outputs of the test and build runs (see "Build side effects" below). The output is a report I can act
+on, or feed into `/review-fix`.
 
 ## 1. Establish the scope
 
+- Run `git fetch origin` first so `origin/master` is current; if it fails (offline), say so and continue with
+  the last-known `origin/master`.
 - Default (no target given): the local work not yet on GitHub — unpushed commits
   (`git log origin/master..HEAD`, `git diff origin/master...HEAD`) plus uncommitted changes (`git status`,
-  `git diff HEAD`). This repo has no feature branches; everything lands on `master`.
+  `git diff HEAD`).
 - A commit or range → `git show` / `git diff` it. A PR → `gh pr view <n>` and `gh pr diff <n>`. An issue on its
-  own → review the commits that reference it (`git log --grep "#<n>\b"`).
+  own → review the commits that reference it (`git log -E --grep '#<n>([^0-9]|$)'`).
 - Find the linked issue(s): `Fixes #N` / `#N` in the commit messages, or the issue given as argument. Read each
   with `gh issue view <n> --comments` (read-only). If a feature change has no issue, that is a finding.
-- If `gh` isn't on the PATH, it is installed at `C:\Program Files\GitHub CLI\gh.exe`.
 
 ## 2. Load the project context
 
 Before judging the code, read `wiki/CLAUDE.md` (the update checklist), `wiki/architecture.md` (layering and the
 new-feature checklist) and the `wiki/` pages for the touched area (from `wiki/index.md`): the feature page,
-related decisions, and the open `wiki/hacks/` and `wiki/tech-debt/` items. Read every touched file in full, not
+related decisions, and the Open items in `wiki/hacks/_index.md` and `wiki/tech-debt/_index.md`. Read every touched file in full, not
 only the diff hunks, plus its callers.
 
 ## 3. Review
@@ -44,12 +46,11 @@ rule, a `Flow` that never emits or emits `EMPTY` first, configuration change and
   `Refs #N` or finishing the work), or missing when everything is done.
 - Scope creep: changes that belong to a different open issue (`gh issue list`), or user-visible behaviour no
   issue asks for.
-- If the change pays down a `tech-debt` / `hack` item (issues #12–#18 today), the matching wiki page must be
-  marked Resolved and moved in its `_index.md`, and the commit should close the issue.
+- If the change pays down an Open item of `wiki/hacks/_index.md` or `wiki/tech-debt/_index.md`, the page must be
+  marked Resolved and moved in its `_index.md`, and the commit should close the issue the page links.
 
 ### Tests
-- Run `./gradlew testDebugUnitTest` (set `JAVA_HOME` to Android Studio's JBR first — see root `CLAUDE.md`) and
-  report the result. Failing or newly skipped tests are findings.
+- Run `./gradlew testDebugUnitTest` (set `JAVA_HOME` first — see root `CLAUDE.md`) and report the result. Failing or newly skipped tests are findings.
 - Pure-Kotlin logic (`domain/`, mappers, the card-number engine) must have JVM tests in `app/src/test/`, in the
   mirrored package. Per the rule-engine decision, every `CheckDigitAlgorithm` and every bundled card-number rule
   needs its own test vectors.
@@ -59,36 +60,33 @@ rule, a `Flow` that never emits or emits `EMPTY` first, configuration change and
   there as a gap, not a blocker, unless the change sets up a harness.
 
 ### Architecture and patterns
-Check against the layer table and the new-feature checklist in `wiki/architecture.md`, especially:
-- entities never leave `data/`; reads return domain models via a mapper; `domain/` has no Android/Room imports
-- ViewModels are `@HiltViewModel` and expose `StateFlow` via `stateIn(viewModelScope, WhileSubscribed(5_000), …)`
-- screens get a `*Directions` object, never a `NavController`; new routes are `@Serializable` and registered in
-  `AppNavigation`; anything the first frame needs (e.g. a transition colour) is in the route
-- screen `Scaffold`s use `containerColor = Color.Transparent`
-- `AsyncImage` gets `imageLoader = hiltImageLoader()`
-- new dependencies go through `gradle/libs.versions.toml`; annotation processors use KSP, not kapt
+Check the change against the "Layers" table and the "Checklist for a new screen/feature" in
+`wiki/architecture.md`, and against the `wiki/decisions/` pages for the touched area. Cite the rule's wiki page
+in the finding.
 
 ### Data layer
-- Entity or DAO change → `version` bumped in `AppDatabase`, the new `app/schemas/…/<version>.json` committed, and
-  the hand-aliased `brand_` columns in the `JOIN` queries updated. Follow `wiki/workflows/database-schema-changes.md`;
-  the missing migration strategy (`wiki/tech-debt/no-room-migrations.md`, #12) is a known gap, so flag a destructive change only
-  if the issue or wiki says real installs exist.
-- Seed SQL (`app/src/main/assets/database/loyscan.sql`) still matches the schema and keeps **one statement per
-  line** — the loader runs each line separately and fails silently (`wiki/hacks/line-based-sql-seed-parser.md`).
-- Card-number rule JSON stays valid for the strict parser (unknown keys, enum values and duplicate ids throw),
-  and no rule is copied from a third-party rule database.
+- Entity or DAO change → every step of `wiki/workflows/database-schema-changes.md` is done (the missing
+  migration strategy, `wiki/tech-debt/no-room-migrations.md`, is a known gap, not a finding by itself).
+- Seed SQL still matches the schema and follows `wiki/hacks/line-based-sql-seed-parser.md`.
+- Card-number rule JSON follows `wiki/decisions/2026-10-09-card-number-rule-engine.md` (strict parsing, rules
+  authored by us).
 
-### Known traps in this codebase
-- an unqualified `List<…>` in the root package `com.bdaniel.loyscan` resolves to the `List` route object
-  (`wiki/hacks/list-route-shadows-kotlin-list.md`)
-- `toColorInt()` on a brand colour that may be empty or invalid (`wiki/tech-debt/empty-brand-color-crash.md`)
-- shared-element keys built from state that is still `EMPTY` on the first frame
-  (`wiki/tech-debt/shared-element-key-from-async-state.md`)
-- new code that copies one of the open hacks or tech-debt patterns instead of avoiding it
+### Known traps
+For every Open item in `wiki/hacks/_index.md` and `wiki/tech-debt/_index.md`: does the change run into it (e.g.
+an unqualified `List<…>` in the root package) or copy the pattern into new code?
 
 ### Build
 Run `./gradlew assembleDebug` and report the result; new compiler warnings in touched files are worth a mention.
 No formatter or linter is configured, so style is judged against the surrounding code, not general taste.
+
+### Build side effects
+Room exports its schema at build time (`room.schemaLocation` in `app/build.gradle.kts`), so a build can rewrite
+the committed `app/schemas/…/<version>.json` — exactly when an entity changed without a version bump or without
+committing the export. Take `git status --porcelain` before the test and build runs and again after:
+- a tracked file the build changed is a finding (usually: schema export not committed, or version not bumped);
+  include its `git diff` in the report
+- then restore it with `git restore <path>`, but only if it was clean before the run — never touch a file that
+  already had uncommitted changes
 
 ### Wiki
 Run the "When to update" checklist in `wiki/CLAUDE.md` against the change and list what is missing:
@@ -99,8 +97,8 @@ Run the "When to update" checklist in `wiki/CLAUDE.md` against the change and li
 - wiki updates are in the same commit as the code that triggered them
 
 ### Public-safety and commit hygiene
-- No local absolute paths, personal data, e-mail addresses, credentials/keystores, or third-party proprietary
-  material in the diff, the commit messages or the wiki.
+- The diff, the commit messages and the wiki follow the "Public-safe" rule in `wiki/CLAUDE.md` (and contain no
+  credentials or keystores).
 - One logical change per commit; message style matches the repo (short imperative, capitalized subject; body
   for the why; `Fixes #N` / `Refs #N`).
 
