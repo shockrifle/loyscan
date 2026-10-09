@@ -32,7 +32,10 @@ The store catalogue ([#3](https://github.com/shockrifle/loyscan/issues/3)) has t
   directions (round-trip test).
 - `CardNumberEngine` provides `normalize`, `validate`, `barcodeContent`, `displayNumber` and `match`.
   A `null` rule means "no rule": the barcode content is the trimmed raw number.
-- `barcodeContent` falls back to the normalised input when validation fails, so "save anyway" cards still render.
+- `barcodeContent` falls back to the normalised input when validation fails, so "save anyway" cards still get
+  content. That content may not be encodable in `rule.format` (5 digits for EAN-13), so the renderer must fall back
+  to another format ([#4](https://github.com/shockrifle/loyscan/issues/4)). Wrapping an invalid number in prefix,
+  padding and check digit was rejected: it would produce a well-formed barcode for a wrong number.
 - `match` (scanned content → core) is exact: it doesn't change the scanned content's case or strip separators,
   and it accepts a core only if that core validates unchanged and rebuilds into exactly the scanned content.
   A case-insensitive match would save a core whose barcode differs from the one on the card, and Code 128 and QR

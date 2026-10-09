@@ -36,17 +36,24 @@ object CardNumberEngine {
             if (!core.all(rule.charset.allows)) add(Validation.Error.INVALID_CHARACTERS)
             if (core.length < rule.minLength) add(Validation.Error.TOO_SHORT)
             if (core.length > rule.maxLength) add(Validation.Error.TOO_LONG)
-            val check = rule.checkDigit
-            if (isEmpty() && check?.mode == Mode.VERIFY && !check.algorithm.verify(core)) {
-                add(Validation.Error.BAD_CHECK_DIGIT)
-            }
         }
-        return if (errors.isEmpty()) Validation.Valid(core) else Validation.Invalid(core, errors)
+        if (errors.isNotEmpty()) return Validation.Invalid(core, errors)
+        // The check digit is only meaningful once the number is otherwise well-formed.
+        val check = rule.checkDigit
+        if (check?.mode == Mode.VERIFY && !check.algorithm.verify(core)) {
+            return Validation.Invalid(core, setOf(Validation.Error.BAD_CHECK_DIGIT))
+        }
+        return Validation.Valid(core)
     }
 
     /**
      * What the barcode must encode. If [raw] doesn't validate against [rule] (the user chose "save anyway"),
      * falls back to the normalised number, so a card can always be shown.
+     *
+     * Only valid input is guaranteed to fit `rule.format` (checked when the rule is created). The fallback may not
+     * be encodable in it, e.g. 5 digits for EAN-13; whoever draws the barcode must then fall back to another
+     * format (CODE_128, then QR — issue #4). Building prefix/padding/check digit around an invalid number is
+     * deliberately not done: it would produce a well-formed barcode for a wrong number.
      */
     fun barcodeContent(raw: String, rule: CardNumberRule?): String =
         when (val v = validate(raw, rule)) {
