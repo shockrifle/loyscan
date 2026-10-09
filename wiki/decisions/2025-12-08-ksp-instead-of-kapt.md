@@ -12,7 +12,7 @@ Hilt and Room were first wired with kapt (`b8b93c0`, `4969a2b`). The same day, k
 ## Decision
 `com.google.devtools.ksp` plugin; `ksp(libs.hilt.compiler)` and `ksp(libs.androidx.room.compiler)`; Room's
 `room.schemaLocation` moved from the `kapt { arguments }` block to `android { ksp { arg(...) } }`
-(`app/build.gradle.kts:27-29`).
+(`app/build.gradle.kts`, `ksp { room.schemaLocation }`).
 
 ## Why
 Not recorded in the commit message (inferred): kapt is in maintenance mode, is slower (it generates Java stubs),

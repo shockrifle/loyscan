@@ -47,8 +47,9 @@ The project is moving to test-first work (#13). Without a number, untested code 
   mean less.
 
 ## Consequences
-- A commit that adds untested code can fail `check` once coverage is close to the bound. That is intended: write the
-  test first.
+- The gate starts with about one line of headroom (273/432 = 63.19 % against 63 %). Two uncovered lines already
+  fail it (273/434 = 62.9 %), so every new line of logic needs a test from the first feature commit on. That is
+  intended: write the test first.
 - **Per-package targets are not enforced yet.** Only the overall bound is checked. Add a rule with
   `filters { includes { packages(…) } }` per package once that package reaches its target.
 - **Generated Room DAOs are excluded.** DAO behaviour is still tested, just through `Room.inMemoryDatabaseBuilder`

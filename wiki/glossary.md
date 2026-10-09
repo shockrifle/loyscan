@@ -81,7 +81,7 @@ See [[seed-data]], [[line-based-sql-seed-parser]].
 classes and bound in `di/RepositoryModule.kt`; the ViewModels' only data dependency (tests use a fake).
 
 **Room schema export** — JSON snapshots of each DB version written by KSP to `app/schemas/<db class>/<version>.json`
-(`app/build.gradle.kts:27-29`). Committed; needed to write migrations. See [[database-schema-changes]].
+(`app/build.gradle.kts`, `ksp { room.schemaLocation }`). Committed; needed to write migrations. See [[database-schema-changes]].
 
 **Shared element** — Compose `Modifier.sharedElement(rememberSharedContentState(key), animatedVisibilityScope)`
 — the same key on two destinations animates bounds between them. Requires the `SharedTransitionLayout` set up in

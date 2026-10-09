@@ -25,7 +25,7 @@ and why it looks this way.
 - **The commands point at the wiki instead of copying it.** Architecture rules, the schema-change steps, the
   public-safety rule and the list of known traps live in the wiki pages; copies in the commands would drift.
 - **The review builds the app, which can change the working tree.** Room exports its schema on every build
-  (`room.schemaLocation`, `app/build.gradle.kts:28`). An entity changed without a version bump rewrites the
+  (`room.schemaLocation` in `app/build.gradle.kts`). An entity changed without a version bump rewrites the
   committed `app/schemas/…/1.json` — as happened in `4cbc71d` ([[database-schema-changes]]); a bumped version
   whose export wasn't committed creates a new, untracked `<version>.json`. `/review-changes` compares
   `git status` (including untracked files) before and after the build, reports either case as a finding, and

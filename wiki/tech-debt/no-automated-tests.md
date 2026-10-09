@@ -3,7 +3,7 @@
 **Status:** Open · **Issue:** [#13](https://github.com/shockrifle/loyscan/issues/13) · **Since:** 2025-12-03 (`00933cd`) · **Where:** `app/src/test/`
 
 ## What
-The data and UI layers have almost no tests, and nothing measures coverage.
+The data and UI layers have almost no tests. Coverage is measured and gated, but only at the low baseline.
 
 Progress (2026-10-09):
 - The card-number rule engine has JVM unit tests (`app/src/test/java/com/bdaniel/loyscan/domain/cardnumber/`,
