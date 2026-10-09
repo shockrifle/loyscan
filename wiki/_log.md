@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-09 · rules rejected at load when their content cannot fit the barcode format · decisions/2026-10-09-card-number-rule-engine · review fix on the #2 engine
 - 2026-10-09 · rule defaults no longer rewrite content (case NONE, no separators for ANY) · decisions/2026-10-09-card-number-rule-engine · review fix on the #2 engine
 - 2026-10-09 · rule matching made exact (case-sensitive, tries every padding length) + fixed-length authoring rule · decisions/2026-10-09-card-number-rule-engine · review fix on the #2 engine
 - 2026-10-09 · card-number rule engine (#2) · decisions/2026-10-09-card-number-rule-engine (new), decisions/_index, index, architecture (domain row), glossary (barcode content, card-number rule, core number, barcode format), tech-debt/no-automated-tests (partial progress) · commit implementing #2

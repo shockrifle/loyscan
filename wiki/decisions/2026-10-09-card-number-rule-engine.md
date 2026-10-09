@@ -45,6 +45,12 @@ The store catalogue ([#3](https://github.com/shockrifle/loyscan/issues/3)) has t
   The barcode is the same either way.
 - `CardNumberRules.parse` is strict: an unknown key, an unknown enum value or a duplicate id throws, and so does an
   invalid definition (via `require` in `init`). A typo in the catalogue fails at load time, not at the checkout.
+- "Invalid" includes content that can't fit the rule's barcode format (`CardNumberRule.requireFitsFormat`).
+  EAN-8, EAN-13, UPC-A and UPC-E need digits only, at exactly 8, 13, 12 and 8 characters for every allowed core
+  length. EAN-8, EAN-13 and UPC-A also need a `GTIN_MOD10` check digit over the whole content: `APPEND`, or
+  `VERIFY` with no prefix, suffix or padding. ITF needs one fixed, even length. Known gaps: UPC-E's check digit
+  (computed on the expanded UPC-A number) isn't modelled, and the character sets of CODE_39 and CODABAR aren't
+  checked. The renderer's fallback in [#4](https://github.com/shockrifle/loyscan/issues/4) covers both.
 
 ## Why
 Data rules keep each store's facts in one place (the catalogue entry), in a format we own, and the engine stays

@@ -79,5 +79,47 @@ data class CardNumberRule(
             }
         }
         if (display != null) require('#' in display.pattern) { "$id: display pattern has no '#'" }
+        requireFitsFormat()
     }
+
+    /**
+     * Rejects rules whose barcode content can't be encoded in [format]: fixed-length numeric symbologies need
+     * digits of exactly the right length, EAN/UPC-A need a valid GTIN check digit, ITF needs an even length.
+     * UPC-E's check digit (computed on the expanded UPC-A number) isn't modelled; only its length is checked.
+     */
+    private fun requireFitsFormat() {
+        val fixedLength = when (format) {
+            BarcodeFormat.EAN_8, BarcodeFormat.UPC_E -> 8
+            BarcodeFormat.EAN_13 -> 13
+            BarcodeFormat.UPC_A -> 12
+            BarcodeFormat.ITF -> null
+            else -> return
+        }
+        require(charset == Charset.DIGITS) { "$id: $format needs charset DIGITS" }
+        // Content length grows by 0 or 1 per extra core character, so checking both ends covers every length.
+        val shortest = contentLength(minLength)
+        val longest = contentLength(maxLength)
+        if (fixedLength != null) {
+            require(shortest == fixedLength.toLong() && longest == fixedLength.toLong()) {
+                "$id: $format needs $fixedLength digits, rule produces $shortest..$longest"
+            }
+        } else {
+            require(shortest == longest && shortest % 2 == 0L) {
+                "$id: $format needs a fixed even length, rule produces $shortest..$longest"
+            }
+        }
+        if (format in setOf(BarcodeFormat.EAN_8, BarcodeFormat.EAN_13, BarcodeFormat.UPC_A)) {
+            val check = checkDigit
+            val coversContent = check?.mode == CheckDigit.Mode.APPEND ||
+                (prefix.isEmpty() && suffix.isEmpty() && padLength == 0)
+            require(check?.algorithm == CheckDigitAlgorithm.GTIN_MOD10 && coversContent) {
+                "$id: $format needs a GTIN_MOD10 check digit over the whole content " +
+                    "(APPEND, or VERIFY without prefix, suffix or padding)"
+            }
+        }
+    }
+
+    private fun contentLength(coreLength: Int): Long =
+        prefix.length + suffix.length + maxOf(coreLength, padLength).toLong() +
+            if (checkDigit?.mode == CheckDigit.Mode.APPEND) 1 else 0
 }
