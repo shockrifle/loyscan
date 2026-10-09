@@ -42,6 +42,13 @@ android {
         compose = true
         buildConfig = true
     }
+    testOptions {
+        // Robolectric (Room, SavedStateHandle, Compose UI tests on the JVM) needs the merged resources.
+        unitTests.isIncludeAndroidResources = true
+        // Robolectric on SDK 36 reaches into FileDescriptor internals; without this every Robolectric test fails
+        // with "Failed to interact with raw FileDescriptor internals".
+        unitTests.all { it.jvmArgs("--add-exports=java.base/jdk.internal.access=ALL-UNNAMED") }
+    }
 }
 
 dependencies {
@@ -74,6 +81,18 @@ dependencies {
     implementation(libs.coil.svg)
 
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.turbine)
+    testImplementation(libs.truth)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.junit)
+    testImplementation(libs.androidx.test.core.ktx)
+    testImplementation(libs.androidx.room.testing)
+    testImplementation(libs.androidx.navigation.testing)
+    testImplementation(libs.hilt.android.testing)
+    kspTest(libs.hilt.compiler)
+    testImplementation(platform(libs.androidx.compose.bom))
+    testImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

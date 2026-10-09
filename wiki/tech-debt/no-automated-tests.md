@@ -1,15 +1,16 @@
 # No automated tests
 
-**Status:** Open · **Issue:** [#13](https://github.com/shockrifle/loyscan/issues/13) · **Since:** 2025-12-03 (`00933cd`) · **Where:** `app/src/test/…/ExampleUnitTest.kt`,
-`app/src/androidTest/…/ExampleInstrumentedTest.kt` (Android Studio templates only)
+**Status:** Open · **Issue:** [#13](https://github.com/shockrifle/loyscan/issues/13) · **Since:** 2025-12-03 (`00933cd`) · **Where:** `app/src/test/`
 
 ## What
-No tests cover DAOs, the mapper, the repositories, the ViewModels, navigation or the UI. The test dependencies
-(JUnit 4, AndroidX JUnit, Espresso, Compose UI test) are declared but unused.
+The data and UI layers have almost no tests, and nothing measures coverage.
 
-Partial progress (2026-10-09): the card-number rule engine has JVM unit tests
-(`app/src/test/java/com/bdaniel/loyscan/domain/cardnumber/`, [[2026-10-09-card-number-rule-engine]]). Nothing in
-the data or UI layers is tested yet.
+Progress (2026-10-09):
+- The card-number rule engine has JVM unit tests (`app/src/test/java/com/bdaniel/loyscan/domain/cardnumber/`,
+  [[2026-10-09-card-number-rule-engine]]).
+- Test infrastructure is in place (#26): every kind of test runs on the JVM, and there is one example test per
+  kind (DAO, ViewModel, Compose screen). See [[build-and-run]] → Tests. The Android Studio template tests were
+  removed.
 
 ## Why it exists
 Early prototype phase (20 commits, 2025-12-03 → 2025-12-12).
@@ -19,5 +20,5 @@ Regressions in the hand-written `JOIN` + `brand_` aliasing (`LoyaltyCardDao.kt:3
 only caught by running the app.
 
 ## How to pay it down
-The highest value for the least effort: an instrumented Room test using `Room.inMemoryDatabaseBuilder` that
-inserts a brand and a card and asserts `getAllWithBrand()` maps every field. Then a JVM test for `toDomainModel()`.
+Tracked as sub-issues of #13: a coverage gate (#27), tests for the seed SQL, mapper and screens (#30), and the
+test-first workflow (#28) and CI (#29) that keep it paid down.

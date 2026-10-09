@@ -14,16 +14,17 @@ All paths below are under `app/src/main/java/com/bdaniel/loyscan/` unless writte
 |---|---|---|---|
 | **Persistence** | `data/local/db/` — `AppDatabase`, `entity/*Entity`, `dao/*Dao` | Room tables, queries returning `Flow` | Entities never leave `data/`. Joins are flattened via `@Embedded` (see `LoyaltyCardWithBrand`). |
 | **Mapping** | `data/mapper/LoyaltyCardMapper.kt` | `LoyaltyCardWithBrand.toDomainModel()` | Extension functions, one direction (DB → domain). |
-| **Repository** | `data/repository/*Repository` | `@Singleton`, exposes `Flow<domain>` and `suspend` writes | Reads return domain models. Writes currently still take *entities* (see note below). |
+| **Repository** | `data/repository/` — `LoyaltyCardRepository` (interface) + `RoomLoyaltyCardRepository` (`@Singleton` impl); `BrandRepository` | Exposes `Flow<domain>` | ViewModels depend on the **interface**, so tests pass a fake (see Testing seams). Reads return domain models. |
 | **Domain** | `domain/` — `LoyaltyCard`, `Brand`, `BarcodeFormat`; `domain/cardnumber/` — card-number rule engine ([[2026-10-09-card-number-rule-engine]]) | Plain data classes with an `EMPTY` sentinel; pure-Kotlin logic | No Android/Room imports — unit-tested on the JVM. |
 | **Presentation state** | root package — `ListViewModel`, `DetailViewModel` | `@HiltViewModel`; turn repository Flows into `StateFlow` via `stateIn(viewModelScope, WhileSubscribed(5_000), initial)` | Route args read with `savedStateHandle.toRoute<Route>()`. |
 | **UI** | root package — `ListScreen`, `DetailScreen`; `ui/` — theme, icons, `hiltImageLoader()` | Composables, extensions on `SharedTransitionScope` | Screens receive a `*Directions` object, never a `NavController`. |
 | **Navigation** | `Navigation.kt`, `MainActivity.kt` (`AppNavigation`) | `@Serializable` routes + `NavController.*Directions()` factories | See [[2025-12-09-type-safe-navigation-directions]]. |
-| **DI** | `di/DatabaseModule.kt`, `di/ImageLoaderModule.kt` | `@Module @InstallIn(SingletonComponent)` providers | Repositories use `@Inject constructor` — no module needed. |
+| **DI** | `di/DatabaseModule.kt`, `di/ImageLoaderModule.kt`, `di/RepositoryModule.kt` | `@Module @InstallIn(SingletonComponent)` providers; `@Binds` repository interface → Room impl | Implementations use `@Inject constructor`. |
 
-Note: `LoyaltyCardRepository.insert/delete` and `BrandRepository.insert` accept **entities**
-(`data/repository/LoyaltyCardRepository.kt:17-23`), so the domain/data boundary is only enforced on reads.
-Nothing calls these writes yet; when a feature first needs them, prefer adding domain→entity mappers.
+Note: `LoyaltyCardRepository` has no write methods; the unused entity-taking `insert/delete` were dropped when
+it became an interface (#26). `BrandRepository` is still a concrete class whose `insert` takes an **entity**, and
+nothing injects it. When a feature first needs writes, add them to the interface in domain terms, with
+domain→entity mappers.
 
 ### Composition / DI
 
@@ -34,6 +35,19 @@ Nothing calls these writes yet; when a feature first needs them, prefer adding d
   through a Hilt `@EntryPoint` wrapped in the `hiltImageLoader()` composable (`ui/ImageLoader.kt:10-19`).
   See [[2025-12-12-singleton-image-loader]] and [[coil-image-loading]].
 - ViewModels are obtained with `hiltViewModel()` as a default parameter of each screen.
+
+### Testing seams
+
+Tests run on the JVM (`./gradlew testDebugUnitTest`, see [[build-and-run]]); shared helpers live in
+`app/src/test/java/com/bdaniel/loyscan/testing/`.
+
+- **ViewModels** are constructed directly with `FakeLoyaltyCardRepository` (a `MutableStateFlow` of domain cards)
+  and `MainDispatcherRule` in place of `Dispatchers.Main`. A route-reading ViewModel gets
+  `SavedStateHandle(route = Detail(…))` from navigation-testing.
+- **Screens** take the ViewModel and a `*Directions` object as parameters, so a test passes a fake-backed
+  ViewModel and lambdas that record navigation (`ListScreenTest`).
+- **DAOs** are tested against `Room.inMemoryDatabaseBuilder` (`LoyaltyCardDaoTest`).
+- Fixture builders (`aLoyaltyCard()`, `aBrandEntity()`, …) give every field a default.
 
 ### Build tooling
 
@@ -53,8 +67,8 @@ This traces one feature through every layer. **Use it as the template for new fe
    (`data/local/db/dao/LoyaltyCardDao.kt:13-18, 31-35`). They return `Flow`, so the UI updates when tables change.
 3. **Mapping.** `LoyaltyCardWithBrand.toDomainModel()` builds `LoyaltyCard(…, brand = Brand(…))`
    (`data/mapper/LoyaltyCardMapper.kt:11-24`).
-4. **Repository.** `LoyaltyCardRepository.getAllWithBrand()` = `dao.getAllWithBrand().map { it.toDomainModel() }`
-   (`data/repository/LoyaltyCardRepository.kt:13-15`).
+4. **Repository.** `RoomLoyaltyCardRepository.getAllWithBrand()` = `dao.getAllWithBrand().map { it.toDomainModel() }`
+   (`data/repository/RoomLoyaltyCardRepository.kt:14`), behind the `LoyaltyCardRepository` interface.
 5. **List ViewModel.** `ListViewModel.cards` = repository flow `.stateIn(viewModelScope, WhileSubscribed(5_000), emptyList())`
    (`ListViewModel.kt:16-20`).
 6. **List UI.** `ListScreen` collects `cards`, renders a 2-column `LazyVerticalGrid` of `CardItem`s; each
@@ -74,7 +88,8 @@ This traces one feature through every layer. **Use it as the template for new fe
 ### Checklist for a new screen/feature (derived from the example)
 
 1. Entity + DAO method returning `Flow` (and bump DB version — [[database-schema-changes]]).
-2. Mapper to a domain model in `domain/`; repository method returning `Flow<Domain>`.
+2. Mapper to a domain model in `domain/`; repository interface method returning `Flow<Domain>`, implemented by the
+   Room-backed class (new repositories: interface + impl + `@Binds` in `di/RepositoryModule.kt`).
 3. `@HiltViewModel` exposing `StateFlow` via `stateIn(viewModelScope, WhileSubscribed(5_000), <EMPTY/initial>)`.
 4. `@Serializable` route + `*Directions` data class + `NavController.*Directions()` factory in `Navigation.kt`;
    register `composable<Route>` in `AppNavigation`.

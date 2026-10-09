@@ -22,7 +22,7 @@ Shows one card: a top bar and a 200dp header in the brand color with the brand l
 
 - The barcode itself: `barcodeFormat` and `code` are stored, but only `code` is shown, as text. No barcode
   library is a dependency.
-- Editing, deleting and adding cards (repository write methods exist but have no callers).
+- Editing, deleting and adding cards (`LoyaltyCardDao` has insert/update/delete; the repository has no write methods).
 
 ## Known issues
 

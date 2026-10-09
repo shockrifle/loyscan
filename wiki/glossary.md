@@ -77,7 +77,8 @@ See [[seed-data]], [[line-based-sql-seed-parser]].
 
 **Mapper** — `toDomainModel()` extension functions in `data/mapper/` converting Room results to domain models.
 
-**Repository** — `@Singleton` classes in `data/repository/` exposing domain `Flow`s; the ViewModels' only data dependency.
+**Repository** — interfaces in `data/repository/` exposing domain `Flow`s, implemented by `@Singleton` `Room*Repository`
+classes and bound in `di/RepositoryModule.kt`; the ViewModels' only data dependency (tests use a fake).
 
 **Room schema export** — JSON snapshots of each DB version written by KSP to `app/schemas/<db class>/<version>.json`
 (`app/build.gradle.kts:27-29`). Committed; needed to write migrations. See [[database-schema-changes]].
