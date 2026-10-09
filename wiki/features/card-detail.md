@@ -15,8 +15,10 @@ Shows one card: a top bar and a 200dp header in the brand color with the brand l
 - If no card has the route's id (deleted, or a stale route), the screen stays on `LoyaltyCard.EMPTY`, or on the
   last card it showed. It doesn't crash: [[2026-10-09-missing-card-throws-from-room]].
 - The logo uses `hiltImageLoader()` (SVG-capable, logs failures) — [[coil-image-loading]].
+- The brand colour is parsed with `toBrandColorOrNull()`. An empty or malformed colour falls back to `surfaceVariant`
+  instead of crashing ([[empty-brand-color-crash]], resolved).
 - Header text color: white if the brand color's luminance is < 0.5, else black.
-- Back arrow → `directions.toBack()` → `navigateUp()`. The Edit icon is a no-op (`DetailScreen.kt:59`,
+- Back arrow → `directions.toBack()` → `navigateUp()`. The Edit icon is a no-op (`DetailScreen.kt:60`,
   `/* TODO */`).
 - The whole `Scaffold` is the shared element `card/{id}` — [[card-transition]].
 
@@ -28,6 +30,5 @@ Shows one card: a top bar and a 200dp header in the brand color with the brand l
 
 ## Known issues
 
-- [[empty-brand-color-crash]] — `Color(color.toColorInt())` throws on an empty string.
 - [[shared-element-key-from-async-state]] — the shared key uses the ViewModel's card id, which is `0` until
   Room emits.

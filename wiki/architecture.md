@@ -91,7 +91,7 @@ This traces one feature through every layer. **Use it as the template for new fe
    (`DetailViewModel.kt:22-31`). A missing card leaves the screen on `EMPTY`; a deleted one leaves it on the last card.
 9. **Detail UI.** `DetailScreen` paints the top bar and header with the **route** color (available on frame 1),
    and fills text/logo from the **ViewModel** card (available once Room emits). The whole `Scaffold` is the
-   matching shared element `"card/${card.id}"` (`DetailScreen.kt:63-71`). Back → `directions.toBack()` → `navigateUp()`.
+   matching shared element `"card/${card.id}"` (`DetailScreen.kt:64-72`). Back → `directions.toBack()` → `navigateUp()`.
    See [[card-detail]], [[card-transition]].
 
 ### Checklist for a new screen/feature (derived from the example)

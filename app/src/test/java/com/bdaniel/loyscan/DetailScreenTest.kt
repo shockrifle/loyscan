@@ -64,4 +64,18 @@ class DetailScreenTest {
 
         assertThat(wentBack).isTrue()
     }
+
+    @Test
+    fun emptyBrandColor_doesNotCrash() { // #14
+        setScreen(color = "")
+
+        composeRule.onNodeWithText("Gold card").assertIsDisplayed()
+    }
+
+    @Test
+    fun malformedBrandColor_doesNotCrash() { // #14
+        setScreen(color = "not a colour")
+
+        composeRule.onNodeWithText("Gold card").assertIsDisplayed()
+    }
 }

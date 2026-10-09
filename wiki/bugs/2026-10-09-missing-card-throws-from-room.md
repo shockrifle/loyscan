@@ -1,6 +1,6 @@
 # A missing card crashed the detail screen instead of showing nothing
 
-**Fixed in:** #30 (found while backfilling tests) · **Date:** 2026-10-09 · **Area:** [[card-detail]]
+**Fixed in:** `9fc953d` (#30, found while backfilling tests) · **Date:** 2026-10-09 · **Area:** [[card-detail]]
 (`LoyaltyCardDao.getByIdWithBrand`, `LoyaltyCardRepository.getByIdWithBrand`)
 
 ## Symptom

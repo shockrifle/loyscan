@@ -55,6 +55,14 @@ class ListScreenTest {
         composeRule.onNodeWithText("Second Store").assertIsDisplayed()
     }
 
+    @Test
+    fun emptyOrMalformedBrandColor_doesNotCrash() { // #14
+        setScreen(aLoyaltyCard(id = 1, brand = aBrand(name = "No Colour", color = "")), aLoyaltyCard(id = 2, brand = aBrand(name = "Bad Colour", color = "not a colour")))
+
+        composeRule.onNodeWithText("No Colour").assertIsDisplayed()
+        composeRule.onNodeWithText("Bad Colour").assertIsDisplayed()
+    }
+
     private fun setScreen(vararg cards: LoyaltyCard) {
         val viewModel = ListViewModel(FakeLoyaltyCardRepository(cards.toList()))
         composeRule.setContent {

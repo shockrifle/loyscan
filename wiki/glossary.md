@@ -21,7 +21,8 @@ is used by card-number rules; the card field is still a string until #1.
 **Brand** — The issuer of a card (a store/chain). `domain/Brand.kt`; table `brands`. Has `name`, `color`, `logo`.
 Several cards can share one brand.
 
-**Brand color** — `Brand.color`, a hex string like `#FF0000`, parsed with `String.toColorInt()` at render time.
+**Brand color** — `Brand.color`, a hex string like `#FF0000`, parsed at render time with `String.toBrandColorOrNull()` (`ui/BrandColor.kt`); empty or malformed →
+`null`, and the screens fall back to `surfaceVariant`.
 Drives card tile and detail header backgrounds; text on it is black/white by luminance (< 0.5 → white).
 Also travels in the `Detail` route — see [[2025-12-12-brand-color-in-route]].
 

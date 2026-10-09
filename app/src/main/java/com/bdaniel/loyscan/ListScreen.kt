@@ -31,10 +31,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.ColorUtils
-import androidx.core.graphics.toColorInt
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.bdaniel.loyscan.domain.LoyaltyCard
+import com.bdaniel.loyscan.ui.toBrandColorOrNull
 import com.bdaniel.loyscan.ui.theme.icons.Icons
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
@@ -84,11 +84,7 @@ fun SharedTransitionScope.CardItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val cardColor = if (card.brand.color.isNotEmpty()) {
-        Color(card.brand.color.toColorInt())
-    } else {
-        MaterialTheme.colorScheme.surfaceVariant
-    }
+    val cardColor = card.brand.color.toBrandColorOrNull() ?: MaterialTheme.colorScheme.surfaceVariant
     Card(
         modifier = modifier
             .fillMaxWidth()

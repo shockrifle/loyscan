@@ -28,10 +28,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.ColorUtils
-import androidx.core.graphics.toColorInt
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.bdaniel.loyscan.ui.hiltImageLoader
+import com.bdaniel.loyscan.ui.toBrandColorOrNull
 import com.bdaniel.loyscan.ui.theme.icons.Icons
 
 
@@ -45,6 +45,7 @@ fun SharedTransitionScope.DetailScreen(
     viewModel: DetailViewModel = hiltViewModel()
 ) {
     val card by viewModel.card.collectAsState()
+    val brandColor = color.toBrandColorOrNull() ?: MaterialTheme.colorScheme.surfaceVariant
 
     Scaffold(
         topBar = {
@@ -61,7 +62,7 @@ fun SharedTransitionScope.DetailScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(color.toColorInt())
+                    containerColor = brandColor
                 )
             )
         },
@@ -80,7 +81,7 @@ fun SharedTransitionScope.DetailScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(200.dp)
-                    .background(Color(color.toColorInt())),
+                    .background(brandColor),
                 contentAlignment = Alignment.Center
             ) {
                 if (card.brand.logo.isNotBlank()) {
@@ -96,7 +97,7 @@ fun SharedTransitionScope.DetailScreen(
                     Text(
                         text = card.brand.name,
                         style = MaterialTheme.typography.headlineLarge,
-                        color = if (ColorUtils.calculateLuminance(Color(color.toColorInt()).toArgb()) < 0.5) Color.White else Color.Black,
+                        color = if (ColorUtils.calculateLuminance(brandColor.toArgb()) < 0.5) Color.White else Color.Black,
                     )
                 }
             }

@@ -25,7 +25,7 @@ synchronous data source.
 ## Consequences
 - The color is now duplicated (route and DB). If the brand color could change while the detail screen is open,
   the route value would be stale — not possible today (no edit UI).
-- The route color is used unguarded: [[empty-brand-color-crash]].
+- The route color was used unguarded until #14 ([[empty-brand-color-crash]], resolved): it is now parsed with a fallback.
 - The same reasoning arguably applies to the shared-element key, which still comes from the ViewModel —
   [[shared-element-key-from-async-state]].
 - Pattern for future screens: anything the first frame of a transition needs goes in the route
