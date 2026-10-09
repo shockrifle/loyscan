@@ -8,10 +8,15 @@ required by `Modifier.sharedElement`. See [[card-transition]].
 
 **AppNavigation** — The `NavHost` composable, defined in `MainActivity.kt:45-69`, that maps routes to screens.
 
+**Barcode content** — The exact string a card's barcode encodes. Derived from the core number by the store's
+card-number rule (`CardNumberEngine.barcodeContent`); equals the raw number when there is no rule.
+See [[2026-10-09-card-number-rule-engine]].
+
 **Barcode format** — `LoyaltyCard.barcodeFormat` / column `loyalty_cards.barcodeFormat`: a free-form string
 naming the barcode symbology (`EAN_13`, `EAN_8`, `CODE_128`, `CODE_39`, `QR_CODE`, `AZTEC`, `DATA_MATRIX`,
 `PDF_417` appear in the seed). Not an enum; not rendered anywhere yet. The values match ZXing/ML Kit
-`BarcodeFormat` names, but no barcode library is a dependency.
+`BarcodeFormat` names, but no barcode library is a dependency. The enum `domain/BarcodeFormat.kt` (2026-10-09)
+is used by card-number rules; the card field is still a string until #1.
 
 **Brand** — The issuer of a card (a store/chain). `domain/Brand.kt`; table `brands`. Has `name`, `color`, `logo`.
 Several cards can share one brand.
@@ -23,10 +28,17 @@ Also travels in the `Detail` route — see [[2025-12-12-brand-color-in-route]].
 **Brand logo** — `Brand.logo`, an image URL (seed uses `https://picsum.photos/seed/<n>/200`). Blank means
 "show the brand name as text instead". Loaded with Coil — [[coil-image-loading]].
 
+**Card-number rule** — `domain/cardnumber/CardNumberRule`: per-store JSON rule for validating, formatting and
+building barcode content from a core number, and matching scanned content back to one.
+See [[2026-10-09-card-number-rule-engine]].
+
 **Card code** — `LoyaltyCard.code`: the membership number the barcode would encode. Was `cardNumber` before `4cbc71d`.
 
 **`card/{id}`** — The shared-content key that links a list tile to the detail screen in the shared-element transition.
 Was `item/{id}` before `45a33e1`.
+
+**Core number** — The card number as the user types it or as it's printed, after normalisation (whitespace and
+separators removed, letter case applied). Rules turn it into barcode content. See [[2026-10-09-card-number-rule-engine]].
 
 **DAO** — Room data-access interface in `data/local/db/dao/`. Reads return `Flow`.
 

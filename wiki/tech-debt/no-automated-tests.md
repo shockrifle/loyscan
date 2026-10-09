@@ -7,6 +7,10 @@
 No tests cover DAOs, the mapper, the repositories, the ViewModels, navigation or the UI. The test dependencies
 (JUnit 4, AndroidX JUnit, Espresso, Compose UI test) are declared but unused.
 
+Partial progress (2026-10-09): the card-number rule engine has JVM unit tests
+(`app/src/test/java/com/bdaniel/loyscan/domain/cardnumber/`, [[2026-10-09-card-number-rule-engine]]). Nothing in
+the data or UI layers is tested yet.
+
 ## Why it exists
 Early prototype phase (20 commits, 2025-12-03 → 2025-12-12).
 

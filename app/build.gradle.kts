@@ -63,6 +63,9 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
 
+    // JSON (card-number rules)
+    implementation(libs.kotlinx.serialization.json)
+
     // Timber
     implementation(libs.timber)
 

@@ -15,7 +15,7 @@ All paths below are under `app/src/main/java/com/bdaniel/loyscan/` unless writte
 | **Persistence** | `data/local/db/` — `AppDatabase`, `entity/*Entity`, `dao/*Dao` | Room tables, queries returning `Flow` | Entities never leave `data/`. Joins are flattened via `@Embedded` (see `LoyaltyCardWithBrand`). |
 | **Mapping** | `data/mapper/LoyaltyCardMapper.kt` | `LoyaltyCardWithBrand.toDomainModel()` | Extension functions, one direction (DB → domain). |
 | **Repository** | `data/repository/*Repository` | `@Singleton`, exposes `Flow<domain>` and `suspend` writes | Reads return domain models. Writes currently still take *entities* (see note below). |
-| **Domain** | `domain/` — `LoyaltyCard`, `Brand` | Plain data classes with an `EMPTY` sentinel | No Android/Room imports. |
+| **Domain** | `domain/` — `LoyaltyCard`, `Brand`, `BarcodeFormat`; `domain/cardnumber/` — card-number rule engine ([[2026-10-09-card-number-rule-engine]]) | Plain data classes with an `EMPTY` sentinel; pure-Kotlin logic | No Android/Room imports — unit-tested on the JVM. |
 | **Presentation state** | root package — `ListViewModel`, `DetailViewModel` | `@HiltViewModel`; turn repository Flows into `StateFlow` via `stateIn(viewModelScope, WhileSubscribed(5_000), initial)` | Route args read with `savedStateHandle.toRoute<Route>()`. |
 | **UI** | root package — `ListScreen`, `DetailScreen`; `ui/` — theme, icons, `hiltImageLoader()` | Composables, extensions on `SharedTransitionScope` | Screens receive a `*Directions` object, never a `NavController`. |
 | **Navigation** | `Navigation.kt`, `MainActivity.kt` (`AppNavigation`) | `@Serializable` routes + `NavController.*Directions()` factories | See [[2025-12-09-type-safe-navigation-directions]]. |

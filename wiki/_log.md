@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-09 · card-number rule engine (#2) · decisions/2026-10-09-card-number-rule-engine (new), decisions/_index, index, architecture (domain row), glossary (barcode content, card-number rule, core number, barcode format), tech-debt/no-automated-tests (partial progress) · commit implementing #2
 - 2026-10-08 · moved backlog to GitHub Issues (#1–#23, 3 milestones) · CLAUDE (new "GitHub Issues vs this wiki" section + checklist items), /CLAUDE.md, tech-debt/* (5) and hacks/* (2) Status lines link their issues · user decision to track work in GitHub
 - 2026-10-08 · history rewritten (commit email → personal), cited SHAs remapped · 24 pages with short SHAs · force-push before going public; old SHAs no longer exist
 - 2026-10-08 · GitHub remote added · CLAUDE (schema sources section), /CLAUDE.md quick facts · `origin` = shockrifle/loyscan, master pushed

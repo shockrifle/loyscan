@@ -32,7 +32,7 @@ the way they are, what's fragile, and how to work on it.
 
 | Folder | What's in it |
 |---|---|
-| [[decisions/_index\|decisions]] | Why the codebase looks the way it does (6 pages) |
+| [[decisions/_index\|decisions]] | Why the codebase looks the way it does (7 pages) |
 | [[bugs/_index\|bugs]] | Postmortems (1 page) |
 | [[tech-debt/_index\|tech-debt]] | Owed work, open vs resolved (5 pages) |
 | [[hacks/_index\|hacks]] | Short-lived workarounds (2 pages) |
