@@ -12,6 +12,8 @@ Shows one card: a top bar and a 200dp header in the brand color with the brand l
 - **Two data sources, on purpose:** the brand `color` comes from the navigation route (available on the first
   frame); everything else comes from `DetailViewModel.card`, which starts as `LoyaltyCard.EMPTY` and fills in
   when Room emits. Why: [[2025-12-12-brand-color-in-route]].
+- If no card has the route's id (deleted, or a stale route), the screen stays on `LoyaltyCard.EMPTY`, or on the
+  last card it showed. It doesn't crash: [[2026-10-09-missing-card-throws-from-room]].
 - The logo uses `hiltImageLoader()` (SVG-capable, logs failures) — [[coil-image-loading]].
 - Header text color: white if the brand color's luminance is < 0.5, else black.
 - Back arrow → `directions.toBack()` → `navigateUp()`. The Edit icon is a no-op (`DetailScreen.kt:59`,

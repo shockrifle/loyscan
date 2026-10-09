@@ -112,7 +112,7 @@ whether something is wiki-worthy, don't write it** — a smaller true wiki beats
 - **Lead with the answer**, then provenance and detail.
 - **Cross-reference liberally** with `[[page-name]]`. Every link must resolve to an existing page.
 - **Provenance is mandatory for non-obvious claims**: repo-relative paths with line numbers when the
-  code is stable (`app/src/main/java/com/bdaniel/loyscan/di/DatabaseModule.kt:26`), symbol names when
+  code is stable (`app/src/main/java/com/bdaniel/loyscan/data/local/db/AppDatabase.kt:10`), symbol names when
   lines churn, commit SHAs (short, 7 chars). Mark inferences explicitly: *"(inferred from diff; not
   stated in commit)"*. Commit messages in this repo are terse, so most "why"s are inferences —
   say so.

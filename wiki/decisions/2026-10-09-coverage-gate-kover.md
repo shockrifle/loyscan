@@ -30,9 +30,11 @@ The project is moving to test-first work (#13). Without a number, untested code 
   - kotlinx.serialization `$$serializer`.
   - `BuildConfig`.
   - Kover patterns match **fully-qualified** names, which is why the Hilt pattern is `*.Hilt_*`, not `Hilt_*`.
-- **The rule:** one line-coverage `minBound`, currently **63 %**. That is the baseline measured on 2026-10-09: 273 of
-  432 lines, with the domain code close to 100 % and the screens, mapper, repository and DI modules mostly
-  untested.
+- **The rule:** one line-coverage `minBound`, currently **90 %**. History:
+  - 63 % at the start (2026-10-09): 273 of 432 lines. The domain code was close to 100 %; the screens, mapper,
+    repository and DI modules were mostly untested.
+  - 90 % after the safety-net backfill (#30): 390 of 432 lines. Still uncovered: the DI module bodies,
+    `hiltImageLoader` and the unused `BrandRepository`.
 - **Targets:** about 80 % overall, and at least 90 % for `domain/`, `data/` and the ViewModels.
 - Only the debug variant has unit tests. Release unit tests are turned off in `androidComponents { }`, because the
   Compose UI tests need `ui-test-manifest`, which is a debug-only dependency.
@@ -47,9 +49,9 @@ The project is moving to test-first work (#13). Without a number, untested code 
   mean less.
 
 ## Consequences
-- The gate starts with about one line of headroom (273/432 = 63.19 % against 63 %). Two uncovered lines already
-  fail it (273/434 = 62.9 %), so every new line of logic needs a test from the first feature commit on. That is
-  intended: write the test first.
+- The gate leaves about one line of headroom: 273/432 = 63.19 % against 63 % at the start, and 390/432 =
+  90.28 % against 90 % after #30. So every new line of logic needs a test from the first feature commit on.
+  That is intended: write the test first.
 - **Per-package targets are not enforced yet.** Only the overall bound is checked. Add a rule with
   `filters { includes { packages(…) } }` per package once that package reaches its target.
 - **Generated Room DAOs are excluded.** DAO behaviour is still tested, just through `Room.inMemoryDatabaseBuilder`

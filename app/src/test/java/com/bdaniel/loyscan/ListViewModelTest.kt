@@ -29,4 +29,20 @@ class ListViewModelTest {
             assertThat(awaitItem()).containsExactly(card)
         }
     }
+
+    @Test
+    fun cards_reflectAdditionsAndRemovals() = runTest {
+        val first = aLoyaltyCard(id = 1)
+        val second = aLoyaltyCard(id = 2)
+        repository.cards.value = listOf(first)
+        val viewModel = ListViewModel(repository)
+
+        viewModel.cards.test {
+            assertThat(awaitItem()).containsExactly(first)
+            repository.cards.value = listOf(first, second)
+            assertThat(awaitItem()).containsExactly(first, second).inOrder()
+            repository.cards.value = listOf(second)
+            assertThat(awaitItem()).containsExactly(second)
+        }
+    }
 }

@@ -14,7 +14,8 @@ needed demo content, and there is no add-card UI.
 
 ## Decision
 A plain-text `app/src/main/assets/database/loyscan.sql`, executed line by line inside `Callback.onCreate` on a
-background executor (`app/src/main/java/com/bdaniel/loyscan/di/DatabaseModule.kt:26-39`). Details:
+background executor (`app/src/main/java/com/bdaniel/loyscan/data/local/db/SeedDatabaseCallback.kt`; it was inline in
+`DatabaseModule` until #30). Details:
 [[seed-data]].
 
 ## Why

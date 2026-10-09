@@ -30,7 +30,8 @@ domain→entity mappers.
 
 - `LoyScanApplication` is `@HiltAndroidApp` (`LoyScanApplication.kt:7`); `MainActivity` is `@AndroidEntryPoint`.
 - `DatabaseModule` provides the singleton `AppDatabase` (file `loyscan.db`, seeded on creation — see
-  [[seed-data]]) and unscoped DAO providers (`di/DatabaseModule.kt:20-46`).
+  [[seed-data]]) and unscoped DAO providers (`di/DatabaseModule.kt`). The seeding itself is `SeedDatabaseCallback`
+  (`data/local/db/`).
 - `ImageLoaderModule` provides a singleton Coil `ImageLoader`. Composables can't `@Inject`, so it is reached
   through a Hilt `@EntryPoint` wrapped in the `hiltImageLoader()` composable (`ui/ImageLoader.kt:10-19`).
   See [[2025-12-12-singleton-image-loader]] and [[coil-image-loading]].
@@ -46,7 +47,12 @@ Tests run on the JVM (`./gradlew testDebugUnitTest`, see [[build-and-run]]); sha
   `SavedStateHandle(route = Detail(…))` from navigation-testing.
 - **Screens** take the ViewModel and a `*Directions` object as parameters, so a test passes a fake-backed
   ViewModel and lambdas that record navigation (`ListScreenTest`).
-- **DAOs** are tested against `Room.inMemoryDatabaseBuilder` (`LoyaltyCardDaoTest`).
+- **DAOs and the repository** are tested against `Room.inMemoryDatabaseBuilder` (`LoyaltyCardDaoTest`,
+  `RoomLoyaltyCardRepositoryTest`). The seed script runs through the real `SeedDatabaseCallback` with a direct
+  executor, so it completes synchronously (`SeedDatabaseCallbackTest`).
+- **The wired-up app** (`MainActivity`, Hilt, navigation) runs in `@HiltAndroidTest`s on Robolectric.
+  `testing/InMemoryDatabaseModule` (`@TestInstallIn`) swaps `DatabaseModule` for an empty in-memory database
+  that the test injects and fills (`AppNavigationTest`).
 - Fixture builders (`aLoyaltyCard()`, `aBrandEntity()`, …) give every field a default.
 
 ### Build tooling
@@ -65,7 +71,9 @@ This traces one feature through every layer. **Use it as the template for new fe
    `app/src/main/assets/database/loyscan.sql` ([[seed-data]]).
 2. **DAO query.** `LoyaltyCardDao.getAllWithBrand()` / `getByIdWithBrand(id)` run a `JOIN` and alias brand
    columns with a `brand_` prefix so they map onto `@Embedded(prefix = "brand_") val brand: BrandEntity`
-   (`data/local/db/dao/LoyaltyCardDao.kt:13-18, 31-35`). They return `Flow`, so the UI updates when tables change.
+   (`data/local/db/dao/LoyaltyCardDao.kt:13-18, 31-36`). They return `Flow`, so the UI updates when tables change.
+   The single-card query returns `Flow<…?>`: with a non-null type Room throws for a missing row
+   ([[2026-10-09-missing-card-throws-from-room]]).
 3. **Mapping.** `LoyaltyCardWithBrand.toDomainModel()` builds `LoyaltyCard(…, brand = Brand(…))`
    (`data/mapper/LoyaltyCardMapper.kt:11-24`).
 4. **Repository.** `RoomLoyaltyCardRepository.getAllWithBrand()` = `dao.getAllWithBrand().map { it.toDomainModel() }`
@@ -80,7 +88,7 @@ This traces one feature through every layer. **Use it as the template for new fe
    `color` out of the route and passing it as a plain parameter (`MainActivity.kt:60-67`).
 8. **Detail ViewModel.** `DetailViewModel` reads `savedStateHandle.toRoute<Detail>().cardId`, then
    `repository.getByIdWithBrand(cardId).filterNotNull().stateIn(…, initialValue = LoyaltyCard.EMPTY)`
-   (`DetailViewModel.kt:22-31`).
+   (`DetailViewModel.kt:22-31`). A missing card leaves the screen on `EMPTY`; a deleted one leaves it on the last card.
 9. **Detail UI.** `DetailScreen` paints the top bar and header with the **route** color (available on frame 1),
    and fills text/logo from the **ViewModel** card (available once Room emits). The whole `Scaffold` is the
    matching shared element `"card/${card.id}"` (`DetailScreen.kt:63-71`). Back → `directions.toBack()` → `navigateUp()`.
@@ -88,7 +96,8 @@ This traces one feature through every layer. **Use it as the template for new fe
 
 ### Checklist for a new screen/feature (derived from the example)
 
-1. Entity + DAO method returning `Flow` (and bump DB version — [[database-schema-changes]]).
+1. Entity + DAO method returning `Flow` (single-row queries: `Flow<T?>`), and bump the DB version —
+   [[database-schema-changes]].
 2. Mapper to a domain model in `domain/`; repository interface method returning `Flow<Domain>`, implemented by the
    Room-backed class (new repositories: interface + impl + `@Binds` in `di/RepositoryModule.kt`).
 3. `@HiltViewModel` exposing `StateFlow` via `stateIn(viewModelScope, WhileSubscribed(5_000), <EMPTY/initial>)`.

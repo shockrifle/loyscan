@@ -1,7 +1,7 @@
 # No Room migration strategy
 
 **Status:** Open · **Issue:** [#12](https://github.com/shockrifle/loyscan/issues/12) · **Since:** 2025-12-08 (`4969a2b`) · **Where:**
-`app/src/main/java/com/bdaniel/loyscan/di/DatabaseModule.kt:22-40`,
+`app/src/main/java/com/bdaniel/loyscan/di/DatabaseModule.kt`, `provideAppDatabase`,
 `app/src/main/java/com/bdaniel/loyscan/data/local/db/AppDatabase.kt:10`
 
 ## What

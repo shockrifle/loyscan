@@ -34,7 +34,10 @@ for raising it: [[2026-10-09-coverage-gate-kover]].
   `SavedStateHandle(route = …)` (`DetailViewModelTest`) and Compose UI (`ListScreenTest`, `createComposeRule()`).
   The first Robolectric test in a run takes a few seconds to start; the rest are quick.
 - Libraries: Truth for assertions, Turbine for `Flow`s, kotlinx-coroutines-test (`runTest`, `MainDispatcherRule`).
-- Shared helpers (fixture builders, fakes, `MainDispatcherRule`) are in `app/src/test/java/com/bdaniel/loyscan/testing/`.
+- Whole-app tests: `@HiltAndroidTest` + `@Config(application = HiltTestApplication::class)` with
+  `createAndroidComposeRule<MainActivity>()` (`AppNavigationTest`). The Hilt rule must run first
+  (`@get:Rule(order = 0)`). `InMemoryDatabaseModule` gives them an empty in-memory database to fill.
+- Shared helpers (fixture builders, fakes, `MainDispatcherRule`, `InMemoryDatabaseModule`) are in `app/src/test/java/com/bdaniel/loyscan/testing/`.
   How the code is made testable: [[architecture]] → Testing seams.
 
 ## Dependencies

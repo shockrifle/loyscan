@@ -70,7 +70,7 @@ Fields: `id`, `name` (user-facing card name, e.g. "Coffee Bean Club"), `brand`, 
 **LoyaltyCardWithBrand** — Room result class joining a card with its brand via two `@Embedded` fields, brand
 columns prefixed `brand_` (`data/local/db/dao/LoyaltyCardDao.kt:13-18`).
 
-**`loyscan.db`** — The on-device SQLite file name (`di/DatabaseModule.kt:25`).
+**`loyscan.db`** — The on-device SQLite file name (`di/DatabaseModule.kt`, `provideAppDatabase`).
 
 **`loyscan.sql`** — Seed script `app/src/main/assets/database/loyscan.sql`, executed line-by-line on DB creation.
 See [[seed-data]], [[line-based-sql-seed-parser]].

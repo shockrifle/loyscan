@@ -41,4 +41,38 @@ class LoyaltyCardDaoTest {
 
         assertThat(dao.getAllWithBrand().first()).containsExactly(LoyaltyCardWithBrand(card, brand))
     }
+
+    @Test
+    fun getAllWithBrand_joinsEachCardWithItsOwnBrand() = runTest {
+        val first = aBrandEntity(id = 1, name = "First Store", color = "#111111")
+        val second = aBrandEntity(id = 2, name = "Second Store", color = "#222222")
+        db.brandDao().insert(first)
+        db.brandDao().insert(second)
+        val cardOfSecond = aLoyaltyCardEntity(id = 10, brandId = 2)
+        val cardOfFirst = aLoyaltyCardEntity(id = 11, brandId = 1)
+        dao.insert(cardOfSecond)
+        dao.insert(cardOfFirst)
+
+        assertThat(dao.getAllWithBrand().first()).containsExactly(
+            LoyaltyCardWithBrand(cardOfSecond, second),
+            LoyaltyCardWithBrand(cardOfFirst, first),
+        )
+    }
+
+    @Test
+    fun getByIdWithBrand_mapsEveryCardAndBrandField() = runTest {
+        // Every field differs from its counterpart, so a wrong alias (card id read as brand id, …) shows up.
+        val brand = aBrandEntity(id = 7, name = "Other Store", color = "#112233", logo = "https://example.com/logo.svg")
+        val card = aLoyaltyCardEntity(id = 3, name = "Gold card", brandId = 7, code = "0042", barcodeFormat = "EAN_13")
+        db.brandDao().insert(brand)
+        dao.insert(card)
+        dao.insert(aLoyaltyCardEntity(id = 4, brandId = 7))
+
+        assertThat(dao.getByIdWithBrand(3).first()).isEqualTo(LoyaltyCardWithBrand(card, brand))
+    }
+
+    @Test
+    fun getByIdWithBrand_unknownId_emitsNull() = runTest {
+        assertThat(dao.getByIdWithBrand(99).first()).isNull()
+    }
 }

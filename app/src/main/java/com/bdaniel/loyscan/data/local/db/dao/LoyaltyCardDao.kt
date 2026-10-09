@@ -31,6 +31,7 @@ interface LoyaltyCardDao {
     @Query("SELECT lc.*, b.id as brand_id, b.name as brand_name, b.color as brand_color, b.logo as brand_logo FROM loyalty_cards lc JOIN brands b ON lc.brandId = b.id")
     fun getAllWithBrand(): Flow<List<LoyaltyCardWithBrand>>
 
+    // Nullable on purpose: with a non-null type, Room throws when no row matches instead of emitting null.
     @Query("SELECT lc.*, b.id as brand_id, b.name as brand_name, b.color as brand_color, b.logo as brand_logo FROM loyalty_cards lc JOIN brands b ON lc.brandId = b.id WHERE lc.id = :id")
-    fun getByIdWithBrand(id: Int): Flow<LoyaltyCardWithBrand>
+    fun getByIdWithBrand(id: Int): Flow<LoyaltyCardWithBrand?>
 }

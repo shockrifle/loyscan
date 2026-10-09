@@ -8,5 +8,6 @@ interface LoyaltyCardRepository {
 
     fun getAllWithBrand(): Flow<List<LoyaltyCard>>
 
-    fun getByIdWithBrand(id: Int): Flow<LoyaltyCard>
+    /** Emits `null` while no card has this id (never existed, or deleted). */
+    fun getByIdWithBrand(id: Int): Flow<LoyaltyCard?>
 }

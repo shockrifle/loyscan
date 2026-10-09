@@ -38,4 +38,26 @@ class DetailViewModelTest {
             assertThat(awaitItem()).isEqualTo(card)
         }
     }
+
+    @Test
+    fun card_staysEmpty_whileNoCardHasTheId() = runTest {
+        val viewModel = DetailViewModel(SavedStateHandle(route = Detail(cardId = 99, color = "#336699")), repository)
+
+        viewModel.card.test {
+            assertThat(awaitItem()).isEqualTo(LoyaltyCard.EMPTY)
+            repository.cards.value += aLoyaltyCard(id = 2)
+            expectNoEvents()
+        }
+    }
+
+    @Test
+    fun card_keepsTheLastCard_whenItIsDeleted() = runTest {
+        val viewModel = DetailViewModel(SavedStateHandle(route = Detail(cardId = 1, color = "#336699")), repository)
+
+        viewModel.card.test {
+            assertThat(awaitItem()).isEqualTo(aLoyaltyCard(id = 1))
+            repository.cards.value = emptyList()
+            expectNoEvents()
+        }
+    }
 }

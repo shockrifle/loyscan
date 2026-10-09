@@ -2,14 +2,14 @@
 
 The Room DB `AppDatabase` is at **`version = 1`**
 (`app/src/main/java/com/bdaniel/loyscan/data/local/db/AppDatabase.kt:10`) with **no migrations and no
-`fallbackToDestructiveMigration`** (`app/src/main/java/com/bdaniel/loyscan/di/DatabaseModule.kt:22-40`). Any
+`fallbackToDestructiveMigration`** (`app/src/main/java/com/bdaniel/loyscan/di/DatabaseModule.kt`, `provideAppDatabase`). Any
 entity change on a device that already has `loyscan.db` crashes on open until the version is bumped and a
 migration (or a wipe) exists.
 
 ## Steps
 
 1. Change the entity in `data/local/db/entity/` and the DAO queries. The `JOIN` queries alias the brand columns
-   by hand (`LoyaltyCardDao.kt:31-35`), so update them if `brands` columns change.
+   by hand (`LoyaltyCardDao.kt:31-36`), so update them if `brands` columns change.
 2. Bump `version` in `@Database`, then build. KSP writes
    `app/schemas/com.bdaniel.loyscan.data.local.db.AppDatabase/<version>.json`. **Commit the new schema JSON**
    with the change.

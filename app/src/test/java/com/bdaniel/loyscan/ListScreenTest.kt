@@ -3,10 +3,12 @@ package com.bdaniel.loyscan
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.bdaniel.loyscan.domain.LoyaltyCard
 import com.bdaniel.loyscan.testing.FakeLoyaltyCardRepository
 import com.bdaniel.loyscan.testing.aBrand
 import com.bdaniel.loyscan.testing.aLoyaltyCard
@@ -43,5 +45,24 @@ class ListScreenTest {
         composeRule.onNodeWithText("Test Store").performClick()
 
         assertThat(navigatedTo).isEqualTo(5 to "#AA0000")
+    }
+
+    @Test
+    fun showsATileForEachCard() {
+        setScreen(aLoyaltyCard(id = 1, brand = aBrand(name = "First Store")), aLoyaltyCard(id = 2, brand = aBrand(name = "Second Store")))
+
+        composeRule.onNodeWithText("First Store").assertIsDisplayed()
+        composeRule.onNodeWithText("Second Store").assertIsDisplayed()
+    }
+
+    private fun setScreen(vararg cards: LoyaltyCard) {
+        val viewModel = ListViewModel(FakeLoyaltyCardRepository(cards.toList()))
+        composeRule.setContent {
+            SharedTransitionLayout {
+                AnimatedVisibility(visible = true) {
+                    ListScreen(animatedVisibilityScope = this, directions = ListDirections(toCard = { _, _ -> }, toBack = {}), viewModel = viewModel)
+                }
+            }
+        }
     }
 }
