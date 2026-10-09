@@ -25,8 +25,8 @@ on, or feed into `/review-fix`.
 
 Before judging the code, read `wiki/CLAUDE.md` (the update checklist), `wiki/architecture.md` (layering and the
 new-feature checklist) and the `wiki/` pages for the touched area (from `wiki/index.md`): the feature page,
-related decisions, and the Open items in `wiki/hacks/_index.md` and `wiki/tech-debt/_index.md`. Read every touched file in full, not
-only the diff hunks, plus its callers.
+related decisions, and the Open items in `wiki/hacks/_index.md` and `wiki/tech-debt/_index.md`. Read every
+touched file in full, not only the diff hunks, plus its callers.
 
 ## 3. Review
 
@@ -50,14 +50,15 @@ rule, a `Flow` that never emits or emits `EMPTY` first, configuration change and
   marked Resolved and moved in its `_index.md`, and the commit should close the issue the page links.
 
 ### Tests
-- Run `./gradlew testDebugUnitTest` (set `JAVA_HOME` first — see root `CLAUDE.md`) and report the result. Failing or newly skipped tests are findings.
+- Run `./gradlew testDebugUnitTest` (set `JAVA_HOME` first — see root `CLAUDE.md`) and report the result.
+  Failing or newly skipped tests are findings.
 - Pure-Kotlin logic (`domain/`, mappers, the card-number engine) must have JVM tests in `app/src/test/`, in the
   mirrored package. Per the rule-engine decision, every `CheckDigitAlgorithm` and every bundled card-number rule
   needs its own test vectors.
 - Check the tests actually exercise the change: assertions on the new branches and edge cases, not only the
   happy path. The template `ExampleUnitTest` / `ExampleInstrumentedTest` don't count as coverage.
-- Room, ViewModel and Compose code has no test harness yet (`wiki/tech-debt/no-automated-tests.md`, #13). Note a missing test
-  there as a gap, not a blocker, unless the change sets up a harness.
+- Room, ViewModel and Compose code has no test harness yet (`wiki/tech-debt/no-automated-tests.md`, #13). Note
+  a missing test there as a gap, not a blocker, unless the change sets up a harness.
 
 ### Architecture and patterns
 Check the change against the "Layers" table and the "Checklist for a new screen/feature" in
@@ -81,12 +82,13 @@ No formatter or linter is configured, so style is judged against the surrounding
 
 ### Build side effects
 Room exports its schema at build time (`room.schemaLocation` in `app/build.gradle.kts`), so a build can rewrite
-the committed `app/schemas/…/<version>.json` — exactly when an entity changed without a version bump or without
-committing the export. Take `git status --porcelain` before the test and build runs and again after:
-- a tracked file the build changed is a finding (usually: schema export not committed, or version not bumped);
-  include its `git diff` in the report
-- then restore it with `git restore <path>`, but only if it was clean before the run — never touch a file that
-  already had uncommitted changes
+the committed `app/schemas/…/<version>.json` when an entity changed without a version bump, or create a new
+`<version>.json` when the version was bumped but the export wasn't committed. Take `git status --porcelain
+--untracked-files=all` before the test and build runs and again after:
+- a tracked file the build modified, or a new untracked file under `app/schemas/`, is a finding (version not
+  bumped, or schema export not committed); include its diff or content in the report
+- then undo it: `git restore <path>` for a modified tracked file, delete a new untracked file — but only files
+  that were clean (or absent) before the run; never touch a file that already had uncommitted changes
 
 ### Wiki
 Run the "When to update" checklist in `wiki/CLAUDE.md` against the change and list what is missing:
