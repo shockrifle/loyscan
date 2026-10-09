@@ -169,7 +169,31 @@ class CardNumberEngineTest {
     }
 
     @Test
-    fun match_isCaseInsensitiveForCaseNormalisingRules() {
-        assertEquals("AB12", match("lc000000ab12", BarcodeFormat.CODE_128, paddedCode128)?.core)
+    fun match_isCaseSensitive() {
+        // The card would otherwise be saved as "AB12" and draw "LC000000AB12", not what was scanned.
+        assertNull(match("lc000000ab12", BarcodeFormat.CODE_128, paddedCode128))
+    }
+
+    @Test
+    fun match_acceptsOwnBarcodeWhenPrefixCaseDiffersFromRuleCase() {
+        val rule = paddedCode128.copy(id = "lowercase-prefix", prefix = "lc")
+        assertEquals(RuleMatch("AB12", formatMatches = true), match(barcodeContent("ab12", rule), BarcodeFormat.CODE_128, rule))
+    }
+
+    @Test
+    fun match_triesLongerCoresWhenCoreStartsWithPadChar() {
+        // Core "9123458" ends in a GTIN check digit; stripping every leading '9' would leave "123458", which fails it.
+        val rule = CardNumberRule(
+            id = "nine-padded",
+            format = BarcodeFormat.CODE_128,
+            minLength = 6,
+            maxLength = 10,
+            padLength = 10,
+            padChar = '9',
+            checkDigit = CheckDigit(CheckDigitAlgorithm.GTIN_MOD10, Mode.VERIFY),
+        )
+        val core = "912345" + CheckDigitAlgorithm.GTIN_MOD10.compute("912345")
+        assertEquals("9999$core".takeLast(10), barcodeContent(core, rule))
+        assertEquals(core, match(barcodeContent(core, rule), null, rule)?.core)
     }
 }

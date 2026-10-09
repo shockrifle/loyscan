@@ -29,9 +29,16 @@ The store catalogue ([#3](https://github.com/shockrifle/loyscan/issues/3)) has t
 - `CardNumberEngine` provides `normalize`, `validate`, `barcodeContent`, `displayNumber` and `match`.
   A `null` rule means "no rule": the barcode content is the trimmed raw number.
 - `barcodeContent` falls back to the normalised input when validation fails, so "save anyway" cards still render.
-- `match` (scanned content → core) builds the content back from the recovered core and accepts it only if the
-  result equals the scanned content. When padding is ambiguous, it takes the shortest core that's valid.
-  It reports `formatMatches` separately instead of rejecting on a format mismatch, so #6 can rank stores.
+- `match` (scanned content → core) is exact: it doesn't change the scanned content's case or strip separators,
+  and it accepts a core only if that core validates unchanged and rebuilds into exactly the scanned content.
+  A case-insensitive match would save a core whose barcode differs from the one on the card, and Code 128 and QR
+  are case-sensitive at the till. When padding is ambiguous (the core may itself start with `padChar`), it tries
+  each candidate from shortest to longest, so a core that starts with the pad character still matches when only
+  the longer reading passes the check digit. It reports `formatMatches` separately instead of rejecting on a
+  format mismatch, so #6 can rank stores.
+- **Authoring rule:** if a store's numbers have a fixed length, set `minLength == maxLength`. Otherwise a scanned
+  `000123456` padded to 9 matches as core `123456`, and the card shows a number that differs from what's printed.
+  The barcode is the same either way.
 - `CardNumberRules.parse` is strict: an unknown key, an unknown enum value or a duplicate id throws, and so does an
   invalid definition (via `require` in `init`). A typo in the catalogue fails at load time, not at the checkout.
 

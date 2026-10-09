@@ -69,21 +69,24 @@ object CardNumberEngine {
      * or `null` if the content can't have been produced by [rule]. Used to check the user picked the right store.
      */
     fun match(content: String, format: BarcodeFormat?, rule: CardNumberRule): RuleMatch? {
-        var rest = rule.case.apply(content)
+        // Scanned content is exact: no case or separator normalisation, it must rebuild to the same string.
+        var rest = content
         if (rule.checkDigit?.mode == Mode.APPEND) {
             if (!rule.checkDigit.algorithm.verify(rest)) return null
             rest = rest.dropLast(1)
         }
-        if (!rest.startsWith(rule.prefix) || !rest.endsWith(rule.suffix)) return null
         if (rest.length < rule.prefix.length + rule.suffix.length) return null
+        if (!rest.startsWith(rule.prefix) || !rest.endsWith(rule.suffix)) return null
         rest = rest.substring(rule.prefix.length, rest.length - rule.suffix.length)
-        if (rule.padLength > 0 && rest.length == rule.padLength) {
-            // Padding is ambiguous when the core itself may start with padChar; take the shortest valid core.
-            val keep = maxOf(rule.minLength, 1)
-            while (rest.length > keep && rest.first() == rule.padChar) rest = rest.drop(1)
-        }
-        val core = (validate(rest, rule) as? Validation.Valid)?.core ?: return null
-        if (build(core, rule) != rule.case.apply(content)) return null
+        // Padding is ambiguous when the core itself may start with padChar: try the shortest candidate first.
+        // Rules for fixed-length numbers avoid the ambiguity with minLength == maxLength.
+        val leadingPad = if (rule.padLength > 0 && rest.length == rule.padLength) {
+            rest.takeWhile { it == rule.padChar }.length
+        } else 0
+        val core = (leadingPad downTo 0).asSequence()
+            .map { rest.substring(it) }
+            .firstOrNull { candidate -> validate(candidate, rule) == Validation.Valid(candidate) && build(candidate, rule) == content }
+            ?: return null
         return RuleMatch(core, formatMatches = format == null || format == rule.format)
     }
 
