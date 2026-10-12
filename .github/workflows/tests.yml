@@ -22,8 +22,11 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      # Caches the Gradle home and validates the wrapper.
+      # Caches the Gradle home and validates the wrapper. Basic (MIT, actions/cache) caching instead of the default
+      # proprietary "enhanced" provider, which is only a free preview for private repos.
       - uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-provider: basic
 
       # Robolectric downloads its android-all jars on first use; keep them between runs.
       - uses: actions/cache@v6
