@@ -48,6 +48,28 @@ class LoyaltyCardTest {
     }
 
     @Test
+    fun scannedCard_barcodeContentIsTheScannedContentVerbatim() {
+        // The rule would rebuild this 9-digit number as "200…"; a scan is what is really on the card.
+        val card = aLoyaltyCard(store = ruledStore, number = "912345678", scannedFormat = BarcodeFormat.CODE_128)
+
+        assertThat(card.barcodeContent).isEqualTo("912345678")
+    }
+
+    @Test
+    fun scannedCard_displayNumberIsTheCoreTheRuleRecoversFromTheScan() {
+        val card = aLoyaltyCard(store = ruledStore, number = "2001234567893", scannedFormat = BarcodeFormat.EAN_13)
+
+        assertThat(card.displayNumber).isEqualTo("123 456 789")
+    }
+
+    @Test
+    fun scannedCard_thatTheRuleDoesNotMatch_displaysTheScannedContent() {
+        val card = aLoyaltyCard(store = ruledStore, number = "12345678", scannedFormat = BarcodeFormat.CODE_128)
+
+        assertThat(card.displayNumber).isEqualTo("12345678")
+    }
+
+    @Test
     fun barcodeFormat_isTheScannedFormat_whenTheCardWasScanned() {
         val card = aLoyaltyCard(store = ruledStore, scannedFormat = BarcodeFormat.QR_CODE)
 

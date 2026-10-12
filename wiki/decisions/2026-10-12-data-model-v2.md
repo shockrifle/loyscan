@@ -35,11 +35,16 @@ timestamps, use count, note, photo paths. It also asks for ids that let restores
   "no rule"), `Instant` as epoch milliseconds. Enums (`BarcodeFormat`) use Room's built-in name mapping.
 - **The rule is copied into the store row.** The database stays self-contained, and a custom store could carry a
   rule later.
-- **Derived on read** (`app/src/main/java/com/bdaniel/loyscan/domain/LoyaltyCard.kt`): `barcodeContent` and
-  `displayNumber` run `CardNumberEngine` over `number` and the store's rule; `barcodeFormat` is the scanned
-  format, else the rule's format, else the store's `defaultBarcodeFormat`.
-- `number` holds the number as typed, or the core number recovered from a scan by `CardNumberEngine.match`, not
-  the raw scanned content. The add-card flow (#6) is responsible for that.
+- **`number` is the raw input**, as the issue asks: the number as typed, or the barcode content exactly as
+  scanned. `scannedFormat != null` marks it as a scan.
+- **Derived on read** (`app/src/main/java/com/bdaniel/loyscan/domain/LoyaltyCard.kt`):
+  - Typed card: `barcodeContent` and `displayNumber` run `CardNumberEngine` over `number` and the store's rule.
+  - Scanned card: `barcodeContent` is `number` verbatim. `displayNumber` is the core that `CardNumberEngine.match`
+    recovers from the scan, formatted by the rule, or the scanned content when the rule doesn't match.
+  - `barcodeFormat` is the scanned format, else the rule's format, else the store's `defaultBarcodeFormat`.
+  A scan is the ground truth of what is on the card: rebuilding it from the store's *current* rule would change the
+  barcode when a catalogue update changes the rule, or produce a barcode that isn't on the card when the scan
+  doesn't match the rule (found in review of #1).
 - Schema version 2; `1.json` is kept as the frozen record of v1. No migration from v1: nothing has been released
   ([[no-room-migrations]]).
 
@@ -55,6 +60,11 @@ separately discussed with the user).
 - Changing a rule in the catalogue doesn't reach existing store rows by itself. The catalogue loader (#3) has to
   update them by slug.
 - Renaming or removing a `BarcodeFormat` constant breaks stored rows, which hold the enum name.
-- A card's `scannedFormat` overrides the rule's format, so a card scanned as QR is drawn as QR even if its store's
-  rule says CODE_128.
+- A scanned card is drawn exactly as scanned, in its scanned format, whatever its store's rule says. Editing a
+  scanned card's number by hand (#8) must clear `scannedFormat`, or the typed number would be drawn verbatim.
+- Stored rules are decoded strictly, so a rule row that no longer parses (a new `require` in `CardNumberRule`, a
+  renamed enum constant, a removed field) throws on every read of its store's cards, and the list screen crashes
+  on open. Hence: the catalogue loader (#3) must rewrite stored catalogue rules before they are read, and a change
+  to the rule format that old rows fail needs a DB version bump whose migration rewrites them. Decoding to "no
+  rule" instead was rejected: it would silently change typed cards' barcodes.
 - The demo seed still ships in every build. The catalogue (#3) replaces it ([[seed-data]]).

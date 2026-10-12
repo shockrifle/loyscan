@@ -34,8 +34,8 @@ See [[2026-10-09-card-number-rule-engine]].
 
 **Card code** — Old name of `LoyaltyCard.number` (was `cardNumber` before `4cbc71d`, `code` until #1).
 
-**Card number** — `LoyaltyCard.number`: the number as the user typed it, or the core number recovered from a
-scan. Barcode content and display number are derived from it, never stored.
+**Card number** — `LoyaltyCard.number`: the raw input, as typed or exactly as scanned (`scannedFormat` set).
+Barcode content and display number are derived from it on read ([[2026-10-12-data-model-v2]]).
 
 **`card/{id}`** — The shared-content key that links a list tile to the detail screen in the shared-element transition.
 Was `item/{id}` before `45a33e1`.

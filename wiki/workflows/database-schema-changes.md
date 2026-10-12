@@ -1,7 +1,7 @@
 # Changing the database schema
 
 The Room DB `AppDatabase` is at **`version = 2`**
-(`app/src/main/java/com/bdaniel/loyscan/data/local/db/AppDatabase.kt:10`) with **no migrations and no
+(`app/src/main/java/com/bdaniel/loyscan/data/local/db/AppDatabase.kt:11`) with **no migrations and no
 `fallbackToDestructiveMigration`** (`app/src/main/java/com/bdaniel/loyscan/di/DatabaseModule.kt`, `provideAppDatabase`). Any
 entity change on a device that already has `loyscan.db` crashes on open until the version is bumped and a
 migration (or a wipe) exists.
