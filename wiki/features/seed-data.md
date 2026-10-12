@@ -22,8 +22,9 @@ database and checks the row counts and one full row. A statement the loader can'
 - Values are written the way `Converters` stores them: lists as JSON text (`'["HU"]'`), timestamps as epoch
   milliseconds, `BarcodeFormat` as the enum name, no rule as `NULL` ([[2026-10-12-data-model-v2]]).
 - Explicit ids line up the `storeId` foreign keys: stores are `demo-a` … `demo-e`, cards are UUIDs
-  `00000000-0000-4000-8000-0000000000NN`. The card's old per-card barcode format is kept as `scannedFormat`, so
-  the demo set still covers many formats.
+  `00000000-0000-4000-8000-0000000000NN`. Each card's old per-card barcode format is kept as `scannedFormat`, so
+  the demo set still covers many formats. These are **not real scans**: several numbers can't be encoded in their
+  format (e.g. 9 digits as `EAN_13`), so they exercise the renderer's fallback (#4).
 - Store logos point at `picsum.photos` placeholder images (since `c4d6bdc`) — [[coil-image-loading]].
 - The demo seed ships in every build until the curated catalogue ([#3](https://github.com/shockrifle/loyscan/issues/3))
   replaces it, which is the last open criterion of [#1](https://github.com/shockrifle/loyscan/issues/1).

@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-12 · demo seed's scannedFormat values marked as not real scans · features/seed-data · review round 2 of #1
 - 2026-10-12 · review fixes: scanned cards keep the raw scan as barcode content; strict stored-rule decoding constraint recorded; stale AppDatabase line ref fixed · decisions/2026-10-12-data-model-v2, glossary, features/card-detail, workflows/database-schema-changes · review of #1 data model v2
 - 2026-10-12 · data model v2 (Brand → Store, string ids, derived barcode content/display number, JSON converters, schema v2): new decision, current-state pages updated; historical postmortems and older decisions left as written · decisions/2026-10-12-data-model-v2 (new), decisions/_index, decisions/2026-10-09-card-number-rule-engine, architecture, glossary, faq, index, features/seed-data, features/card-detail, features/card-list, workflows/database-schema-changes, workflows/tdd, tech-debt/no-room-migrations, tech-debt/shared-element-key-from-async-state, tech-debt/list-screen-bypasses-image-loader, tech-debt/_index, integrations/coil-image-loading · #1 data model v2 (slice)
 - 2026-10-12 · added /next-task (issue → test-first implementation → independent Fable review → fix with the reviewer → push → issue update) · workflows/code-review, workflows/_index · end-to-end task workflow
