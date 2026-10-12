@@ -17,6 +17,28 @@ and why it looks this way.
 4. Push once the review has no blockers. CI then runs the tests and the coverage gate on GitHub Actions ([[ci]]);
    a red run means `master` is broken and comes first.
 
+## The end-to-end loop: `/next-task`
+
+`/next-task [issue #n]` runs the whole cycle for one issue: it picks the next open issue (milestone order, then
+dependencies and size; offers a choice when several are close), implements it test-first, commits locally, and
+then has `/review-changes` run by an **independent reviewer**. That reviewer is a fresh subagent on a different
+model (Fable), not a fork. The main session then fixes the findings with the `/review-fix` method, talking to the
+reviewer: it rebuts claims it thinks are invalid, and disputes that survive one exchange go to the user. The
+reviewer re-reviews the fixes (at most 3 rounds). Once the gates are green (no blocker/major findings, tests,
+coverage and build pass), it pushes, watches CI, comments on the issue and offers the review's follow-ups as new
+issues.
+
+Why it is set up this way:
+- **The reviewer gets no context from the implementing session.** Its prompt is fixed in the command and holds
+  no plan or rationale, so it judges the code rather than the author's explanation of it. A different model
+  adds variety in what it notices, but it is still a Claude model, not a second vendor.
+- **The reviewer has the wiki rules but may challenge them.** The prompt tells it that a recorded decision is not
+  proof that the code is right.
+- **Disagreement is resolved by evidence, then by the user.** Neither side simply obeys the other. This is the
+  same "verified, not obeyed" rule as `/review-fix`, plus a way for the reviewer to answer back.
+- **Running the command authorizes the push and the issue comment.** Creating new issues still needs
+  confirmation, because those change the backlog.
+
 ## What the review enforces about tests
 
 The project is test-first ([[2026-10-12-tdd-and-coverage]], [[tdd]]), and `/review-changes` checks it:

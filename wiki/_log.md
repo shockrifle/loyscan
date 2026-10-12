@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-12 · added /next-task (issue → test-first implementation → independent Fable review → fix with the reviewer → push → issue update) · workflows/code-review, workflows/_index · end-to-end task workflow
 - 2026-10-12 · CI workflow page; no-automated-tests resolved (all #13 sub-issues done) · workflows/ci (new), workflows/_index, index, workflows/build-and-run, workflows/tdd, workflows/code-review, tech-debt/no-automated-tests, tech-debt/_index · #29 CI
 - 2026-10-12 · test-first made the default: TDD decision, tdd workflow page, worked example rewritten test-first, acceptance-criteria convention, review enforces tests and the coverage gate · decisions/2026-10-12-tdd-and-coverage (new), workflows/tdd (new), architecture, CLAUDE (issue convention, update trigger), workflows/code-review, workflows/build-and-run, workflows/_index, decisions/_index, index, tech-debt/no-automated-tests, tech-debt/_index · #28 TDD workflow
 - 2026-10-09 · brand-colour crash resolved (moved to Resolved), screens document the fallback, DetailScreen line refs updated, postmortem gets its fix SHA · tech-debt/empty-brand-color-crash, tech-debt/_index, decisions/2025-12-12-brand-color-in-route, tech-debt/shared-element-key-from-async-state, features/card-detail, features/card-list, features/card-transition, architecture, glossary, bugs/2026-10-09-missing-card-throws-from-room · #14 fixed test-first

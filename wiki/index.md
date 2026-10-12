@@ -23,7 +23,7 @@ the way they are, what's fragile, and how to work on it.
 
 ## How-to
 
-- Workflows: [[tdd]] (start here before writing code), [[build-and-run]], [[ci]], [[database-schema-changes]], [[code-review]]
+- Workflows: [[tdd]] (start here before writing code), [[build-and-run]], [[ci]], [[database-schema-changes]], [[code-review]] (incl. `/next-task`)
 - Runbooks: [[cli-build-jvm-target-mismatch]], [[reset-local-database]]
 - Integrations: [[coil-image-loading]]
 - Scripts: none yet — see [[scripts/_index|scripts]]
