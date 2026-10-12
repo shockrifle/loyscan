@@ -5,8 +5,8 @@
 
 ## What
 The detail `Scaffold`'s shared key is `"card/${card.id}"`, where `card` comes from `DetailViewModel.card`, which is
-`LoyaltyCard.EMPTY` (id `0`) until Room emits. On the first composed frame of the destination, the key is likely
-`card/0`, which doesn't match the list tile's `card/<n>`. The correct id is already available synchronously in the
+`LoyaltyCard.EMPTY` (id `""` since #1, `0` before) until Room emits. On the first composed frame of the
+destination, the key is likely `card/`, which doesn't match the list tile's `card/<uuid>`. The correct id is already available synchronously in the
 route (`Detail.cardId`).
 
 ## Why it exists

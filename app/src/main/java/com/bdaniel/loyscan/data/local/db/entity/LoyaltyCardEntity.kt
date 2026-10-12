@@ -4,24 +4,33 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.bdaniel.loyscan.domain.BarcodeFormat
+import java.time.Instant
 
 @Entity(
         tableName = "loyalty_cards",
         foreignKeys = [
             ForeignKey(
-                    entity = BrandEntity::class,
+                    entity = StoreEntity::class,
                     parentColumns = ["id"],
-                    childColumns = ["brandId"],
+                    childColumns = ["storeId"],
                     onDelete = ForeignKey.CASCADE
             )
         ],
-        indices = [Index("brandId")]
+        indices = [Index("storeId")]
 )
 data class LoyaltyCardEntity(
-        @PrimaryKey(autoGenerate = true)
-        val id: Int = 0,
-        val name: String,
-        val brandId: Int,
-        val code: String,
-        val barcodeFormat: String
+        @PrimaryKey
+        val id: String,
+        val storeId: String,
+        val label: String?,
+        val number: String,
+        val scannedFormat: BarcodeFormat?,
+        val createdAt: Instant,
+        val lastUsedAt: Instant?,
+        val useCount: Int,
+        val note: String?,
+        val frontPhotoPath: String?,
+        val backPhotoPath: String?,
+        val updatedAt: Instant,
 )

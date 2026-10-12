@@ -1,17 +1,18 @@
-INSERT INTO brands (id, name, color, logo) VALUES (1, 'Brand A', '#FF0000', 'https://picsum.photos/seed/1/200');
-INSERT INTO brands (id, name, color, logo) VALUES (2, 'Brand B', '#00FF00', 'https://picsum.photos/seed/2/200');
-INSERT INTO brands (id, name, color, logo) VALUES (3, 'Brand C', '#0000FF', 'https://picsum.photos/seed/3/200');
-INSERT INTO brands (id, name, color, logo) VALUES (4, 'Brand D', '#FFFF00', 'https://picsum.photos/seed/4/200');
-INSERT INTO brands (id, name, color, logo) VALUES (5, 'Brand E', '#FF00FF', 'https://picsum.photos/seed/5/200');
+-- Demo data, loaded once when loyscan.db is created. One complete statement per line (see wiki/features/seed-data.md).
+INSERT INTO stores (id, name, color, logo, aliases, countryCodes, defaultBarcodeFormat, cardNumberRule, isCustom, updatedAt) VALUES ('demo-a', 'Brand A', '#FF0000', 'https://picsum.photos/seed/1/200', '[]', '["HU"]', 'CODE_128', NULL, 0, 1767225600000);
+INSERT INTO stores (id, name, color, logo, aliases, countryCodes, defaultBarcodeFormat, cardNumberRule, isCustom, updatedAt) VALUES ('demo-b', 'Brand B', '#00FF00', 'https://picsum.photos/seed/2/200', '[]', '["HU"]', 'CODE_128', NULL, 0, 1767225600000);
+INSERT INTO stores (id, name, color, logo, aliases, countryCodes, defaultBarcodeFormat, cardNumberRule, isCustom, updatedAt) VALUES ('demo-c', 'Brand C', '#0000FF', 'https://picsum.photos/seed/3/200', '[]', '["HU"]', 'CODE_128', NULL, 0, 1767225600000);
+INSERT INTO stores (id, name, color, logo, aliases, countryCodes, defaultBarcodeFormat, cardNumberRule, isCustom, updatedAt) VALUES ('demo-d', 'Brand D', '#FFFF00', 'https://picsum.photos/seed/4/200', '[]', '["HU"]', 'CODE_128', NULL, 0, 1767225600000);
+INSERT INTO stores (id, name, color, logo, aliases, countryCodes, defaultBarcodeFormat, cardNumberRule, isCustom, updatedAt) VALUES ('demo-e', 'Brand E', '#FF00FF', 'https://picsum.photos/seed/5/200', '[]', '["HU"]', 'CODE_128', NULL, 0, 1767225600000);
 
-INSERT INTO loyalty_cards (id, name, brandId, code, barcodeFormat) VALUES (1, 'Card A', 1, '123456789', 'EAN_13');
-INSERT INTO loyalty_cards (id, name, brandId, code, barcodeFormat) VALUES (2, 'Card B', 2, '987654321', 'EAN_13');
-INSERT INTO loyalty_cards (id, name, brandId, code, barcodeFormat) VALUES (3, 'Card C', 3, '112233445', 'EAN_13');
-INSERT INTO loyalty_cards (id, name, brandId, code, barcodeFormat) VALUES (4, 'SuperMart Rewards', 1, '543210987', 'CODE_128');
-INSERT INTO loyalty_cards (id, name, brandId, code, barcodeFormat) VALUES (5, 'Coffee Bean Club', 2, '678901234', 'QR_CODE');
-INSERT INTO loyalty_cards (id, name, brandId, code, barcodeFormat) VALUES (6, 'Bookworm Bonus', 3, '109876543', 'EAN_13');
-INSERT INTO loyalty_cards (id, name, brandId, code, barcodeFormat) VALUES (7, 'Tech Store VIP', 4, '9876543210', 'CODE_39');
-INSERT INTO loyalty_cards (id, name, brandId, code, barcodeFormat) VALUES (8, 'Fashion Outlet Pass', 5, '1234509876', 'AZTEC');
-INSERT INTO loyalty_cards (id, name, brandId, code, barcodeFormat) VALUES (9, 'Grocery Saver', 1, '1122334455', 'EAN_8');
-INSERT INTO loyalty_cards (id, name, brandId, code, barcodeFormat) VALUES (10, 'Pet Supplies Club', 4, '6677889900', 'DATA_MATRIX');
-INSERT INTO loyalty_cards (id, name, brandId, code, barcodeFormat) VALUES (11, 'Cinema Fan Card', 2, '0011223344', 'PDF_417');
+INSERT INTO loyalty_cards (id, storeId, label, number, scannedFormat, createdAt, lastUsedAt, useCount, note, frontPhotoPath, backPhotoPath, updatedAt) VALUES ('00000000-0000-4000-8000-000000000001', 'demo-a', 'Card A', '123456789', 'EAN_13', 1767225600000, NULL, 0, NULL, NULL, NULL, 1767225600000);
+INSERT INTO loyalty_cards (id, storeId, label, number, scannedFormat, createdAt, lastUsedAt, useCount, note, frontPhotoPath, backPhotoPath, updatedAt) VALUES ('00000000-0000-4000-8000-000000000002', 'demo-b', 'Card B', '987654321', 'EAN_13', 1767225600000, NULL, 0, NULL, NULL, NULL, 1767225600000);
+INSERT INTO loyalty_cards (id, storeId, label, number, scannedFormat, createdAt, lastUsedAt, useCount, note, frontPhotoPath, backPhotoPath, updatedAt) VALUES ('00000000-0000-4000-8000-000000000003', 'demo-c', 'Card C', '112233445', 'EAN_13', 1767225600000, NULL, 0, NULL, NULL, NULL, 1767225600000);
+INSERT INTO loyalty_cards (id, storeId, label, number, scannedFormat, createdAt, lastUsedAt, useCount, note, frontPhotoPath, backPhotoPath, updatedAt) VALUES ('00000000-0000-4000-8000-000000000004', 'demo-a', 'SuperMart Rewards', '543210987', 'CODE_128', 1767225600000, NULL, 0, NULL, NULL, NULL, 1767225600000);
+INSERT INTO loyalty_cards (id, storeId, label, number, scannedFormat, createdAt, lastUsedAt, useCount, note, frontPhotoPath, backPhotoPath, updatedAt) VALUES ('00000000-0000-4000-8000-000000000005', 'demo-b', 'Coffee Bean Club', '678901234', 'QR_CODE', 1767225600000, NULL, 0, NULL, NULL, NULL, 1767225600000);
+INSERT INTO loyalty_cards (id, storeId, label, number, scannedFormat, createdAt, lastUsedAt, useCount, note, frontPhotoPath, backPhotoPath, updatedAt) VALUES ('00000000-0000-4000-8000-000000000006', 'demo-c', 'Bookworm Bonus', '109876543', 'EAN_13', 1767225600000, NULL, 0, NULL, NULL, NULL, 1767225600000);
+INSERT INTO loyalty_cards (id, storeId, label, number, scannedFormat, createdAt, lastUsedAt, useCount, note, frontPhotoPath, backPhotoPath, updatedAt) VALUES ('00000000-0000-4000-8000-000000000007', 'demo-d', 'Tech Store VIP', '9876543210', 'CODE_39', 1767225600000, NULL, 0, NULL, NULL, NULL, 1767225600000);
+INSERT INTO loyalty_cards (id, storeId, label, number, scannedFormat, createdAt, lastUsedAt, useCount, note, frontPhotoPath, backPhotoPath, updatedAt) VALUES ('00000000-0000-4000-8000-000000000008', 'demo-e', 'Fashion Outlet Pass', '1234509876', 'AZTEC', 1767225600000, NULL, 0, NULL, NULL, NULL, 1767225600000);
+INSERT INTO loyalty_cards (id, storeId, label, number, scannedFormat, createdAt, lastUsedAt, useCount, note, frontPhotoPath, backPhotoPath, updatedAt) VALUES ('00000000-0000-4000-8000-000000000009', 'demo-a', 'Grocery Saver', '1122334455', 'EAN_8', 1767225600000, NULL, 0, NULL, NULL, NULL, 1767225600000);
+INSERT INTO loyalty_cards (id, storeId, label, number, scannedFormat, createdAt, lastUsedAt, useCount, note, frontPhotoPath, backPhotoPath, updatedAt) VALUES ('00000000-0000-4000-8000-000000000010', 'demo-d', 'Pet Supplies Club', '6677889900', 'DATA_MATRIX', 1767225600000, NULL, 0, NULL, NULL, NULL, 1767225600000);
+INSERT INTO loyalty_cards (id, storeId, label, number, scannedFormat, createdAt, lastUsedAt, useCount, note, frontPhotoPath, backPhotoPath, updatedAt) VALUES ('00000000-0000-4000-8000-000000000011', 'demo-b', 'Cinema Fan Card', '0011223344', 'PDF_417', 1767225600000, NULL, 0, NULL, NULL, NULL, 1767225600000);

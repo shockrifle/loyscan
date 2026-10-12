@@ -22,7 +22,7 @@ class DetailViewModel @Inject constructor(
     private val cardId = savedStateHandle.toRoute<Detail>().cardId
 
     val card: StateFlow<LoyaltyCard> =
-        loyaltyCardRepository.getByIdWithBrand(cardId)
+        loyaltyCardRepository.getByIdWithStore(cardId)
             .filterNotNull()
             .stateIn(
                 scope = viewModelScope,

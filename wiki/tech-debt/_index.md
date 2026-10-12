@@ -7,7 +7,7 @@ delete the page.
 ## Open
 
 - [[list-screen-bypasses-image-loader]] — list tiles use Coil's default loader (no SVG, no logging)
-- [[shared-element-key-from-async-state]] — detail key is `card/0` until Room emits (suspected)
+- [[shared-element-key-from-async-state]] — detail key is `card/` until Room emits (suspected)
 - [[no-room-migrations]] — DB v1, no migration path
 
 ## Resolved

@@ -11,8 +11,8 @@ class FakeLoyaltyCardRepository(cards: List<LoyaltyCard> = emptyList()) : Loyalt
 
     val cards = MutableStateFlow(cards)
 
-    override fun getAllWithBrand(): Flow<List<LoyaltyCard>> = cards
+    override fun getAllWithStore(): Flow<List<LoyaltyCard>> = cards
 
-    override fun getByIdWithBrand(id: Int): Flow<LoyaltyCard?> =
+    override fun getByIdWithStore(id: String): Flow<LoyaltyCard?> =
         cards.map { all -> all.firstOrNull { it.id == id } }
 }

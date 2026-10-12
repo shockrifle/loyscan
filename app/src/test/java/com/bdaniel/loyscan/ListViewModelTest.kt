@@ -4,6 +4,7 @@ import app.cash.turbine.test
 import com.bdaniel.loyscan.testing.FakeLoyaltyCardRepository
 import com.bdaniel.loyscan.testing.MainDispatcherRule
 import com.bdaniel.loyscan.testing.aLoyaltyCard
+import com.bdaniel.loyscan.testing.cardId
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
@@ -32,8 +33,8 @@ class ListViewModelTest {
 
     @Test
     fun cards_reflectAdditionsAndRemovals() = runTest {
-        val first = aLoyaltyCard(id = 1)
-        val second = aLoyaltyCard(id = 2)
+        val first = aLoyaltyCard(id = cardId(1))
+        val second = aLoyaltyCard(id = cardId(2))
         repository.cards.value = listOf(first)
         val viewModel = ListViewModel(repository)
 

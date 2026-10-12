@@ -12,7 +12,7 @@ The seed only runs in `RoomDatabase.Callback.onCreate`, i.e. when the DB file is
 data — see [[reset-local-database]] and [[seed-data]].
 
 ### I added a field to an entity and the app crashes on launch.
-The DB is at `version = 1` with no migrations (`AppDatabase.kt:10`). Bump the version and either add a
+The DB is at `version = 2` with no migrations (`AppDatabase.kt:11`). Bump the version and either add a
 `Migration` or wipe the DB. See [[database-schema-changes]] and [[no-room-migrations]].
 
 ### Why does the detail screen get the brand color as a navigation argument when the ViewModel loads the card anyway?

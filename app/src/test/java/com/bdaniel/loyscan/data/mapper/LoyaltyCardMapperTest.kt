@@ -1,37 +1,85 @@
 package com.bdaniel.loyscan.data.mapper
 
-import com.bdaniel.loyscan.data.local.db.dao.LoyaltyCardWithBrand
-import com.bdaniel.loyscan.domain.Brand
+import com.bdaniel.loyscan.data.local.db.dao.LoyaltyCardWithStore
+import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.domain.LoyaltyCard
-import com.bdaniel.loyscan.testing.aBrandEntity
+import com.bdaniel.loyscan.domain.Store
+import com.bdaniel.loyscan.domain.cardnumber.CardNumberRule
 import com.bdaniel.loyscan.testing.aLoyaltyCardEntity
+import com.bdaniel.loyscan.testing.aStoreEntity
+import com.bdaniel.loyscan.testing.cardId
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
+import java.time.Instant
 
 class LoyaltyCardMapperTest {
 
-    private val withBrand = LoyaltyCardWithBrand(
-        loyaltyCard = aLoyaltyCardEntity(id = 3, name = "Gold card", brandId = 7, code = "0042", barcodeFormat = "EAN_13"),
-        brand = aBrandEntity(id = 7, name = "Other Store", color = "#112233", logo = "https://example.com/logo.svg"),
+    private val rule = CardNumberRule(id = "example", format = BarcodeFormat.CODE_128, minLength = 4, maxLength = 10)
+
+    private val withStore = LoyaltyCardWithStore(
+        loyaltyCard = aLoyaltyCardEntity(
+            id = cardId(3),
+            storeId = "other",
+            label = "Gold card",
+            number = "0042",
+            scannedFormat = BarcodeFormat.EAN_13,
+            createdAt = Instant.ofEpochMilli(1),
+            lastUsedAt = Instant.ofEpochMilli(2),
+            useCount = 7,
+            note = "Expires in May",
+            frontPhotoPath = "photos/front.jpg",
+            backPhotoPath = "photos/back.jpg",
+            updatedAt = Instant.ofEpochMilli(3),
+        ),
+        store = aStoreEntity(
+            id = "other",
+            name = "Other Store",
+            color = "#112233",
+            logo = "https://example.com/logo.svg",
+            aliases = listOf("Other"),
+            countryCodes = listOf("AT"),
+            defaultBarcodeFormat = BarcodeFormat.CODE_39,
+            cardNumberRule = rule,
+            isCustom = true,
+            updatedAt = Instant.ofEpochMilli(4),
+        ),
     )
 
     @Test
     fun toDomainModel_copiesEveryField() {
-        assertThat(withBrand.toDomainModel()).isEqualTo(
+        assertThat(withStore.toDomainModel()).isEqualTo(
             LoyaltyCard(
-                id = 3,
-                name = "Gold card",
-                brand = Brand(id = 7, name = "Other Store", color = "#112233", logo = "https://example.com/logo.svg"),
-                code = "0042",
-                barcodeFormat = "EAN_13",
+                id = cardId(3),
+                store = Store(
+                    id = "other",
+                    name = "Other Store",
+                    color = "#112233",
+                    logo = "https://example.com/logo.svg",
+                    aliases = listOf("Other"),
+                    countryCodes = listOf("AT"),
+                    defaultBarcodeFormat = BarcodeFormat.CODE_39,
+                    cardNumberRule = rule,
+                    isCustom = true,
+                    updatedAt = Instant.ofEpochMilli(4),
+                ),
+                label = "Gold card",
+                number = "0042",
+                scannedFormat = BarcodeFormat.EAN_13,
+                createdAt = Instant.ofEpochMilli(1),
+                lastUsedAt = Instant.ofEpochMilli(2),
+                useCount = 7,
+                note = "Expires in May",
+                frontPhotoPath = "photos/front.jpg",
+                backPhotoPath = "photos/back.jpg",
+                updatedAt = Instant.ofEpochMilli(3),
             )
         )
     }
 
     @Test
     fun listToDomainModel_mapsEachElementInOrder() {
-        val other = withBrand.copy(loyaltyCard = withBrand.loyaltyCard.copy(id = 4))
+        val other = withStore.copy(loyaltyCard = withStore.loyaltyCard.copy(id = cardId(4)))
 
-        assertThat(listOf(withBrand, other).toDomainModel().map { it.id }).containsExactly(3, 4).inOrder()
+        assertThat(listOf(withStore, other).toDomainModel().map { it.id }).containsExactly(cardId(3), cardId(4)).inOrder()
     }
 }

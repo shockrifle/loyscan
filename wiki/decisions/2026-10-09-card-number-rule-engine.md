@@ -62,8 +62,9 @@ change as `libs.kotlinx.serialization.json`). This was the user's choice (2026-1
 "catalogue in our own format".
 
 ## Consequences
-- `domain/BarcodeFormat.kt` is a new enum (ZXing names, plus `DATABAR*` for GS1 DataBar). `LoyaltyCard.barcodeFormat`
-  is still a `String` until [#1](https://github.com/shockrifle/loyscan/issues/1) migrates it.
+- `domain/BarcodeFormat.kt` is a new enum (ZXing names, plus `DATABAR*` for GS1 DataBar). Since #1 the card model
+  uses it, and a card's barcode content and display number are derived through this engine
+  ([[2026-10-12-data-model-v2]]).
 - The display pattern uses `#` per character and copies anything else literally. With short input, trailing
   literals are dropped; with long input, the extra characters are appended unformatted.
 - Adding an algorithm means adding a `CheckDigitAlgorithm` entry and its test vectors.

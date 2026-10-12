@@ -2,19 +2,22 @@ package com.bdaniel.loyscan.data.local.db.dao
 
 import androidx.room.Dao
 import androidx.room.Delete
+import androidx.room.Embedded
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Relation
+import androidx.room.Transaction
 import androidx.room.Update
-import com.bdaniel.loyscan.data.local.db.entity.BrandEntity
 import com.bdaniel.loyscan.data.local.db.entity.LoyaltyCardEntity
+import com.bdaniel.loyscan.data.local.db.entity.StoreEntity
 import kotlinx.coroutines.flow.Flow
-import androidx.room.Embedded
 
-data class LoyaltyCardWithBrand(
+/** A card with its store. Room loads [store] with a second query, so no store column is aliased by hand. */
+data class LoyaltyCardWithStore(
     @Embedded
     val loyaltyCard: LoyaltyCardEntity,
-    @Embedded(prefix = "brand_")
-    val brand: BrandEntity
+    @Relation(parentColumn = "storeId", entityColumn = "id")
+    val store: StoreEntity
 )
 
 @Dao
@@ -28,10 +31,12 @@ interface LoyaltyCardDao {
     @Delete
     suspend fun delete(loyaltyCard: LoyaltyCardEntity)
 
-    @Query("SELECT lc.*, b.id as brand_id, b.name as brand_name, b.color as brand_color, b.logo as brand_logo FROM loyalty_cards lc JOIN brands b ON lc.brandId = b.id")
-    fun getAllWithBrand(): Flow<List<LoyaltyCardWithBrand>>
+    @Transaction
+    @Query("SELECT * FROM loyalty_cards")
+    fun getAllWithStore(): Flow<List<LoyaltyCardWithStore>>
 
     // Nullable on purpose: with a non-null type, Room throws when no row matches instead of emitting null.
-    @Query("SELECT lc.*, b.id as brand_id, b.name as brand_name, b.color as brand_color, b.logo as brand_logo FROM loyalty_cards lc JOIN brands b ON lc.brandId = b.id WHERE lc.id = :id")
-    fun getByIdWithBrand(id: Int): Flow<LoyaltyCardWithBrand?>
+    @Transaction
+    @Query("SELECT * FROM loyalty_cards WHERE id = :id")
+    fun getByIdWithStore(id: String): Flow<LoyaltyCardWithStore?>
 }

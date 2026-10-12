@@ -4,10 +4,11 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.bdaniel.loyscan.data.local.db.AppDatabase
-import com.bdaniel.loyscan.testing.aBrand
-import com.bdaniel.loyscan.testing.aBrandEntity
 import com.bdaniel.loyscan.testing.aLoyaltyCard
 import com.bdaniel.loyscan.testing.aLoyaltyCardEntity
+import com.bdaniel.loyscan.testing.aStore
+import com.bdaniel.loyscan.testing.aStoreEntity
+import com.bdaniel.loyscan.testing.cardId
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -23,8 +24,8 @@ class RoomLoyaltyCardRepositoryTest {
     private lateinit var db: AppDatabase
     private lateinit var repository: RoomLoyaltyCardRepository
 
-    private val brand = aBrand(id = 7, name = "Other Store", color = "#112233")
-    private val card = aLoyaltyCard(id = 3, name = "Gold card", brand = brand, code = "0042")
+    private val store = aStore(id = "other", name = "Other Store", color = "#112233")
+    private val card = aLoyaltyCard(id = cardId(3), label = "Gold card", store = store, number = "0042")
 
     @Before
     fun setUp() = runTest {
@@ -32,25 +33,25 @@ class RoomLoyaltyCardRepositoryTest {
             .allowMainThreadQueries()
             .build()
         repository = RoomLoyaltyCardRepository(db.loyaltyCardDao())
-        db.brandDao().insert(aBrandEntity(id = 7, name = "Other Store", color = "#112233"))
-        db.loyaltyCardDao().insert(aLoyaltyCardEntity(id = 3, name = "Gold card", brandId = 7, code = "0042"))
+        db.storeDao().insert(aStoreEntity(id = "other", name = "Other Store", color = "#112233"))
+        db.loyaltyCardDao().insert(aLoyaltyCardEntity(id = cardId(3), label = "Gold card", storeId = "other", number = "0042"))
     }
 
     @After
     fun tearDown() = db.close()
 
     @Test
-    fun getAllWithBrand_returnsDomainCards() = runTest {
-        assertThat(repository.getAllWithBrand().first()).containsExactly(card)
+    fun getAllWithStore_returnsDomainCards() = runTest {
+        assertThat(repository.getAllWithStore().first()).containsExactly(card)
     }
 
     @Test
-    fun getByIdWithBrand_returnsTheDomainCard() = runTest {
-        assertThat(repository.getByIdWithBrand(3).first()).isEqualTo(card)
+    fun getByIdWithStore_returnsTheDomainCard() = runTest {
+        assertThat(repository.getByIdWithStore(cardId(3)).first()).isEqualTo(card)
     }
 
     @Test
-    fun getByIdWithBrand_unknownId_emitsNull() = runTest {
-        assertThat(repository.getByIdWithBrand(99).first()).isNull()
+    fun getByIdWithStore_unknownId_emitsNull() = runTest {
+        assertThat(repository.getByIdWithStore(cardId(99)).first()).isNull()
     }
 }

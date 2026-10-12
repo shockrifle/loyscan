@@ -50,7 +50,7 @@ fun SharedTransitionScope.DetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(text = card.brand.name) },
+                title = { Text(text = card.store.name) },
                 navigationIcon = {
                     IconButton(onClick = { directions.toBack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -84,10 +84,10 @@ fun SharedTransitionScope.DetailScreen(
                     .background(brandColor),
                 contentAlignment = Alignment.Center
             ) {
-                if (card.brand.logo.isNotBlank()) {
+                if (!card.store.logo.isNullOrBlank()) {
                     AsyncImage(
-                        model = card.brand.logo,
-                        contentDescription = card.brand.name,
+                        model = card.store.logo,
+                        contentDescription = card.store.name,
                         imageLoader = hiltImageLoader(),
                         modifier = Modifier
                             .fillMaxSize()
@@ -95,7 +95,7 @@ fun SharedTransitionScope.DetailScreen(
                     )
                 } else {
                     Text(
-                        text = card.brand.name,
+                        text = card.store.name,
                         style = MaterialTheme.typography.headlineLarge,
                         color = if (ColorUtils.calculateLuminance(brandColor.toArgb()) < 0.5) Color.White else Color.Black,
                     )
@@ -106,9 +106,9 @@ fun SharedTransitionScope.DetailScreen(
                     .fillMaxSize()
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text(text = card.name)
-                    Text(text = card.brand.name)
-                    Text(text = card.code)
+                    card.label?.let { Text(text = it) }
+                    Text(text = card.store.name)
+                    Text(text = card.displayNumber)
                 }
             }
         }

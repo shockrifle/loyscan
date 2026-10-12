@@ -3,11 +3,11 @@ package com.bdaniel.loyscan.data.repository
 import com.bdaniel.loyscan.domain.LoyaltyCard
 import kotlinx.coroutines.flow.Flow
 
-/** Cards with their brand, as domain models. ViewModels depend on this; tests swap in a fake. */
+/** Cards with their store, as domain models. ViewModels depend on this; tests swap in a fake. */
 interface LoyaltyCardRepository {
 
-    fun getAllWithBrand(): Flow<List<LoyaltyCard>>
+    fun getAllWithStore(): Flow<List<LoyaltyCard>>
 
     /** Emits `null` while no card has this id (never existed, or deleted). */
-    fun getByIdWithBrand(id: Int): Flow<LoyaltyCard?>
+    fun getByIdWithStore(id: String): Flow<LoyaltyCard?>
 }

@@ -17,7 +17,7 @@ the way they are, what's fragile, and how to work on it.
 ## Features
 
 - [[card-list]] — "My Cards" grid (start destination)
-- [[card-detail]] — one card: brand header, name, code
+- [[card-detail]] — one card: store header, label, display number
 - [[card-transition]] — shared-element animation between list and detail
 - [[seed-data]] — demo data loaded from SQL on first DB creation
 
@@ -32,7 +32,7 @@ the way they are, what's fragile, and how to work on it.
 
 | Folder | What's in it |
 |---|---|
-| [[decisions/_index\|decisions]] | Why the codebase looks the way it does (9 pages) |
+| [[decisions/_index\|decisions]] | Why the codebase looks the way it does (10 pages) |
 | [[bugs/_index\|bugs]] | Postmortems (2 pages) |
 | [[tech-debt/_index\|tech-debt]] | Owed work, open vs resolved (5 pages) |
 | [[hacks/_index\|hacks]] | Short-lived workarounds (2 pages) |

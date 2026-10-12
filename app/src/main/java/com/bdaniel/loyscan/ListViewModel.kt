@@ -13,7 +13,7 @@ class ListViewModel @Inject constructor(
     loyaltyCardRepository: LoyaltyCardRepository
 ) : ViewModel() {
 
-    val cards = loyaltyCardRepository.getAllWithBrand().stateIn(
+    val cards = loyaltyCardRepository.getAllWithStore().stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = emptyList()

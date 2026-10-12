@@ -12,8 +12,11 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.testing.invoke
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.bdaniel.loyscan.testing.FakeLoyaltyCardRepository
-import com.bdaniel.loyscan.testing.aBrand
+import com.bdaniel.loyscan.domain.BarcodeFormat
+import com.bdaniel.loyscan.domain.LoyaltyCard
+import com.bdaniel.loyscan.domain.cardnumber.CardNumberRule
 import com.bdaniel.loyscan.testing.aLoyaltyCard
+import com.bdaniel.loyscan.testing.aStore
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -26,9 +29,9 @@ class DetailScreenTest {
     @get:Rule
     val composeRule = createComposeRule()
 
-    private val card = aLoyaltyCard(id = 3, name = "Gold card", brand = aBrand(name = "Test Store"), code = "0042")
+    private val card = aLoyaltyCard(label = "Gold card", store = aStore(name = "Test Store"), number = "0042")
 
-    private fun setScreen(color: String = "#336699", onBack: () -> Unit = {}) {
+    private fun setScreen(color: String = "#336699", card: LoyaltyCard = this.card, onBack: () -> Unit = {}) {
         val viewModel = DetailViewModel(
             SavedStateHandle(route = Detail(cardId = card.id, color = color)),
             FakeLoyaltyCardRepository(listOf(card)),
@@ -48,11 +51,25 @@ class DetailScreenTest {
     }
 
     @Test
-    fun showsTheCardNameAndCode() {
+    fun showsTheCardLabelAndNumber() {
         setScreen()
 
         composeRule.onNodeWithText("Gold card").assertIsDisplayed()
         composeRule.onNodeWithText("0042").assertIsDisplayed()
+    }
+
+    @Test
+    fun showsTheNumberFormattedByTheStoresRule() { // #1: the display number is derived, not stored
+        val rule = CardNumberRule(
+            id = "example",
+            format = BarcodeFormat.CODE_128,
+            minLength = 9,
+            maxLength = 9,
+            display = CardNumberRule.Display(pattern = "### ### ###"),
+        )
+        setScreen(card = aLoyaltyCard(store = aStore(cardNumberRule = rule), number = "123456789"))
+
+        composeRule.onNodeWithText("123 456 789").assertIsDisplayed()
     }
 
     @Test
@@ -66,14 +83,14 @@ class DetailScreenTest {
     }
 
     @Test
-    fun emptyBrandColor_doesNotCrash() { // #14
+    fun emptyStoreColor_doesNotCrash() { // #14
         setScreen(color = "")
 
         composeRule.onNodeWithText("Gold card").assertIsDisplayed()
     }
 
     @Test
-    fun malformedBrandColor_doesNotCrash() { // #14
+    fun malformedStoreColor_doesNotCrash() { // #14
         setScreen(color = "not a colour")
 
         composeRule.onNodeWithText("Gold card").assertIsDisplayed()

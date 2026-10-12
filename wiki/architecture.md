@@ -12,17 +12,17 @@ All paths below are under `app/src/main/java/com/bdaniel/loyscan/` unless writte
 
 | Layer | Package / files | Responsibility | Rules |
 |---|---|---|---|
-| **Persistence** | `data/local/db/` — `AppDatabase`, `entity/*Entity`, `dao/*Dao` | Room tables, queries returning `Flow` | Entities never leave `data/`. Joins are flattened via `@Embedded` (see `LoyaltyCardWithBrand`). |
-| **Mapping** | `data/mapper/LoyaltyCardMapper.kt` | `LoyaltyCardWithBrand.toDomainModel()` | Extension functions, one direction (DB → domain). |
-| **Repository** | `data/repository/` — `LoyaltyCardRepository` (interface) + `RoomLoyaltyCardRepository` (`@Singleton` impl); `BrandRepository` | Exposes `Flow<domain>` | ViewModels depend on the **interface**, so tests pass a fake (see Testing seams). Reads return domain models. |
-| **Domain** | `domain/` — `LoyaltyCard`, `Brand`, `BarcodeFormat`; `domain/cardnumber/` — card-number rule engine ([[2026-10-09-card-number-rule-engine]]) | Plain data classes with an `EMPTY` sentinel; pure-Kotlin logic | No Android/Room imports — unit-tested on the JVM. |
+| **Persistence** | `data/local/db/` — `AppDatabase`, `entity/*Entity`, `dao/*Dao` | Room tables, queries returning `Flow` | Entities never leave `data/`. A card's store is loaded with `@Relation` (see `LoyaltyCardWithStore`). `Converters` maps lists, rules and `Instant`s to columns. |
+| **Mapping** | `data/mapper/LoyaltyCardMapper.kt` | `LoyaltyCardWithStore.toDomainModel()`, `StoreEntity.toDomainModel()` | Extension functions, one direction (DB → domain). |
+| **Repository** | `data/repository/` — `LoyaltyCardRepository` (interface) + `RoomLoyaltyCardRepository` (`@Singleton` impl); `StoreRepository` | Exposes `Flow<domain>` | ViewModels depend on the **interface**, so tests pass a fake (see Testing seams). Reads return domain models. |
+| **Domain** | `domain/` — `LoyaltyCard`, `Store`, `BarcodeFormat`; `domain/cardnumber/` — card-number rule engine ([[2026-10-09-card-number-rule-engine]]) | Plain data classes with an `EMPTY` sentinel; pure-Kotlin logic. Barcode content, display number and barcode format are derived on read (`LoyaltyCard`), never stored ([[2026-10-12-data-model-v2]]) | No Android/Room imports — unit-tested on the JVM. |
 | **Presentation state** | root package — `ListViewModel`, `DetailViewModel` | `@HiltViewModel`; turn repository Flows into `StateFlow` via `stateIn(viewModelScope, WhileSubscribed(5_000), initial)` | Route args read with `savedStateHandle.toRoute<Route>()`. |
 | **UI** | root package — `ListScreen`, `DetailScreen`; `ui/` — theme, icons, `hiltImageLoader()` | Composables, extensions on `SharedTransitionScope` | Screens receive a `*Directions` object, never a `NavController`. |
 | **Navigation** | `Navigation.kt`, `MainActivity.kt` (`AppNavigation`) | `@Serializable` routes + `NavController.*Directions()` factories | See [[2025-12-09-type-safe-navigation-directions]]. |
 | **DI** | `di/DatabaseModule.kt`, `di/ImageLoaderModule.kt`, `di/RepositoryModule.kt` | `@Module @InstallIn(SingletonComponent)` providers; `@Binds` repository interface → Room impl | Implementations use `@Inject constructor`. |
 
 Note: `LoyaltyCardRepository` has no write methods; the unused entity-taking `insert/delete` were dropped when
-it became an interface (#26). `BrandRepository` is still a concrete class whose `insert` takes an **entity**, and
+it became an interface (#26). `StoreRepository` is still a concrete class whose `insert` takes an **entity**, and
 nothing injects it. When a feature first needs writes, add them to the interface in domain terms, with
 domain→entity mappers.
 
@@ -53,7 +53,7 @@ Tests run on the JVM (`./gradlew testDebugUnitTest`, see [[build-and-run]]); sha
 - **The wired-up app** (`MainActivity`, Hilt, navigation) runs in `@HiltAndroidTest`s on Robolectric.
   `testing/InMemoryDatabaseModule` (`@TestInstallIn`) swaps `DatabaseModule` for an empty in-memory database
   that the test injects and fills (`AppNavigationTest`).
-- Fixture builders (`aLoyaltyCard()`, `aBrandEntity()`, …) give every field a default.
+- Fixture builders (`aLoyaltyCard()`, `aStoreEntity()`, …) give every field a default; `cardId(n)` makes distinct UUID-shaped card ids.
 
 ### Build tooling
 
@@ -68,23 +68,26 @@ This traces one feature through every layer. **Use it as the template for new fe
 its test: write it, watch it fail, then write the code ([[tdd]], [[2026-10-12-tdd-and-coverage]]). The tests named
 here exist; read them next to the code.
 
-1. **Data at rest.** Rows live in `brands` and `loyalty_cards` (FK `brandId` → `brands.id`, `ON DELETE CASCADE`,
-   indexed): `data/local/db/entity/LoyaltyCardEntity.kt:8-19`. On first launch they're inserted from
+1. **Data at rest.** Rows live in `stores` and `loyalty_cards` (FK `storeId` → `stores.id`, `ON DELETE CASCADE`,
+   indexed; string ids): `data/local/db/entity/LoyaltyCardEntity.kt:10-36`. Lists, rules and timestamps go
+   through `data/local/db/Converters.kt` ([[2026-10-12-data-model-v2]]). On first launch they're inserted from
    `app/src/main/assets/database/loyscan.sql` ([[seed-data]]).
    *Test first:* `SeedDatabaseCallbackTest`: the script loads, and the row counts and one full row match.
-2. **DAO query.** *Test first:* `LoyaltyCardDaoTest` inserts a brand and cards whose every field differs, then
-   expects the joined row (`getByIdWithBrand_mapsEveryCardAndBrandField`). A missing id emits `null`
+2. **DAO query.** *Test first:* `LoyaltyCardDaoTest` inserts a store and a card with every field set to a
+   non-default value, then expects the same row back with its store (`getByIdWithStore_storesEveryCardField`);
+   `StoreDaoTest.getById_storesEveryField` does the same for a store. A missing id emits `null`
    (`…_unknownId_emitsNull`).
-   Then the code: `LoyaltyCardDao.getAllWithBrand()` / `getByIdWithBrand(id)` run a `JOIN` and alias brand
-   columns with a `brand_` prefix, so they map onto `@Embedded(prefix = "brand_") val brand: BrandEntity`
-   (`data/local/db/dao/LoyaltyCardDao.kt:13-18, 31-36`). They return `Flow`, so the UI updates when tables change.
+   Then the code: `LoyaltyCardDao.getAllWithStore()` / `getByIdWithStore(id)` select cards inside `@Transaction`,
+   and Room fills `@Relation val store: StoreEntity` with a second query
+   (`data/local/db/dao/LoyaltyCardDao.kt:16-41`). They return `Flow`, so the UI updates when either table changes.
    The single-card query returns `Flow<…?>`: with a non-null type Room throws for a missing row
    ([[2026-10-09-missing-card-throws-from-room]]).
 3. **Mapping.** *Test first:* `LoyaltyCardMapperTest.toDomainModel_copiesEveryField`.
-   Then `LoyaltyCardWithBrand.toDomainModel()` builds `LoyaltyCard(…, brand = Brand(…))`
-   (`data/mapper/LoyaltyCardMapper.kt:11-24`).
+   Then `LoyaltyCardWithStore.toDomainModel()` builds `LoyaltyCard(…, store = Store(…))`
+   (`data/mapper/LoyaltyCardMapper.kt:12-42`). The derived fields (`barcodeContent`, `displayNumber`,
+   `barcodeFormat`) are computed by `LoyaltyCard` itself; test: `domain/LoyaltyCardTest`.
 4. **Repository.** *Test first:* `RoomLoyaltyCardRepositoryTest`: a real in-memory database in, domain cards out.
-   Then `RoomLoyaltyCardRepository.getAllWithBrand()` = `dao.getAllWithBrand().map { it.toDomainModel() }`
+   Then `RoomLoyaltyCardRepository.getAllWithStore()` = `dao.getAllWithStore().map { it.toDomainModel() }`
    (`data/repository/RoomLoyaltyCardRepository.kt:14`), behind the `LoyaltyCardRepository` interface. Change
    `FakeLoyaltyCardRepository` in the same step, so it keeps the interface's contract.
 5. **List ViewModel.** *Test first:* `ListViewModelTest`: built with the fake repository, Turbine on `cards`. It
@@ -95,7 +98,7 @@ here exist; read them next to the code.
    checks one tile per card, and that a click calls `toCard(id, color)`.
    Then `ListScreen` collects `cards` and renders a 2-column `LazyVerticalGrid` of `CardItem`s. Each `CardItem`'s
    colored box is a shared element keyed `"card/${card.id}"`. A click calls
-   `directions.toCard(card.id, card.brand.color)` ([[card-list]]).
+   `directions.toCard(card.id, card.store.color)` ([[card-list]]).
 7. **Navigation.** *Test first:* `AppNavigationTest`, the one end-to-end test for this flow: real Hilt and
    navigation over `InMemoryDatabaseModule`, list → detail → back.
    Then `NavController.listDirections().toCard` → `navigate(Detail(id, color))` (`Navigation.kt:16-21, 24-25`).
@@ -105,10 +108,10 @@ here exist; read them next to the code.
    checks `EMPTY` first, then the routed card. A missing card stays `EMPTY`, and a deleted card keeps the last
    value.
    Then `DetailViewModel` reads `savedStateHandle.toRoute<Detail>().cardId`, then
-   `repository.getByIdWithBrand(cardId).filterNotNull().stateIn(…, initialValue = LoyaltyCard.EMPTY)`
+   `repository.getByIdWithStore(cardId).filterNotNull().stateIn(…, initialValue = LoyaltyCard.EMPTY)`
    (`DetailViewModel.kt:22-31`).
-9. **Detail UI.** *Test first:* `DetailScreenTest`: it shows the name and code, the back arrow calls `toBack`,
-   and an empty or malformed route color doesn't crash.
+9. **Detail UI.** *Test first:* `DetailScreenTest`: it shows the label and the display number (formatted by the
+   store's rule), the back arrow calls `toBack`, and an empty or malformed route color doesn't crash.
    Then `DetailScreen` paints the top bar and header with the **route** color (available on frame 1), and fills
    text/logo from the **ViewModel** card (available once Room emits). The whole `Scaffold` is the matching shared
    element `"card/${card.id}"` (`DetailScreen.kt:64-72`). Back → `directions.toBack()` → `navigateUp()`.

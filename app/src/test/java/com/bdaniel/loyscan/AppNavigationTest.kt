@@ -8,8 +8,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.bdaniel.loyscan.data.local.db.AppDatabase
-import com.bdaniel.loyscan.testing.aBrandEntity
 import com.bdaniel.loyscan.testing.aLoyaltyCardEntity
+import com.bdaniel.loyscan.testing.aStoreEntity
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
@@ -43,8 +43,8 @@ class AppNavigationTest {
     fun setUp() {
         hiltRule.inject()
         runBlocking {
-            db.brandDao().insert(aBrandEntity(id = 1, name = "Test Store", logo = ""))
-            db.loyaltyCardDao().insert(aLoyaltyCardEntity(id = 1, name = "Gold card", brandId = 1, code = "0042"))
+            db.storeDao().insert(aStoreEntity(name = "Test Store", logo = null))
+            db.loyaltyCardDao().insert(aLoyaltyCardEntity(label = "Gold card", number = "0042"))
         }
     }
 

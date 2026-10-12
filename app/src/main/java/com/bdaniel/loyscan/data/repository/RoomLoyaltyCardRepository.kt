@@ -11,7 +11,7 @@ class RoomLoyaltyCardRepository @Inject constructor(
     private val loyaltyCardDao: LoyaltyCardDao
 ) : LoyaltyCardRepository {
 
-    override fun getAllWithBrand() = loyaltyCardDao.getAllWithBrand().map { it.toDomainModel() }
+    override fun getAllWithStore() = loyaltyCardDao.getAllWithStore().map { it.toDomainModel() }
 
-    override fun getByIdWithBrand(id: Int) = loyaltyCardDao.getByIdWithBrand(id).map { it?.toDomainModel() }
+    override fun getByIdWithStore(id: String) = loyaltyCardDao.getByIdWithStore(id).map { it?.toDomainModel() }
 }

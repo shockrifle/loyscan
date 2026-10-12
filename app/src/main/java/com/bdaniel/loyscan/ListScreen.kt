@@ -69,7 +69,7 @@ fun SharedTransitionScope.ListScreen(
                 CardItem(
                     animatedVisibilityScope = animatedVisibilityScope,
                     card = card,
-                    onClick = { directions.toCard(card.id, card.brand.color) },
+                    onClick = { directions.toCard(card.id, card.store.color) },
                 )
             }
         }
@@ -84,7 +84,7 @@ fun SharedTransitionScope.CardItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val cardColor = card.brand.color.toBrandColorOrNull() ?: MaterialTheme.colorScheme.surfaceVariant
+    val cardColor = card.store.color.toBrandColorOrNull() ?: MaterialTheme.colorScheme.surfaceVariant
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -101,16 +101,16 @@ fun SharedTransitionScope.CardItem(
                 ),
             contentAlignment = Alignment.Center
         ) {
-            if (card.brand.logo.isNotBlank()) {
+            if (!card.store.logo.isNullOrBlank()) {
                 AsyncImage(
-                    model = card.brand.logo,
-                    contentDescription = card.brand.name,
+                    model = card.store.logo,
+                    contentDescription = card.store.name,
                     modifier = Modifier
                         .fillMaxSize(0.6f)
                 )
             } else {
                 Text(
-                    text = card.brand.name,
+                    text = card.store.name,
                     style = MaterialTheme.typography.headlineSmall,
                     color = if (ColorUtils.calculateLuminance(cardColor.toArgb()) < 0.5) Color.White else Color.Black
                 )

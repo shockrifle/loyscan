@@ -6,7 +6,7 @@ This requires `android.permission.INTERNET`.
 
 ## Contract
 
-- `Brand.logo` is a URL string. **Blank means no logo**, and the screens render the brand name instead.
+- `Store.logo` is a nullable URL string. **`null` or blank means no logo**, and the screens render the store name instead.
 - The app-wide `ImageLoader` is a Hilt `@Singleton` with the SVG decoder and an `EventListener` that logs
   failures at WARN via Timber (`app/src/main/java/com/bdaniel/loyscan/di/ImageLoaderModule.kt:20-35`). Get it in
   Compose with `hiltImageLoader()` and pass it to `AsyncImage(imageLoader = …)` —

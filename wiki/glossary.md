@@ -12,28 +12,30 @@ required by `Modifier.sharedElement`. See [[card-transition]].
 card-number rule (`CardNumberEngine.barcodeContent`); equals the raw number when there is no rule.
 See [[2026-10-09-card-number-rule-engine]].
 
-**Barcode format** — `LoyaltyCard.barcodeFormat` / column `loyalty_cards.barcodeFormat`: a free-form string
-naming the barcode symbology (`EAN_13`, `EAN_8`, `CODE_128`, `CODE_39`, `QR_CODE`, `AZTEC`, `DATA_MATRIX`,
-`PDF_417` appear in the seed). Not an enum; not rendered anywhere yet. The values match ZXing/ML Kit
-`BarcodeFormat` names, but no barcode library is a dependency. The enum `domain/BarcodeFormat.kt` (2026-10-09)
-is used by card-number rules; the card field is still a string until #1.
+**Barcode format** — The symbology, enum `domain/BarcodeFormat.kt` (ZXing names, plus `DATABAR*`). A card's
+`barcodeFormat` is derived: `scannedFormat` (column `loyalty_cards.scannedFormat`), else the store rule's
+format, else `Store.defaultBarcodeFormat` ([[2026-10-12-data-model-v2]]). Not rendered anywhere yet; no barcode
+library is a dependency. Stored as the enum name. Was a free-form string before #1.
 
-**Brand** — The issuer of a card (a store/chain). `domain/Brand.kt`; table `brands`. Has `name`, `color`, `logo`.
-Several cards can share one brand.
+**Brand** — Old name of **Store** (`domain/Brand.kt`, table `brands`) until #1. "Brand colour" is still
+used for `Store.color`.
 
-**Brand color** — `Brand.color`, a hex string like `#FF0000`, parsed at render time with `String.toBrandColorOrNull()` (`ui/BrandColor.kt`); empty or malformed →
+**Brand color** — `Store.color`, a hex string like `#FF0000`, parsed at render time with `String.toBrandColorOrNull()` (`ui/BrandColor.kt`); empty or malformed →
 `null`, and the screens fall back to `surfaceVariant`.
 Drives card tile and detail header backgrounds; text on it is black/white by luminance (< 0.5 → white).
 Also travels in the `Detail` route — see [[2025-12-12-brand-color-in-route]].
 
-**Brand logo** — `Brand.logo`, an image URL (seed uses `https://picsum.photos/seed/<n>/200`). Blank means
-"show the brand name as text instead". Loaded with Coil — [[coil-image-loading]].
+**Brand logo** — `Store.logo`, a nullable image URL (seed uses `https://picsum.photos/seed/<n>/200`). `null` or
+blank means "show the store name as text instead". Loaded with Coil — [[coil-image-loading]].
 
 **Card-number rule** — `domain/cardnumber/CardNumberRule`: per-store JSON rule for validating, formatting and
 building barcode content from a core number, and matching scanned content back to one.
 See [[2026-10-09-card-number-rule-engine]].
 
-**Card code** — `LoyaltyCard.code`: the membership number the barcode would encode. Was `cardNumber` before `4cbc71d`.
+**Card code** — Old name of `LoyaltyCard.number` (was `cardNumber` before `4cbc71d`, `code` until #1).
+
+**Card number** — `LoyaltyCard.number`: the number as the user typed it, or the core number recovered from a
+scan. Barcode content and display number are derived from it, never stored.
 
 **`card/{id}`** — The shared-content key that links a list tile to the detail screen in the shared-element transition.
 Was `item/{id}` before `45a33e1`.
@@ -43,18 +45,21 @@ separators removed, letter case applied). Rules turn it into barcode content. Se
 
 **DAO** — Room data-access interface in `data/local/db/dao/`. Reads return `Flow`.
 
-**Detail** — Navigation route `data class Detail(val cardId: Int, val color: String)` (`Navigation.kt:24-25`).
+**Detail** — Navigation route `data class Detail(val cardId: String, val color: String)` (`Navigation.kt:24-25`).
+
+**Display number** — `LoyaltyCard.displayNumber`: the number formatted by the store rule's display pattern
+(`CardNumberEngine.displayNumber`); the trimmed number when there is no rule. Shown on the detail screen.
 
 **Directions** — Per-screen data class of navigation lambdas (`ListDirections`, `DetailDirections`), created by
 `NavController.listDirections()` / `detailDirections()` (`Navigation.kt`). Screens depend on Directions, never on
 `NavController`. See [[2025-12-09-type-safe-navigation-directions]].
 
-**Domain model** — Plain Kotlin data classes in `domain/` (`LoyaltyCard`, `Brand`) that the UI consumes.
+**Domain model** — Plain Kotlin data classes in `domain/` (`LoyaltyCard`, `Store`) that the UI consumes.
 
-**`EMPTY`** — Companion sentinel (`LoyaltyCard.EMPTY`, `Brand.EMPTY`) with id `0` and empty strings; used as
-`stateIn` initial value so screens never deal with `null`. Its `id = 0` matters for [[shared-element-key-from-async-state]].
+**`EMPTY`** — Companion sentinel (`LoyaltyCard.EMPTY`, `Store.EMPTY`) with id `""` and empty or null fields; used as
+`stateIn` initial value so screens never deal with `null`. Its empty id matters for [[shared-element-key-from-async-state]].
 
-**Entity** — Room table class in `data/local/db/entity/` (`BrandEntity`, `LoyaltyCardEntity`). Stays inside `data/`.
+**Entity** — Room table class in `data/local/db/entity/` (`StoreEntity`, `LoyaltyCardEntity`). Stays inside `data/`.
 
 **hiltImageLoader()** — Composable in `ui/ImageLoader.kt` that returns the app-wide Coil `ImageLoader` from Hilt
 via `ImageLoaderEntryPoint`. See [[2025-12-12-singleton-image-loader]].
@@ -65,11 +70,14 @@ via `ImageLoaderEntryPoint`. See [[2025-12-12-singleton-image-loader]].
 **List** — Navigation route `object List` (`Navigation.kt:7-8`), the start destination. **Shadows
 `kotlin.collections.List`** in the root package — [[list-route-shadows-kotlin-list]].
 
-**Loyalty card** — The core entity: a membership card for a brand. `domain/LoyaltyCard.kt`; table `loyalty_cards`.
-Fields: `id`, `name` (user-facing card name, e.g. "Coffee Bean Club"), `brand`, `code`, `barcodeFormat`.
+**Label** — `LoyaltyCard.label`: the user's own optional name for a card (e.g. "Coffee Bean Club"). Was `name`
+until #1.
 
-**LoyaltyCardWithBrand** — Room result class joining a card with its brand via two `@Embedded` fields, brand
-columns prefixed `brand_` (`data/local/db/dao/LoyaltyCardDao.kt:13-18`).
+**Loyalty card** — The core entity: a user's membership card for one store. `domain/LoyaltyCard.kt`; table
+`loyalty_cards`. UUID string id; fields per [[2026-10-12-data-model-v2]].
+
+**LoyaltyCardWithStore** — Room result class: the card `@Embedded`, its store loaded by `@Relation`
+(`data/local/db/dao/LoyaltyCardDao.kt:16-21`). Was `LoyaltyCardWithBrand` (a hand-aliased `JOIN`) until #1.
 
 **`loyscan.db`** — The on-device SQLite file name (`di/DatabaseModule.kt`, `provideAppDatabase`).
 
@@ -90,5 +98,9 @@ classes and bound in `di/RepositoryModule.kt`; the ViewModels' only data depende
 
 **SharedTransitionScope** — Receiver of `AppNavigation`, `ListScreen`, `DetailScreen`, `CardItem`, so they can call
 `sharedElement`. Experimental API (`@OptIn(ExperimentalSharedTransitionApi::class)`).
+
+**Store** — The issuer of a card: a catalogue store (stable slug id) or a custom store the user created
+(`isCustom`, UUID id). `domain/Store.kt`; table `stores`. Several cards can share one store. Carries the optional
+card-number rule. Was `Brand` until #1 — [[2026-10-12-data-model-v2]].
 
 **Timber** — Logging library; `DebugTree` planted in debug builds only (`LoyScanApplication.kt:11-13`).

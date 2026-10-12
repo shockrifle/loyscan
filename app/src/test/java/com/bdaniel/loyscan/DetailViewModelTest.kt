@@ -8,6 +8,7 @@ import com.bdaniel.loyscan.domain.LoyaltyCard
 import com.bdaniel.loyscan.testing.FakeLoyaltyCardRepository
 import com.bdaniel.loyscan.testing.MainDispatcherRule
 import com.bdaniel.loyscan.testing.aLoyaltyCard
+import com.bdaniel.loyscan.testing.cardId
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
@@ -24,16 +25,16 @@ class DetailViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val repository = FakeLoyaltyCardRepository(listOf(aLoyaltyCard(id = 1)))
+    private val repository = FakeLoyaltyCardRepository(listOf(aLoyaltyCard(id = cardId(1))))
 
     @Test
     fun card_isTheOneNamedByTheRoute() = runTest {
-        val viewModel = DetailViewModel(SavedStateHandle(route = Detail(cardId = 2, color = "#336699")), repository)
+        val viewModel = DetailViewModel(SavedStateHandle(route = Detail(cardId = cardId(2), color = "#336699")), repository)
 
         viewModel.card.test {
             assertThat(awaitItem()).isEqualTo(LoyaltyCard.EMPTY)
 
-            val card = aLoyaltyCard(id = 2)
+            val card = aLoyaltyCard(id = cardId(2))
             repository.cards.value += card
             assertThat(awaitItem()).isEqualTo(card)
         }
@@ -41,21 +42,21 @@ class DetailViewModelTest {
 
     @Test
     fun card_staysEmpty_whileNoCardHasTheId() = runTest {
-        val viewModel = DetailViewModel(SavedStateHandle(route = Detail(cardId = 99, color = "#336699")), repository)
+        val viewModel = DetailViewModel(SavedStateHandle(route = Detail(cardId = cardId(99), color = "#336699")), repository)
 
         viewModel.card.test {
             assertThat(awaitItem()).isEqualTo(LoyaltyCard.EMPTY)
-            repository.cards.value += aLoyaltyCard(id = 2)
+            repository.cards.value += aLoyaltyCard(id = cardId(2))
             expectNoEvents()
         }
     }
 
     @Test
     fun card_keepsTheLastCard_whenItIsDeleted() = runTest {
-        val viewModel = DetailViewModel(SavedStateHandle(route = Detail(cardId = 1, color = "#336699")), repository)
+        val viewModel = DetailViewModel(SavedStateHandle(route = Detail(cardId = cardId(1), color = "#336699")), repository)
 
         viewModel.card.test {
-            assertThat(awaitItem()).isEqualTo(aLoyaltyCard(id = 1))
+            assertThat(awaitItem()).isEqualTo(aLoyaltyCard(id = cardId(1)))
             repository.cards.value = emptyList()
             expectNoEvents()
         }

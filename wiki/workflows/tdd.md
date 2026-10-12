@@ -45,7 +45,7 @@ details belong in the per-layer tests.
 ## Naming and shape
 
 - Class: `<ClassUnderTest>Test`. Method: `subject_condition_expectedResult` or `behaviour_inPlainWords`, e.g.
-  `getByIdWithBrand_unknownId_emitsNull`, `clickingACard_navigatesToItWithItsBrandColor`.
+  `getByIdWithStore_unknownId_emitsNull`, `clickingACard_navigatesToItWithItsStoreColor`.
 - One behaviour per test, arranged as arrange / act / assert with blank lines between them. Assertions use Truth
   (`assertThat`), and `Flow`s are tested with Turbine (`flow.test { awaitItem() … }`).
 - A regression test is named after the behaviour; a `// #N` comment links the issue.
@@ -53,11 +53,11 @@ details belong in the per-layer tests.
 ## Fixtures and doubles
 
 Shared helpers are in `testing/`:
-- **Fixture builders**, `aLoyaltyCard()`, `aBrand()`, `aBrandEntity()`, `aLoyaltyCardEntity()`: every field has a
+- **Fixture builders**, `aLoyaltyCard()`, `aStore()`, `aStoreEntity()`, `aLoyaltyCardEntity()`: every field has a
   default, so a test names only what it is about. Add a builder when you add a model. Use example data only,
   never real stores.
 - **Fakes**, e.g. `FakeLoyaltyCardRepository` (a `MutableStateFlow` you set): a fake implements the real
-  interface *and its edge cases*. For example, `getByIdWithBrand` emits `null` for a missing id, as Room does.
+  interface *and its edge cases*. For example, `getByIdWithStore` emits `null` for a missing id, as Room does.
   When you change an interface's contract, change the fake in the same commit. No mocking library.
 - **`MainDispatcherRule`** for anything that uses `viewModelScope`.
 - **`InMemoryDatabaseModule`** replaces `DatabaseModule` in every `@HiltAndroidTest`: an empty database that the

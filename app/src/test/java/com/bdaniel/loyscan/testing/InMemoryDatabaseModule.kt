@@ -22,7 +22,7 @@ object InMemoryDatabaseModule {
         Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).allowMainThreadQueries().build()
 
     @Provides
-    fun provideBrandDao(appDatabase: AppDatabase) = appDatabase.brandDao()
+    fun provideStoreDao(appDatabase: AppDatabase) = appDatabase.storeDao()
 
     @Provides
     fun provideLoyaltyCardDao(appDatabase: AppDatabase) = appDatabase.loyaltyCardDao()

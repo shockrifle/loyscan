@@ -2,11 +2,12 @@
 
 **Status:** Open · **Issue:** [#12](https://github.com/shockrifle/loyscan/issues/12) · **Since:** 2025-12-08 (`4969a2b`) · **Where:**
 `app/src/main/java/com/bdaniel/loyscan/di/DatabaseModule.kt`, `provideAppDatabase`,
-`app/src/main/java/com/bdaniel/loyscan/data/local/db/AppDatabase.kt:10`
+`app/src/main/java/com/bdaniel/loyscan/data/local/db/AppDatabase.kt:11`
 
 ## What
-`version = 1`, with no `addMigrations`, no `@AutoMigration`, and no `fallbackToDestructiveMigration`. The schema
-JSON for v1 was rewritten in place by `4cbc71d` (column renames) without a version bump.
+`version = 2`, with no `addMigrations`, no `@AutoMigration`, and no `fallbackToDestructiveMigration`. The schema
+JSON for v1 was rewritten in place by `4cbc71d` (column renames) without a version bump. v2 (#1, 2026-10-12)
+rebuilt both tables with no v1 → v2 migration, so a dev install from before #1 crashes on open until it is wiped.
 
 ## Why it exists
 Pre-release development; nothing has shipped, so wiping the DB is free.
