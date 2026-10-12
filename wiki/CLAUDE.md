@@ -69,6 +69,7 @@ Treat this as a checklist at the end of every non-trivial task:
 - [ ] **External integration touched/changed** (image hosts, future barcode/scanner libs, any
       network API) → `integrations/`.
 - [ ] **Script / Gradle task / workflow added, renamed, removed** → `scripts/` or `workflows/`.
+- [ ] **New kind of test, fixture or fake** → [[tdd]] (the per-layer table) and [[architecture]] → Testing seams.
 - [ ] **Room schema / DB version changed** → update [[database-schema-changes]] and
       [[seed-data]] if the seed SQL changed.
 - [ ] **Non-obvious question came up** → [[faq]]. **Domain term came up** → [[glossary]].
@@ -84,7 +85,11 @@ Treat this as a checklist at the end of every non-trivial task:
 
 Work is tracked in GitHub Issues on `shockrifle/loyscan` (use `gh`). The split:
 
-- **Issue = what and whether.** Scope, acceptance criteria, status, milestone. Labels: `feature`, `bug`,
+- **Issue = what and whether.** Scope, acceptance criteria, status, milestone. **Acceptance criteria are
+  testable statements:** observable behaviour with its input and expected result ("tapping a card opens its
+  detail", "an empty brand colour falls back to `surfaceVariant`"), not tasks ("refactor X") or vague qualities
+  ("works well"). Each criterion maps to at least one test ([[tdd]]). Documentation criteria (a wiki page, a
+  decision) are fine as they are. Labels: `feature`, `bug`,
   `tech-debt`, `hack`. Milestones: `v1 – core cards`, `v1 – extras`, `Later`.
 - **Wiki = why and how.** Decisions, architecture, feature docs, postmortems, runbooks. Wiki pages don't hold
   backlogs or TODO lists; issues don't hold design rationale (link to the wiki page instead).

@@ -23,7 +23,7 @@ the way they are, what's fragile, and how to work on it.
 
 ## How-to
 
-- Workflows: [[build-and-run]], [[database-schema-changes]], [[code-review]]
+- Workflows: [[tdd]] (start here before writing code), [[build-and-run]], [[database-schema-changes]], [[code-review]]
 - Runbooks: [[cli-build-jvm-target-mismatch]], [[reset-local-database]]
 - Integrations: [[coil-image-loading]]
 - Scripts: none yet — see [[scripts/_index|scripts]]
@@ -32,7 +32,7 @@ the way they are, what's fragile, and how to work on it.
 
 | Folder | What's in it |
 |---|---|
-| [[decisions/_index\|decisions]] | Why the codebase looks the way it does (8 pages) |
+| [[decisions/_index\|decisions]] | Why the codebase looks the way it does (9 pages) |
 | [[bugs/_index\|bugs]] | Postmortems (2 pages) |
 | [[tech-debt/_index\|tech-debt]] | Owed work, open vs resolved (5 pages) |
 | [[hacks/_index\|hacks]] | Short-lived workarounds (2 pages) |

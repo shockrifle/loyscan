@@ -50,15 +50,22 @@ rule, a `Flow` that never emits or emits `EMPTY` first, configuration change and
   marked Resolved and moved in its `_index.md`, and the commit should close the issue the page links.
 
 ### Tests
-- Run `./gradlew testDebugUnitTest` (set `JAVA_HOME` first — see root `CLAUDE.md`) and report the result.
-  Failing or newly skipped tests are findings.
-- Pure-Kotlin logic (`domain/`, mappers, the card-number engine) must have JVM tests in `app/src/test/`, in the
-  mirrored package. Per the rule-engine decision, every `CheckDigitAlgorithm` and every bundled card-number rule
-  needs its own test vectors.
-- Check the tests actually exercise the change: assertions on the new branches and edge cases, not only the
-  happy path. The template `ExampleUnitTest` / `ExampleInstrumentedTest` don't count as coverage.
-- Room, ViewModel and Compose code has no test harness yet (`wiki/tech-debt/no-automated-tests.md`, #13). Note
-  a missing test there as a gap, not a blocker, unless the change sets up a harness.
+LoyScan is test-first (`wiki/decisions/2026-10-12-tdd-and-coverage.md`, how-to in `wiki/workflows/tdd.md`).
+- Run `./gradlew testDebugUnitTest koverVerify` (set `JAVA_HOME` first — see root `CLAUDE.md`) and report both
+  results. Failing or newly skipped (`@Ignore`) tests, and a failing coverage gate, are **blockers**.
+- **New logic without tests is a major finding**, in every layer: domain, mapper, DAO, repository, ViewModel,
+  screen and navigation each have a harness (the per-layer table in `wiki/workflows/tdd.md`). Logic means a branch,
+  a calculation, a query, a mapping or a state change. Pure wiring (DI bindings, theme values) is exempt.
+- **A bug fix without a regression test is a major finding.** The test must fail without the fix: reason it
+  through, or revert the fix locally to check if in doubt, then restore it. It should be named after the
+  behaviour.
+- Check the tests actually exercise the change: assertions on the new branches and edge cases (null, empty, the
+  no-row case, errors), not only the happy path. Per the rule-engine decision, every `CheckDigitAlgorithm` and
+  every bundled card-number rule needs its own test vectors.
+- Test doubles are fakes from `app/src/test/java/com/bdaniel/loyscan/testing/`, not a mocking library. If the
+  change alters an interface's contract (nullability, ordering, errors), the fake must change with it.
+- Coverage ratchet: if coverage rose by a whole percent or more, `minBound` in `app/build.gradle.kts` should be
+  raised in the same change. If `minBound` was lowered, that is a blocker.
 
 ### Architecture and patterns
 Check the change against the "Layers" table and the "Checklist for a new screen/feature" in
@@ -117,7 +124,7 @@ and don't pad the list with taste-level nits.
 2. **Findings** — a table ranked most severe first: severity (blocker / major / minor) · Confirmed/Plausible ·
    `path:line` · the defect · the failure scenario · suggested fix (one line).
 3. **Issue acceptance criteria** — each criterion with met / partly / not met and the evidence.
-4. **Checks** — unit test and build results (pass/fail with the failing output), and the wiki checklist items
+4. **Checks** — unit test, coverage gate and build results (pass/fail with the failing output), and the wiki checklist items
    still open.
 5. **Follow-ups** — true but out-of-scope problems, phrased as suggested new issues (title + label). Don't
    create them.

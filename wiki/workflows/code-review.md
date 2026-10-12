@@ -8,13 +8,26 @@ and why it looks this way.
 
 1. Commit locally on `master`.
 2. `/review-changes` — reviews the unpushed commits plus uncommitted changes (or a given commit, range, PR or
-   issue) against the linked issue's acceptance criteria, the unit tests, [[architecture]], the open
+   issue) against the linked issue's acceptance criteria, the test-first rules, [[architecture]], the open
    [[hacks/_index|hacks]] and [[tech-debt/_index|tech-debt]] items, and the wiki checklist in [[CLAUDE]]. It only
    reports; it does not change code.
 3. `/review-fix <review text>` — takes a review (from step 2, or from a human or another tool), verifies each
    claim and each proposed fix, and stops with a plan. After approval it implements the plan, commits locally and
    drafts a reply to the reviewer.
 4. Push once the review has no blockers.
+
+## What the review enforces about tests
+
+The project is test-first ([[2026-10-12-tdd-and-coverage]], [[tdd]]), and `/review-changes` checks it:
+- It runs `./gradlew testDebugUnitTest koverVerify`. A failing or newly skipped test, or a failing coverage gate,
+  is a **blocker**, and so is a lowered `minBound`.
+- **New logic without tests** is a major finding in every layer: each has a harness. Pure wiring (DI, theme) is
+  exempt.
+- **A bug fix without a regression test** that fails without the fix is a major finding.
+- A fake that no longer matches its interface's contract is a finding, and so is a missed ratchet (coverage rose
+  but `minBound` didn't).
+
+`/review-fix` implements fixes test-first too. If the test passes before the fix, the claim was wrong.
 
 ## Why it looks this way
 

@@ -54,7 +54,8 @@ For the valid and partly valid claims, write a fix plan:
 - what changes, in which files and layers
 - if the reviewer suggested a fix: whether to follow it or do something else, and why
 - related places with the same problem that the review did not mention
-- whether tests need adding or changing (unit tests live in `app/src/test/`)
+- the test for each fix, written first (`wiki/workflows/tdd.md`): a valid bug claim gets a regression test that
+  fails before the fix; a claim about missing behaviour gets a test for that behaviour
 - which wiki pages the fix makes inaccurate or calls for (run the "When to update" checklist in `wiki/CLAUDE.md`)
 - how the fixes map to commits — one focused commit per logical fix, message in the repo's existing style (short imperative sentence, capitalized, no prefix; `Fixes #N` when it closes an issue)
 
@@ -68,9 +69,13 @@ Present the claim table (claim → verdict → proposed-fix verdict, if any → 
 
 After my go-ahead, implement exactly the approved plan. If something turns out differently while implementing, stop and tell me instead of improvising.
 
+Implement test-first: for each fix, write its test, run it and see it fail for the claimed reason, then fix
+it. If the test passes before the fix, the claim was wrong: stop and tell me.
+
 Then:
 
-- set `JAVA_HOME` to Android Studio's JBR first (see root `CLAUDE.md`), then run `./gradlew testDebugUnitTest` and `./gradlew assembleDebug` and make sure both pass
+- set `JAVA_HOME` to Android Studio's JBR first (see root `CLAUDE.md`), then run `./gradlew testDebugUnitTest koverVerify assembleDebug` and make sure it passes; raise the Kover
+  `minBound` if coverage rose (`wiki/decisions/2026-10-09-coverage-gate-kover.md`)
 - update the wiki pages from the plan in the same commit as the code, and append a line to `wiki/_log.md`
 - commit locally on `master`; do not push, do not comment on the PR or issue, and do not create, edit or close GitHub issues — report back and I will answer the reviewer myself. Out-of-scope findings go in the report as suggested follow-up issues.
 - keep commits within the "Public-safe" rule in `wiki/CLAUDE.md`

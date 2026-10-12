@@ -27,7 +27,7 @@ hacks and tech debt, integration contracts, runbooks, in-flight projects, and th
 
 `wiki/architecture.md` contains a worked end-to-end example showing the layered pattern every
 new feature follows (Room entity/DAO → mapper → repository → `@HiltViewModel` → Compose screen +
-type-safe route/Directions). Use it as the template.
+type-safe route/Directions). Use it as the template. Each layer there starts with its test.
 
 ## Project quick facts
 
@@ -36,6 +36,9 @@ type-safe route/Directions). Use it as the template.
 - Build: `./gradlew assembleDebug` · install: `./gradlew installDebug`. Versions live in `gradle/libs.versions.toml`.
   From a terminal, set `JAVA_HOME` to Android Studio's JBR 21 first (`/c/Program Files/Android/Android Studio/jbr`),
   otherwise the build fails with a JVM-target mismatch — see `wiki/runbooks/cli-build-jvm-target-mismatch.md`.
+- **Test-first.** Write the failing test before the code, and see it fail. A bug fix starts with a failing
+  regression test. `./gradlew testDebugUnitTest koverVerify` must pass before committing; raise the Kover
+  `minBound` when coverage rises. How: `wiki/workflows/tdd.md`; why: `wiki/decisions/2026-10-12-tdd-and-coverage.md`.
 - Remote: GitHub `shockrifle/loyscan` (`origin`, SSH). Commit directly to `master`. The repo-local
   `core.sshCommand` points at the user's SSH key, so plain `git push` / `git pull` work.
 - Work is tracked in GitHub Issues + milestones (`gh issue list`); reference issues in commits (`Fixes #N`).
