@@ -9,9 +9,9 @@ delete the page.
 - [[list-screen-bypasses-image-loader]] — list tiles use Coil's default loader (no SVG, no logging)
 - [[shared-element-key-from-async-state]] — detail key is `card/0` until Room emits (suspected)
 - [[no-room-migrations]] — DB v1, no migration path
-- [[no-automated-tests]] — safety net, gate and test-first workflow in place; CI still missing
 
 ## Resolved
 
+- [[no-automated-tests]] — tests in every layer, coverage gate, test-first workflow and CI (#13)
 - [[empty-brand-color-crash]] — empty/malformed brand colour crashed detail (and list); now parsed with a
   fallback (#14)

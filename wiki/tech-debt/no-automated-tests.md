@@ -1,10 +1,13 @@
 # No automated tests
 
-**Status:** Open · **Issue:** [#13](https://github.com/shockrifle/loyscan/issues/13) · **Since:** 2025-12-03 (`00933cd`) · **Where:** `app/src/test/`
+**Status:** Resolved 2026-10-12 (#13; last piece #29) · **Issue:** [#13](https://github.com/shockrifle/loyscan/issues/13) · **Since:** 2025-12-03 (`00933cd`) · **Where:** `app/src/test/`
+
+**Resolved:** every layer has tests (#30), coverage is gated at 90 % (#27), test-first is the documented default
+(#28), and CI runs the tests and the gate on every push (#29, [[ci]]). Feature work keeps it paid down; the
+coverage ratchet makes slipping back visible.
 
 ## What
-Every layer now has a safety net of tests (#30), coverage is gated at 90 %, and test-first is the documented
-default (#28). What is still missing is CI (#29), so nothing runs the tests unless someone does it locally.
+The app had no automated tests apart from the Android Studio templates.
 
 Progress (2026-10-09):
 - The card-number rule engine has JVM unit tests (`app/src/test/java/com/bdaniel/loyscan/domain/cardnumber/`,
@@ -19,12 +22,13 @@ Progress (2026-10-09):
   [[2026-10-09-missing-card-throws-from-room]].
 - Test-first is the default (#28): [[2026-10-12-tdd-and-coverage]], how-to in [[tdd]]. It is in the root
   `CLAUDE.md`, and `/review-changes` enforces it.
+- CI (#29): GitHub Actions runs `testDebugUnitTest koverVerify` on every push to `master` — [[ci]].
 
 ## Why it exists
 Early prototype phase (20 commits, 2025-12-03 → 2025-12-12).
 
 ## Risk / impact
-Without CI, the rules hold only when someone runs the tests and the review locally before pushing.
+(Historical) Regressions in the hand-written SQL, the seed script or the screens were only caught by running the app.
 
 ## How to pay it down
-The remaining sub-issue of #13 is CI (#29).
+Done: the sub-issues of #13 (#26, #27, #28, #29, #30) are all closed.

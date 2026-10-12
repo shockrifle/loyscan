@@ -22,7 +22,8 @@ locally.
 
 ## Tests
 
-How to work test-first and which test goes with which layer: [[tdd]].
+How to work test-first and which test goes with which layer: [[tdd]]. The same tests and gate run in CI on every
+push to `master`: [[ci]].
 
 All tests are in `app/src/test/` and run on the JVM; there is no `androidTest` source set, so no emulator is
 needed. Only the debug variant has unit tests (release ones are turned off in `app/build.gradle.kts`,

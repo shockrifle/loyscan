@@ -14,7 +14,8 @@ and why it looks this way.
 3. `/review-fix <review text>` — takes a review (from step 2, or from a human or another tool), verifies each
    claim and each proposed fix, and stops with a plan. After approval it implements the plan, commits locally and
    drafts a reply to the reviewer.
-4. Push once the review has no blockers.
+4. Push once the review has no blockers. CI then runs the tests and the coverage gate on GitHub Actions ([[ci]]);
+   a red run means `master` is broken and comes first.
 
 ## What the review enforces about tests
 
