@@ -35,7 +35,7 @@ the way they are, what's fragile, and how to work on it.
 |---|---|
 | [[decisions/_index\|decisions]] | Why the codebase looks the way it does (11 pages) |
 | [[bugs/_index\|bugs]] | Postmortems (2 pages) |
-| [[tech-debt/_index\|tech-debt]] | Owed work, open vs resolved (5 pages) |
+| [[tech-debt/_index\|tech-debt]] | Owed work, open vs resolved (7 pages) |
 | [[hacks/_index\|hacks]] | Short-lived workarounds (2 pages) |
 | [[workflows/_index\|workflows]] · [[runbooks/_index\|runbooks]] · [[integrations/_index\|integrations]] · [[features/_index\|features]] · [[apps/_index\|apps]] | Folder indexes |
 

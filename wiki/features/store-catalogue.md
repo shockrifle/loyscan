@@ -47,14 +47,15 @@ why it has no logos, and why it is loaded this way: [[2026-10-13-curated-store-c
 - **16 Hungarian stores (2026-10-13), 10 with a card-number rule.** They were drafted from the retailers' public
   pages, with an existing app's catalogue used only as a checklist of facts to check. Most number formats are not
   yet confirmed on a real card. Which entries still need that is tracked in
-  [#3](https://github.com/shockrifle/loyscan/issues/3), not here.
+  [#31](https://github.com/shockrifle/loyscan/issues/31), not here.
 - **The core is the full printed number.** EAN-13 stores use 13 digits with a `GTIN_MOD10` `VERIFY` check and no
   prefix, because the card prints all 13 digits. As a result a store's fixed leading digits (e.g. `999…`) are not
   enforced, and `CardNumberEngine.match` accepts any valid EAN-13 for every EAN-13 store. A scanned card can't tell
-  those stores apart (matters for #6). The rule model has no "required leading digits" check.
+  those stores apart (matters for #6). The rule model has no "required leading digits" check:
+  [[rules-cannot-require-leading-digits]].
 - **GS1-128 is drawn as plain Code 128.** `BarcodeFormat` has no `GS1_128`. Coop's barcode starts with Application
   Identifier `90`. A till that parses GS1 may expect a leading FNC1, which plain Code 128 doesn't have. Not
-  yet tested at a till.
+  yet tested at a till: [[gs1-128-drawn-as-code-128]].
 
 ## Tests
 

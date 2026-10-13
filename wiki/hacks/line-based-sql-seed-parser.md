@@ -1,6 +1,6 @@
 # Line-based SQL seed "parser"
 
-**Status:** Removed (2026-10-13, #18) · **Issue:** [#18](https://github.com/shockrifle/loyscan/issues/18) · **Since:** 2025-12-09 (`01e3480`) · **Where:**
+**Status:** Removed (`622632c`, 2026-10-13, #18) · **Issue:** [#18](https://github.com/shockrifle/loyscan/issues/18) · **Since:** 2025-12-09 (`01e3480`) · **Where:**
 `app/src/main/java/com/bdaniel/loyscan/data/local/db/SeedDatabaseCallback.kt` (`onCreate`)
 
 ## What

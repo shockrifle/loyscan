@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-13 · review fixes: two catalogue gaps filed as tech debt (#32, #33); entry verification moved to #31; stale data-model-v2 bullet, hack SHA and the DB version in the tech-debt index corrected · tech-debt/rules-cannot-require-leading-digits (new), tech-debt/gs1-128-drawn-as-code-128 (new), tech-debt/_index, index, features/store-catalogue, decisions/2026-10-12-data-model-v2, hacks/line-based-sql-seed-parser · review of #3
 - 2026-10-13 · first 16 HU catalogue entries; known gaps recorded (EAN prefixes not enforced, GS1-128 drawn as Code 128) · features/store-catalogue, features/seed-data · #3, #1
 - 2026-10-13 · store catalogue loader (JSON asset synced into Room on every open), demo cards debug-only, SQL seed and line-based loader removed; seed-from-SQL decision superseded · features/store-catalogue (new), workflows/add-a-catalogue-store (new), decisions/2026-10-13-curated-store-catalogue (new), features/seed-data, hacks/line-based-sql-seed-parser (removed), hacks/_index, decisions/2025-12-09-seed-db-from-sql-asset, decisions/2026-10-12-data-model-v2, decisions/_index, architecture, glossary, faq, index, CLAUDE, features/_index, workflows/_index, workflows/tdd, workflows/database-schema-changes, runbooks/reset-local-database · #3, #18
 - 2026-10-12 · demo seed's scannedFormat values marked as not real scans · features/seed-data · review round 2 of #1
