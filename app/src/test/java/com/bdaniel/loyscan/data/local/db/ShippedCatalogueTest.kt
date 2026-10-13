@@ -27,7 +27,18 @@ class ShippedCatalogueTest {
     /** A made-up printed number per store with a rule; never a real person's card. */
     private data class Vector(val storeId: String, val printed: String, val barcodeContent: String, val display: String)
 
-    private val vectors = listOf<Vector>()
+    private val vectors = listOf(
+        Vector("hu-coop", "6028532123456789", "906028532123456789", "6028 5321 2345 6789"),
+        Vector("hu-dm", "2410000123452", "2410000123452", "2 410000 123452"),
+        Vector("hu-auchan", "9700000123457", "9700000123457", "9700000123457"),
+        Vector("hu-ikea-family", "6275980421234567893", "6275980421234567893", "627598 042 123 456 7893"),
+        Vector("hu-momax", "1234567890", "1234567890", "1234567890"),
+        Vector("hu-penny", "9940000123457", "9940000123457", "9940000123457"),
+        Vector("hu-praktiker", "123456789", "123456789", "123 456 789"),
+        Vector("hu-rossmann", "9991234567890", "9991234567890", "9991234567890"),
+        Vector("hu-shell-clubsmart", "70044200012345678", "70044200012345678", "7004 4200 0123 4567 8"),
+        Vector("hu-supershop", "5540000012345678", "5540000012345678", "5540 0000 1234 5678"),
+    )
 
     @Test
     fun shippedCatalogue_loadsIntoTheDatabase() = runTest {

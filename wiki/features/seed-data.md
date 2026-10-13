@@ -1,7 +1,8 @@
 # Demo data (debug builds only)
 
 When a **debug** build first creates `loyscan.db`, it inserts 5 demo stores and 11 demo cards. Release builds
-insert none: they start with only the catalogue stores ([[store-catalogue]]) and no cards. Until the add-card flow
+insert none: they start with only the catalogue stores ([[store-catalogue]]) and no cards. This closed the last
+criterion of [#1](https://github.com/shockrifle/loyscan/issues/1). Until the add-card flow
 (#6) exists, this is the only way cards get into a debug build.
 
 **Entry point:** `DemoSeedCallback.onCreate`
