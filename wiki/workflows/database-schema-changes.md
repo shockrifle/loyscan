@@ -18,7 +18,8 @@ migration (or a wipe) exists.
    - *Pre-release / dev:* uninstall or clear data ([[reset-local-database]]).
    - *Real users:* add `.addMigrations(...)` or a Room `@AutoMigration(from, to)` (which needs the exported
      schemas). See [[no-room-migrations]].
-4. Update `app/src/main/assets/database/loyscan.sql` to the new column names — [[seed-data]].
+4. Update the raw-row mappers in `data/local/db/ContentValues.kt` (`ContentValuesTest` fails until you do), and the
+   catalogue entry format if a store column changed ([[store-catalogue]]).
 5. Update the domain model and mapper if the field is user-visible.
 
 ## History

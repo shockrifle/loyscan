@@ -7,8 +7,8 @@ below.
 ## Active
 
 - [[list-route-shadows-kotlin-list]] — route `object List` hides `kotlin.collections.List`; types are inferred instead
-- [[line-based-sql-seed-parser]] — the seed SQL must be one statement per line
 
 ## Removed
 
-_(none yet)_
+- [[line-based-sql-seed-parser]] — the seed SQL had to be one statement per line; replaced by the catalogue loader and
+  a Kotlin demo seed (#18)

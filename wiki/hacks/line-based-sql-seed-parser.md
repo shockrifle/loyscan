@@ -1,6 +1,6 @@
 # Line-based SQL seed "parser"
 
-**Status:** Active · **Issue:** [#18](https://github.com/shockrifle/loyscan/issues/18) · **Since:** 2025-12-09 (`01e3480`) · **Where:**
+**Status:** Removed (2026-10-13, #18) · **Issue:** [#18](https://github.com/shockrifle/loyscan/issues/18) · **Since:** 2025-12-09 (`01e3480`) · **Where:**
 `app/src/main/java/com/bdaniel/loyscan/data/local/db/SeedDatabaseCallback.kt` (`onCreate`)
 
 ## What
@@ -25,3 +25,8 @@ multi-line statement in `loyscan.sql` fails the build instead of a device. The l
 Run the inserts inside `db.beginTransaction()` / `setTransactionSuccessful()` and log failures with Timber. Or
 replace the script with a `createFromAsset` prepackaged DB or a Kotlin seeder once data is no longer
 hand-edited. Until then: **one statement per line** — [[seed-data]].
+
+## Removed
+2026-10-13 (#18): `loyscan.sql` and `SeedDatabaseCallback` were deleted. Catalogue stores are loaded from JSON in one
+transaction, with logging, on every open ([[store-catalogue]]). The demo cards became debug-only Kotlin, written in a
+transaction on creation ([[seed-data]]). Both run synchronously inside Room's open, so the executor is gone too.

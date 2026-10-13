@@ -16,19 +16,17 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import java.time.Instant
 
-/**
- * Runs the real seed script (`assets/database/loyscan.sql`) through the real loader into an in-memory database.
- * A statement the loader can't execute (for example one split across lines) fails here instead of on a device.
- */
+/** The debug-only demo data, seeded into a new in-memory database next to the real catalogue loader. */
 @RunWith(AndroidJUnit4::class)
-class SeedDatabaseCallbackTest {
+class DemoSeedCallbackTest {
 
     private lateinit var db: AppDatabase
 
     @Before
     fun setUp() {
         db = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), AppDatabase::class.java)
-            .addCallback(SeedDatabaseCallback(ApplicationProvider.getApplicationContext(), executor = Runnable::run))
+            .addCallback(CatalogueDatabaseCallback.fromAssets(ApplicationProvider.getApplicationContext()))
+            .addCallback(DemoSeedCallback())
             .allowMainThreadQueries()
             .build()
     }
@@ -38,7 +36,7 @@ class SeedDatabaseCallbackTest {
 
     @Test
     fun seed_loadsEveryStoreAndCard() = runTest {
-        assertThat(db.storeDao().getAll().first()).hasSize(5)
+        assertThat(db.storeDao().getAll().first().filter { it.id.startsWith("demo-") }).hasSize(5)
         // Reading a card's store fails when its storeId names no store, so this also checks every storeId.
         assertThat(db.loyaltyCardDao().getAllWithStore().first()).hasSize(11)
     }

@@ -28,6 +28,10 @@ Also travels in the `Detail` route — see [[2025-12-12-brand-color-in-route]].
 **Brand logo** — `Store.logo`, a nullable image URL (seed uses `https://picsum.photos/seed/<n>/200`). `null` or
 blank means "show the store name as text instead". Loaded with Coil — [[coil-image-loading]].
 
+**Catalogue store** — A store from the shipped catalogue `app/src/main/assets/catalogue/stores.json`
+(`domain/catalogue/CatalogueEntry`): slug id like `hu-ikea-family`, no logo, `isCustom = false`. Its row is rewritten
+from the catalogue on every DB open. See [[store-catalogue]].
+
 **Card-number rule** — `domain/cardnumber/CardNumberRule`: per-store JSON rule for validating, formatting and
 building barcode content from a core number, and matching scanned content back to one.
 See [[2026-10-09-card-number-rule-engine]].
@@ -81,8 +85,8 @@ until #1.
 
 **`loyscan.db`** — The on-device SQLite file name (`di/DatabaseModule.kt`, `provideAppDatabase`).
 
-**`loyscan.sql`** — Seed script `app/src/main/assets/database/loyscan.sql`, executed line-by-line on DB creation.
-See [[seed-data]], [[line-based-sql-seed-parser]].
+**`loyscan.sql`** — The former demo seed script, run line by line on DB creation. Removed in #18; the demo cards are
+now debug-only Kotlin ([[seed-data]]).
 
 **Mapper** — `toDomainModel()` extension functions in `data/mapper/` converting Room results to domain models.
 
@@ -98,6 +102,9 @@ classes and bound in `di/RepositoryModule.kt`; the ViewModels' only data depende
 
 **SharedTransitionScope** — Receiver of `AppNavigation`, `ListScreen`, `DetailScreen`, `CardItem`, so they can call
 `sharedElement`. Experimental API (`@OptIn(ExperimentalSharedTransitionApi::class)`).
+
+**Slug id** — A catalogue store's id: the ISO country code, then lowercase letters, digits and single hyphens
+(`hu-tesco`). Never changes once shipped. See [[2026-10-13-curated-store-catalogue]].
 
 **Store** — The issuer of a card: a catalogue store (stable slug id) or a custom store the user created
 (`isCustom`, UUID id). `domain/Store.kt`; table `stores`. Several cards can share one store. Carries the optional

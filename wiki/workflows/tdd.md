@@ -32,7 +32,7 @@ Paths are under `app/src/test/java/com/bdaniel/loyscan/`, in the same package as
 | Domain logic (`domain/`) | Plain JUnit, no Android | default | `domain/cardnumber/CardNumberEngineTest` |
 | Mapper (`data/mapper/`) | Plain JUnit on fixture entities | default | `data/mapper/LoyaltyCardMapperTest` |
 | DAO / SQL (`data/local/db/`) | Real Room, `Room.inMemoryDatabaseBuilder(…).allowMainThreadQueries()` | Robolectric | `data/local/db/dao/LoyaltyCardDaoTest` |
-| Seed / DB callbacks | The real callback with `executor = Runnable::run` | Robolectric | `data/local/db/SeedDatabaseCallbackTest` |
+| DB callbacks (catalogue, demo seed) | The real callback on a real database; an on-disk one, closed and reopened, when the behaviour is about reopening. Debug-only code is tested from `src/testDebug` | Robolectric | `data/local/db/CatalogueDatabaseCallbackTest`, `DemoSeedCallbackTest` |
 | Repository | The real repository over an in-memory database | Robolectric | `data/repository/RoomLoyaltyCardRepositoryTest` |
 | ViewModel (no route) | Constructed with a fake repository; Turbine on the `StateFlow`; `MainDispatcherRule` | default | `ListViewModelTest` |
 | ViewModel reading a route | Same, with `SavedStateHandle(route = Detail(…))` | Robolectric | `DetailViewModelTest` |

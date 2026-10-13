@@ -30,8 +30,10 @@ domain→entity mappers.
 
 - `LoyScanApplication` is `@HiltAndroidApp` (`LoyScanApplication.kt:7`); `MainActivity` is `@AndroidEntryPoint`.
 - `DatabaseModule` provides the singleton `AppDatabase` (file `loyscan.db`, seeded on creation — see
-  [[seed-data]]) and unscoped DAO providers (`di/DatabaseModule.kt`). The seeding itself is `SeedDatabaseCallback`
-  (`data/local/db/`).
+  [[store-catalogue]]) and unscoped DAO providers (`di/DatabaseModule.kt`). Two kinds of `RoomDatabase.Callback`
+  write rows through the raw database: `CatalogueDatabaseCallback` (every open) and, in debug builds only,
+  `DemoSeedCallback` (on creation; registered via `buildTypeDatabaseCallbacks()` in `src/debug` / `src/release`,
+  [[seed-data]]).
 - `ImageLoaderModule` provides a singleton Coil `ImageLoader`. Composables can't `@Inject`, so it is reached
   through a Hilt `@EntryPoint` wrapped in the `hiltImageLoader()` composable (`ui/ImageLoader.kt:10-19`).
   See [[2025-12-12-singleton-image-loader]] and [[coil-image-loading]].
@@ -48,8 +50,9 @@ Tests run on the JVM (`./gradlew testDebugUnitTest`, see [[build-and-run]]); sha
 - **Screens** take the ViewModel and a `*Directions` object as parameters, so a test passes a fake-backed
   ViewModel and lambdas that record navigation (`ListScreenTest`).
 - **DAOs and the repository** are tested against `Room.inMemoryDatabaseBuilder` (`LoyaltyCardDaoTest`,
-  `RoomLoyaltyCardRepositoryTest`). The seed script runs through the real `SeedDatabaseCallback` with a direct
-  executor, so it completes synchronously (`SeedDatabaseCallbackTest`).
+  `RoomLoyaltyCardRepositoryTest`). Database callbacks are tested on a real database too: an on-disk one that is
+  closed and reopened for the catalogue loader (`CatalogueDatabaseCallbackTest`), in-memory for the demo seed
+  (`DemoSeedCallbackTest`, in `src/testDebug` because the class only exists in debug builds).
 - **The wired-up app** (`MainActivity`, Hilt, navigation) runs in `@HiltAndroidTest`s on Robolectric.
   `testing/InMemoryDatabaseModule` (`@TestInstallIn`) swaps `DatabaseModule` for an empty in-memory database
   that the test injects and fills (`AppNavigationTest`).
@@ -70,9 +73,10 @@ here exist; read them next to the code.
 
 1. **Data at rest.** Rows live in `stores` and `loyalty_cards` (FK `storeId` → `stores.id`, `ON DELETE CASCADE`,
    indexed; string ids): `data/local/db/entity/LoyaltyCardEntity.kt:10-36`. Lists, rules and timestamps go
-   through `data/local/db/Converters.kt` ([[2026-10-12-data-model-v2]]). On first launch they're inserted from
-   `app/src/main/assets/database/loyscan.sql` ([[seed-data]]).
-   *Test first:* `SeedDatabaseCallbackTest`: the script loads, and the row counts and one full row match.
+   through `data/local/db/Converters.kt` ([[2026-10-12-data-model-v2]]). Catalogue stores are written from
+   `app/src/main/assets/catalogue/stores.json` on every open ([[store-catalogue]]); debug builds also seed demo
+   cards on creation ([[seed-data]]).
+   *Test first:* `CatalogueDatabaseCallbackTest` / `DemoSeedCallbackTest`: the rows land and read back as expected.
 2. **DAO query.** *Test first:* `LoyaltyCardDaoTest` inserts a store and a card with every field set to a
    non-default value, then expects the same row back with its store (`getByIdWithStore_storesEveryCardField`);
    `StoreDaoTest.getById_storesEveryField` does the same for a store. A missing id emits `null`

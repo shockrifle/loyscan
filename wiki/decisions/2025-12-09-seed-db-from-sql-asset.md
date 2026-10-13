@@ -1,6 +1,6 @@
 # Seed the database from a SQL asset in `RoomDatabase.Callback.onCreate`
 
-**Status:** Active · **Date:** 2025-12-09 · **Commits:** `01e3480` (seed), `4cbc71d` (repositories replaced the
+**Status:** Superseded by [[2026-10-13-curated-store-catalogue]] (2026-10-13) · **Date:** 2025-12-09 · **Commits:** `01e3480` (seed), `4cbc71d` (repositories replaced the
 in-ViewModel dummy lists)
 
 ## Context

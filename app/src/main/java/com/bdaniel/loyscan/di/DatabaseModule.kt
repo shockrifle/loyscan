@@ -3,7 +3,7 @@ package com.bdaniel.loyscan.di
 import android.content.Context
 import androidx.room.Room
 import com.bdaniel.loyscan.data.local.db.AppDatabase
-import com.bdaniel.loyscan.data.local.db.SeedDatabaseCallback
+import com.bdaniel.loyscan.data.local.db.CatalogueDatabaseCallback
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -21,7 +21,10 @@ object DatabaseModule {
         return Room.databaseBuilder(
                 context,
                 AppDatabase::class.java, "loyscan.db"
-        ).addCallback(SeedDatabaseCallback(context)).build()
+        )
+                .addCallback(CatalogueDatabaseCallback.fromAssets(context))
+                .apply { buildTypeDatabaseCallbacks().forEach(::addCallback) }
+                .build()
     }
 
     @Provides

@@ -57,7 +57,8 @@ separately discussed with the user).
 ## Consequences
 - Searching by alias (#6, #7) matches against the JSON text or filters in memory. If that gets slow, move aliases
   to a child table or an FTS table.
-- Changing a rule in the catalogue doesn't reach existing store rows by itself. The catalogue loader (#3) has to
+- Changing a rule in the catalogue doesn't reach existing store rows by itself. The catalogue loader (#3, implemented
+  2026-10-13 in [[store-catalogue]]) has to
   update them by slug.
 - Renaming or removing a `BarcodeFormat` constant breaks stored rows, which hold the enum name.
 - A scanned card is drawn exactly as scanned, in its scanned format, whatever its store's rule says. Editing a
