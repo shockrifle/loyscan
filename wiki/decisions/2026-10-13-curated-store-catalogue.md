@@ -32,6 +32,11 @@ logos. The SQL demo seed was removed, and the demo cards now exist only in debug
   Each fact (format, length, prefix, check digit) is checked against a real card or the retailer's own public
   material. Other apps' catalogues may be used as a checklist of what to check, never copied in bulk. How to add a
   store: [[add-a-catalogue-store]].
+- **Exception for the first 16 entries (2026-10-13):** the retailers' own pages confirm each programme exists and
+  most colours, but the number facts (the 10 rules' format, length, leading digits and check digit, and the other 6
+  entries' default barcode format) come only from the checklist catalogue. The user accepted shipping them as provisional facts, to be reviewed later. They stay
+  provisional until confirmed on real cards ([#31](https://github.com/shockrifle/loyscan/issues/31)). A rule was
+  kept even where unconfirmed, because no rule is just as unconfirmed: it asserts that the barcode is the typed number.
 - **No bundled logos.** `logo` is `null` for catalogue stores, and tiles show the name on the brand colour.
 - **Country-prefixed slug ids** (`hu-ikea-family`): the same chain can issue a different card in each country, and
   each needs its own entry and rule. The id never changes once shipped, because cards reference it.

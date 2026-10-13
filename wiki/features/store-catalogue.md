@@ -44,10 +44,11 @@ why it has no logos, and why it is loaded this way: [[2026-10-13-curated-store-c
 
 ## Contents and known gaps
 
-- **16 Hungarian stores (2026-10-13), 10 with a card-number rule.** They were drafted from the retailers' public
-  pages, with an existing app's catalogue used only as a checklist of facts to check. Most number formats are not
-  yet confirmed on a real card. Which entries still need that is tracked in
-  [#31](https://github.com/shockrifle/loyscan/issues/31), not here.
+- **16 Hungarian stores (2026-10-13), 10 with a card-number rule. The number facts are provisional.** The
+  retailers' public pages confirm that each programme exists, and most of the colours. The barcode formats (of every
+  entry), and the rules' length, leading digits and check digit, come from an existing app's catalogue and are not yet confirmed on a
+  real card. The user accepted this for the first entries ([[2026-10-13-curated-store-catalogue]]). Per-store status:
+  [#31](https://github.com/shockrifle/loyscan/issues/31).
 - **The core is the full printed number.** EAN-13 stores use 13 digits with a `GTIN_MOD10` `VERIFY` check and no
   prefix, because the card prints all 13 digits. As a result a store's fixed leading digits (e.g. `999…`) are not
   enforced, and `CardNumberEngine.match` accepts any valid EAN-13 for every EAN-13 store. A scanned card can't tell
