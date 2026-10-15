@@ -125,6 +125,16 @@ class CardNumberEngineTest {
     }
 
     @Test
+    fun validate_coreLongEnoughButOnlyPartOfAnAllowedStartIsWrongStart() {
+        // minLength 1 < start length 3: "12" is not too short, so it must not get the still-typing exemption.
+        val rule = CardNumberRule(id = "short-min", format = BarcodeFormat.CODE_128, coreStartsWith = listOf("123"))
+
+        assertEquals(setOf(Error.WRONG_START), (validate("12", rule) as Validation.Invalid).errors)
+        assertNull(match("12", BarcodeFormat.CODE_128, rule))
+        assertEquals(Validation.Valid("1234"), validate("1234", rule))
+    }
+
+    @Test
     fun validate_requiredStartAppliesToTheCoreNotTheBarcodeContent() {
         val rule = prefixedEan.copy(id = "prefixed-start", coreStartsWith = listOf("12"))
         assertEquals(Validation.Valid("123456789"), validate("123456789", rule))

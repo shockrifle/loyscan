@@ -25,7 +25,7 @@ The store catalogue ([#3](https://github.com/shockrifle/loyscan/issues/3)) has t
   (`GTIN_MOD10` or `LUHN`, mode `APPEND` or `VERIFY`), the primary `BarcodeFormat`, an optional display pattern,
   and (since 2026-10-15, #32) `coreStartsWith`: allowed starts of the core, so a store whose full printed number is
   the core can still require its fixed leading digits. A core that starts with none of them is `WRONG_START`, unless
-  it is shorter than a start it still agrees with (then only `TOO_SHORT`). It is a separate field from `prefix`
+  it is still `TOO_SHORT` and agrees with a start so far (then only `TOO_SHORT`, so live typing isn't flagged early). It is a separate field from `prefix`
   because `prefix` is added to the barcode, while `coreStartsWith` only checks what the user typed or scanned.
 - Barcode content = `prefix + core.padStart(padLength, padChar) + suffix`, plus a check digit computed over all
   of that when the mode is `APPEND`. `VERIFY` means the core's last digit is already a check digit over the rest

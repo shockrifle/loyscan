@@ -35,9 +35,11 @@ object CardNumberEngine {
             if (!core.all(rule.charset.allows)) add(Validation.Error.INVALID_CHARACTERS)
             if (core.length < rule.minLength) add(Validation.Error.TOO_SHORT)
             if (core.length > rule.maxLength) add(Validation.Error.TOO_LONG)
-            // A shorter core that can still grow into an allowed start is only TOO_SHORT, so live input isn't flagged early.
+            // A too-short core that can still grow into an allowed start is only TOO_SHORT, so live input isn't
+            // flagged early. A core of allowed length must start with one in full.
+            val stillTyping = core.length < rule.minLength
             if (rule.coreStartsWith.isNotEmpty() &&
-                rule.coreStartsWith.none { core.startsWith(it) || it.startsWith(core) }
+                rule.coreStartsWith.none { core.startsWith(it) || (stillTyping && it.startsWith(core)) }
             ) add(Validation.Error.WRONG_START)
         }
         if (errors.isNotEmpty()) return Validation.Invalid(core, errors)
