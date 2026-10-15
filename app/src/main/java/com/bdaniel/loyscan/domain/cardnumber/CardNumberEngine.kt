@@ -3,13 +3,12 @@ package com.bdaniel.loyscan.domain.cardnumber
 import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.domain.cardnumber.CardNumberRule.CheckDigit.Mode
 import com.bdaniel.loyscan.domain.cardnumber.CardNumberRule.Display.Source
-import com.bdaniel.loyscan.domain.cardnumber.CardNumberRule.LetterCase
 
 sealed interface Validation {
     data class Valid(val core: String) : Validation
     data class Invalid(val core: String, val errors: Set<Error>) : Validation
 
-    enum class Error { EMPTY, INVALID_CHARACTERS, TOO_SHORT, TOO_LONG, BAD_CHECK_DIGIT }
+    enum class Error { EMPTY, INVALID_CHARACTERS, TOO_SHORT, TOO_LONG, WRONG_START, BAD_CHECK_DIGIT }
 }
 
 /** Result of reading scanned barcode content back through a rule. */
@@ -36,6 +35,10 @@ object CardNumberEngine {
             if (!core.all(rule.charset.allows)) add(Validation.Error.INVALID_CHARACTERS)
             if (core.length < rule.minLength) add(Validation.Error.TOO_SHORT)
             if (core.length > rule.maxLength) add(Validation.Error.TOO_LONG)
+            // A shorter core that can still grow into an allowed start is only TOO_SHORT, so live input isn't flagged early.
+            if (rule.coreStartsWith.isNotEmpty() &&
+                rule.coreStartsWith.none { core.startsWith(it) || it.startsWith(core) }
+            ) add(Validation.Error.WRONG_START)
         }
         if (errors.isNotEmpty()) return Validation.Invalid(core, errors)
         // The check digit is only meaningful once the number is otherwise well-formed.
@@ -113,11 +116,5 @@ object CardNumberEngine {
         }
         if (i < value.length) out.append(value, i, value.length)
         return out.toString()
-    }
-
-    private fun LetterCase.apply(s: String) = when (this) {
-        LetterCase.UPPER -> s.uppercase()
-        LetterCase.LOWER -> s.lowercase()
-        LetterCase.NONE -> s
     }
 }

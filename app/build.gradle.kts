@@ -136,7 +136,7 @@ kover {
         verify {
             rule("Line coverage") {
                 // Ratchet: raise to the new measured floor whenever coverage grows; never lower it.
-                minBound(92)
+                minBound(93)
             }
         }
     }

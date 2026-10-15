@@ -32,6 +32,11 @@ data class CardNumberRule(
     val padLength: Int = 0,
     val padChar: Char = '0',
     val checkDigit: CheckDigit? = null,
+    /**
+     * If not empty, the core must start with one of these, e.g. a store's fixed leading digits when the full printed
+     * number is the core. Checked on the core, not the barcode content, so [prefix] is not part of it.
+     */
+    val coreStartsWith: List<String> = emptyList(),
     val display: Display? = null,
 ) {
     @Serializable
@@ -42,7 +47,15 @@ data class CardNumberRule(
     }
 
     @Serializable
-    enum class LetterCase { UPPER, LOWER, NONE }
+    enum class LetterCase {
+        UPPER, LOWER, NONE;
+
+        fun apply(s: String) = when (this) {
+            UPPER -> s.uppercase()
+            LOWER -> s.lowercase()
+            NONE -> s
+        }
+    }
 
     @Serializable
     data class CheckDigit(val algorithm: CheckDigitAlgorithm, val mode: Mode) {
@@ -77,6 +90,11 @@ data class CardNumberRule(
             require(checkDigit.mode != CheckDigit.Mode.VERIFY || minLength >= 2) {
                 "$id: VERIFY check digit needs minLength >= 2"
             }
+        }
+        for (start in coreStartsWith) {
+            require(start.isNotEmpty() && start.all(charset.allows)) { "$id: coreStartsWith \"$start\" outside charset $charset" }
+            require(start.length <= maxLength) { "$id: coreStartsWith \"$start\" is longer than maxLength" }
+            require(case.apply(start) == start) { "$id: coreStartsWith \"$start\" can't match after case $case" }
         }
         if (display != null) require('#' in display.pattern) { "$id: display pattern has no '#'" }
         requireFitsFormat()

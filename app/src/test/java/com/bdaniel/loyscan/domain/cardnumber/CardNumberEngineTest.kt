@@ -95,6 +95,54 @@ class CardNumberEngineTest {
         assertEquals("AB-1234xy", barcodeContent(" AB-1234xy ", any))
     }
 
+    // --- required start (#32) ---
+
+    /** Two made-up stores whose full printed EAN-13 is the core; they differ only in their leading digits. */
+    private val eanStoreA = CardNumberRule(
+        id = "ean-store-a",
+        format = BarcodeFormat.EAN_13,
+        minLength = 13,
+        maxLength = 13,
+        checkDigit = CheckDigit(CheckDigitAlgorithm.GTIN_MOD10, Mode.VERIFY),
+        coreStartsWith = listOf("999"),
+    )
+    private val eanStoreB = eanStoreA.copy(id = "ean-store-b", coreStartsWith = listOf("994", "995"))
+
+    private fun ean(first12: String) = first12 + CheckDigitAlgorithm.GTIN_MOD10.compute(first12)
+
+    @Test
+    fun validate_coreMustStartWithAnAllowedStart() {
+        assertEquals(Validation.Valid(ean("999000000001")), validate(ean("999000000001"), eanStoreA))
+        assertEquals(Validation.Valid(ean("995000000001")), validate(ean("995000000001"), eanStoreB))
+        assertEquals(setOf(Error.WRONG_START), (validate(ean("400000000001"), eanStoreA) as Validation.Invalid).errors)
+        assertEquals(setOf(Error.WRONG_START), (validate(ean("999000000001"), eanStoreB) as Validation.Invalid).errors)
+    }
+
+    @Test
+    fun validate_partialInputThatCanStillReachAnAllowedStartIsOnlyTooShort() {
+        assertEquals(setOf(Error.TOO_SHORT), (validate("99", eanStoreA) as Validation.Invalid).errors)
+        assertEquals(setOf(Error.TOO_SHORT, Error.WRONG_START), (validate("98", eanStoreA) as Validation.Invalid).errors)
+    }
+
+    @Test
+    fun validate_requiredStartAppliesToTheCoreNotTheBarcodeContent() {
+        val rule = prefixedEan.copy(id = "prefixed-start", coreStartsWith = listOf("12"))
+        assertEquals(Validation.Valid("123456789"), validate("123456789", rule))
+        assertEquals(setOf(Error.WRONG_START), (validate("200456789", rule) as Validation.Invalid).errors)
+        assertEquals(RuleMatch("123456789", formatMatches = true), match("2001234567893", BarcodeFormat.EAN_13, rule))
+    }
+
+    @Test
+    fun match_scannedEanOfOneStoreDoesNotMatchAnotherStoresRule() {
+        val scannedA = ean("999123456789")
+        val scannedB = ean("994123456789")
+
+        assertEquals(RuleMatch(scannedA, formatMatches = true), match(scannedA, BarcodeFormat.EAN_13, eanStoreA))
+        assertNull(match(scannedA, BarcodeFormat.EAN_13, eanStoreB))
+        assertEquals(RuleMatch(scannedB, formatMatches = true), match(scannedB, BarcodeFormat.EAN_13, eanStoreB))
+        assertNull(match(scannedB, BarcodeFormat.EAN_13, eanStoreA))
+    }
+
     // --- barcode content ---
 
     @Test

@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-15 · rule field `coreStartsWith` (required leading digits of the core, error `WRONG_START`); catalogue entries still unset pending #31 · decisions/2026-10-09-card-number-rule-engine, tech-debt/rules-cannot-require-leading-digits, tech-debt/_index, features/store-catalogue, workflows/add-a-catalogue-store · #32 (slice)
 - 2026-10-13 · corrected: the first entries' number facts are provisional (from the checklist catalogue, accepted by the user), not checked against real cards as the pages claimed · decisions/2026-10-13-curated-store-catalogue, features/store-catalogue · review round 2 of #3
 - 2026-10-13 · review fixes: two catalogue gaps filed as tech debt (#32, #33); entry verification moved to #31; stale data-model-v2 bullet, hack SHA and the DB version in the tech-debt index corrected · tech-debt/rules-cannot-require-leading-digits (new), tech-debt/gs1-128-drawn-as-code-128 (new), tech-debt/_index, index, features/store-catalogue, decisions/2026-10-12-data-model-v2, hacks/line-based-sql-seed-parser · review of #3
 - 2026-10-13 · first 16 HU catalogue entries; known gaps recorded (EAN prefixes not enforced, GS1-128 drawn as Code 128) · features/store-catalogue, features/seed-data · #3, #1

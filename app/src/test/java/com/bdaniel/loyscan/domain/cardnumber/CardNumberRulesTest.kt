@@ -28,6 +28,7 @@ class CardNumberRulesTest {
               "padLength": 0,
               "padChar": "0",
               "checkDigit": { "algorithm": "GTIN_MOD10", "mode": "APPEND" },
+              "coreStartsWith": ["12", "34"],
               "display": { "source": "CORE", "pattern": "### ### ###" }
             }]
             """
@@ -41,6 +42,7 @@ class CardNumberRulesTest {
             separators = "-./",
             prefix = "200",
             checkDigit = CheckDigit(CheckDigitAlgorithm.GTIN_MOD10, CheckDigit.Mode.APPEND),
+            coreStartsWith = listOf("12", "34"),
             display = Display(Display.Source.CORE, "### ### ###"),
         )
         assertEquals(listOf(expected), rules)
@@ -55,6 +57,7 @@ class CardNumberRulesTest {
         assertEquals("-", rule.separators)
         val any = CardNumberRules.parse("""[{ "id": "any", "format": "QR_CODE", "charset": "ANY" }]""").single()
         assertEquals("", any.separators)
+        assertEquals(emptyList<String>(), rule.coreStartsWith)
     }
 
     @Test
@@ -67,6 +70,7 @@ class CardNumberRulesTest {
                 id = "b", format = BarcodeFormat.EAN_8, minLength = 7, maxLength = 7,
                 checkDigit = CheckDigit(CheckDigitAlgorithm.GTIN_MOD10, CheckDigit.Mode.APPEND),
             ),
+            CardNumberRule(id = "c", format = BarcodeFormat.CODE_128, coreStartsWith = listOf("99", "123")),
         )
         assertEquals(rules, CardNumberRules.parse(CardNumberRules.toJson(rules)))
     }
@@ -98,6 +102,11 @@ class CardNumberRulesTest {
             """{ "id": "x", "format": "CODE_128", "maxLength": 1,
                  "checkDigit": { "algorithm": "LUHN", "mode": "VERIFY" } }""",
             """{ "id": "x", "format": "CODE_128", "display": { "pattern": "    " } }""",
+            """{ "id": "x", "format": "CODE_128", "coreStartsWith": [""] }""",
+            """{ "id": "x", "format": "CODE_128", "coreStartsWith": ["9A"] }""",
+            """{ "id": "x", "format": "CODE_128", "maxLength": 3, "coreStartsWith": ["1234"] }""",
+            // input is upper-cased, so a lower-case start could never match
+            """{ "id": "x", "format": "CODE_128", "charset": "ALPHANUMERIC", "case": "UPPER", "coreStartsWith": ["ab"] }""",
         )
         for (rule in invalid) {
             val e = assertThrows(rule, IllegalArgumentException::class.java) { CardNumberRules.parse("[$rule]") }

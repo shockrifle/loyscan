@@ -38,7 +38,8 @@ never the answer to copy.
 - **`cardNumberRule`:** optional. Leave it `null` when the barcode is just the typed number. The **core** is the
   number as printed on the card. Write the rule so that typing what is printed produces the barcode. Field meanings
   and the format checks are in [[2026-10-09-card-number-rule-engine]]. For a fixed-length number, set
-  `minLength == maxLength`.
+  `minLength == maxLength`. If the printed number has fixed leading digits that are part of the core (e.g. a full
+  EAN-13 starting `999`), list them in `coreStartsWith` once confirmed, so other stores' cards don't match the rule.
 - No `logo`: the catalogue ships none ([[2026-10-13-curated-store-catalogue]]).
 - Keep the array sorted by id.
 

@@ -4,8 +4,8 @@
 `app/src/main/java/com/bdaniel/loyscan/domain/cardnumber/CardNumberRule.kt`, `app/src/main/assets/catalogue/stores.json`
 
 ## What
-A `CardNumberRule` can add a `prefix` to the core, but it can't require the core itself to start with given digits.
-The EAN-13 catalogue stores (`hu-auchan`, `hu-dm`, `hu-penny`, `hu-rossmann`) print all 13 digits on the card, so
+The shipped EAN-13 entries don't require their store's leading digits. (Until 2026-10-15 the rule model couldn't
+express it either; now it can, see below.) The EAN-13 catalogue stores (`hu-auchan`, `hu-dm`, `hu-penny`, `hu-rossmann`) print all 13 digits on the card, so
 their core is the full number: 13 digits, `GTIN_MOD10` `VERIFY`, no prefix. Their store-specific leading digits
 (`999…`, `994…`, …) are not checked anywhere.
 
@@ -22,6 +22,10 @@ entries shipped ([[store-catalogue]]).
   till changes; only the "wrong store?" hint is lost.
 
 ## How to pay it down
-Add an optional list of allowed leading digits to the rule (validated against the core, so `validate` and `match`
-both reject other prefixes), then set it on the EAN-13 entries once their prefixes are confirmed
-([#31](https://github.com/shockrifle/loyscan/issues/31)).
+1. Done 2026-10-15: `CardNumberRule.coreStartsWith`, a list of allowed starts of the core. `validate` reports
+   `WRONG_START` when the core starts with none of them, so `match` rejects other stores' numbers too. Input that is
+   still shorter than an allowed start and agrees with it so far gets only `TOO_SHORT`, so live typing isn't
+   flagged early. Tests: `CardNumberEngineTest` ("required start"), `CardNumberRulesTest`.
+2. Open: set `coreStartsWith` on the EAN-13 entries once their prefixes are confirmed
+   ([#31](https://github.com/shockrifle/loyscan/issues/31)), each with a `ShippedCatalogueTest` vector. Then this
+   page is resolved.

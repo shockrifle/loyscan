@@ -52,8 +52,8 @@ why it has no logos, and why it is loaded this way: [[2026-10-13-curated-store-c
 - **The core is the full printed number.** EAN-13 stores use 13 digits with a `GTIN_MOD10` `VERIFY` check and no
   prefix, because the card prints all 13 digits. As a result a store's fixed leading digits (e.g. `999…`) are not
   enforced, and `CardNumberEngine.match` accepts any valid EAN-13 for every EAN-13 store. A scanned card can't tell
-  those stores apart (matters for #6). The rule model has no "required leading digits" check:
-  [[rules-cannot-require-leading-digits]].
+  those stores apart (matters for #6). The rule model can now require them (`coreStartsWith`, since 2026-10-15),
+  but the shipped entries don't set it until their prefixes are confirmed (#31): [[rules-cannot-require-leading-digits]].
 - **GS1-128 is drawn as plain Code 128.** `BarcodeFormat` has no `GS1_128`. Coop's barcode starts with Application
   Identifier `90`. A till that parses GS1 may expect a leading FNC1, which plain Code 128 doesn't have. Not
   yet tested at a till: [[gs1-128-drawn-as-code-128]].
