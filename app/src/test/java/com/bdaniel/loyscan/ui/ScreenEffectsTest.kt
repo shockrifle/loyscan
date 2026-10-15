@@ -49,6 +49,19 @@ class ScreenEffectsTest {
     }
 
     @Test
+    fun fullBrightness_restoresTheWindowsOwnValue_notTheDefault() {
+        composeRule.runOnUiThread {
+            composeRule.activity.window.attributes = composeRule.activity.window.attributes.apply { screenBrightness = 0.3f }
+        }
+        setContent()
+
+        shown = false
+        composeRule.waitForIdle()
+
+        assertThat(brightness).isEqualTo(0.3f)
+    }
+
+    @Test
     fun fullBrightness_isRestoredWhileTheScreenIsPaused_andComesBackOnResume() {
         setContent()
 
@@ -74,6 +87,17 @@ class ScreenEffectsTest {
         composeRule.waitForIdle()
 
         assertThat(keepsScreenOn).isFalse()
+    }
+
+    @Test
+    fun keepScreenOn_leavesAFlagSomeoneElseSet() {
+        composeRule.runOnUiThread { composeRule.activity.window.addFlags(FLAG_KEEP_SCREEN_ON) }
+        setKeepScreenOn()
+
+        shown = false
+        composeRule.waitForIdle()
+
+        assertThat(keepsScreenOn).isTrue()
     }
 
     @Test
