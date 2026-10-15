@@ -6,6 +6,9 @@ import com.google.common.truth.Truth.assertWithMessage
 import com.google.zxing.BinaryBitmap
 import com.google.zxing.DecodeHintType
 import com.google.zxing.MultiFormatReader
+import com.google.zxing.MultiFormatWriter
+import com.google.zxing.common.BitMatrix
+import com.google.zxing.BarcodeFormat as ZxingFormat
 import com.google.zxing.NotFoundException
 import com.google.zxing.RGBLuminanceSource
 import com.google.zxing.common.HybridBinarizer
@@ -74,6 +77,25 @@ class BarcodeEncoderTest {
     }
 
     @Test
+    fun latin1Content_isEncodedWithoutACharsetHeader() {
+        // A UTF-8 hint makes ZXing prepend an ECI header, which the card's own barcode doesn't have: a till may pass
+        // it on as a prefix or reject the code. ZXing's reader strips it, so compare with a hint-free encoding.
+        listOf(
+            BarcodeFormat.AZTEC to ZxingFormat.AZTEC,
+            BarcodeFormat.PDF_417 to ZxingFormat.PDF_417,
+            BarcodeFormat.QR_CODE to ZxingFormat.QR_CODE,
+            BarcodeFormat.DATA_MATRIX to ZxingFormat.DATA_MATRIX,
+        ).forEach { (format, zxing) ->
+            val content = "https://example.com/c/abc123"
+            val plain = MultiFormatWriter().encode(content, zxing, 0, 0)
+
+            val barcode = BarcodeEncoder.encode(content, format)!!
+
+            assertWithMessage(format.name).that(barcode.modules()).isEqualTo(plain.modules())
+        }
+    }
+
+    @Test
     fun emptyContent_encodesNothing() {
         assertThat(BarcodeEncoder.encode("", BarcodeFormat.QR_CODE)).isNull()
     }
@@ -88,6 +110,11 @@ class BarcodeEncoderTest {
         assertThat(qr.isLinear).isFalse()
         assertThat(qr.height).isEqualTo(qr.width)
     }
+
+    private fun EncodedBarcode.modules() = (0 until height).map { y -> (0 until width).map { x -> this[x, y] } }
+
+    // Without the quiet zone EncodedBarcode adds, if any, so the symbol itself is compared.
+    private fun BitMatrix.modules() = (0 until height).map { y -> (0 until width).map { x -> this[x, y] } }
 
     /**
      * Draws [barcode] at 4 px per module (linear ones 40 rows high) inside a 4-module white border, as the screen's

@@ -44,7 +44,7 @@ object BarcodeEncoder {
         val zxingFormat = format.toZxing() ?: return null
         return try {
             // Size 0: the smallest matrix, one pixel per module (and one row for 1D); the screen scales it.
-            val matrix = MultiFormatWriter().encode(content, zxingFormat, 0, 0, HINTS)
+            val matrix = MultiFormatWriter().encode(content, zxingFormat, 0, 0, hintsFor(content))
             EncodedBarcode(format, matrix)
         } catch (e: WriterException) {
             null
@@ -54,7 +54,13 @@ object BarcodeEncoder {
         }
     }
 
-    private val HINTS = mapOf(EncodeHintType.CHARACTER_SET to Charsets.UTF_8.name())
+    /**
+     * UTF-8 only for content ISO-8859-1 (ZXing's default) can't hold: with a charset hint ZXing prepends an ECI
+     * header, which the card's own barcode doesn't have and a till may pass on as a prefix or reject.
+     */
+    private fun hintsFor(content: String): Map<EncodeHintType, Any> =
+        if (Charsets.ISO_8859_1.newEncoder().canEncode(content)) emptyMap()
+        else mapOf(EncodeHintType.CHARACTER_SET to Charsets.UTF_8.name())
 
     private fun BarcodeFormat.toZxing(): ZxingFormat? = when (this) {
         BarcodeFormat.AZTEC -> ZxingFormat.AZTEC
