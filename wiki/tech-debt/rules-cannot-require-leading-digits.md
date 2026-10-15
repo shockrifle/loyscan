@@ -23,9 +23,9 @@ entries shipped ([[store-catalogue]]).
 
 ## How to pay it down
 1. Done 2026-10-15: `CardNumberRule.coreStartsWith`, a list of allowed starts of the core. `validate` reports
-   `WRONG_START` when the core starts with none of them, so `match` rejects other stores' numbers too. Input that is
-   still `TOO_SHORT` and agrees with an allowed start so far gets no `WRONG_START`, so live typing isn't flagged
-   early; a core of allowed length must contain a start in full. Tests: `CardNumberEngineTest` ("required start"), `CardNumberRulesTest`.
+   `WRONG_START` when the core starts with none of them, so `match` rejects other stores' numbers too. A core that
+   is only the beginning of an allowed start gets `TOO_SHORT` instead, so live typing isn't flagged early; a valid
+   core always contains a start in full. Tests: `CardNumberEngineTest` ("required start"), `CardNumberRulesTest`.
 2. Open: set `coreStartsWith` on the EAN-13 entries once their prefixes are confirmed
    ([#31](https://github.com/shockrifle/loyscan/issues/31)), each with a `ShippedCatalogueTest` vector. Then this
    page is resolved.
