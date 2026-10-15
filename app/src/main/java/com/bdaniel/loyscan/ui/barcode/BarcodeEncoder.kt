@@ -12,18 +12,36 @@ class EncodedBarcode(
     /** The format actually encoded, which differs from the card's when it had to fall back. */
     val format: BarcodeFormat,
     private val matrix: BitMatrix,
+    /** Light modules added on each side. ZXing is asked for none, since its own are too narrow or missing. */
+    private val margin: Int = quietZoneModules(format),
 ) {
-    val width: Int get() = matrix.width
-    val height: Int get() = matrix.height
+    val width: Int get() = matrix.width + 2 * margin
+    val height: Int get() = if (isLinear) matrix.height else matrix.height + 2 * margin
 
     /** A one-row (1D) barcode, to be stretched to any height; otherwise modules are square. */
     val isLinear: Boolean get() = format !in TWO_DIMENSIONAL
 
-    operator fun get(x: Int, y: Int): Boolean = matrix[x, y]
+    operator fun get(x: Int, y: Int): Boolean {
+        val mx = x - margin
+        val my = if (isLinear) y else y - margin
+        return mx in 0 until matrix.width && my in 0 until matrix.height && matrix[mx, my]
+    }
 
     private companion object {
         val TWO_DIMENSIONAL =
             setOf(BarcodeFormat.AZTEC, BarcodeFormat.DATA_MATRIX, BarcodeFormat.PDF_417, BarcodeFormat.QR_CODE)
+
+        /**
+         * Each symbology's minimum quiet zone, a little more where the spec allows one module. 1D: 11 covers
+         * EAN-13's left side (the largest), Code 128 and ITF need 10, UPC 9. ZXing at size 0 gives 1D codes 4-5 a
+         * side and Aztec and Data Matrix none, and the screen's padding alone is less than a module of a 2D code
+         * drawn at full width.
+         */
+        fun quietZoneModules(format: BarcodeFormat): Int = when (format) {
+            BarcodeFormat.QR_CODE -> 4
+            BarcodeFormat.AZTEC, BarcodeFormat.DATA_MATRIX, BarcodeFormat.PDF_417 -> 2
+            else -> 11
+        }
     }
 }
 
@@ -59,8 +77,12 @@ object BarcodeEncoder {
      * header, which the card's own barcode doesn't have and a till may pass on as a prefix or reject.
      */
     private fun hintsFor(content: String): Map<EncodeHintType, Any> =
-        if (Charsets.ISO_8859_1.newEncoder().canEncode(content)) emptyMap()
+        if (Charsets.ISO_8859_1.newEncoder().canEncode(content)) NO_MARGIN
         else mapOf(EncodeHintType.CHARACTER_SET to Charsets.UTF_8.name())
+            .plus(NO_MARGIN)
+
+    /** [EncodedBarcode] adds the quiet zone. */
+    private val NO_MARGIN = mapOf(EncodeHintType.MARGIN to 0)
 
     private fun BarcodeFormat.toZxing(): ZxingFormat? = when (this) {
         BarcodeFormat.AZTEC -> ZxingFormat.AZTEC

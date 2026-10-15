@@ -31,7 +31,10 @@ Java, no Android or network code. Only its writers are used, in `BarcodeEncoder`
 - **Rejection is an exception.** 1D writers throw `IllegalArgumentException` for content they can't hold (EAN-13 with
   the wrong length or check digit, a non-ASCII character in Code 128, an odd-length ITF); the 2D writers throw
   `WriterException` when content is too long. `BarcodeEncoder` catches both and moves to the next format.
-- **Quiet zones differ.** 1D writers add a 10-module margin and QR a 4-module one; Aztec and Data Matrix come with
-  none. The detail screen puts every barcode on a white card with 16dp padding, which is their quiet zone. Without
-  a margin, ZXing's own reader can't find an Aztec or Data Matrix symbol (seen while writing the test).
+- **ZXing's quiet zones are too narrow or missing.** At size 0 the 1D writers split a 9–10-module margin over both
+  sides (4–5 each; EAN-13 needs 11 on the left, Code 128 10 a side), QR gets 4, Aztec and Data Matrix none. A fixed
+  screen padding doesn't fix it: a 2D code drawn at full width has modules wider than 16dp. So `BarcodeEncoder` asks
+  for `MARGIN = 0` and `EncodedBarcode` adds each symbology's own minimum in modules (`quietZoneModules`: 11 for 1D,
+  4 for QR, 2 for Aztec, Data Matrix and PDF417). Test: `BarcodeEncoderTest.everyBarcode_carriesItsSymbologysQuietZone`;
+  the read-back test draws barcodes with no extra border, and UPC-E and Data Matrix fail to read without it.
 - Barcodes are black on white in both themes: scanners need dark bars on a light background.

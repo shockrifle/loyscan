@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-15 · review fix: each barcode carries its symbology's quiet zone in modules (ZXing margin 0); the screen padding claim corrected · integrations/zxing-core, glossary, features/card-detail · review of #4
 - 2026-10-15 · review fix: UTF-8 charset hint (and its ECI header) only for content Latin-1 can't hold · integrations/zxing-core · review of #4
 - 2026-10-15 · scan mode (double-tap, white full screen, keep-screen-on while resumed); DetailScreen/DetailViewModel line refs updated on current-state pages · features/card-detail, architecture, features/card-transition, tech-debt/shared-element-key-from-async-state · #4 (scan mode)
 - 2026-10-15 · detail runs at full brightness while resumed, restored on pause and on leave · features/card-detail · #4 (brightness)

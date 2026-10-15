@@ -91,8 +91,8 @@ now debug-only Kotlin ([[seed-data]]).
 
 **Mapper** — `toDomainModel()` extension functions in `data/mapper/` converting Room results to domain models.
 
-**Quiet zone** — The blank margin a scanner needs around a barcode. ZXing adds one for 1D and QR but not for Aztec
-or Data Matrix; the detail screen's white padded card provides it for all ([[zxing-core]]).
+**Quiet zone** — The blank margin a scanner needs around a barcode, in modules (EAN-13: 11 on the left; QR: 4).
+Added by `EncodedBarcode` per symbology, since ZXing's are too narrow or missing ([[zxing-core]]).
 
 **Repository** — interfaces in `data/repository/` exposing domain `Flow`s, implemented by `@Singleton` `Room*Repository`
 classes and bound in `di/RepositoryModule.kt`; the ViewModels' only data dependency (tests use a fake).

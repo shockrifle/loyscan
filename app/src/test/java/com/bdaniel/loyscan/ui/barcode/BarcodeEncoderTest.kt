@@ -5,6 +5,7 @@ import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
 import com.google.zxing.BinaryBitmap
 import com.google.zxing.DecodeHintType
+import com.google.zxing.EncodeHintType
 import com.google.zxing.MultiFormatReader
 import com.google.zxing.MultiFormatWriter
 import com.google.zxing.common.BitMatrix
@@ -87,11 +88,41 @@ class BarcodeEncoderTest {
             BarcodeFormat.DATA_MATRIX to ZxingFormat.DATA_MATRIX,
         ).forEach { (format, zxing) ->
             val content = "https://example.com/c/abc123"
-            val plain = MultiFormatWriter().encode(content, zxing, 0, 0)
+            val plain = MultiFormatWriter().encode(content, zxing, 0, 0, mapOf(EncodeHintType.MARGIN to 0))
 
             val barcode = BarcodeEncoder.encode(content, format)!!
 
-            assertWithMessage(format.name).that(barcode.modules()).isEqualTo(plain.modules())
+            assertWithMessage(format.name).that(barcode.modules(like = plain)).isEqualTo(plain.modules())
+        }
+    }
+
+    @Test
+    fun everyBarcode_carriesItsSymbologysQuietZone() {
+        // Minimum light modules on each side, per symbology spec (EAN/UPC: the larger, left one). ZXing gives 1D codes
+        // only 4-5 a side at size 0, and Aztec and Data Matrix none.
+        val minimum = mapOf(
+            BarcodeFormat.CODE_128 to ("Loy42-x" to 10),
+            BarcodeFormat.EAN_13 to ("5901234123457" to 11),
+            BarcodeFormat.UPC_E to ("01234565" to 9),
+            BarcodeFormat.ITF to ("12345678" to 10),
+            BarcodeFormat.QR_CODE to ("LoyScan 0042" to 4),
+            BarcodeFormat.DATA_MATRIX to ("LoyScan 0042" to 1),
+            BarcodeFormat.PDF_417 to ("LoyScan 0042" to 2),
+        )
+        minimum.forEach { (format, contentAndModules) ->
+            val (content, modules) = contentAndModules
+
+            val barcode = BarcodeEncoder.encode(content, format)!!
+
+            val rows = if (barcode.isLinear) 0 until 1 else 0 until barcode.height
+            fun lightColumn(x: Int) = rows.none { barcode[x, it] }
+            fun lightRow(y: Int) = (0 until barcode.width).none { barcode[it, y] }
+            assertWithMessage("$format left").that((0 until modules).all(::lightColumn)).isTrue()
+            assertWithMessage("$format right").that((barcode.width - modules until barcode.width).all(::lightColumn)).isTrue()
+            if (!barcode.isLinear) {
+                assertWithMessage("$format top").that((0 until modules).all(::lightRow)).isTrue()
+                assertWithMessage("$format bottom").that((barcode.height - modules until barcode.height).all(::lightRow)).isTrue()
+            }
         }
     }
 
@@ -111,25 +142,24 @@ class BarcodeEncoderTest {
         assertThat(qr.height).isEqualTo(qr.width)
     }
 
-    private fun EncodedBarcode.modules() = (0 until height).map { y -> (0 until width).map { x -> this[x, y] } }
-
-    // Without the quiet zone EncodedBarcode adds, if any, so the symbol itself is compared.
     private fun BitMatrix.modules() = (0 until height).map { y -> (0 until width).map { x -> this[x, y] } }
 
+    /** The modules of the symbol [like] is, without the quiet zone [EncodedBarcode] adds around it. */
+    private fun EncodedBarcode.modules(like: BitMatrix): List<List<Boolean>> {
+        val margin = (width - like.width) / 2
+        return (0 until like.height).map { y -> (0 until like.width).map { x -> this[x + margin, y + margin] } }
+    }
+
     /**
-     * Draws [barcode] at 4 px per module (linear ones 40 rows high) inside a 4-module white border, as the screen's
-     * white card does (Aztec and Data Matrix come without a quiet zone), and reads it with ZXing.
+     * Draws [barcode] at 4 px per module (linear ones 40 rows high), with no margin beyond its own: every barcode must
+     * carry the quiet zone a reader needs, whatever the screen puts around it. Then reads it with ZXing.
      */
     private fun decode(barcode: EncodedBarcode): String {
         val scale = 4
-        val border = 4 * scale
-        val width = barcode.width * scale + 2 * border
-        val rows = (if (barcode.isLinear) 10 else barcode.height) * scale + 2 * border
+        val width = barcode.width * scale
+        val rows = if (barcode.isLinear) 40 else barcode.height * scale
         val pixels = IntArray(width * rows) { i ->
-            val px = i % width - border
-            val py = i / width - border
-            val inside = px >= 0 && py >= 0 && px < barcode.width * scale && py < rows - 2 * border
-            val dark = inside && barcode[px / scale, if (barcode.isLinear) 0 else py / scale]
+            val dark = barcode[(i % width) / scale, if (barcode.isLinear) 0 else (i / width) / scale]
             if (dark) 0xFF000000.toInt() else 0xFFFFFFFF.toInt()
         }
         val bitmap = BinaryBitmap(HybridBinarizer(RGBLuminanceSource(width, rows, pixels)))

@@ -27,8 +27,8 @@ UUID string.
   adds 1 to `useCount` and sets `lastUsedAt` to now in one `UPDATE` (`LoyaltyCardDao.recordUse`). Once per
   ViewModel, so a rotation doesn't count again (a restore after process death does). `updatedAt` is left alone: a
   use isn't an edit of the card. These fields feed the list's "most / recently used" sort (#7).
-- **Barcode:** below the label and store name, on a white rounded card with 16dp padding (the quiet zone) in both
-  themes. `BarcodeEncoder` encodes `barcodeContent` in `barcodeFormat`, falling back to `CODE_128`, then QR
+- **Barcode:** below the label and store name, on a white rounded card with 16dp padding in both themes; the barcode
+  carries its own quiet zone ([[zxing-core]]). `BarcodeEncoder` encodes `barcodeContent` in `barcodeFormat`, falling back to `CODE_128`, then QR
   ([[zxing-core]]); nothing is drawn for empty content. 1D barcodes are 120dp high across the card; 2D ones keep
   their aspect ratio at full width. Its content description is "Barcode".
 - **Number:** `displayNumber` in `headlineMedium` below the barcode. A tap copies it to the clipboard exactly as

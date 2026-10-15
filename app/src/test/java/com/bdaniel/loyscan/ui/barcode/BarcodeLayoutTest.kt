@@ -9,11 +9,11 @@ import org.junit.Test
 
 class BarcodeLayoutTest {
 
-    /** A barcode from a picture: `#` is a dark module, one string per row. */
+    /** A barcode from a picture: `#` is a dark module, one string per row; no quiet zone added. */
     private fun barcode(format: BarcodeFormat, vararg rows: String): EncodedBarcode {
         val matrix = BitMatrix(rows[0].length, rows.size)
         rows.forEachIndexed { y, row -> row.forEachIndexed { x, c -> if (c == '#') matrix.set(x, y) } }
-        return EncodedBarcode(format, matrix)
+        return EncodedBarcode(format, matrix, margin = 0)
     }
 
     @Test
