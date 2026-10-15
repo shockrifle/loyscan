@@ -1,5 +1,7 @@
 package com.bdaniel.loyscan
 
+import android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_FULL
+import android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
@@ -10,6 +12,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.bdaniel.loyscan.data.local.db.AppDatabase
 import com.bdaniel.loyscan.testing.aLoyaltyCardEntity
 import com.bdaniel.loyscan.testing.aStoreEntity
+import com.google.common.truth.Truth.assertThat
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
@@ -61,4 +64,19 @@ class AppNavigationTest {
         composeRule.onNodeWithText("My Cards").assertIsDisplayed()
         composeRule.onNodeWithText("Gold card").assertDoesNotExist()
     }
+
+    @Test
+    fun detailsFullBrightness_isRestoredOnBack() {
+        composeRule.waitUntil { composeRule.onAllNodes(hasText("Test Store")).fetchSemanticsNodes().isNotEmpty() }
+        composeRule.onNodeWithText("Test Store").performClick()
+        // The destination is resumed, and brightens, only once the enter transition has finished.
+        composeRule.waitUntil(5_000) { brightness == BRIGHTNESS_OVERRIDE_FULL }
+
+        composeRule.onNodeWithContentDescription("Back").performClick()
+        composeRule.waitForIdle()
+
+        assertThat(brightness).isEqualTo(BRIGHTNESS_OVERRIDE_NONE)
+    }
+
+    private val brightness get() = composeRule.activity.window.attributes.screenBrightness
 }

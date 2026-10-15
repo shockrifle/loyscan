@@ -2,11 +2,13 @@ package com.bdaniel.loyscan
 
 import android.content.ClipboardManager
 import android.content.Context
+import android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_FULL
+import androidx.activity.ComponentActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -33,7 +35,7 @@ import org.robolectric.annotation.Config
 class DetailScreenTest {
 
     @get:Rule
-    val composeRule = createComposeRule()
+    val composeRule = createAndroidComposeRule<ComponentActivity>()
 
     private val card = aLoyaltyCard(label = "Gold card", store = aStore(name = "Test Store"), number = "0042")
 
@@ -108,6 +110,13 @@ class DetailScreenTest {
         val clipboard = ApplicationProvider.getApplicationContext<Context>().getSystemService(ClipboardManager::class.java)
         composeRule.waitUntil { clipboard.primaryClip != null }
         assertThat(clipboard.primaryClip!!.getItemAt(0).text.toString()).isEqualTo("123 456 789")
+    }
+
+    @Test
+    fun turnsTheScreenToFullBrightness() {
+        setScreen()
+
+        assertThat(composeRule.activity.window.attributes.screenBrightness).isEqualTo(BRIGHTNESS_OVERRIDE_FULL)
     }
 
     @Test

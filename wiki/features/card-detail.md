@@ -34,6 +34,11 @@ UUID string.
   shown, rule spacing included (product choice, 2026-10-15). Android 13+ confirms the copy itself; on 10–12 a toast
   says "Number copied".
 - The card's content scrolls vertically when it doesn't fit.
+- **Full brightness:** `FullBrightness()` (`app/src/main/java/com/bdaniel/loyscan/ui/ScreenEffects.kt`) sets the
+  window's `screenBrightness` to `BRIGHTNESS_OVERRIDE_FULL` while the detail destination is resumed and puts the
+  window's previous value back on pause (home, app switch) and when the screen leaves composition (back). It follows
+  the `NavBackStackEntry`'s lifecycle, so it only brightens once the enter transition has finished. Tests:
+  `ScreenEffectsTest`, `DetailScreenTest`, `AppNavigationTest.detailsFullBrightness_isRestoredOnBack`.
 - Back arrow → `directions.toBack()` → `navigateUp()`. The Edit icon is a no-op (`DetailScreen.kt:60`,
   `/* TODO */`).
 - The whole `Scaffold` is the shared element `card/{id}` — [[card-transition]].

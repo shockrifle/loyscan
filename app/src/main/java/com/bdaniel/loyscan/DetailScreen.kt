@@ -45,6 +45,7 @@ import coil.compose.AsyncImage
 import com.bdaniel.loyscan.ui.barcode.Barcode
 import com.bdaniel.loyscan.ui.barcode.BarcodeEncoder
 import com.bdaniel.loyscan.ui.barcode.barcodeSize
+import com.bdaniel.loyscan.ui.FullBrightness
 import com.bdaniel.loyscan.ui.hiltImageLoader
 import com.bdaniel.loyscan.ui.toBrandColorOrNull
 import com.bdaniel.loyscan.ui.theme.icons.Icons
@@ -61,6 +62,8 @@ fun SharedTransitionScope.DetailScreen(
     viewModel: DetailViewModel = hiltViewModel()
 ) {
     val card by viewModel.card.collectAsState()
+    // At the till the barcode must be readable, whatever the user's brightness setting.
+    FullBrightness()
     val brandColor = color.toBrandColorOrNull() ?: MaterialTheme.colorScheme.surfaceVariant
 
     Scaffold(
