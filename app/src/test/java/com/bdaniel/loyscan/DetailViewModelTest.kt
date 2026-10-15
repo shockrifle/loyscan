@@ -7,6 +7,7 @@ import app.cash.turbine.test
 import com.bdaniel.loyscan.domain.LoyaltyCard
 import com.bdaniel.loyscan.testing.FakeLoyaltyCardRepository
 import com.bdaniel.loyscan.testing.MainDispatcherRule
+import com.bdaniel.loyscan.testing.SOME_INSTANT
 import com.bdaniel.loyscan.testing.aLoyaltyCard
 import com.bdaniel.loyscan.testing.cardId
 import com.google.common.truth.Truth.assertThat
@@ -41,6 +42,18 @@ class DetailViewModelTest {
     }
 
     @Test
+    fun opening_countsOneUseOfTheRoutedCardOnly() = runTest {
+        repository.cards.value += aLoyaltyCard(id = cardId(2), useCount = 4)
+
+        DetailViewModel(SavedStateHandle(route = Detail(cardId = cardId(2), color = "#336699")), repository)
+
+        val (other, opened) = repository.cards.value
+        assertThat(opened.useCount).isEqualTo(5)
+        assertThat(opened.lastUsedAt).isEqualTo(SOME_INSTANT)
+        assertThat(other.useCount).isEqualTo(0)
+    }
+
+    @Test
     fun card_staysEmpty_whileNoCardHasTheId() = runTest {
         val viewModel = DetailViewModel(SavedStateHandle(route = Detail(cardId = cardId(99), color = "#336699")), repository)
 
@@ -56,7 +69,7 @@ class DetailViewModelTest {
         val viewModel = DetailViewModel(SavedStateHandle(route = Detail(cardId = cardId(1), color = "#336699")), repository)
 
         viewModel.card.test {
-            assertThat(awaitItem()).isEqualTo(aLoyaltyCard(id = cardId(1)))
+            assertThat(awaitItem().id).isEqualTo(cardId(1))
             repository.cards.value = emptyList()
             expectNoEvents()
         }

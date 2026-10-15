@@ -93,6 +93,32 @@ class LoyaltyCardDaoTest {
     }
 
     @Test
+    fun recordUse_countsTheUseAndStampsTheTime_ofThatCardOnly() = runTest {
+        db.storeDao().insert(aStoreEntity())
+        dao.insert(aLoyaltyCardEntity(id = cardId(1), useCount = 2, lastUsedAt = null))
+        dao.insert(aLoyaltyCardEntity(id = cardId(2), useCount = 5))
+        val at = Instant.parse("2026-04-04T00:00:00.004Z")
+
+        dao.recordUse(cardId(1), at)
+
+        val used = dao.getByIdWithStore(cardId(1)).first()!!.loyaltyCard
+        assertThat(used.useCount).isEqualTo(3)
+        assertThat(used.lastUsedAt).isEqualTo(at)
+        assertThat(dao.getByIdWithStore(cardId(2)).first()!!.loyaltyCard.useCount).isEqualTo(5)
+    }
+
+    @Test
+    fun recordUse_leavesUpdatedAtAlone() = runTest {
+        db.storeDao().insert(aStoreEntity())
+        dao.insert(aLoyaltyCardEntity(id = cardId(1), updatedAt = Instant.parse("2026-03-03T00:00:00Z")))
+
+        dao.recordUse(cardId(1), Instant.parse("2026-04-04T00:00:00Z"))
+
+        assertThat(dao.getByIdWithStore(cardId(1)).first()!!.loyaltyCard.updatedAt)
+            .isEqualTo(Instant.parse("2026-03-03T00:00:00Z"))
+    }
+
+    @Test
     fun deletingAStore_deletesItsCards() = runTest {
         val store = aStoreEntity(id = "doomed")
         db.storeDao().insert(store)

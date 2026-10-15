@@ -11,6 +11,7 @@ import androidx.room.Update
 import com.bdaniel.loyscan.data.local.db.entity.LoyaltyCardEntity
 import com.bdaniel.loyscan.data.local.db.entity.StoreEntity
 import kotlinx.coroutines.flow.Flow
+import java.time.Instant
 
 /** A card with its store. Room loads [store] with a second query, so no store column is aliased by hand. */
 data class LoyaltyCardWithStore(
@@ -30,6 +31,10 @@ interface LoyaltyCardDao {
 
     @Delete
     suspend fun delete(loyaltyCard: LoyaltyCardEntity)
+
+    // Usage isn't an edit of the card, so updatedAt stays as it is.
+    @Query("UPDATE loyalty_cards SET useCount = useCount + 1, lastUsedAt = :at WHERE id = :id")
+    suspend fun recordUse(id: String, at: Instant)
 
     @Transaction
     @Query("SELECT * FROM loyalty_cards")

@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-15 · opening a card counts a use (`recordUse`, `updatedAt` untouched); injected `Clock` · features/card-detail, architecture · #4 (usage)
 - 2026-10-15 · review round 2: a core that is only the beginning of an allowed start is `TOO_SHORT` regardless of `minLength` (round 1 flagged it `WRONG_START` when `minLength` was short) · decisions/2026-10-09-card-number-rule-engine, tech-debt/rules-cannot-require-leading-digits · review of #32
 - 2026-10-15 · review fix: the still-typing exemption from `WRONG_START` applies only while the core is `TOO_SHORT` (a core of allowed length that is only part of a start was accepted) · decisions/2026-10-09-card-number-rule-engine, tech-debt/rules-cannot-require-leading-digits · review of #32
 - 2026-10-15 · rule field `coreStartsWith` (required leading digits of the core, error `WRONG_START`); catalogue entries still unset pending #31 · decisions/2026-10-09-card-number-rule-engine, tech-debt/rules-cannot-require-leading-digits, tech-debt/_index, features/store-catalogue, workflows/add-a-catalogue-store · #32 (slice)

@@ -22,6 +22,10 @@ UUID string.
 - The number shown is `LoyaltyCard.displayNumber`: the number formatted by the store's card-number rule (for a
   scanned card, the core the rule recovers from the scan), or the raw number when there is no rule or no match
   ([[2026-10-12-data-model-v2]]).
+- **Opening a card counts a use:** `DetailViewModel`'s `init` calls `LoyaltyCardRepository.recordUse(cardId)`, which
+  adds 1 to `useCount` and sets `lastUsedAt` to now in one `UPDATE` (`LoyaltyCardDao.recordUse`). Once per
+  ViewModel, so a rotation doesn't count again (a restore after process death does). `updatedAt` is left alone: a
+  use isn't an edit of the card. These fields feed the list's "most / recently used" sort (#7).
 - Back arrow → `directions.toBack()` → `navigateUp()`. The Edit icon is a no-op (`DetailScreen.kt:60`,
   `/* TODO */`).
 - The whole `Scaffold` is the shared element `card/{id}` — [[card-transition]].

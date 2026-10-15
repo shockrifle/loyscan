@@ -21,10 +21,11 @@ All paths below are under `app/src/main/java/com/bdaniel/loyscan/` unless writte
 | **Navigation** | `Navigation.kt`, `MainActivity.kt` (`AppNavigation`) | `@Serializable` routes + `NavController.*Directions()` factories | See [[2025-12-09-type-safe-navigation-directions]]. |
 | **DI** | `di/DatabaseModule.kt`, `di/ImageLoaderModule.kt`, `di/RepositoryModule.kt` | `@Module @InstallIn(SingletonComponent)` providers; `@Binds` repository interface → Room impl | Implementations use `@Inject constructor`. |
 
-Note: `LoyaltyCardRepository` has no write methods; the unused entity-taking `insert/delete` were dropped when
-it became an interface (#26). `StoreRepository` is still a concrete class whose `insert` takes an **entity**, and
-nothing injects it. When a feature first needs writes, add them to the interface in domain terms, with
-domain→entity mappers.
+Note: `LoyaltyCardRepository`'s only write is `recordUse(id)` (opening a card counts a use, #4); the unused
+entity-taking `insert/delete` were dropped when it became an interface (#26). `StoreRepository` is still a concrete
+class whose `insert` takes an **entity**, and nothing injects it. When a feature needs more writes, add them to the
+interface in domain terms, with domain→entity mappers. Time comes from an injected `java.time.Clock`
+(`di/ClockModule.kt`), so tests pass `Clock.fixed(…)`.
 
 ### Composition / DI
 

@@ -10,4 +10,7 @@ interface LoyaltyCardRepository {
 
     /** Emits `null` while no card has this id (never existed, or deleted). */
     fun getByIdWithStore(id: String): Flow<LoyaltyCard?>
+
+    /** Counts one use of the card, now. Does nothing for an unknown id. */
+    suspend fun recordUse(id: String)
 }

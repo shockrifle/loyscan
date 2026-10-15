@@ -16,6 +16,9 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.time.Clock
+import java.time.Instant
+import java.time.ZoneOffset
 
 /** The Room-backed repository over a real in-memory database: DAO rows come out as domain models. */
 @RunWith(AndroidJUnit4::class)
@@ -32,7 +35,7 @@ class RoomLoyaltyCardRepositoryTest {
         db = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), AppDatabase::class.java)
             .allowMainThreadQueries()
             .build()
-        repository = RoomLoyaltyCardRepository(db.loyaltyCardDao())
+        repository = RoomLoyaltyCardRepository(db.loyaltyCardDao(), Clock.fixed(NOW, ZoneOffset.UTC))
         db.storeDao().insert(aStoreEntity(id = "other", name = "Other Store", color = "#112233"))
         db.loyaltyCardDao().insert(aLoyaltyCardEntity(id = cardId(3), label = "Gold card", storeId = "other", number = "0042"))
     }
@@ -51,7 +54,18 @@ class RoomLoyaltyCardRepositoryTest {
     }
 
     @Test
+    fun recordUse_countsAUseAtTheClocksTime() = runTest {
+        repository.recordUse(cardId(3))
+
+        assertThat(repository.getByIdWithStore(cardId(3)).first()).isEqualTo(card.copy(useCount = 1, lastUsedAt = NOW))
+    }
+
+    @Test
     fun getByIdWithStore_unknownId_emitsNull() = runTest {
         assertThat(repository.getByIdWithStore(cardId(99)).first()).isNull()
+    }
+
+    private companion object {
+        val NOW: Instant = Instant.parse("2026-05-05T05:05:05Z")
     }
 }

@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -20,6 +21,11 @@ class DetailViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val cardId = savedStateHandle.toRoute<Detail>().cardId
+
+    init {
+        // Once per opened card: the ViewModel outlives rotation, so turning the phone doesn't count again.
+        viewModelScope.launch { loyaltyCardRepository.recordUse(cardId) }
+    }
 
     val card: StateFlow<LoyaltyCard> =
         loyaltyCardRepository.getByIdWithStore(cardId)
