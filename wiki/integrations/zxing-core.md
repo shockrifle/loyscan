@@ -24,8 +24,8 @@ Java, no Android or network code. Only its writers are used, in `BarcodeEncoder`
 ## Quirks
 
 - **No DataBar writers.** ZXing core reads `RSS_14` / `RSS_EXPANDED` but can't write them, and has no DataBar
-  Limited at all. `DATABAR*` cards are always drawn as `CODE_128` with the same content. Whether tills accept that
-  is unknown.
+  Limited at all. `DATABAR*` cards are always drawn as `CODE_128` with the same content, and the detail screen says
+  so under the barcode ([[card-detail]] → Fallback note). Whether tills accept that is unknown.
 - **No GS1-128.** It isn't a separate format; GS1-128 is Code 128 with a leading FNC1 (`EncodeHintType.GS1_FORMAT`),
   which isn't used: [[gs1-128-drawn-as-code-128]].
 - **Rejection is an exception.** 1D writers throw `IllegalArgumentException` for content they can't hold (EAN-13 with

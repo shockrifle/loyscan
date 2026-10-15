@@ -105,6 +105,27 @@ class DetailScreenTest {
     }
 
     @Test
+    fun cardDrawnInAFallbackFormat_namesTheFormatDrawn() { // #35: ZXing can't write DataBar
+        setScreen(card = aLoyaltyCard(store = aStore(defaultBarcodeFormat = BarcodeFormat.DATABAR), number = "0042"))
+
+        composeRule.onNodeWithText("Shown as Code 128").assertIsDisplayed()
+    }
+
+    @Test
+    fun contentNotEvenCode128CanHold_namesQrAsTheFormatDrawn() { // #35
+        setScreen(card = aLoyaltyCard(store = aStore(defaultBarcodeFormat = BarcodeFormat.EAN_13), number = "Café"))
+
+        composeRule.onNodeWithText("Shown as QR code").assertIsDisplayed()
+    }
+
+    @Test
+    fun cardDrawnInItsOwnFormat_showsNoFormatNote() { // #35
+        setScreen()
+
+        composeRule.onNodeWithText("Shown as", substring = true).assertDoesNotExist()
+    }
+
+    @Test
     fun tappingTheNumber_copiesItAsShown() {
         val rule = CardNumberRule(
             id = "example",

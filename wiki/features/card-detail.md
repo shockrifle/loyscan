@@ -31,6 +31,11 @@ UUID string.
   carries its own quiet zone ([[zxing-core]]). `BarcodeEncoder` encodes `barcodeContent` in `barcodeFormat`, falling back to `CODE_128`, then QR
   ([[zxing-core]]); nothing is drawn for empty content. 1D barcodes are 120dp high across the card; 2D ones keep
   their aspect ratio at full width. Its content description is "Barcode".
+- **Fallback note:** when the barcode is drawn in a format other than the card's `barcodeFormat`, a `bodySmall` line
+  under it names the format drawn, e.g. a DataBar card shows "Shown as Code 128" (#35). The name is
+  `BarcodeFormat.displayName`. A card drawn in its own format shows no note, and scan mode never does. Tests:
+  `DetailScreenTest.cardDrawnInAFallbackFormat_namesTheFormatDrawn`, `contentNotEvenCode128CanHold_namesQrAsTheFormatDrawn`,
+  `cardDrawnInItsOwnFormat_showsNoFormatNote`.
 - **Number:** `displayNumber` in `headlineMedium` below the barcode. A tap copies it to the clipboard exactly as
   shown, rule spacing included (product choice, 2026-10-15). Android 13+ confirms the copy itself; on 10–12 a toast
   says "Number copied".

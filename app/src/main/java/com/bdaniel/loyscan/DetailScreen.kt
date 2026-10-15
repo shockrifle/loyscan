@@ -163,6 +163,14 @@ fun SharedTransitionScope.DetailScreen(
                             ) {
                                 Barcode(barcode, Modifier.barcodeSize(barcode))
                             }
+                            // The card's own format couldn't be drawn (no writer, or content it can't hold).
+                            if (barcode.format != card.barcodeFormat) {
+                                Text(
+                                    text = "Shown as ${barcode.format.displayName}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    modifier = Modifier.padding(top = 8.dp),
+                                )
+                            }
                         }
                         CopyableNumber(
                             number = card.displayNumber,
