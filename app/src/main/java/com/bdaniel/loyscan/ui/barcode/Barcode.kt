@@ -62,10 +62,14 @@ internal fun barcodeRects(barcode: EncodedBarcode, size: Size): List<Rect> {
     }
 }
 
-/** The size [Barcode] should be laid out at: the available width, and [linearHeight] high if it is 1D. */
+/**
+ * The size [Barcode] should be laid out at: a 1D one the available width and [linearHeight] high; a 2D one as large as
+ * fits at its own aspect ratio, so the full width unless the height is shorter (not `fillMaxWidth`, which would pin
+ * the width and push it past the height).
+ */
 fun Modifier.barcodeSize(barcode: EncodedBarcode, linearHeight: Dp = 120.dp): Modifier =
     if (barcode.isLinear) fillMaxWidth().height(linearHeight)
-    else fillMaxWidth().aspectRatio(barcode.width.toFloat() / barcode.height)
+    else aspectRatio(barcode.width.toFloat() / barcode.height)
 
 /** Whole pixels when a module gets at least one; otherwise the exact fraction, so the barcode still fits. */
 private fun snap(px: Float): Float = if (px >= 1f) floor(px) else px

@@ -11,6 +11,10 @@ import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performTouchInput
@@ -145,6 +149,17 @@ class DetailScreenTest {
 
         composeRule.onNodeWithTag("scanMode").assertDoesNotExist()
         assertThat(keepsScreenOn).isFalse()
+    }
+
+    @Test
+    @Config(qualifiers = "w891dp-h411dp")
+    fun scanMode_inLandscape_keepsTheNumberUnderA2dBarcode() {
+        setScreen(card = aLoyaltyCard(store = aStore(defaultBarcodeFormat = BarcodeFormat.QR_CODE), number = "0042"))
+        composeRule.onNodeWithContentDescription("Barcode").performScrollTo().performTouchInput { doubleClick() }
+
+        // Unmerged: the clickable scan-mode surface merges its children into one node.
+        composeRule.onNode(hasText("0042") and hasAnyAncestor(hasTestTag("scanMode")), useUnmergedTree = true)
+            .assertIsDisplayed()
     }
 
     @Test

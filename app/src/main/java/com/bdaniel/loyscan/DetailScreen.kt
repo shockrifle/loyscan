@@ -196,7 +196,8 @@ private fun ScanMode(barcode: EncodedBarcode, number: String, onExit: () -> Unit
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Barcode(barcode, Modifier.barcodeSize(barcode, linearHeight = 200.dp))
+        // Weighted, so it is measured after the number and gets only the height left (landscape).
+        Barcode(barcode, Modifier.weight(1f, fill = false).barcodeSize(barcode, linearHeight = 200.dp))
         Text(
             text = number,
             color = Color.Black,

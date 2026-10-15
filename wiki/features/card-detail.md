@@ -41,8 +41,9 @@ UUID string.
   the `NavBackStackEntry`'s lifecycle, so it only brightens once the enter transition has finished. Tests:
   `ScreenEffectsTest`, `DetailScreenTest`, `AppNavigationTest.detailsFullBrightness_isRestoredOnBack`.
 - **Scan mode:** a double-tap on the barcode (or the accessibility action "Show full screen") lays `ScanMode` over
-  the whole screen, status bar included: white, the barcode at full width less 24dp padding (1D ones 200dp high)
-  and the number below it in black. It keeps the screen on (`KeepScreenOn()`, `FLAG_KEEP_SCREEN_ON`, same
+  the whole screen, status bar included: white, the barcode as large as fits inside 24dp padding with the number
+  below it in black (1D: full width, 200dp high; 2D: square modules, height-bound in landscape so the number keeps
+  its room). It keeps the screen on (`KeepScreenOn()`, `FLAG_KEEP_SCREEN_ON`, same
   resumed-only rule as the brightness). A tap anywhere or back closes it. Its open state survives rotation
   (`rememberSaveable`). 1D barcodes are not rotated to the long side.
 - Back arrow → `directions.toBack()` → `navigateUp()`. The Edit icon is a no-op (`DetailScreen.kt:96`,
