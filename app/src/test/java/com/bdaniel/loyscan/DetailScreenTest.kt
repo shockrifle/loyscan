@@ -3,6 +3,7 @@ package com.bdaniel.loyscan
 import android.content.ClipboardManager
 import android.content.Context
 import android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_FULL
+import android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
 import androidx.activity.ComponentActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -10,7 +11,10 @@ import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.doubleClick
 import androidx.compose.ui.test.performClick
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.testing.invoke
@@ -38,6 +42,8 @@ class DetailScreenTest {
     val composeRule = createAndroidComposeRule<ComponentActivity>()
 
     private val card = aLoyaltyCard(label = "Gold card", store = aStore(name = "Test Store"), number = "0042")
+
+    private val keepsScreenOn get() = composeRule.activity.window.attributes.flags and FLAG_KEEP_SCREEN_ON != 0
 
     private fun setScreen(color: String = "#336699", card: LoyaltyCard = this.card, onBack: () -> Unit = {}) {
         val viewModel = DetailViewModel(
@@ -117,6 +123,38 @@ class DetailScreenTest {
         setScreen()
 
         assertThat(composeRule.activity.window.attributes.screenBrightness).isEqualTo(BRIGHTNESS_OVERRIDE_FULL)
+    }
+
+    @Test
+    fun doubleTappingTheBarcode_opensScanMode_whichKeepsTheScreenOn() {
+        setScreen()
+
+        composeRule.onNodeWithContentDescription("Barcode").performTouchInput { doubleClick() }
+
+        composeRule.onNodeWithTag("scanMode").assertIsDisplayed()
+        assertThat(keepsScreenOn).isTrue()
+    }
+
+    @Test
+    fun scanMode_backClosesIt_andLetsTheScreenSleep() {
+        setScreen()
+        composeRule.onNodeWithContentDescription("Barcode").performTouchInput { doubleClick() }
+        composeRule.onNodeWithTag("scanMode").assertIsDisplayed()
+
+        composeRule.runOnUiThread { composeRule.activity.onBackPressedDispatcher.onBackPressed() }
+
+        composeRule.onNodeWithTag("scanMode").assertDoesNotExist()
+        assertThat(keepsScreenOn).isFalse()
+    }
+
+    @Test
+    fun scanMode_tapClosesIt() {
+        setScreen()
+        composeRule.onNodeWithContentDescription("Barcode").performTouchInput { doubleClick() }
+
+        composeRule.onNodeWithTag("scanMode").performClick()
+
+        composeRule.onNodeWithTag("scanMode").assertDoesNotExist()
     }
 
     @Test

@@ -13,6 +13,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlin.math.floor
 import kotlin.math.min
@@ -61,9 +62,9 @@ internal fun barcodeRects(barcode: EncodedBarcode, size: Size): List<Rect> {
     }
 }
 
-/** The size [Barcode] should be laid out at within the available width. */
-fun Modifier.barcodeSize(barcode: EncodedBarcode): Modifier =
-    if (barcode.isLinear) fillMaxWidth().height(120.dp)
+/** The size [Barcode] should be laid out at: the available width, and [linearHeight] high if it is 1D. */
+fun Modifier.barcodeSize(barcode: EncodedBarcode, linearHeight: Dp = 120.dp): Modifier =
+    if (barcode.isLinear) fillMaxWidth().height(linearHeight)
     else fillMaxWidth().aspectRatio(barcode.width.toFloat() / barcode.height)
 
 /** Whole pixels when a module gets at least one; otherwise the exact fraction, so the barcode still fits. */

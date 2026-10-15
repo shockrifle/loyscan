@@ -2,6 +2,7 @@ package com.bdaniel.loyscan.ui
 
 import android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_FULL
 import android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+import android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -22,9 +23,13 @@ class ScreenEffectsTest {
 
     private val brightness get() = composeRule.activity.window.attributes.screenBrightness
 
+    private val keepsScreenOn get() = composeRule.activity.window.attributes.flags and FLAG_KEEP_SCREEN_ON != 0
+
     private var shown by mutableStateOf(true)
 
     private fun setContent() = composeRule.setContent { if (shown) FullBrightness() }
+
+    private fun setKeepScreenOn() = composeRule.setContent { if (shown) KeepScreenOn() }
 
     @Test
     fun fullBrightness_whileInComposition() {
@@ -52,5 +57,33 @@ class ScreenEffectsTest {
 
         composeRule.activityRule.scenario.moveToState(Lifecycle.State.RESUMED)
         assertThat(brightness).isEqualTo(BRIGHTNESS_OVERRIDE_FULL)
+    }
+
+    @Test
+    fun keepScreenOn_whileInComposition() {
+        setKeepScreenOn()
+
+        assertThat(keepsScreenOn).isTrue()
+    }
+
+    @Test
+    fun keepScreenOn_leavingComposition_clearsTheFlag() {
+        setKeepScreenOn()
+
+        shown = false
+        composeRule.waitForIdle()
+
+        assertThat(keepsScreenOn).isFalse()
+    }
+
+    @Test
+    fun keepScreenOn_isClearedWhileTheScreenIsPaused_andComesBackOnResume() {
+        setKeepScreenOn()
+
+        composeRule.activityRule.scenario.moveToState(Lifecycle.State.STARTED)
+        assertThat(keepsScreenOn).isFalse()
+
+        composeRule.activityRule.scenario.moveToState(Lifecycle.State.RESUMED)
+        assertThat(keepsScreenOn).isTrue()
     }
 }

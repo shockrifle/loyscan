@@ -3,11 +3,14 @@ package com.bdaniel.loyscan
 import android.content.ClipData
 import android.os.Build
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,23 +32,32 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.ColorUtils
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.bdaniel.loyscan.ui.FullBrightness
+import com.bdaniel.loyscan.ui.KeepScreenOn
 import com.bdaniel.loyscan.ui.barcode.Barcode
 import com.bdaniel.loyscan.ui.barcode.BarcodeEncoder
+import com.bdaniel.loyscan.ui.barcode.EncodedBarcode
 import com.bdaniel.loyscan.ui.barcode.barcodeSize
-import com.bdaniel.loyscan.ui.FullBrightness
 import com.bdaniel.loyscan.ui.hiltImageLoader
 import com.bdaniel.loyscan.ui.toBrandColorOrNull
 import com.bdaniel.loyscan.ui.theme.icons.Icons
@@ -65,96 +77,132 @@ fun SharedTransitionScope.DetailScreen(
     // At the till the barcode must be readable, whatever the user's brightness setting.
     FullBrightness()
     val brandColor = color.toBrandColorOrNull() ?: MaterialTheme.colorScheme.surfaceVariant
+    val barcode = remember(card.barcodeContent, card.barcodeFormat) {
+        BarcodeEncoder.encode(card.barcodeContent, card.barcodeFormat)
+    }
+    var scanMode by rememberSaveable { mutableStateOf(false) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(text = card.store.name) },
-                navigationIcon = {
-                    IconButton(onClick = { directions.toBack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { /* TODO: Handle edit */ }) {
-                        Icon(Icons.Default.Edit, contentDescription = "Edit")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = brandColor
-                )
-            )
-        },
-        modifier = Modifier.sharedElement(
-            sharedContentState = rememberSharedContentState(key = "card/${card.id}"),
-            animatedVisibilityScope = animatedVisibilityScope
-        ),
-        containerColor = Color.Transparent
-    ) { paddingValues ->
-        Column(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
-                    .background(brandColor),
-                contentAlignment = Alignment.Center
-            ) {
-                if (!card.store.logo.isNullOrBlank()) {
-                    AsyncImage(
-                        model = card.store.logo,
-                        contentDescription = card.store.name,
-                        imageLoader = hiltImageLoader(),
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp)
-                    )
-                } else {
-                    Text(
-                        text = card.store.name,
-                        style = MaterialTheme.typography.headlineLarge,
-                        color = if (ColorUtils.calculateLuminance(brandColor.toArgb()) < 0.5) Color.White else Color.Black,
-                    )
-                }
-            }
-            Card(
-                modifier = Modifier
-                    .fillMaxSize()
-            ) {
-                Column(
-                    modifier = Modifier
-                        .verticalScroll(rememberScrollState())
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    card.label?.let { Text(text = it, style = MaterialTheme.typography.titleMedium) }
-                    Text(text = card.store.name)
-                    val barcode = remember(card.barcodeContent, card.barcodeFormat) {
-                        BarcodeEncoder.encode(card.barcodeContent, card.barcodeFormat)
-                    }
-                    if (barcode != null) {
-                        Box(
-                            modifier = Modifier
-                                .padding(top = 16.dp)
-                                .fillMaxWidth()
-                                // White whatever the theme, with a margin for the quiet zone: scanners need it.
-                                .background(Color.White, RoundedCornerShape(8.dp))
-                                .padding(16.dp),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Barcode(barcode, Modifier.barcodeSize(barcode))
+    Box(Modifier.fillMaxSize()) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(text = card.store.name) },
+                    navigationIcon = {
+                        IconButton(onClick = { directions.toBack() }) {
+                            Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                         }
-                    }
-                    CopyableNumber(
-                        number = card.displayNumber,
-                        modifier = Modifier.padding(top = 16.dp),
+                    },
+                    actions = {
+                        IconButton(onClick = { /* TODO: Handle edit */ }) {
+                            Icon(Icons.Default.Edit, contentDescription = "Edit")
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = brandColor
                     )
+                )
+            },
+            modifier = Modifier.sharedElement(
+                sharedContentState = rememberSharedContentState(key = "card/${card.id}"),
+                animatedVisibilityScope = animatedVisibilityScope
+            ),
+            containerColor = Color.Transparent
+        ) { paddingValues ->
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .background(brandColor),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (!card.store.logo.isNullOrBlank()) {
+                        AsyncImage(
+                            model = card.store.logo,
+                            contentDescription = card.store.name,
+                            imageLoader = hiltImageLoader(),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp)
+                        )
+                    } else {
+                        Text(
+                            text = card.store.name,
+                            style = MaterialTheme.typography.headlineLarge,
+                            color = if (ColorUtils.calculateLuminance(brandColor.toArgb()) < 0.5) Color.White else Color.Black,
+                        )
+                    }
+                }
+                Card(
+                    modifier = Modifier
+                        .fillMaxSize()
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .verticalScroll(rememberScrollState())
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        card.label?.let { Text(text = it, style = MaterialTheme.typography.titleMedium) }
+                        Text(text = card.store.name)
+                        if (barcode != null) {
+                            Box(
+                                modifier = Modifier
+                                    .padding(top = 16.dp)
+                                    .fillMaxWidth()
+                                    // White whatever the theme, with a margin for the quiet zone: scanners need it.
+                                    .background(Color.White, RoundedCornerShape(8.dp))
+                                    .pointerInput(Unit) { detectTapGestures(onDoubleTap = { scanMode = true }) }
+                                    .semantics { onClick(label = "Show full screen") { scanMode = true; true } }
+                                    .padding(16.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Barcode(barcode, Modifier.barcodeSize(barcode))
+                            }
+                        }
+                        CopyableNumber(
+                            number = card.displayNumber,
+                            modifier = Modifier.padding(top = 16.dp),
+                        )
+                    }
                 }
             }
         }
+        if (scanMode && barcode != null) {
+            ScanMode(barcode, card.displayNumber, onExit = { scanMode = false })
+        }
+    }
+}
+
+/**
+ * The barcode alone, as large as the screen allows, black on white, with the screen kept on. A tap or back closes
+ * it.
+ */
+@Composable
+private fun ScanMode(barcode: EncodedBarcode, number: String, onExit: () -> Unit) {
+    KeepScreenOn()
+    BackHandler(onBack = onExit)
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+            .clickable(onClickLabel = "Close full screen", onClick = onExit)
+            .testTag("scanMode")
+            .padding(24.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Barcode(barcode, Modifier.barcodeSize(barcode, linearHeight = 200.dp))
+        Text(
+            text = number,
+            color = Color.Black,
+            style = MaterialTheme.typography.headlineLarge,
+            modifier = Modifier.padding(top = 24.dp),
+        )
     }
 }
 

@@ -114,12 +114,12 @@ here exist; read them next to the code.
    value.
    Then `DetailViewModel` reads `savedStateHandle.toRoute<Detail>().cardId`, then
    `repository.getByIdWithStore(cardId).filterNotNull().stateIn(…, initialValue = LoyaltyCard.EMPTY)`
-   (`DetailViewModel.kt:22-31`).
+   (`DetailViewModel.kt:23-37`).
 9. **Detail UI.** *Test first:* `DetailScreenTest`: it shows the label and the display number (formatted by the
    store's rule), the back arrow calls `toBack`, and an empty or malformed route color doesn't crash.
    Then `DetailScreen` paints the top bar and header with the **route** color (available on frame 1), and fills
    text/logo from the **ViewModel** card (available once Room emits). The whole `Scaffold` is the matching shared
-   element `"card/${card.id}"` (`DetailScreen.kt:64-72`). Back → `directions.toBack()` → `navigateUp()`.
+   element `"card/${card.id}"` (`DetailScreen.kt:105-108`). Back → `directions.toBack()` → `navigateUp()`.
    See [[card-detail]], [[card-transition]].
 
 ### Checklist for a new screen/feature (derived from the example)

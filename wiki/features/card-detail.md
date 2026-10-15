@@ -1,10 +1,11 @@
 # Card detail
 
-Shows one card: a top bar and a 200dp header in the store's brand color with its logo (or store name), then a
-`Card` listing the card's label (if it has one), the store name and the display number as plain text.
+Shows one card at the checkout: a top bar and a 200dp header in the store's brand color with its logo (or store
+name), then a `Card` with the card's label, the store name, the barcode on white and the display number in large
+type. The screen runs at full brightness; a double-tap on the barcode opens a full-screen scan mode.
 
-**Entry points:** `DetailScreen` (`app/src/main/java/com/bdaniel/loyscan/DetailScreen.kt:38-46`);
-`DetailViewModel` (`app/src/main/java/com/bdaniel/loyscan/DetailViewModel.kt:16-32`); route
+**Entry points:** `DetailScreen` (`app/src/main/java/com/bdaniel/loyscan/DetailScreen.kt:67-75`);
+`DetailViewModel` (`app/src/main/java/com/bdaniel/loyscan/DetailViewModel.kt:17-38`); route
 `Detail(cardId, color)` (`app/src/main/java/com/bdaniel/loyscan/Navigation.kt:24-25`), where `cardId` is the card's
 UUID string.
 
@@ -39,7 +40,12 @@ UUID string.
   window's previous value back on pause (home, app switch) and when the screen leaves composition (back). It follows
   the `NavBackStackEntry`'s lifecycle, so it only brightens once the enter transition has finished. Tests:
   `ScreenEffectsTest`, `DetailScreenTest`, `AppNavigationTest.detailsFullBrightness_isRestoredOnBack`.
-- Back arrow → `directions.toBack()` → `navigateUp()`. The Edit icon is a no-op (`DetailScreen.kt:60`,
+- **Scan mode:** a double-tap on the barcode (or the accessibility action "Show full screen") lays `ScanMode` over
+  the whole screen, status bar included: white, the barcode at full width less 24dp padding (1D ones 200dp high)
+  and the number below it in black. It keeps the screen on (`KeepScreenOn()`, `FLAG_KEEP_SCREEN_ON`, same
+  resumed-only rule as the brightness). A tap anywhere or back closes it. Its open state survives rotation
+  (`rememberSaveable`). 1D barcodes are not rotated to the long side.
+- Back arrow → `directions.toBack()` → `navigateUp()`. The Edit icon is a no-op (`DetailScreen.kt:96`,
   `/* TODO */`).
 - The whole `Scaffold` is the shared element `card/{id}` — [[card-transition]].
 

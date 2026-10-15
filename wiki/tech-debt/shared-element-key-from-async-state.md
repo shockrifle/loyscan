@@ -1,7 +1,7 @@
 # Detail shared-element key depends on async-loaded data
 
-**Status:** Open — **suspected, not verified on a device** · **Issue:** [#16](https://github.com/shockrifle/loyscan/issues/16) · **Since:** 2025-12-04 (`1ea9fe0`), still present at
-`45a33e1` · **Where:** `app/src/main/java/com/bdaniel/loyscan/DetailScreen.kt:70`
+**Status:** Open — **suspected, not verified on a device** · **Issue:** [#16](https://github.com/shockrifle/loyscan/issues/16) · **Since:** 2025-12-04 (`1ea9fe0`), still present on
+2026-10-15 · **Where:** `app/src/main/java/com/bdaniel/loyscan/DetailScreen.kt:106`
 
 ## What
 The detail `Scaffold`'s shared key is `"card/${card.id}"`, where `card` comes from `DetailViewModel.card`, which is
