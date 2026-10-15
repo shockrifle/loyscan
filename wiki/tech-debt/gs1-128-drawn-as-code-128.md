@@ -6,7 +6,7 @@
 ## What
 `BarcodeFormat` has no `GS1_128`. A GS1-128 barcode is Code 128 with a leading FNC1 character that tells the
 scanner the data is GS1 (Application Identifiers). A card catalogued as GS1-128 is stored as `CODE_128` and will
-be drawn without the FNC1 (#4).
+be drawn without the FNC1 ([[zxing-core]]).
 
 ## Why it exists
 The enum follows ZXing's names ([[2026-10-09-card-number-rule-engine]]), and GS1-128 isn't a separate ZXing format
@@ -18,4 +18,5 @@ GS1 may reject or misread a barcode without FNC1. It is unconfirmed: plain Code 
 
 ## How to pay it down
 Test at a Coop till ([#31](https://github.com/shockrifle/loyscan/issues/31)). If plain Code 128 doesn't scan, add
-`GS1_128`, draw it with a leading FNC1 when #4 renders barcodes, and switch `hu-coop` to it.
+`GS1_128`, draw it with a leading FNC1 (ZXing's `EncodeHintType.GS1_FORMAT` in `BarcodeEncoder`), and switch
+`hu-coop` to it.

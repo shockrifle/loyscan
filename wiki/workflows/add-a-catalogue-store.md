@@ -48,7 +48,7 @@ never the answer to copy.
 - Add a test vector to `ShippedCatalogueTest.vectors` (`app/src/test/java/com/bdaniel/loyscan/data/local/db/`): a made-up
   core number, never a real person's card, and the barcode content and display number the rule must produce.
 - `./gradlew testDebugUnitTest --tests '*Catalogue*'`. A malformed entry fails `ShippedCatalogueTest`, and so does a rule without a vector.
-- On a device: open a card of the store and check that its barcode scans at the till (once #4 draws barcodes).
+- On a device: open a card of the store and check that its barcode scans at the till.
 
 ## Changing an existing entry
 

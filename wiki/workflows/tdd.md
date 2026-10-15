@@ -36,7 +36,8 @@ Paths are under `app/src/test/java/com/bdaniel/loyscan/`, in the same package as
 | Repository | The real repository over an in-memory database | Robolectric | `data/repository/RoomLoyaltyCardRepositoryTest` |
 | ViewModel (no route) | Constructed with a fake repository; Turbine on the `StateFlow`; `MainDispatcherRule` | default | `ListViewModelTest` |
 | ViewModel reading a route | Same, with `SavedStateHandle(route = Detail(…))` | Robolectric | `DetailViewModelTest` |
-| Screen | `createComposeRule()`, a fake-backed ViewModel, recording `*Directions` lambdas, wrapped in `SharedTransitionLayout { AnimatedVisibility(true) { … } }` | Robolectric | `ListScreenTest`, `DetailScreenTest` |
+| Drawing geometry, barcode encoding (`ui/barcode/`) | Plain JUnit. Robolectric doesn't run Compose draw code, so what a `drawWithCache` block draws is computed by a pure function (`barcodeRects`) and tested there. Encoded barcodes are read back with ZXing's reader | default | `ui/barcode/BarcodeLayoutTest`, `BarcodeEncoderTest` |
+| Screen | `createComposeRule()`, a fake-backed ViewModel, recording `*Directions` lambdas, wrapped in `SharedTransitionLayout { AnimatedVisibility(true) { … } }`. Robolectric's default screen is 320×470dp; a screen taller than that gets `@Config(qualifiers = "w411dp-h891dp")` | Robolectric | `ListScreenTest`, `DetailScreenTest` |
 | App wiring / navigation | `@HiltAndroidTest` with `createAndroidComposeRule<MainActivity>()` and `InMemoryDatabaseModule` | Robolectric + `HiltTestApplication` | `AppNavigationTest` |
 
 Robolectric means `@RunWith(AndroidJUnit4::class)`. Keep end-to-end tests few, one per user flow; behaviour

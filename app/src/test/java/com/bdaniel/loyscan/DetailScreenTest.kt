@@ -1,5 +1,7 @@
 package com.bdaniel.loyscan
 
+import android.content.ClipboardManager
+import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
@@ -10,6 +12,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.testing.invoke
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.bdaniel.loyscan.testing.FakeLoyaltyCardRepository
 import com.bdaniel.loyscan.domain.BarcodeFormat
@@ -21,8 +24,11 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.annotation.Config
 
 @OptIn(ExperimentalSharedTransitionApi::class)
+// A typical phone: Robolectric's default 320x470dp screen is shorter than the header, barcode and number together.
+@Config(qualifiers = "w411dp-h891dp")
 @RunWith(AndroidJUnit4::class)
 class DetailScreenTest {
 
@@ -70,6 +76,38 @@ class DetailScreenTest {
         setScreen(card = aLoyaltyCard(store = aStore(cardNumberRule = rule), number = "123456789"))
 
         composeRule.onNodeWithText("123 456 789").assertIsDisplayed()
+    }
+
+    @Test
+    fun showsTheCardsBarcode() {
+        setScreen()
+
+        composeRule.onNodeWithContentDescription("Barcode").assertIsDisplayed()
+    }
+
+    @Test
+    fun cardWithNothingToEncode_showsNoBarcode() {
+        setScreen(card = aLoyaltyCard(number = ""))
+
+        composeRule.onNodeWithContentDescription("Barcode").assertDoesNotExist()
+    }
+
+    @Test
+    fun tappingTheNumber_copiesItAsShown() {
+        val rule = CardNumberRule(
+            id = "example",
+            format = BarcodeFormat.CODE_128,
+            minLength = 9,
+            maxLength = 9,
+            display = CardNumberRule.Display(pattern = "### ### ###"),
+        )
+        setScreen(card = aLoyaltyCard(store = aStore(cardNumberRule = rule), number = "123456789"))
+
+        composeRule.onNodeWithText("123 456 789").performClick()
+
+        val clipboard = ApplicationProvider.getApplicationContext<Context>().getSystemService(ClipboardManager::class.java)
+        composeRule.waitUntil { clipboard.primaryClip != null }
+        assertThat(clipboard.primaryClip!!.getItemAt(0).text.toString()).isEqualTo("123 456 789")
     }
 
     @Test

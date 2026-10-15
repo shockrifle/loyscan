@@ -14,8 +14,9 @@ See [[2026-10-09-card-number-rule-engine]].
 
 **Barcode format** — The symbology, enum `domain/BarcodeFormat.kt` (ZXing names, plus `DATABAR*`). A card's
 `barcodeFormat` is derived: `scannedFormat` (column `loyalty_cards.scannedFormat`), else the store rule's
-format, else `Store.defaultBarcodeFormat` ([[2026-10-12-data-model-v2]]). Not rendered anywhere yet; no barcode
-library is a dependency. Stored as the enum name. Was a free-form string before #1.
+format, else `Store.defaultBarcodeFormat` ([[2026-10-12-data-model-v2]]). Drawn on the detail screen with ZXing
+core, falling back to `CODE_128`, then QR, when the format can't hold the content or has no writer (DataBar):
+[[zxing-core]]. Stored as the enum name. Was a free-form string before #1.
 
 **Brand** — Old name of **Store** (`domain/Brand.kt`, table `brands`) until #1. "Brand colour" is still
 used for `Store.color`.
@@ -89,6 +90,9 @@ until #1.
 now debug-only Kotlin ([[seed-data]]).
 
 **Mapper** — `toDomainModel()` extension functions in `data/mapper/` converting Room results to domain models.
+
+**Quiet zone** — The blank margin a scanner needs around a barcode. ZXing adds one for 1D and QR but not for Aztec
+or Data Matrix; the detail screen's white padded card provides it for all ([[zxing-core]]).
 
 **Repository** — interfaces in `data/repository/` exposing domain `Flow`s, implemented by `@Singleton` `Room*Repository`
 classes and bound in `di/RepositoryModule.kt`; the ViewModels' only data dependency (tests use a fake).

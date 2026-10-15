@@ -26,7 +26,8 @@ import javax.inject.Inject
  * `InMemoryDatabaseModule`). Screen details belong in the per-screen tests.
  */
 @HiltAndroidTest
-@Config(application = HiltTestApplication::class)
+// A typical phone: on Robolectric's default 320x470dp screen the detail's number is below the fold.
+@Config(application = HiltTestApplication::class, qualifiers = "w411dp-h891dp")
 @RunWith(AndroidJUnit4::class)
 class AppNavigationTest {
 

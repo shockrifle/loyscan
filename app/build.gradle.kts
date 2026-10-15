@@ -83,6 +83,9 @@ dependencies {
     // JSON (card-number rules)
     implementation(libs.kotlinx.serialization.json)
 
+    // Barcode drawing (encoding only; pure Java, offline)
+    implementation(libs.zxing.core)
+
     // Timber
     implementation(libs.timber)
 
