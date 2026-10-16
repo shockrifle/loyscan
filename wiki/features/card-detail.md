@@ -37,8 +37,9 @@ UUID string.
   `DetailScreenTest.cardDrawnInAFallbackFormat_namesTheFormatDrawn`, `contentNotEvenCode128CanHold_namesQrAsTheFormatDrawn`,
   `cardDrawnInItsOwnFormat_showsNoFormatNote`.
 - **Scan mode shows no fallback note** (product choice, 2026-10-16, #37): it stays barcode and number only. The note
-  is for the user, who has just seen it on the detail card they opened scan mode from; the till's scanner reads the
-  barcode whatever the note says, and the space goes to the barcode. Test:
+  is for the user, who has just seen it on the detail card they opened scan mode from. Whether tills accept a
+  fallback barcode is unknown ([[zxing-core]]); if one rejects it, the cashier keys in the number shown below the
+  barcode. The space goes to the barcode. Test:
   `DetailScreenTest.scanMode_forAFallbackCard_showsNoFormatNote`.
 - **Number:** `displayNumber` in `headlineMedium` below the barcode. A tap copies it to the clipboard exactly as
   shown, rule spacing included (product choice, 2026-10-15). Android 13+ confirms the copy itself; on 10–12 a toast

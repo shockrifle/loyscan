@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-16 · review fix: the scan-mode note rationale no longer claims tills accept fallback barcodes (unknown, per zxing-core) · features/card-detail · review of #37
 - 2026-10-16 · decision recorded: scan mode shows no fallback-format note (product choice), with its test · features/card-detail · #37
 - 2026-10-15 · update: the detail screen names the fallback format a barcode is drawn in ("Shown as Code 128") · features/card-detail, integrations/zxing-core · #35
 - 2026-10-15 · review fix: scan mode keeps the number visible under a 2D barcode in landscape · features/card-detail · review of #4

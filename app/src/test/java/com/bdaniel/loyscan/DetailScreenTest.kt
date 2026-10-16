@@ -189,6 +189,8 @@ class DetailScreenTest {
         composeRule.onNodeWithContentDescription("Barcode").performTouchInput { doubleClick() }
 
         val inScanMode = hasAnyAncestor(hasTestTag("scanMode"))
+        // The card does fall back: the detail card under the overlay has the note.
+        composeRule.onNode(hasText("Shown as Code 128") and !inScanMode, useUnmergedTree = true).assertExists()
         composeRule.onNode(hasText("0042") and inScanMode, useUnmergedTree = true).assertIsDisplayed()
         composeRule.onNode(hasText("Shown as", substring = true) and inScanMode, useUnmergedTree = true)
             .assertDoesNotExist()
