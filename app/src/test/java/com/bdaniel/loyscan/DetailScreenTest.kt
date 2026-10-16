@@ -184,6 +184,17 @@ class DetailScreenTest {
     }
 
     @Test
+    fun scanMode_forAFallbackCard_showsNoFormatNote() { // #37: the note stays on the detail card
+        setScreen(card = aLoyaltyCard(store = aStore(defaultBarcodeFormat = BarcodeFormat.DATABAR), number = "0042"))
+        composeRule.onNodeWithContentDescription("Barcode").performTouchInput { doubleClick() }
+
+        val inScanMode = hasAnyAncestor(hasTestTag("scanMode"))
+        composeRule.onNode(hasText("0042") and inScanMode, useUnmergedTree = true).assertIsDisplayed()
+        composeRule.onNode(hasText("Shown as", substring = true) and inScanMode, useUnmergedTree = true)
+            .assertDoesNotExist()
+    }
+
+    @Test
     fun scanMode_tapClosesIt() {
         setScreen()
         composeRule.onNodeWithContentDescription("Barcode").performTouchInput { doubleClick() }
