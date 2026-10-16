@@ -46,7 +46,7 @@ directly and a scan is only shown in a dialog: [[scanner-result-dialog-until-add
   `onScanned`, torch also after a pause, close on leave, failures) and the analysis settings (`scannerUseCases`).
 - `ScanAnalyzerTest`: frames closed, barcodes delivered on the callback executor, unreadable frames skipped.
 - `CameraPermissionTest`: the real permission state, with the system dialog replaced by an `ActivityResultRegistry`
-  that answers at once and Robolectric's permission and rationale shadows.
+  that answers at once (or leaves the request open, for the rotation test) and Robolectric's permission and rationale shadows.
 - `ZxingCppFormatsTest`, `NoPlayServicesTest`: see [[zxing-cpp]].
 - `ScannerDirectionsTest`, `AppNavigationTest.addCard_opensTheScanner_andBackReturnsToTheList`: navigation.
 
