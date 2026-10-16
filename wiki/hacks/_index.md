@@ -7,6 +7,7 @@ below.
 ## Active
 
 - [[list-route-shadows-kotlin-list]] — route `object List` hides `kotlin.collections.List`; types are inferred instead
+- [[scanner-result-dialog-until-add-card-flow]] — "Add card" opens the scanner directly and a scan is only shown (#39)
 
 ## Removed
 

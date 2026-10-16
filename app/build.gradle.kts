@@ -86,6 +86,12 @@ dependencies {
     // Barcode drawing (encoding only; pure Java, offline)
     implementation(libs.zxing.core)
 
+    // Barcode scanning (CameraX + zxing-cpp; native, offline, no Play Services)
+    implementation(libs.zxing.cpp)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.compose)
+
     // Timber
     implementation(libs.timber)
 

@@ -197,5 +197,99 @@ object Icons {
         @Suppress("ObjectPropertyName")
         private var _Edit: ImageVector? = null
 
+        val Add: ImageVector
+            get() {
+                if (_Add != null) {
+                    return _Add!!
+                }
+                _Add = ImageVector.Builder(
+                        name = "Add",
+                        defaultWidth = 24.dp,
+                        defaultHeight = 24.dp,
+                        viewportWidth = 960f,
+                        viewportHeight = 960f
+                ).apply {
+                    path(fill = SolidColor(Color.Black)) {
+                        moveTo(440f, 520f)
+                        horizontalLineTo(200f)
+                        verticalLineToRelative(-80f)
+                        horizontalLineToRelative(240f)
+                        verticalLineToRelative(-240f)
+                        horizontalLineToRelative(80f)
+                        verticalLineToRelative(240f)
+                        horizontalLineToRelative(240f)
+                        verticalLineToRelative(80f)
+                        horizontalLineTo(520f)
+                        verticalLineToRelative(240f)
+                        horizontalLineToRelative(-80f)
+                        verticalLineToRelative(-240f)
+                        close()
+                    }
+                }.build()
+
+                return _Add!!
+            }
+
+        @Suppress("ObjectPropertyName")
+        private var _Add: ImageVector? = null
+
+        val Flashlight: ImageVector
+            get() {
+                if (_Flashlight != null) {
+                    return _Flashlight!!
+                }
+                _Flashlight = ImageVector.Builder(
+                        name = "Flashlight",
+                        defaultWidth = 24.dp,
+                        defaultHeight = 24.dp,
+                        viewportWidth = 960f,
+                        viewportHeight = 960f
+                ).apply {
+                    path(fill = SolidColor(Color.Black)) {
+                        moveTo(280f, 880f)
+                        verticalLineToRelative(-400f)
+                        lineToRelative(-80f, -120f)
+                        verticalLineToRelative(-280f)
+                        horizontalLineToRelative(560f)
+                        verticalLineToRelative(280f)
+                        lineToRelative(-80f, 120f)
+                        verticalLineToRelative(400f)
+                        horizontalLineTo(280f)
+                        close()
+                        moveTo(480f, 620f)
+                        quadToRelative(-25f, 0f, -42.5f, -17.5f)
+                        reflectiveQuadTo(420f, 560f)
+                        quadToRelative(0f, -25f, 17.5f, -42.5f)
+                        reflectiveQuadTo(480f, 500f)
+                        quadToRelative(25f, 0f, 42.5f, 17.5f)
+                        reflectiveQuadTo(540f, 560f)
+                        quadToRelative(0f, 25f, -17.5f, 42.5f)
+                        reflectiveQuadTo(480f, 620f)
+                        close()
+                        moveTo(280f, 200f)
+                        horizontalLineToRelative(400f)
+                        verticalLineToRelative(-40f)
+                        horizontalLineTo(280f)
+                        verticalLineToRelative(40f)
+                        close()
+                        moveTo(680f, 280f)
+                        horizontalLineTo(280f)
+                        verticalLineToRelative(16f)
+                        lineToRelative(80f, 120f)
+                        verticalLineToRelative(384f)
+                        horizontalLineToRelative(240f)
+                        verticalLineToRelative(-384f)
+                        lineToRelative(80f, -120f)
+                        verticalLineToRelative(-16f)
+                        close()
+                    }
+                }.build()
+
+                return _Flashlight!!
+            }
+
+        @Suppress("ObjectPropertyName")
+        private var _Flashlight: ImageVector? = null
+
     }
 }

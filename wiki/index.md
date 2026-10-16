@@ -19,6 +19,7 @@ the way they are, what's fragile, and how to work on it.
 - [[card-list]] — "My Cards" grid (start destination)
 - [[card-detail]] — one card: store header, label, display number
 - [[card-transition]] — shared-element animation between list and detail
+- [[barcode-scanner]] — reads a card's barcode with the camera (offline, no Play Services)
 - [[store-catalogue]] — curated store list, synced into the database on every open
 - [[seed-data]] — demo cards, debug builds only
 
@@ -26,17 +27,17 @@ the way they are, what's fragile, and how to work on it.
 
 - Workflows: [[tdd]] (start here before writing code), [[build-and-run]], [[ci]], [[database-schema-changes]], [[add-a-catalogue-store]], [[code-review]] (incl. `/next-task`)
 - Runbooks: [[cli-build-jvm-target-mismatch]], [[reset-local-database]]
-- Integrations: [[coil-image-loading]], [[zxing-core]]
+- Integrations: [[coil-image-loading]], [[zxing-core]], [[zxing-cpp]]
 - Scripts: none yet — see [[scripts/_index|scripts]]
 
 ## Knowledge registers
 
 | Folder | What's in it |
 |---|---|
-| [[decisions/_index\|decisions]] | Why the codebase looks the way it does (11 pages) |
+| [[decisions/_index\|decisions]] | Why the codebase looks the way it does (12 pages) |
 | [[bugs/_index\|bugs]] | Postmortems (2 pages) |
 | [[tech-debt/_index\|tech-debt]] | Owed work, open vs resolved (7 pages) |
-| [[hacks/_index\|hacks]] | Short-lived workarounds (2 pages) |
+| [[hacks/_index\|hacks]] | Short-lived workarounds (3 pages) |
 | [[workflows/_index\|workflows]] · [[runbooks/_index\|runbooks]] · [[integrations/_index\|integrations]] · [[features/_index\|features]] · [[apps/_index\|apps]] | Folder indexes |
 
 Raw human-dropped material goes in `wiki/assets/` (read-only source; see [[assets/_index|assets]]).

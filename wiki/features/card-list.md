@@ -17,7 +17,9 @@ The start destination: a top bar titled "My Cards" and a 2-column grid of card t
   (chosen by luminance) when the logo is `null` or blank.
 - The colored box is the shared element `card/{id}` — [[card-transition]].
 - Tap → `directions.toCard(card.id, card.store.color)` → [[card-detail]].
-- The Settings icon in the top bar is a no-op (`ListScreen.kt:54`, `/* TODO */`).
+- The Settings icon in the top bar is a no-op (`ListScreen.kt:55`, `/* TODO */`).
+- The "Add card" floating button → `directions.toScanner()` → [[barcode-scanner]]. Until the add-card flow (#6) it
+  opens the scanner directly: [[scanner-result-dialog-until-add-card-flow]].
 
 ## Known issues
 

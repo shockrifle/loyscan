@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.dialog
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.bdaniel.loyscan.ui.theme.LoyScanTheme
@@ -64,6 +65,12 @@ fun SharedTransitionScope.AppNavigation(modifier: Modifier = Modifier) {
                 animatedVisibilityScope = this,
                 directions = navController.detailDirections()
             )
+        }
+        composable<Scanner> {
+            ScannerScreen(directions = navController.scannerDirections())
+        }
+        dialog<ScanResult> {
+            ScanResultDialog(it.savedStateHandle.toRoute<ScanResult>(), onDismiss = { navController.navigateUp() })
         }
     }
 }

@@ -5,6 +5,7 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -34,7 +35,7 @@ class ListScreenTest {
         val card = aLoyaltyCard(id = cardId(5), store = aStore(name = "Test Store", color = "#AA0000"))
         val viewModel = ListViewModel(FakeLoyaltyCardRepository(listOf(card)))
         var navigatedTo: Pair<String, String>? = null
-        val directions = ListDirections(toCard = { id, color -> navigatedTo = id to color }, toBack = {})
+        val directions = ListDirections(toCard = { id, color -> navigatedTo = id to color }, toScanner = {}, toBack = {})
 
         composeRule.setContent {
             SharedTransitionLayout {
@@ -64,12 +65,25 @@ class ListScreenTest {
         composeRule.onNodeWithText("Bad Colour").assertIsDisplayed()
     }
 
-    private fun setScreen(vararg cards: LoyaltyCard) {
+    @Test
+    fun addCard_opensTheScanner() {
+        var scannerOpened = 0
+        setScreen(directions = ListDirections(toCard = { _, _ -> }, toScanner = { scannerOpened++ }, toBack = {}))
+
+        composeRule.onNodeWithContentDescription("Add card").performClick()
+
+        assertThat(scannerOpened).isEqualTo(1)
+    }
+
+    private fun setScreen(
+        vararg cards: LoyaltyCard,
+        directions: ListDirections = ListDirections(toCard = { _, _ -> }, toScanner = {}, toBack = {}),
+    ) {
         val viewModel = ListViewModel(FakeLoyaltyCardRepository(cards.toList()))
         composeRule.setContent {
             SharedTransitionLayout {
                 AnimatedVisibility(visible = true) {
-                    ListScreen(animatedVisibilityScope = this, directions = ListDirections(toCard = { _, _ -> }, toBack = {}), viewModel = viewModel)
+                    ListScreen(animatedVisibilityScope = this, directions = directions, viewModel = viewModel)
                 }
             }
         }

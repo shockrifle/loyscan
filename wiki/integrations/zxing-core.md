@@ -3,7 +3,7 @@
 Barcodes on the detail screen are encoded with **ZXing core 3.5.3** (`com.google.zxing:core`, Apache-2.0): pure
 Java, no Android or network code. Only its writers are used, in `BarcodeEncoder`
 (`app/src/main/java/com/bdaniel/loyscan/ui/barcode/BarcodeEncoder.kt`); Compose draws the result
-(`app/src/main/java/com/bdaniel/loyscan/ui/barcode/Barcode.kt`). Scanning is a separate library (#5).
+(`app/src/main/java/com/bdaniel/loyscan/ui/barcode/Barcode.kt`). Scanning is a separate library: [[zxing-cpp]].
 
 ## Contract
 

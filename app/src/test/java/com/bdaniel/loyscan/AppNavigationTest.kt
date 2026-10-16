@@ -78,5 +78,16 @@ class AppNavigationTest {
         assertThat(brightness).isEqualTo(BRIGHTNESS_OVERRIDE_NONE)
     }
 
+    @Test
+    fun addCard_opensTheScanner_andBackReturnsToTheList() {
+        composeRule.onNodeWithContentDescription("Add card").performClick()
+
+        composeRule.waitUntil { composeRule.onAllNodes(hasText("Scan card")).fetchSemanticsNodes().isNotEmpty() }
+
+        composeRule.onNodeWithContentDescription("Back").performClick()
+        composeRule.onNodeWithText("My Cards").assertIsDisplayed()
+        composeRule.onNodeWithText("Scan card").assertDoesNotExist()
+    }
+
     private val brightness get() = composeRule.activity.window.attributes.screenBrightness
 }

@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-16 · add barcode scanner (zxing-cpp + CameraX), interim result dialog · decisions/2026-10-16-zxing-cpp-for-scanning, integrations/zxing-cpp, features/barcode-scanner, hacks/scanner-result-dialog-until-add-card-flow (new); index, decisions/_index, hacks/_index, features/_index, integrations/_index, integrations/zxing-core, features/card-list, apps/android-app, architecture, workflows/tdd · #5
 - 2026-10-16 · review fix: the scan-mode note rationale no longer claims tills accept fallback barcodes (unknown, per zxing-core) · features/card-detail · review of #37
 - 2026-10-16 · decision recorded: scan mode shows no fallback-format note (product choice), with its test · features/card-detail · #37
 - 2026-10-15 · update: the detail screen names the fallback format a barcode is drawn in ("Shown as Code 128") · features/card-detail, integrations/zxing-core · #35

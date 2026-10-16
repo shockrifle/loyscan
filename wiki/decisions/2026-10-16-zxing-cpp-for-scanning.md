@@ -1,0 +1,41 @@
+# zxing-cpp + CameraX for scanning, not ML Kit
+
+**Status:** Active · **Date:** 2026-10-16 · **Issue:** [#5](https://github.com/shockrifle/loyscan/issues/5)
+
+The scanner reads barcodes with **zxing-cpp** (`io.github.zxing-cpp:android`, Apache-2.0) on frames from
+**CameraX**. No Google Play Services or ML Kit code is in the app. Contract and quirks: [[zxing-cpp]].
+
+## Context
+The add-card flow ([#6](https://github.com/shockrifle/loyscan/issues/6)) starts by scanning the card. It must work
+offline and without Google Play Services (the app is meant to run on de-Googled phones too), and it must read every
+symbology a card can be stored in ([[zxing-core]] draws them), GS1 DataBar included.
+
+## Options considered
+- **ML Kit barcode scanning** (bundled or through Play Services). Fast and well tuned, but it can't read GS1 DataBar,
+  its libraries depend on Play Services artifacts even in the bundled model, and it is closed source.
+- **ZXing's Java reader** (`MultiFormatReader`, already on the classpath for drawing). It reads DataBar and DataBar
+  Expanded but not DataBar Limited, it's slow on camera frames, and the Java project is in maintenance mode.
+- **zxing-cpp**: an actively maintained C++ port with an official Android wrapper that reads a CameraX `ImageProxy`
+  directly. It reads all three DataBar variants. The cost is a native library per ABI (`arm64-v8a`, `armeabi-v7a`,
+  `x86`, `x86_64`) in the APK.
+
+## Decision
+- zxing-cpp **3.0.2** with CameraX **1.5.3** (`camera-camera2`, `camera-lifecycle`, `camera-compose`); versions in
+  `gradle/libs.versions.toml`.
+- Not zxing-cpp 3.1.x: it is built against kotlin-stdlib 2.3.20 and would raise the app's stdlib past the Kotlin
+  2.2.21 compiler ([[2025-12-08-ksp-instead-of-kapt]] couples KSP to the Kotlin version). Its `Format` enum also
+  changed to symbology families with variants (`DATA_BAR_OMNI`, `QR_CODE_MODEL_1`, …), while 3.0.2's maps one to one
+  onto `BarcodeFormat`. Revisit with the next Kotlin upgrade.
+- CameraX 1.5.x because zxing-cpp 3.0.2 is built against `camera-core` 1.5.2.
+
+## Why
+DataBar is a hard requirement of #5, and only zxing-cpp reads all of it offline without Play Services. Using the
+same ZXing family for drawing and reading also keeps format names and content conventions aligned (inferred; not
+measured).
+
+## Consequences
+- `NoPlayServicesTest` fails the build if a Play Services or ML Kit class reaches the classpath (e.g. through a
+  CameraX artifact such as `camera-mlkit-vision`).
+- zxing-cpp's native code can't run in JVM tests. Its mapping and options are tested
+  (`ZxingCppFormatsTest`); actual reading is checked on a real device (#5's first criterion).
+- The camera code sits behind small seams so Robolectric can drive the rest: [[barcode-scanner]] → Tests.

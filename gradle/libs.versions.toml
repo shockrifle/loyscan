@@ -19,6 +19,8 @@ coil = "2.7.0"
 kotlinxSerializationJson = "1.9.0"
 kover = "0.9.10"
 zxingCore = "3.5.3"
+zxingCpp = "3.0.2"
+camerax = "1.5.3"
 # Test-only. coroutinesTest matches the kotlinx-coroutines-core version the app resolves.
 coroutinesTest = "1.9.0"
 turbine = "1.2.1"
@@ -52,6 +54,10 @@ timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "tim
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
 coil-svg = { group = "io.coil-kt", name = "coil-svg", version.ref = "coil" }
 zxing-core = { group = "com.google.zxing", name = "core", version.ref = "zxingCore" }
+zxing-cpp = { group = "io.github.zxing-cpp", name = "android", version.ref = "zxingCpp" }
+androidx-camera-camera2 = { group = "androidx.camera", name = "camera-camera2", version.ref = "camerax" }
+androidx-camera-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", version.ref = "camerax" }
+androidx-camera-compose = { group = "androidx.camera", name = "camera-compose", version.ref = "camerax" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutinesTest" }
 turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
