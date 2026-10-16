@@ -44,23 +44,30 @@ interface CameraPermission {
 fun rememberCameraPermission(): CameraPermission {
     val context = LocalContext.current
     val activity = LocalActivity.current
-    // Whether this screen has asked yet; after a denial, the rationale flag tells "ask again" from "denied for good".
-    var asked by rememberSaveable { mutableStateOf(false) }
+    // Denials answered on this visit, and whether the system dialog is up. Saved, so a dialog that is still open
+    // over a rotation isn't requested a second time (Android would answer that one with an instant denial).
+    var denials by rememberSaveable { mutableIntStateOf(0) }
+    var requesting by rememberSaveable { mutableStateOf(false) }
     // Bumped to re-read the status after the dialog and on resume.
     var checks by remember { mutableIntStateOf(0) }
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
-        asked = true
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        requesting = false
+        if (!granted) denials++
         checks++
     }
     LifecycleResumeEffect(Unit) {
         checks++
         onPauseOrDispose {}
     }
-    val status = remember(asked, checks) { cameraPermissionStatus(context, activity, asked) }
+    val status = remember(denials, checks) { cameraPermissionStatus(context, activity, denials) }
     return remember(status) {
         object : CameraPermission {
             override val status = status
-            override fun request() = launcher.launch(Manifest.permission.CAMERA)
+            override fun request() {
+                if (requesting) return
+                requesting = true
+                launcher.launch(Manifest.permission.CAMERA)
+            }
             override fun openSettings() = context.startActivity(
                 Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", context.packageName, null))
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
@@ -69,10 +76,16 @@ fun rememberCameraPermission(): CameraPermission {
     }
 }
 
-internal fun cameraPermissionStatus(context: Context, activity: Activity?, asked: Boolean): CameraPermission.Status = when {
+/**
+ * Without a rationale after a denial, the system won't show its dialog again. Except after the first one: on
+ * Android 11+ closing the dialog unanswered also leaves no rationale, and the system still asks next time. So only a
+ * repeated denial counts as for good; a user who denied for good on an earlier visit taps "Allow camera" once more.
+ */
+internal fun cameraPermissionStatus(context: Context, activity: Activity?, denials: Int): CameraPermission.Status = when {
     ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED ->
         CameraPermission.Status.GRANTED
-    !asked -> CameraPermission.Status.NOT_ASKED
-    activity?.shouldShowRequestPermissionRationale(Manifest.permission.CAMERA) == true -> CameraPermission.Status.DENIED
+    denials == 0 -> CameraPermission.Status.NOT_ASKED
+    denials == 1 || activity?.shouldShowRequestPermissionRationale(Manifest.permission.CAMERA) == true ->
+        CameraPermission.Status.DENIED
     else -> CameraPermission.Status.DENIED_PERMANENTLY
 }

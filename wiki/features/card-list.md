@@ -19,7 +19,8 @@ The start destination: a top bar titled "My Cards" and a 2-column grid of card t
 - Tap → `directions.toCard(card.id, card.store.color)` → [[card-detail]].
 - The Settings icon in the top bar is a no-op (`ListScreen.kt:55`, `/* TODO */`).
 - The "Add card" floating button → `directions.toScanner()` → [[barcode-scanner]]. Until the add-card flow (#6) it
-  opens the scanner directly: [[scanner-result-dialog-until-add-card-flow]].
+  opens the scanner directly: [[scanner-result-dialog-until-add-card-flow]]. The grid has 88dp of bottom content
+  padding so the button never covers the last row (`ListScreenTest.theLastTile_isNotCoveredByTheAddButtonWhenScrolledToTheEnd`).
 
 ## Known issues
 

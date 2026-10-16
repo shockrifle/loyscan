@@ -9,7 +9,9 @@ import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.result.ActivityResultRegistry
 import androidx.activity.result.ActivityResultRegistryOwner
 import androidx.activity.result.contract.ActivityResultContract
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.core.app.ActivityOptionsCompat
 import androidx.lifecycle.Lifecycle
@@ -32,15 +34,16 @@ class CameraPermissionTest {
     private val application = ApplicationProvider.getApplicationContext<Application>()
     private lateinit var permission: CameraPermission
 
-    /** What the "dialog" answers: whether the user allowed the camera. */
-    private var userAllows = false
+    /** What the "dialog" answers: whether the user allowed the camera; `null` leaves it open. */
+    private var userAllows: Boolean? = false
     private val requested = mutableListOf<Any?>()
 
     private val registry = object : ActivityResultRegistry() {
         override fun <I, O> onLaunch(requestCode: Int, contract: ActivityResultContract<I, O>, input: I, options: ActivityOptionsCompat?) {
             requested += input
-            if (userAllows) grant()
-            dispatchResult(requestCode, userAllows)
+            val allows = userAllows ?: return
+            if (allows) grant()
+            dispatchResult(requestCode, allows)
         }
     }
 
@@ -49,15 +52,18 @@ class CameraPermissionTest {
     private fun showRationale(show: Boolean) =
         shadowOf(application.packageManager).setShouldShowRequestPermissionRationale(Manifest.permission.CAMERA, show)
 
-    private fun setContent() {
-        composeRule.setContent {
-            CompositionLocalProvider(
-                LocalActivityResultRegistryOwner provides object : ActivityResultRegistryOwner {
-                    override val activityResultRegistry = registry
-                },
-            ) {
-                permission = rememberCameraPermission()
-            }
+    private fun setContent(restoration: StateRestorationTester? = null) {
+        if (restoration != null) restoration.setContent { Content() } else composeRule.setContent { Content() }
+    }
+
+    @Composable
+    private fun Content() {
+        CompositionLocalProvider(
+            LocalActivityResultRegistryOwner provides object : ActivityResultRegistryOwner {
+                override val activityResultRegistry = registry
+            },
+        ) {
+            permission = rememberCameraPermission()
         }
     }
 
@@ -101,13 +107,37 @@ class CameraPermissionTest {
     }
 
     @Test
-    fun aDenialTheSystemWontAskAgainFor_isDeniedPermanently() {
+    fun aFirstDenialWithoutRationale_canBeAskedAgain() { // Android 11+: closing the dialog unanswered looks like this
         showRationale(false)
         setContent()
 
         composeRule.runOnIdle { permission.request() }
 
+        composeRule.runOnIdle { assertThat(permission.status).isEqualTo(Status.DENIED) }
+    }
+
+    @Test
+    fun aRepeatedDenialTheSystemWontAskAgainFor_isDeniedPermanently() {
+        showRationale(false)
+        setContent()
+
+        composeRule.runOnIdle { permission.request() }
+        composeRule.runOnIdle { permission.request() }
+
         composeRule.runOnIdle { assertThat(permission.status).isEqualTo(Status.DENIED_PERMANENTLY) }
+    }
+
+    @Test
+    fun aRequestStillOpen_isNotRepeated_evenAfterRecreation() { // e.g. rotating with the dialog up
+        userAllows = null
+        val restoration = StateRestorationTester(composeRule)
+        setContent(restoration)
+        composeRule.runOnIdle { permission.request() }
+
+        restoration.emulateSavedInstanceStateRestore()
+        composeRule.runOnIdle { permission.request() }
+
+        composeRule.runOnIdle { assertThat(requested).hasSize(1) }
     }
 
     @Test

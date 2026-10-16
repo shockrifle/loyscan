@@ -191,4 +191,14 @@ class ScannerScreenTest {
         composeRule.onNodeWithText("The camera couldn't be opened", substring = true).assertIsDisplayed()
         composeRule.onNodeWithText("Enter manually").assertIsDisplayed()
     }
+
+    @Test
+    fun cameraFailure_hidesTheScanningHint() {
+        setScreen(FakeCameraPermission(Status.GRANTED), hintDelay = Duration.ZERO)
+        composeRule.runOnIdle { events!!.onStarted(false) }
+
+        composeRule.runOnIdle { events!!.onFailed() }
+
+        composeRule.onNodeWithText("Card won't scan?", substring = true).assertDoesNotExist()
+    }
 }

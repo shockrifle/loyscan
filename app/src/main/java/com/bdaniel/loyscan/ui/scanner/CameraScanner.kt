@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.bdaniel.loyscan.domain.ScannedBarcode
 import kotlinx.coroutines.CancellationException
@@ -58,9 +59,17 @@ interface OpenCamera {
     fun close()
 }
 
-/** Binds [preview] and [analysis] to the back camera for [lifecycleOwner]; throws when there is none to open. */
+/**
+ * Binds a preview (its surface requests go to [onSurfaceRequest]) and an analysis running [analyzer] on
+ * [analyzerExecutor] to the back camera for [lifecycleOwner]; throws when there is none to open.
+ */
 fun interface CameraOpener {
-    suspend fun open(lifecycleOwner: LifecycleOwner, preview: Preview, analysis: ImageAnalysis): OpenCamera
+    suspend fun open(
+        lifecycleOwner: LifecycleOwner,
+        onSurfaceRequest: (SurfaceRequest) -> Unit,
+        analyzer: ImageAnalysis.Analyzer,
+        analyzerExecutor: Executor,
+    ): OpenCamera
 }
 
 /** Reads a barcode from one frame; `null` when there is none. Called on the analysis thread. */
@@ -106,20 +115,10 @@ internal fun CameraXScannerContent(
 
     LaunchedEffect(opener, lifecycleOwner) {
         val analysisExecutor = Executors.newSingleThreadExecutor()
-        val preview = Preview.Builder().build().apply { setSurfaceProvider { surfaceRequest = it } }
-        val analysis = ImageAnalysis.Builder()
-            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-            .setResolutionSelector(
-                ResolutionSelector.Builder()
-                    .setResolutionStrategy(ResolutionStrategy(ANALYSIS_SIZE, ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER))
-                    .build(),
-            )
-            .build()
         var opened: OpenCamera? = null
         try {
             val analyzer = ScanAnalyzer(newReader(), ContextCompat.getMainExecutor(context)) { currentEvents.onScanned(it) }
-            analysis.setAnalyzer(analysisExecutor, analyzer)
-            opened = opener.open(lifecycleOwner, preview, analysis)
+            opened = opener.open(lifecycleOwner, { surfaceRequest = it }, analyzer, analysisExecutor)
             camera = opened
             currentEvents.onStarted(opened.hasTorch)
             awaitCancellation()
@@ -134,13 +133,14 @@ internal fun CameraXScannerContent(
         } finally {
             camera = null
             opened?.close()
-            analysis.clearAnalyzer()
             analysisExecutor.shutdown()
         }
     }
 
-    LaunchedEffect(camera, torchOn) {
+    // Also on every resume: CameraX turns the torch off when it closes the camera on pause, and reopens the same one.
+    LifecycleResumeEffect(camera, torchOn) {
         camera?.enableTorch(torchOn)
+        onPauseOrDispose {}
     }
 
     Box(modifier) {
@@ -148,12 +148,33 @@ internal fun CameraXScannerContent(
     }
 }
 
-/** Analysis frames: enough pixels for the thin bars of a 1D barcode, few enough to keep up with the preview. */
-private val ANALYSIS_SIZE = Size(1280, 720)
+/**
+ * The scanner's two use cases: a preview, and an analysis that keeps only the latest frame (a slow read skips frames
+ * instead of queueing them) at about 1280×720, enough pixels for the thin bars of a 1D barcode.
+ */
+internal fun scannerUseCases(onSurfaceRequest: (SurfaceRequest) -> Unit): Pair<Preview, ImageAnalysis> {
+    val preview = Preview.Builder().build().apply { setSurfaceProvider(onSurfaceRequest) }
+    val analysis = ImageAnalysis.Builder()
+        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+        .setResolutionSelector(
+            ResolutionSelector.Builder()
+                .setResolutionStrategy(ResolutionStrategy(Size(1280, 720), ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER))
+                .build(),
+        )
+        .build()
+    return preview to analysis
+}
 
 /** CameraX's process-wide camera provider. Not unit-tested: there is no camera on Robolectric. */
 private class ProcessCameraOpener(private val context: Context) : CameraOpener {
-    override suspend fun open(lifecycleOwner: LifecycleOwner, preview: Preview, analysis: ImageAnalysis): OpenCamera {
+    override suspend fun open(
+        lifecycleOwner: LifecycleOwner,
+        onSurfaceRequest: (SurfaceRequest) -> Unit,
+        analyzer: ImageAnalysis.Analyzer,
+        analyzerExecutor: Executor,
+    ): OpenCamera {
+        val (preview, analysis) = scannerUseCases(onSurfaceRequest)
+        analysis.setAnalyzer(analyzerExecutor, analyzer)
         val provider = ProcessCameraProvider.awaitInstance(context)
         val camera = provider.bindToLifecycle(lifecycleOwner, CameraSelector.DEFAULT_BACK_CAMERA, preview, analysis)
         return object : OpenCamera {
@@ -161,7 +182,10 @@ private class ProcessCameraOpener(private val context: Context) : CameraOpener {
             override fun enableTorch(on: Boolean) {
                 camera.cameraControl.enableTorch(on)
             }
-            override fun close() = provider.unbind(preview, analysis)
+            override fun close() {
+                provider.unbind(preview, analysis)
+                analysis.clearAnalyzer()
+            }
         }
     }
 }

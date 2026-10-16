@@ -64,6 +64,16 @@ class ScannerViewModelTest {
     }
 
     @Test
+    fun torch_isOffWhenTheCameraRestartsWithoutOne() = runTest {
+        viewModel.onCameraStarted(torchAvailable = true)
+        viewModel.toggleTorch()
+
+        viewModel.onCameraStarted(torchAvailable = false)
+
+        assertThat(viewModel.state.value.torchOn).isFalse()
+    }
+
+    @Test
     fun onScanned_acceptsTheFirstScanOnly() {
         assertThat(viewModel.onScanned()).isTrue()
         assertThat(viewModel.onScanned()).isFalse()

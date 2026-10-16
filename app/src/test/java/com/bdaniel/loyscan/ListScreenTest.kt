@@ -5,7 +5,9 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -73,6 +75,18 @@ class ListScreenTest {
         composeRule.onNodeWithContentDescription("Add card").performClick()
 
         assertThat(scannerOpened).isEqualTo(1)
+    }
+
+    @Test
+    fun theLastTile_isNotCoveredByTheAddButtonWhenScrolledToTheEnd() {
+        val cards = (1..12).map { aLoyaltyCard(id = cardId(it), store = aStore(name = "Store $it")) }
+        setScreen(*cards.toTypedArray())
+
+        composeRule.onNode(hasScrollAction()).performScrollToIndex(cards.lastIndex)
+
+        val lastTile = composeRule.onNodeWithText("Store 12").fetchSemanticsNode().boundsInRoot
+        val addButton = composeRule.onNodeWithContentDescription("Add card").fetchSemanticsNode().boundsInRoot
+        assertThat(lastTile.overlaps(addButton)).isFalse()
     }
 
     private fun setScreen(
