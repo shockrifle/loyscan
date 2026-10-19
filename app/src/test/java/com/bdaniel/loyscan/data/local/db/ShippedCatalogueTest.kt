@@ -29,6 +29,7 @@ class ShippedCatalogueTest {
 
     private val vectors = listOf(
         Vector("hu-coop", "6028532123456789", "906028532123456789", "6028 5321 2345 6789"),
+        Vector("hu-decathlon", "2090000123456", "2090000123456", "2090000123456"),
         Vector("hu-dm", "2410000123452", "2410000123452", "2 410000 123452"),
         Vector("hu-auchan", "9700000123457", "9700000123457", "9700000123457"),
         Vector("hu-ikea-family", "6275980421234567893", "6275980421234567893", "627598 042 123 456 7893"),
@@ -68,6 +69,19 @@ class ShippedCatalogueTest {
             // A scan of that barcode reads back as the same store's card (the add-card flow's check, #6).
             assertWithMessage(v.storeId).that(CardNumberEngine.match(v.barcodeContent, rule!!.format, rule)?.core)
                 .isNotNull()
+        }
+    }
+
+    /** The stores whose leading digits were confirmed on a real card (#31) tell each other's scans apart. */
+    @Test
+    fun storesWithConfirmedLeadingDigits_rejectOtherStoresCards() {
+        val confirmed = setOf("hu-decathlon", "hu-dm", "hu-ikea-family", "hu-penny", "hu-rossmann")
+        for (id in confirmed) {
+            val rule = shipped.single { it.id == id }.cardNumberRule!!
+            for (other in vectors.filter { it.storeId != id }) {
+                assertWithMessage("$id matched ${other.storeId}")
+                    .that(CardNumberEngine.match(other.barcodeContent, rule.format, rule)).isNull()
+            }
         }
     }
 }

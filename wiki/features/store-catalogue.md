@@ -44,19 +44,25 @@ why it has no logos, and why it is loaded this way: [[2026-10-13-curated-store-c
 
 ## Contents and known gaps
 
-- **16 Hungarian stores (2026-10-13), 10 with a card-number rule. The number facts are provisional.** The
-  retailers' public pages confirm that each programme exists, and most of the colours. The barcode formats (of every
-  entry), and the rules' length, leading digits and check digit, come from an existing app's catalogue and are not yet confirmed on a
-  real card. The user accepted this for the first entries ([[2026-10-13-curated-store-catalogue]]). Per-store status:
+- **16 Hungarian stores (2026-10-13), 11 with a card-number rule. Some number facts are still provisional.** The
+  retailers' public pages confirm that each programme exists, and most of the colours. The first barcode formats and
+  rules came from an existing app's catalogue, which the user accepted for the first entries
+  ([[2026-10-13-curated-store-catalogue]]). On 2026-10-19, decoding photos of real cards confirmed Decathlon, dm,
+  IKEA Family, mömax, Penny and Rossmann, and added Decathlon's rule. Per-store status, with what each card showed:
   [#31](https://github.com/shockrifle/loyscan/issues/31).
 - **The core is the full printed number.** EAN-13 stores use 13 digits with a `GTIN_MOD10` `VERIFY` check and no
-  prefix, because the card prints all 13 digits. As a result a store's fixed leading digits (e.g. `999…`) are not
-  enforced, and `CardNumberEngine.match` accepts any valid EAN-13 for every EAN-13 store. A scanned card can't tell
-  those stores apart (matters for #6). The rule model can now require them (`coreStartsWith`, since 2026-10-15),
-  but the shipped entries don't set it until their prefixes are confirmed (#31): [[rules-cannot-require-leading-digits]].
+  prefix, because the card prints all 13 digits. Since 2026-10-19 the stores whose leading digits were seen on a real
+  card require them (`coreStartsWith`): Decathlon `209`, dm `241`, Penny `994`, Rossmann `999`, IKEA Family
+  `627598042`. Other starts that the first catalogue listed (Penny `9980`/`9981`, dm `90`, Rossmann `2`) were left
+  out until a card shows them. Auchan still accepts any EAN-13, so `CardNumberEngine.match` can't tell it from the
+  others (matters for #6): [[rules-cannot-require-leading-digits]].
+- **A typed Tesco number doesn't give its barcode.** The Clubcard prints 18 digits (`634009…`), but its barcode holds
+  `9799` + the last 12 of them. A rule can't drop leading digits, so `hu-tesco` has no rule and a typed card is drawn
+  as the printed number. A scanned card is stored right
+  ([#43](https://github.com/shockrifle/loyscan/issues/43)).
 - **GS1-128 is drawn as plain Code 128.** `BarcodeFormat` has no `GS1_128`. Coop's barcode starts with Application
-  Identifier `90`. A till that parses GS1 may expect a leading FNC1, which plain Code 128 doesn't have. Not
-  yet tested at a till: [[gs1-128-drawn-as-code-128]].
+  Identifier `90`, and the Tesco Clubcard's real barcode is GS1-128 (AI `97`). A till that parses GS1 may expect a leading
+  FNC1, which plain Code 128 doesn't have. Not yet tested at a till: [[gs1-128-drawn-as-code-128]].
 
 ## Tests
 

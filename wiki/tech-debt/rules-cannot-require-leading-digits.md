@@ -4,7 +4,7 @@
 `app/src/main/java/com/bdaniel/loyscan/domain/cardnumber/CardNumberRule.kt`, `app/src/main/assets/catalogue/stores.json`
 
 ## What
-The shipped EAN-13 entries don't require their store's leading digits. (Until 2026-10-15 the rule model couldn't
+Until 2026-10-19 the shipped EAN-13 entries didn't require their store's leading digits; now only Auchan doesn't. (Until 2026-10-15 the rule model couldn't
 express it either; now it can, see below.) The EAN-13 catalogue stores (`hu-auchan`, `hu-dm`, `hu-penny`, `hu-rossmann`) print all 13 digits on the card, so
 their core is the full number: 13 digits, `GTIN_MOD10` `VERIFY`, no prefix. Their store-specific leading digits
 (`999…`, `994…`, …) are not checked anywhere.
@@ -26,6 +26,6 @@ entries shipped ([[store-catalogue]]).
    `WRONG_START` when the core starts with none of them, so `match` rejects other stores' numbers too. A core that
    is only the beginning of an allowed start gets `TOO_SHORT` instead, so live typing isn't flagged early; a valid
    core always contains a start in full. Tests: `CardNumberEngineTest` ("required start"), `CardNumberRulesTest`.
-2. Open: set `coreStartsWith` on the EAN-13 entries once their prefixes are confirmed
-   ([#31](https://github.com/shockrifle/loyscan/issues/31)), each with a `ShippedCatalogueTest` vector. Then this
-   page is resolved.
+2. Partly done 2026-10-19: Decathlon, dm, Penny and Rossmann (and IKEA Family) set `coreStartsWith` from real
+   cards. `ShippedCatalogueTest` checks that they reject each other's vectors. Open: Auchan, whose prefix isn't
+   confirmed yet ([#31](https://github.com/shockrifle/loyscan/issues/31)). Then this page is resolved.
