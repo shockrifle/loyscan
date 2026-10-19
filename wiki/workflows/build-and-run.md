@@ -47,11 +47,13 @@ for raising it: [[2026-10-09-coverage-gate-kover]].
 
 All versions live in `gradle/libs.versions.toml`. Constraints that have bitten before:
 
-- **The KSP version must match the Kotlin version line.** Kotlin `2.2.21` ↔ KSP `2.3.3` (changed together in
-  `d0d171a`). See [[2025-12-08-ksp-instead-of-kapt]].
+- **Kotlin `2.3.21`, KSP `2.3.3`.** KSP 2.3.x is versioned independently of Kotlin; `2.3.3` builds with Kotlin
+  2.2.21 and 2.3.21 alike. After a Kotlin bump, run the full build and bump KSP only if it fails
+  ([[2025-12-08-ksp-instead-of-kapt]]). Kotlin is at least 2.3.20 because zxing-cpp 3.1.x is built on that stdlib
+  ([[zxing-cpp]]).
 - Compose libraries come from the Compose BOM. The BOM bump in `d0d171a` removed the transitive Material
   icons — [[2025-12-08-hand-rolled-icons]].
-- The `kotlinSerialization` plugin version is pinned to the Kotlin version (`2.2.21`). It's needed for the
+- The `kotlinSerialization` plugin version is pinned to the Kotlin version (`2.3.21`). It's needed for the
   type-safe navigation routes.
 - `coroutinesTest` must match the `kotlinx-coroutines-core` version the app actually resolves (check with
   `./gradlew :app:dependencies --configuration debugRuntimeClasspath`); a newer one silently upgrades core.

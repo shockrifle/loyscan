@@ -31,7 +31,7 @@ type-safe route/Directions). Use it as the template. Each layer there starts wit
 
 ## Project quick facts
 
-- Single-module Android app (`:app`), Kotlin 2.2 + Jetpack Compose (Material 3), Hilt + Room via KSP,
+- Single-module Android app (`:app`), Kotlin 2.3 + Jetpack Compose (Material 3), Hilt + Room via KSP,
   Navigation Compose with `@Serializable` routes, Coil 2 for images, Timber for logging.
 - Build: `./gradlew assembleDebug` · install: `./gradlew installDebug`. Versions live in `gradle/libs.versions.toml`.
   From a terminal, set `JAVA_HOME` to Android Studio's JBR 21 first (`/c/Program Files/Android/Android Studio/jbr`),
