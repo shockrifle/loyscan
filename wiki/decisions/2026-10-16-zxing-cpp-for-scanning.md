@@ -20,13 +20,12 @@ symbology a card can be stored in ([[zxing-core]] draws them), GS1 DataBar inclu
   `x86`, `x86_64`) in the APK.
 
 ## Decision
-- zxing-cpp **3.0.2** with CameraX **1.5.3** (`camera-camera2`, `camera-lifecycle`, `camera-compose`); versions in
-  `gradle/libs.versions.toml`.
-- Not zxing-cpp 3.1.x: it is built against kotlin-stdlib 2.3.20 and would raise the app's stdlib past the Kotlin
-  2.2.21 compiler ([[2025-12-08-ksp-instead-of-kapt]] couples KSP to the Kotlin version). Its `Format` enum also
-  changed to symbology families with variants (`DATA_BAR_OMNI`, `QR_CODE_MODEL_1`, …), while 3.0.2's maps one to one
-  onto `BarcodeFormat`. Revisit with the next Kotlin upgrade.
-- CameraX 1.5.x because zxing-cpp 3.0.2 is built against `camera-core` 1.5.2.
+- zxing-cpp **3.1.1** with CameraX **1.5.3** (`camera-camera2`, `camera-lifecycle`, `camera-compose`); versions in
+  `gradle/libs.versions.toml`. CameraX 1.5.x because zxing-cpp 3.1.1 is built against `camera-core` 1.5.2.
+- Kotlin **2.3.21**, because zxing-cpp 3.1.x is built on kotlin-stdlib 2.3.20 (`8ed8052`).
+- *Correction (2026-10-19):* the first version of this decision chose zxing-cpp 3.0.2, to avoid raising Kotlin. On a
+  device, 3.0.2 couldn't return any DataBar result: [[2026-10-19-zxing-cpp-3-0-databar]]. 3.1's `Format` enum
+  reports variants (`DATA_BAR_OMNI`, `QR_CODE_MODEL_2`, …), which `ZxingCppFormats.kt` maps to their symbology.
 
 ## Why
 DataBar is a hard requirement of #5, and only zxing-cpp reads all of it offline without Play Services. Using the

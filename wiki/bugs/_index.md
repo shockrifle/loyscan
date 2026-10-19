@@ -10,6 +10,8 @@ _(none — suspected issues live in [[tech-debt/_index|tech-debt]] until confirm
 
 ## Resolved
 
+- [[2026-10-19-zxing-cpp-3-0-databar]] — zxing-cpp 3.0.2 threw for every DataBar result; the scanner swallowed it
+  per frame (#5)
 - [[2026-10-09-missing-card-throws-from-room]] — a non-null single-row Room query threw for a missing card
   instead of emitting `null` (#30)
 - [[2025-12-12-detail-color-flash-on-transition]] — async ViewModel state made the transition's first frames

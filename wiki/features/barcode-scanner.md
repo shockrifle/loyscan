@@ -51,7 +51,9 @@ directly and a scan is only shown in a dialog: [[scanner-result-dialog-until-add
 - `ScannerDirectionsTest`, `AppNavigationTest.addCard_opensTheScanner_andBackReturnsToTheList`: navigation.
 
 Not covered by JVM tests: `ProcessCameraOpener` and `ZxingCppFrameReader.read`, which need a camera and the native
-library. Reading real cards is checked on a device ([#5](https://github.com/shockrifle/loyscan/issues/5)).
+library. Checked on a device (Android 15, 2026-10-19): EAN-13, Code 128, QR, PDF417, GS1 DataBar and DataBar
+Stacked; torch after a pause; the permission flow; the hint; "Enter manually"; the list's bottom padding. The first
+device check found DataBar never scanned: [[2026-10-19-zxing-cpp-3-0-databar]].
 
 ## Not implemented
 

@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-19 · bug postmortem: zxing-cpp 3.0.2 couldn't return DataBar; moved to 3.1.1 (correction on the decision page); device check recorded · bugs/2026-10-19-zxing-cpp-3-0-databar (new), bugs/_index, index, decisions/2026-10-16-zxing-cpp-for-scanning, integrations/zxing-cpp, features/barcode-scanner · #5
 - 2026-10-19 · Kotlin 2.2.21 → 2.3.21; correction: KSP 2.3.x isn't coupled to the Kotlin version · workflows/build-and-run, decisions/2025-12-08-ksp-instead-of-kapt · #5 (zxing-cpp 3.1.x needs stdlib 2.3.20)
 - 2026-10-16 · review fixes: permission denial rule and pending request, torch after resume, camera-error limits stated, list bottom padding · features/barcode-scanner, features/card-list · review of #5
 - 2026-10-16 · add barcode scanner (zxing-cpp + CameraX), interim result dialog · decisions/2026-10-16-zxing-cpp-for-scanning, integrations/zxing-cpp, features/barcode-scanner, hacks/scanner-result-dialog-until-add-card-flow (new); index, decisions/_index, hacks/_index, features/_index, integrations/_index, integrations/zxing-core, features/card-list, apps/android-app, architecture, workflows/tdd · #5

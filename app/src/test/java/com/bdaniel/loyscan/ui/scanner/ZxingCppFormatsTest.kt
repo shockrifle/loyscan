@@ -11,26 +11,42 @@ class ZxingCppFormatsTest {
 
     @Test
     fun everyAppFormat_isLookedForAndMappedBack() {
-        val readable = SCANNED_FORMATS.mapNotNull { it.toBarcodeFormat() }
+        val readable = SCANNED_FORMATS.mapNotNull { it.toBarcodeFormat() }.toSet()
 
         assertThat(readable).containsExactlyElementsIn(BarcodeFormat.entries)
     }
 
     @Test
-    fun formatsKeepTheirName() {
-        val mapped = Format.entries.mapNotNull { format -> format.toBarcodeFormat()?.let { format to it } }
+    fun theVariantsTheReaderReports_mapToTheirSymbology() { // 3.0.2 couldn't hand these back at all (bug page)
+        val expected = mapOf(
+            Format.DATA_BAR_OMNI to BarcodeFormat.DATABAR,
+            Format.DATA_BAR_STK to BarcodeFormat.DATABAR,
+            Format.DATA_BAR_STK_OMNI to BarcodeFormat.DATABAR,
+            Format.DATA_BAR_LTD to BarcodeFormat.DATABAR_LIMITED,
+            Format.DATA_BAR_EXP to BarcodeFormat.DATABAR_EXPANDED,
+            Format.DATA_BAR_EXP_STK to BarcodeFormat.DATABAR_EXPANDED,
+            Format.CODE_39_STD to BarcodeFormat.CODE_39,
+            Format.CODE_39_EXT to BarcodeFormat.CODE_39,
+            Format.ITF_14 to BarcodeFormat.ITF,
+            Format.ISBN to BarcodeFormat.EAN_13,
+            Format.COMPACT_PDF_417 to BarcodeFormat.PDF_417,
+            Format.AZTEC_CODE to BarcodeFormat.AZTEC,
+            Format.QR_CODE_MODEL_1 to BarcodeFormat.QR_CODE,
+            Format.QR_CODE_MODEL_2 to BarcodeFormat.QR_CODE,
+        )
 
-        val renamed = mapped.filter { (zxing, app) -> zxing.name.replace("DATA_BAR", "DATABAR") != app.name }
-
-        assertThat(renamed).isEmpty()
+        assertThat(expected.keys.associateWith { it.toBarcodeFormat() }).isEqualTo(expected)
     }
 
     @Test
-    fun symbologiesTheAppCannotDraw_areNotLookedFor() {
-        val undrawable = listOf(Format.MICRO_QR_CODE, Format.RMQR_CODE, Format.MAXICODE, Format.DX_FILM_EDGE, Format.NONE)
+    fun formatsTheAppCannotDrawBack_areNotMapped() {
+        val undrawable = listOf(
+            Format.MICRO_QR_CODE, Format.RMQR_CODE, Format.MICRO_PDF_417, Format.AZTEC_RUNE, Format.MAXI_CODE,
+            Format.CODE_32, Format.PZN, Format.EAN_2, Format.EAN_5, Format.TELEPEN, Format.DX_FILM_EDGE,
+            Format.OTHER_BARCODE, Format.NONE, Format.ALL,
+        )
 
         assertThat(undrawable.mapNotNull { it.toBarcodeFormat() }).isEmpty()
-        assertThat(SCANNED_FORMATS).containsNoneIn(undrawable)
     }
 
     @Test
