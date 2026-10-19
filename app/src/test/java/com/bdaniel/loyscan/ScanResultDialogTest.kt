@@ -33,6 +33,13 @@ class ScanResultDialogTest {
     }
 
     @Test
+    fun aDataBarScan_isNotMarkedGs1Twice() { // DataBar is always GS1, and its name already says so
+        composeRule.setContent { ScanResultDialog(ScanResult("0109012345678901", BarcodeFormat.DATABAR, gs1 = true), onDismiss = {}) }
+
+        composeRule.onNodeWithText("GS1 DataBar").assertIsDisplayed()
+    }
+
+    @Test
     fun ok_dismissesIt() {
         var dismissed = 0
         composeRule.setContent { ScanResultDialog(ScanResult("42", BarcodeFormat.QR_CODE), onDismiss = { dismissed++ }) }

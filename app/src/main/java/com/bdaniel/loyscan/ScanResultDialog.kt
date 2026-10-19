@@ -18,9 +18,13 @@ fun ScanResultDialog(result: ScanResult, onDismiss: () -> Unit) {
         title = { Text("Scanned") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(if (result.gs1) "${result.format.displayName} · GS1" else result.format.displayName, style = MaterialTheme.typography.labelLarge)
+                Text(result.formatLabel, style = MaterialTheme.typography.labelLarge)
                 Text(result.content, style = MaterialTheme.typography.bodyLarge)
             }
         },
     )
 }
+
+/** The format's name, marked GS1 when the scan holds GS1 data and the name doesn't already say so (DataBar). */
+private val ScanResult.formatLabel: String
+    get() = if (gs1 && !format.displayName.startsWith("GS1")) "${format.displayName} · GS1" else format.displayName

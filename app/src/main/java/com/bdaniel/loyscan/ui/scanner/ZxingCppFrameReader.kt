@@ -21,7 +21,8 @@ class ZxingCppFrameReader : FrameReader {
  * format, never its content: otherwise a card that never scans leaves no trace (wiki: bugs/2026-10-19-zxing-cpp-3-0-databar).
  *
  * GS1 data is taken from the content type, which zxing-cpp sets from the same AI flag as the symbology identifier's
- * GS1 modifier (`]C1` for GS1-128, `]e0` for DataBar, `]d2` for Data Matrix, `]Q3` for QR).
+ * GS1 modifier (`]C1` for GS1-128, `]e0` for DataBar, `]d2` for Data Matrix, `]Q3` for QR), unless the content is
+ * empty (dropped anyway) or carries an ECI it can't process (`UNKNOWN_ECI`, which GS1-128 doesn't use).
  */
 internal fun firstScannedBarcode(results: kotlin.collections.List<BarcodeReader.Result>): ScannedBarcode? {
     for (result in results) {
