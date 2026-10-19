@@ -32,10 +32,12 @@ class ZxingCppResultsTest {
     @After
     fun uproot() = Timber.uproot(tree)
 
-    private fun result(format: Format, text: String?) = Result(
-        format = format, bytes = null, text = text, contentType = ContentType.TEXT,
+    private fun result(
+        format: Format, text: String?, contentType: ContentType = ContentType.TEXT, symbologyIdentifier: String? = null,
+    ) = Result(
+        format = format, bytes = null, text = text, contentType = contentType,
         position = Position(Point(), Point(), Point(), Point(), 0.0), orientation = 0, ecLevel = null,
-        symbologyIdentifier = null, sequenceSize = -1, sequenceIndex = -1, sequenceId = null, readerInit = false,
+        symbologyIdentifier = symbologyIdentifier, sequenceSize = -1, sequenceIndex = -1, sequenceId = null, readerInit = false,
         lineCount = 1, error = null,
     )
 
@@ -54,5 +56,19 @@ class ZxingCppResultsTest {
         assertThat(logged[0]).contains("MICRO_PDF_417")
         assertThat(logged[1]).contains("EAN_13")
         assertThat(logged.joinToString()).doesNotContain("secret-123")
+    }
+
+    @Test
+    fun aGs1Code128Result_isRecordedAsGs1() { // #41: zxing-cpp marks it with "]C1" and content type GS1
+        val scan = firstScannedBarcode(listOf(result(Format.CODE_128, "9799123456789012", ContentType.GS1, "]C1")))
+
+        assertThat(scan).isEqualTo(ScannedBarcode("9799123456789012", BarcodeFormat.CODE_128, gs1 = true))
+    }
+
+    @Test
+    fun aPlainCode128Result_isNotGs1() {
+        val scan = firstScannedBarcode(listOf(result(Format.CODE_128, "9799123456789012", ContentType.TEXT, "]C0")))
+
+        assertThat(scan).isEqualTo(ScannedBarcode("9799123456789012", BarcodeFormat.CODE_128, gs1 = false))
     }
 }

@@ -1,7 +1,7 @@
 # Barcode scanner
 
 A full-screen camera view that reads a card's barcode and hands on the first scan: its content exactly as decoded,
-and its format. Offline, without Play Services ([[2026-10-16-zxing-cpp-for-scanning]], [[zxing-cpp]]). Until the
+its format, and whether it holds GS1 data (a GS1-128 barcode is Code 128 marked GS1: [[zxing-cpp]] → Contract). Offline, without Play Services ([[2026-10-16-zxing-cpp-for-scanning]], [[zxing-cpp]]). Until the
 add-card flow ([#6](https://github.com/shockrifle/loyscan/issues/6)) exists, the list's "Add card" button opens it
 directly and a scan is only shown in a dialog: [[scanner-result-dialog-until-add-card-flow]].
 
@@ -47,7 +47,7 @@ directly and a scan is only shown in a dialog: [[scanner-result-dialog-until-add
 - `ScanAnalyzerTest`: frames closed, barcodes delivered on the callback executor, unreadable frames skipped.
 - `CameraPermissionTest`: the real permission state, with the system dialog replaced by an `ActivityResultRegistry`
   that answers at once (or leaves the request open, for the rotation test) and Robolectric's permission and rationale shadows.
-- `ZxingCppFormatsTest`, `NoPlayServicesTest`: see [[zxing-cpp]].
+- `ZxingCppFormatsTest`, `ZxingCppResultsTest`, `NoPlayServicesTest`: see [[zxing-cpp]].
 - `ScannerDirectionsTest`, `AppNavigationTest.addCard_opensTheScanner_andBackReturnsToTheList`: navigation.
 
 Not covered by JVM tests: `ProcessCameraOpener` and `ZxingCppFrameReader.read`, which need a camera and the native

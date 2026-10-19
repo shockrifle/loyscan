@@ -18,7 +18,7 @@ fun ScanResultDialog(result: ScanResult, onDismiss: () -> Unit) {
         title = { Text("Scanned") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(result.format.displayName, style = MaterialTheme.typography.labelLarge)
+                Text(if (result.gs1) "${result.format.displayName} · GS1" else result.format.displayName, style = MaterialTheme.typography.labelLarge)
                 Text(result.content, style = MaterialTheme.typography.bodyLarge)
             }
         },

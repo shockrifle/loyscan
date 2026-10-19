@@ -52,7 +52,7 @@ data class ScannerDirections(
 // wiki/hacks/scanner-result-dialog-until-add-card-flow.md.
 fun NavController.scannerDirections() = ScannerDirections(
     onScanned = { barcode ->
-        navigate(ScanResult(barcode.content, barcode.format)) {
+        navigate(ScanResult(barcode.content, barcode.format, barcode.gs1)) {
             popUpTo<Scanner> { inclusive = true }
         }
     },
@@ -63,4 +63,4 @@ fun NavController.scannerDirections() = ScannerDirections(
 
 /** Interim result of a scan, shown as a dialog over the list (see [scannerDirections]). */
 @Serializable
-data class ScanResult(val content: String, val format: BarcodeFormat)
+data class ScanResult(val content: String, val format: BarcodeFormat, val gs1: Boolean = false)

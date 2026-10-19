@@ -5,7 +5,7 @@
 
 ## What
 The list's "Add card" button opens the [[barcode-scanner]] directly. A scan replaces the scanner with a `ScanResult`
-dialog over the list that shows the format and the content, and saves nothing. "Enter manually" goes back to the
+dialog over the list that shows the format (with "· GS1" for GS1 data) and the content, and saves nothing. "Enter manually" goes back to the
 list.
 
 ## Why it exists

@@ -58,6 +58,18 @@ class ScannerDirectionsTest {
     }
 
     @Test
+    fun aGs1Scan_keepsItsGs1MarkInTheResult() { // #41
+        composeRule.runOnIdle {
+            navController.scannerDirections().onScanned(ScannedBarcode("9799123456789012", BarcodeFormat.CODE_128, gs1 = true))
+        }
+
+        composeRule.runOnIdle {
+            assertThat(navController.currentBackStackEntry!!.toRoute<ScanResult>())
+                .isEqualTo(ScanResult("9799123456789012", BarcodeFormat.CODE_128, gs1 = true))
+        }
+    }
+
+    @Test
     fun enterManually_returnsToTheList() {
         composeRule.runOnIdle { navController.scannerDirections().toManualEntry() }
 

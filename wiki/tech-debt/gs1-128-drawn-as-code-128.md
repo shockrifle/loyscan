@@ -16,8 +16,9 @@ The enum follows ZXing's names ([[2026-10-09-card-number-rule-engine]]), and GS1
 Coop's barcode content starts with `90` (GS1 Application Identifier "internal company use"). A till that parses
 GS1 may reject or misread a barcode without FNC1. It is unconfirmed: plain Code 128 may scan fine at Coop tills.
 
-Tesco too: a real Clubcard's barcode decodes as GS1-128 with AI `97` (seen 2026-10-19, #31). A scanned Tesco card is
-stored as plain `CODE_128` with the same digits, so it is drawn without the FNC1.
+Tesco too: a real Clubcard's barcode decodes as GS1-128 with AI `97` (seen 2026-10-19, #31). The scanner marks such a
+scan as GS1 (`ScannedBarcode.gs1`, #41), but a card has nowhere to keep the mark yet: once saved (#6) it would be plain
+`CODE_128` with the same digits, drawn without the FNC1.
 
 ## How to pay it down
 Test at a Coop till ([#31](https://github.com/shockrifle/loyscan/issues/31)). If plain Code 128 doesn't scan, add

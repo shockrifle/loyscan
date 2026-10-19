@@ -59,9 +59,10 @@ fun Format.toBarcodeFormat(): BarcodeFormat? = when (this) {
 
 /**
  * A decoded result as a [ScannedBarcode], or `null` when it has no text or a format the app can't store. [text] is
- * kept exactly: it becomes the card's number as scanned (`LoyaltyCard.number`).
+ * kept exactly: it becomes the card's number as scanned (`LoyaltyCard.number`). [gs1] marks GS1 data, e.g. a GS1-128
+ * barcode, which is Code 128 with a leading FNC1 that the text doesn't show.
  */
-fun scannedBarcode(format: Format, text: String?): ScannedBarcode? {
+fun scannedBarcode(format: Format, text: String?, gs1: Boolean = false): ScannedBarcode? {
     if (text.isNullOrEmpty()) return null
-    return ScannedBarcode(text, format.toBarcodeFormat() ?: return null)
+    return ScannedBarcode(text, format.toBarcodeFormat() ?: return null, gs1)
 }

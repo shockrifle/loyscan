@@ -19,10 +19,13 @@ class ZxingCppFrameReader : FrameReader {
 /**
  * The first result the app can store. Each one it drops (a format it can't draw back, or no text) is logged with its
  * format, never its content: otherwise a card that never scans leaves no trace (wiki: bugs/2026-10-19-zxing-cpp-3-0-databar).
+ *
+ * GS1 data is taken from the content type, which zxing-cpp sets from the same AI flag as the symbology identifier's
+ * GS1 modifier (`]C1` for GS1-128, `]e0` for DataBar, `]d2` for Data Matrix, `]Q3` for QR).
  */
 internal fun firstScannedBarcode(results: kotlin.collections.List<BarcodeReader.Result>): ScannedBarcode? {
     for (result in results) {
-        scannedBarcode(result.format, result.text)?.let { return it }
+        scannedBarcode(result.format, result.text, gs1 = result.contentType == BarcodeReader.ContentType.GS1)?.let { return it }
         Timber.d("Dropped a %s result (%s)", result.format, if (result.text.isNullOrEmpty()) "no text" else "format not stored")
     }
     return null

@@ -26,6 +26,13 @@ class ScanResultDialogTest {
     }
 
     @Test
+    fun aGs1Scan_saysSoNextToItsFormat() { // #41
+        composeRule.setContent { ScanResultDialog(ScanResult("9799123456789012", BarcodeFormat.CODE_128, gs1 = true), onDismiss = {}) }
+
+        composeRule.onNodeWithText("Code 128 · GS1").assertIsDisplayed()
+    }
+
+    @Test
     fun ok_dismissesIt() {
         var dismissed = 0
         composeRule.setContent { ScanResultDialog(ScanResult("42", BarcodeFormat.QR_CODE), onDismiss = { dismissed++ }) }

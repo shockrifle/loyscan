@@ -31,6 +31,12 @@ Code: `app/src/main/java/com/bdaniel/loyscan/ui/scanner/ZxingCppFrameReader.kt` 
   members map (Code 128, Codabar, Code 93, Data Matrix, DataBar, ITF). PDF417 must be asked for as the family, since
   plain PDF417 is reported as the family value, so Micro PDF417 comes along and is dropped. Tests:
   `ZxingCppFormatsTest` (every requested value stands only for mappable formats, except that one).
+- **GS1 data is marked** (`ScannedBarcode.gs1`, #41). In plain text mode a GS1-128 barcode's text is the same as a
+  plain Code 128's, since the leading FNC1 isn't in it; zxing-cpp says it is GS1 through the content type (`GS1`) and
+  the symbology identifier's modifier (`]C1`). Both come from one flag (`Content::type()` returns `GS1` exactly when
+  `symbology.aiFlag == AIFlag::GS1`, `core/src/Content.cpp` in 3.1.1); the app reads the content type. DataBar is
+  always GS1, so a DataBar scan is marked too. Tests: `ZxingCppResultsTest.aGs1Code128Result_isRecordedAsGs1`,
+  `aPlainCode128Result_isNotGs1`. Not yet checked on a device with a real GS1-128 barcode.
 - **Dropped results are logged** (`firstScannedBarcode`, `Timber.d` "Dropped a … result", format only, never the
   content). Test: `ZxingCppResultsTest`.
 - Options: `tryHarder`, `tryRotate` (a card held sideways), `tryInvert` (light bars on a dark card), one symbol per
