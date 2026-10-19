@@ -46,7 +46,8 @@ Code: `app/src/main/java/com/bdaniel/loyscan/ui/scanner/ZxingCppFrameReader.kt` 
   … result" (a format the app doesn't store).
 - **No JVM tests of reading.** The native library is built for Android ABIs only. Reading real barcodes is checked
   on a device (2026-10-19, on 3.1.1 with the final format list: EAN-13, Code 128, QR, PDF417, DataBar and DataBar
-  Stacked, all from screens or labels, not loyalty cards); after every zxing-cpp upgrade or format-list change,
+  Stacked, Code 39 including a PZN-shaped `-12345678` read as plain Code 39; all from screens or labels, not
+  loyalty cards); after every zxing-cpp upgrade or format-list change,
   check each family again. JVM tests cover the mapping, the options, `ScanAnalyzer` (with `FakeImageProxy`) and the camera
   lifecycle (with a fake `CameraOpener`).
 - The AAR's consumer ProGuard rule keeps `zxingcpp.**`, which the JNI side needs. Release builds aren't minified yet

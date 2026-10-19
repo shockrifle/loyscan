@@ -52,7 +52,8 @@ directly and a scan is only shown in a dialog: [[scanner-result-dialog-until-add
 
 Not covered by JVM tests: `ProcessCameraOpener` and `ZxingCppFrameReader.read`, which need a camera and the native
 library. Checked on a device (Android 15, 2026-10-19, final build): EAN-13, Code 128, QR, PDF417, GS1 DataBar and
-DataBar Stacked (gs1.org samples on a screen; content `01` + digits, no brackets); torch after a pause; the permission flow; the hint; "Enter manually"; the list's bottom padding. The first
+DataBar Stacked (gs1.org samples on a screen; content `01` + digits, no brackets), Code 39 (also a PZN-shaped one,
+read as plain Code 39); torch after a pause; the permission flow; the hint; "Enter manually"; the list's bottom padding. The first
 device check found DataBar never scanned: [[2026-10-19-zxing-cpp-3-0-databar]].
 
 ## Not implemented
