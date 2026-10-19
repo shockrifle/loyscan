@@ -29,7 +29,11 @@ QR and PDF417 read.
 ## Lessons
 - **A swallowed per-frame exception hides a systematic failure.** Catching per frame is right, but the warning is
   the only trace. When a symbology "never scans", check the log for `ScanAnalyzer` warnings before tuning
-  resolution or options.
+  resolution or options. Results the app drops are logged too now ("Dropped a … result"), so no failure path is
+  silent.
+- **Asking for a family asks for all its variants.** In 3.1, `CODE_39` would also have brought Code 32 and PZN
+  readings, which the app drops, so a card read that way would never scan: the same class of failure. The scanner
+  asks for variants where a family has one it drops (found in review).
 - **JVM tests can't see the native boundary.** The mapping tests were green because they only see the Kotlin enum.
   Every zxing-cpp upgrade needs a device check of each symbology family, DataBar included.
 - **Compare with a known-good reader built on the same library** (Binary Eye): it settles "the source is

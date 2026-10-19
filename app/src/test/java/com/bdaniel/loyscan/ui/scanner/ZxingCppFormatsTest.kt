@@ -11,7 +11,7 @@ class ZxingCppFormatsTest {
 
     @Test
     fun everyAppFormat_isLookedForAndMappedBack() {
-        val readable = SCANNED_FORMATS.mapNotNull { it.toBarcodeFormat() }.toSet()
+        val readable = SCANNED_FORMATS.flatMap { it.members() }.mapNotNull { it.toBarcodeFormat() }.toSet()
 
         assertThat(readable).containsExactlyElementsIn(BarcodeFormat.entries)
     }
@@ -36,6 +36,29 @@ class ZxingCppFormatsTest {
         )
 
         assertThat(expected.keys.associateWith { it.toBarcodeFormat() }).isEqualTo(expected)
+    }
+
+    @Test
+    fun everyFormatLookedFor_standsOnlyForFormatsThatMap() { // a family value also asks for all its variants
+        val unmappableMembers = SCANNED_FORMATS.associateWith { requested -> requested.members().filter { it.toBarcodeFormat() == null } }
+            .filterValues { it.isNotEmpty() }
+
+        // Plain PDF417 is reported as the family value itself, so the family must be asked for, Micro PDF417 included.
+        assertThat(unmappableMembers).containsExactly(Format.PDF_417, listOf(Format.MICRO_PDF_417))
+    }
+
+    @Test
+    fun code39_isAskedForWithoutItsCode32AndPznReadings() { // same bars, different text: such a card would never scan
+        assertThat(SCANNED_FORMATS).containsAtLeast(Format.CODE_39_STD, Format.CODE_39_EXT)
+        assertThat(SCANNED_FORMATS).containsNoneOf(Format.CODE_39, Format.CODE_32, Format.PZN)
+    }
+
+    @Test
+    fun members_ofAFamilyShareItsSymbologyByte() {
+        assertThat(Format.QR_CODE.members()).containsExactly(
+            Format.QR_CODE, Format.QR_CODE_MODEL_1, Format.QR_CODE_MODEL_2, Format.MICRO_QR_CODE, Format.RMQR_CODE,
+        )
+        assertThat(Format.QR_CODE_MODEL_2.members()).containsExactly(Format.QR_CODE_MODEL_2)
     }
 
     @Test

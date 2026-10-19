@@ -51,8 +51,8 @@ directly and a scan is only shown in a dialog: [[scanner-result-dialog-until-add
 - `ScannerDirectionsTest`, `AppNavigationTest.addCard_opensTheScanner_andBackReturnsToTheList`: navigation.
 
 Not covered by JVM tests: `ProcessCameraOpener` and `ZxingCppFrameReader.read`, which need a camera and the native
-library. Checked on a device (Android 15, 2026-10-19): EAN-13, Code 128, QR, PDF417, GS1 DataBar and DataBar
-Stacked; torch after a pause; the permission flow; the hint; "Enter manually"; the list's bottom padding. The first
+library. Checked on a device (Android 15, 2026-10-19, final build): EAN-13, Code 128, QR, PDF417, GS1 DataBar and
+DataBar Stacked (gs1.org samples on a screen; content `01` + digits, no brackets); torch after a pause; the permission flow; the hint; "Enter manually"; the list's bottom padding. The first
 device check found DataBar never scanned: [[2026-10-19-zxing-cpp-3-0-databar]].
 
 ## Not implemented

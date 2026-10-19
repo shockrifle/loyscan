@@ -5,10 +5,24 @@ import com.bdaniel.loyscan.domain.ScannedBarcode
 import zxingcpp.BarcodeReader.Format
 
 /**
- * The zxing-cpp formats the scanner looks for: every family and variant that maps to a symbology a card can be
- * stored in. Asking for both is harmless (zxing-cpp merges them) and doesn't rely on how a family expands.
+ * The zxing-cpp formats the scanner looks for. A family value (`QR_CODE`, `CODE_39`, …) also asks for every variant
+ * of it ([members]), so a family whose variants include one the app drops is asked for variant by variant: above
+ * all Code 39, whose Code 32 and PZN readings give different text for the same bars, so such a card would never
+ * scan. Plain PDF417, ITF, Code 128 and the like are reported as the family value itself and are asked for that way;
+ * the PDF417 family brings Micro PDF417 along, which is read and dropped.
  */
-val SCANNED_FORMATS: Set<Format> = Format.entries.filter { it.toBarcodeFormat() != null }.toSet()
+val SCANNED_FORMATS: Set<Format> = setOf(
+    Format.AZTEC_CODE, Format.CODABAR, Format.CODE_39_STD, Format.CODE_39_EXT, Format.CODE_93, Format.CODE_128,
+    Format.DATA_MATRIX, Format.DATA_BAR, Format.EAN_8, Format.EAN_13, Format.ISBN, Format.UPC_A, Format.UPC_E,
+    Format.ITF, Format.PDF_417, Format.QR_CODE_MODEL_1, Format.QR_CODE_MODEL_2,
+)
+
+/**
+ * The formats a value stands for when the reader is asked for it. In zxing-cpp 3.1 a format's low byte names the
+ * symbology and its high byte the variant, `' '` (0x20) meaning the whole symbology.
+ */
+internal fun Format.members(): kotlin.collections.List<Format> =
+    if (value shr 8 == 0x20) Format.entries.filter { it.value and 0xFF == value and 0xFF } else listOf(this)
 
 /**
  * The app's symbology for a zxing-cpp format. zxing-cpp 3.1 reports variants (`DATA_BAR_OMNI`, `QR_CODE_MODEL_2`,
