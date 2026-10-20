@@ -1,28 +1,32 @@
 # GS1-128 barcodes are drawn as plain Code 128
 
 **Status:** Open · **Issue:** [#33](https://github.com/shockrifle/loyscan/issues/33) · **Since:** 2026-10-13 (`ee569f1`) · **Where:**
-`app/src/main/java/com/bdaniel/loyscan/domain/BarcodeFormat.kt`, `hu-coop` in `app/src/main/assets/catalogue/stores.json`
+`hu-coop` in `app/src/main/assets/catalogue/stores.json`
 
 ## What
-`BarcodeFormat` has no `GS1_128`. A GS1-128 barcode is Code 128 with a leading FNC1 character that tells the
-scanner the data is GS1 (Application Identifiers). A card catalogued as GS1-128 is stored as `CODE_128` and will
-be drawn without the FNC1 ([[zxing-core]]).
+Scanned cards are no longer affected. `BarcodeFormat.GS1_128` exists and is drawn as Code 128 with a leading FNC1, the
+character that tells the scanner the data is GS1 (Application Identifiers) ([[zxing-core]]). A Code 128 scan marked
+GS1 is read as `GS1_128` ([[zxing-cpp]]), so a scanned GS1-128 card keeps its FNC1 (#33, 2026-10-20).
+
+What is left is the catalogue: `hu-coop` is catalogued as plain `CODE_128`, so a typed Coop number is drawn without the
+FNC1, although its content starts with Application Identifier `90`.
 
 ## Why it exists
 The enum follows ZXing's names ([[2026-10-09-card-number-rule-engine]]), and GS1-128 isn't a separate ZXing format
-(ZXing writes it as Code 128 with an FNC1 hint). The first catalogue entries had to map it to something.
+(ZXing writes it as Code 128 with an FNC1). The first catalogue entries had to map it to something, and `GS1_128` was
+only added once scans needed it (#33).
 
 ## Risk / impact
-Coop's barcode content starts with `90` (GS1 Application Identifier "internal company use"). A till that parses
-GS1 may reject or misread a barcode without FNC1. It is unconfirmed: plain Code 128 may scan fine at Coop tills.
+A till that parses GS1 may reject or misread a Coop barcode without FNC1. It is unconfirmed: plain Code 128 may scan
+fine at Coop tills.
 
-Tesco too: a real Clubcard's barcode decodes as GS1-128 with AI `97` (seen 2026-10-19, #31). The scanner marks such a
-scan as GS1 (`ScannedBarcode.gs1`, #41), but a card has nowhere to keep the mark yet: once saved (#6) it would be plain
-`CODE_128` with the same digits, drawn without the FNC1.
+A Coop card whose barcode really is GS1-128 is scanned as `GS1_128`. `CardNumberEngine.match` still recovers its core
+from the content, but reports `formatMatches = false` against `hu-coop`'s `CODE_128` rule; the add-card flow (#6)
+must not treat that as a different store.
+
+Tesco's real Clubcard barcode is GS1-128 with AI `97` (seen 2026-10-19, #31). A scanned one is stored and drawn as
+`GS1_128`; a typed one can't be built by a rule yet ([#43](https://github.com/shockrifle/loyscan/issues/43)).
 
 ## How to pay it down
-Test at a Coop till ([#31](https://github.com/shockrifle/loyscan/issues/31)). If plain Code 128 doesn't scan, add
-`GS1_128`, draw it with a leading FNC1 (ZXing's `EncodeHintType.GS1_FORMAT` in `BarcodeEncoder`), and switch
-`hu-coop` to it. A Coop till that reads plain Code 128 settles only `hu-coop`: a Code 128 scan marked GS1
-(`ScannedBarcode.gs1`, e.g. a Tesco Clubcard) must still be stored and drawn as GS1-128, so `GS1_128` is needed
-either way (#33's last criterion).
+Test at a Coop till ([#31](https://github.com/shockrifle/loyscan/issues/31)). If plain Code 128 doesn't scan, switch
+`hu-coop`'s rule and default format to `GS1_128`. If it does, `hu-coop` stays `CODE_128` and this page is resolved.

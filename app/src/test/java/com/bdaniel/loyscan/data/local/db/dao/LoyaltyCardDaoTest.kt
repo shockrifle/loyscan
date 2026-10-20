@@ -88,6 +88,15 @@ class LoyaltyCardDaoTest {
     }
 
     @Test
+    fun aCardScannedAsGs1_128_isStoredAsGs1_128() = runTest { // #33: not as plain Code 128
+        val card = aLoyaltyCardEntity(id = cardId(5), number = "9799123456789012", scannedFormat = BarcodeFormat.GS1_128)
+        db.storeDao().insert(aStoreEntity(id = card.storeId))
+        dao.insert(card)
+
+        assertThat(dao.getByIdWithStore(cardId(5)).first()?.loyaltyCard?.scannedFormat).isEqualTo(BarcodeFormat.GS1_128)
+    }
+
+    @Test
     fun getByIdWithStore_unknownId_emitsNull() = runTest {
         assertThat(dao.getByIdWithStore(cardId(99)).first()).isNull()
     }

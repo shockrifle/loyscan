@@ -77,6 +77,14 @@ class LoyaltyCardTest {
     }
 
     @Test
+    fun scannedGs1_128Card_isDrawnAsGs1_128WithTheScannedContent() { // #33: not as plain Code 128
+        val card = aLoyaltyCard(store = ruledStore, number = "9799123456789012", scannedFormat = BarcodeFormat.GS1_128)
+
+        assertThat(card.barcodeFormat).isEqualTo(BarcodeFormat.GS1_128)
+        assertThat(card.barcodeContent).isEqualTo("9799123456789012")
+    }
+
+    @Test
     fun barcodeFormat_isTheRulesFormat_whenNotScanned() {
         val store = aStore(defaultBarcodeFormat = BarcodeFormat.CODE_128, cardNumberRule = prefixedEan)
         val card = aLoyaltyCard(store = store, scannedFormat = null)

@@ -119,6 +119,14 @@ class DetailScreenTest {
     }
 
     @Test
+    fun scannedGs1_128Card_isDrawnAsGs1_128_withNoFormatNote() { // #33: drawn with its FNC1, not as plain Code 128
+        setScreen(card = aLoyaltyCard(number = "9799123456789012", scannedFormat = BarcodeFormat.GS1_128))
+
+        composeRule.onNodeWithContentDescription("Barcode").assertExists()
+        composeRule.onNodeWithText("Shown as", substring = true).assertDoesNotExist()
+    }
+
+    @Test
     fun cardDrawnInItsOwnFormat_showsNoFormatNote() { // #35
         setScreen()
 

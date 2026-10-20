@@ -75,7 +75,7 @@ class StoreCatalogueTest {
             // logos are not part of the catalogue
             """{ "id": "hu-x", "name": "X", "countryCodes": ["HU"], "color": "#000000", "defaultBarcodeFormat": "CODE_128",
                  "logo": "https://example.com/x.png" }""",
-            """{ "id": "hu-x", "name": "X", "countryCodes": ["HU"], "color": "#000000", "defaultBarcodeFormat": "GS1_128" }""",
+            """{ "id": "hu-x", "name": "X", "countryCodes": ["HU"], "color": "#000000", "defaultBarcodeFormat": "MAXICODE" }""",
             // a missing required field
             """{ "id": "hu-x", "name": "X", "countryCodes": ["HU"], "color": "#000000" }""",
         )

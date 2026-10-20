@@ -67,7 +67,8 @@ change as `libs.kotlinx.serialization.json`). This was the user's choice (2026-1
 "catalogue in our own format".
 
 ## Consequences
-- `domain/BarcodeFormat.kt` is a new enum (ZXing names, plus `DATABAR*` for GS1 DataBar). Since #1 the card model
+- `domain/BarcodeFormat.kt` is a new enum (ZXing names, plus `DATABAR*` for GS1 DataBar, and `GS1_128` since #33:
+  Code 128 with a leading FNC1, which ZXing has no name for). Since #1 the card model
   uses it, and a card's barcode content and display number are derived through this engine
   ([[2026-10-12-data-model-v2]]).
 - The display pattern uses `#` per character and copies anything else literally. With short input, trailing

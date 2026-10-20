@@ -27,9 +27,16 @@ class ScanResultDialogTest {
 
     @Test
     fun aGs1Scan_saysSoNextToItsFormat() { // #41
-        composeRule.setContent { ScanResultDialog(ScanResult("9799123456789012", BarcodeFormat.CODE_128, gs1 = true), onDismiss = {}) }
+        composeRule.setContent { ScanResultDialog(ScanResult("0109012345678901", BarcodeFormat.QR_CODE, gs1 = true), onDismiss = {}) }
 
-        composeRule.onNodeWithText("Code 128 · GS1").assertIsDisplayed()
+        composeRule.onNodeWithText("QR code · GS1").assertIsDisplayed()
+    }
+
+    @Test
+    fun aGs1_128Scan_isNotMarkedGs1Twice() { // #33: the format's name already says so
+        composeRule.setContent { ScanResultDialog(ScanResult("9799123456789012", BarcodeFormat.GS1_128, gs1 = true), onDismiss = {}) }
+
+        composeRule.onNodeWithText("GS1-128").assertIsDisplayed()
     }
 
     @Test

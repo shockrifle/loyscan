@@ -12,6 +12,8 @@ import com.google.zxing.common.BitMatrix
 import com.google.zxing.BarcodeFormat as ZxingFormat
 import com.google.zxing.NotFoundException
 import com.google.zxing.RGBLuminanceSource
+import com.google.zxing.Result
+import com.google.zxing.ResultMetadataType
 import com.google.zxing.common.HybridBinarizer
 import org.junit.Test
 
@@ -35,6 +37,7 @@ class BarcodeEncoderTest {
             BarcodeFormat.DATABAR_EXPANDED to ("0123456789012" to BarcodeFormat.CODE_128),
             BarcodeFormat.DATABAR_LIMITED to ("0123456789012" to BarcodeFormat.CODE_128),
             BarcodeFormat.EAN_8 to ("96385074" to BarcodeFormat.EAN_8),
+            BarcodeFormat.GS1_128 to ("9799123456789012" to BarcodeFormat.GS1_128),
             BarcodeFormat.EAN_13 to ("5901234123457" to BarcodeFormat.EAN_13),
             BarcodeFormat.ITF to ("12345678" to BarcodeFormat.ITF),
             BarcodeFormat.PDF_417 to ("LoyScan 0042" to BarcodeFormat.PDF_417),
@@ -52,6 +55,17 @@ class BarcodeEncoderTest {
             assertWithMessage(format.name).that(barcode!!.format).isEqualTo(drawnAs)
             assertWithMessage(format.name).that(decode(barcode)).isEqualTo(content)
         }
+    }
+
+    @Test
+    fun gs1_128_isCode128WithALeadingFnc1() { // #33: the FNC1 tells a till the content is GS1 data
+        val gs1 = read(BarcodeEncoder.encode("9799123456789012", BarcodeFormat.GS1_128)!!)
+        val plain = read(BarcodeEncoder.encode("9799123456789012", BarcodeFormat.CODE_128)!!)
+
+        // Symbology identifier "]C1": Code 128 with FNC1 in the first position; "]C0": no FNC1.
+        assertThat(gs1.resultMetadata[ResultMetadataType.SYMBOLOGY_IDENTIFIER]).isEqualTo("]C1")
+        assertThat(gs1.text).isEqualTo("9799123456789012")
+        assertThat(plain.resultMetadata[ResultMetadataType.SYMBOLOGY_IDENTIFIER]).isEqualTo("]C0")
     }
 
     @Test
@@ -154,7 +168,9 @@ class BarcodeEncoderTest {
      * Draws [barcode] at 4 px per module (linear ones 40 rows high), with no margin beyond its own: every barcode must
      * carry the quiet zone a reader needs, whatever the screen puts around it. Then reads it with ZXing.
      */
-    private fun decode(barcode: EncodedBarcode): String {
+    private fun decode(barcode: EncodedBarcode): String = read(barcode).text
+
+    private fun read(barcode: EncodedBarcode): Result {
         val scale = 4
         val width = barcode.width * scale
         val rows = if (barcode.isLinear) 40 else barcode.height * scale
@@ -164,7 +180,7 @@ class BarcodeEncoderTest {
         }
         val bitmap = BinaryBitmap(HybridBinarizer(RGBLuminanceSource(width, rows, pixels)))
         return try {
-            MultiFormatReader().decode(bitmap, mapOf(DecodeHintType.TRY_HARDER to true)).text
+            MultiFormatReader().decode(bitmap, mapOf(DecodeHintType.TRY_HARDER to true))
         } catch (e: NotFoundException) {
             throw AssertionError("${barcode.format} didn't read back", e)
         }

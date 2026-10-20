@@ -1,7 +1,8 @@
 # Barcode scanner
 
 A full-screen camera view that reads a card's barcode and hands on the first scan: its content exactly as decoded,
-its format, and whether it holds GS1 data (a GS1-128 barcode is Code 128 marked GS1: [[zxing-cpp]] → Contract). Offline, without Play Services ([[2026-10-16-zxing-cpp-for-scanning]], [[zxing-cpp]]). Until the
+its format, and whether it holds GS1 data (a Code 128 marked GS1 is a GS1-128 barcode and is handed on as `GS1_128`:
+[[zxing-cpp]] → Contract). Offline, without Play Services ([[2026-10-16-zxing-cpp-for-scanning]], [[zxing-cpp]]). Until the
 add-card flow ([#6](https://github.com/shockrifle/loyscan/issues/6)) exists, the list's "Add card" button opens it
 directly and a scan is only shown in a dialog: [[scanner-result-dialog-until-add-card-flow]].
 

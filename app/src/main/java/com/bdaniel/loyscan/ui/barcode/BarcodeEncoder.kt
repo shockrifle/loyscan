@@ -62,7 +62,7 @@ object BarcodeEncoder {
         val zxingFormat = format.toZxing() ?: return null
         return try {
             // Size 0: the smallest matrix, one pixel per module (and one row for 1D); the screen scales it.
-            val matrix = MultiFormatWriter().encode(content, zxingFormat, 0, 0, hintsFor(content))
+            val matrix = MultiFormatWriter().encode(content.withFnc1For(format), zxingFormat, 0, 0, hintsFor(content))
             EncodedBarcode(format, matrix)
         } catch (e: WriterException) {
             null
@@ -81,6 +81,15 @@ object BarcodeEncoder {
         else mapOf(EncodeHintType.CHARACTER_SET to Charsets.UTF_8.name())
             .plus(NO_MARGIN)
 
+    /**
+     * GS1-128 is Code 128 with a leading FNC1. ZXing's Code 128 writer ignores `EncodeHintType.GS1_FORMAT` (only its
+     * 2D writers read it); it writes FNC1 for the escape character U+00F1 instead.
+     */
+    private fun String.withFnc1For(format: BarcodeFormat): String =
+        if (format == BarcodeFormat.GS1_128) "$CODE_128_FNC1$this" else this
+
+    private const val CODE_128_FNC1 = 'ñ'
+
     /** [EncodedBarcode] adds the quiet zone. */
     private val NO_MARGIN = mapOf(EncodeHintType.MARGIN to 0)
 
@@ -89,7 +98,8 @@ object BarcodeEncoder {
         BarcodeFormat.CODABAR -> ZxingFormat.CODABAR
         BarcodeFormat.CODE_39 -> ZxingFormat.CODE_39
         BarcodeFormat.CODE_93 -> ZxingFormat.CODE_93
-        BarcodeFormat.CODE_128 -> ZxingFormat.CODE_128
+        // GS1-128 is Code 128 with a leading FNC1 (withFnc1For).
+        BarcodeFormat.CODE_128, BarcodeFormat.GS1_128 -> ZxingFormat.CODE_128
         BarcodeFormat.DATA_MATRIX -> ZxingFormat.DATA_MATRIX
         BarcodeFormat.EAN_8 -> ZxingFormat.EAN_8
         BarcodeFormat.EAN_13 -> ZxingFormat.EAN_13

@@ -59,10 +59,10 @@ class ZxingCppResultsTest {
     }
 
     @Test
-    fun aGs1Code128Result_isRecordedAsGs1() { // #41: zxing-cpp marks it with "]C1" and content type GS1
+    fun aGs1Code128Result_isAGs1_128Scan() { // #41, #33: zxing-cpp marks it with "]C1" and content type GS1
         val scan = firstScannedBarcode(listOf(result(Format.CODE_128, "9799123456789012", ContentType.GS1, "]C1")))
 
-        assertThat(scan).isEqualTo(ScannedBarcode("9799123456789012", BarcodeFormat.CODE_128, gs1 = true))
+        assertThat(scan).isEqualTo(ScannedBarcode("9799123456789012", BarcodeFormat.GS1_128, gs1 = true))
     }
 
     @Test

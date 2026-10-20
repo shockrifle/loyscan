@@ -11,7 +11,8 @@ delete the page.
 - [[no-room-migrations]] — DB v2, no migration path
 - [[rules-cannot-require-leading-digits]] — confirmed EAN-13 stores require their prefix; Auchan still waits
   for one (#32, #31)
-- [[gs1-128-drawn-as-code-128]] — no FNC1; Coop's `90…` and Tesco's `97…` barcodes are unconfirmed at the till (#33)
+- [[gs1-128-drawn-as-code-128]] — scans keep their FNC1 (`GS1_128`); `hu-coop` is still plain Code 128, unconfirmed at
+  the till (#33)
 
 ## Resolved
 

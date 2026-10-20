@@ -12,7 +12,7 @@ required by `Modifier.sharedElement`. See [[card-transition]].
 card-number rule (`CardNumberEngine.barcodeContent`); equals the raw number when there is no rule.
 See [[2026-10-09-card-number-rule-engine]].
 
-**Barcode format** — The symbology, enum `domain/BarcodeFormat.kt` (ZXing names, plus `DATABAR*`). A card's
+**Barcode format** — The symbology, enum `domain/BarcodeFormat.kt` (ZXing names, plus `DATABAR*` and `GS1_128`). A card's
 `barcodeFormat` is derived: `scannedFormat` (column `loyalty_cards.scannedFormat`), else the store rule's
 format, else `Store.defaultBarcodeFormat` ([[2026-10-12-data-model-v2]]). Drawn on the detail screen with ZXing
 core, falling back to `CODE_128`, then QR, when the format can't hold the content or has no writer (DataBar):
@@ -65,6 +65,10 @@ separators removed, letter case applied). Rules turn it into barcode content. Se
 `stateIn` initial value so screens never deal with `null`. Its empty id matters for [[shared-element-key-from-async-state]].
 
 **Entity** — Room table class in `data/local/db/entity/` (`StoreEntity`, `LoyaltyCardEntity`). Stays inside `data/`.
+
+**GS1-128** — Code 128 with a leading FNC1, which tells the reader the content is GS1 data (Application
+Identifiers such as `90` or `97`). `BarcodeFormat.GS1_128`: scanned as a Code 128 marked GS1 ([[zxing-cpp]]),
+drawn with the FNC1 ([[zxing-core]]). See [[gs1-128-drawn-as-code-128]].
 
 **hiltImageLoader()** — Composable in `ui/ImageLoader.kt` that returns the app-wide Coil `ImageLoader` from Hilt
 via `ImageLoaderEntryPoint`. See [[2025-12-12-singleton-image-loader]].

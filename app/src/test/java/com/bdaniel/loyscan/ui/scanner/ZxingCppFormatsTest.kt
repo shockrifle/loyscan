@@ -10,10 +10,11 @@ import zxingcpp.BarcodeReader.Format
 class ZxingCppFormatsTest {
 
     @Test
-    fun everyAppFormat_isLookedForAndMappedBack() {
+    fun everyAppFormat_isLookedForAndMappedBack() { // GS1-128 is a Code 128 marked GS1, not a zxing-cpp format
         val readable = SCANNED_FORMATS.flatMap { it.members() }.mapNotNull { it.toBarcodeFormat() }.toSet()
 
-        assertThat(readable).containsExactlyElementsIn(BarcodeFormat.entries)
+        assertThat(readable + scannedBarcode(Format.CODE_128, "90", gs1 = true)!!.format)
+            .containsExactlyElementsIn(BarcodeFormat.entries)
     }
 
     @Test
@@ -81,6 +82,20 @@ class ZxingCppFormatsTest {
     @Test
     fun scannedBarcode_keepsTheContentExactly() {
         assertThat(scannedBarcode(Format.CODE_128, " 90 12\u001D34 ")).isEqualTo(ScannedBarcode(" 90 12\u001D34 ", BarcodeFormat.CODE_128))
+    }
+
+    @Test
+    fun scannedBarcode_code128MarkedGs1_isGs1_128() { // #33: so the card keeps its FNC1 when drawn
+        assertThat(scannedBarcode(Format.CODE_128, "9799123456789012", gs1 = true))
+            .isEqualTo(ScannedBarcode("9799123456789012", BarcodeFormat.GS1_128, gs1 = true))
+    }
+
+    @Test
+    fun scannedBarcode_otherFormatsMarkedGs1_keepTheirFormat() { // DataBar is always GS1; QR and Data Matrix may be
+        assertThat(scannedBarcode(Format.DATA_BAR_OMNI, "0109012345678901", gs1 = true))
+            .isEqualTo(ScannedBarcode("0109012345678901", BarcodeFormat.DATABAR, gs1 = true))
+        assertThat(scannedBarcode(Format.QR_CODE_MODEL_2, "0109012345678901", gs1 = true))
+            .isEqualTo(ScannedBarcode("0109012345678901", BarcodeFormat.QR_CODE, gs1 = true))
     }
 
     @Test

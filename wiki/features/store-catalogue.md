@@ -60,9 +60,10 @@ why it has no logos, and why it is loaded this way: [[2026-10-13-curated-store-c
   `9799` + the last 12 of them. A rule can't drop leading digits, so `hu-tesco` has no rule and a typed card is drawn
   as the printed number. A scanned card is stored right
   ([#43](https://github.com/shockrifle/loyscan/issues/43)).
-- **GS1-128 is drawn as plain Code 128.** `BarcodeFormat` has no `GS1_128`. Coop's barcode starts with Application
-  Identifier `90`, and the Tesco Clubcard's real barcode is GS1-128 (AI `97`). A till that parses GS1 may expect a leading
-  FNC1, which plain Code 128 doesn't have. Not yet tested at a till: [[gs1-128-drawn-as-code-128]].
+- **Coop is catalogued as plain Code 128.** Its barcode starts with Application Identifier `90`, and a till that parses
+  GS1 may expect the leading FNC1 of GS1-128 (`BarcodeFormat.GS1_128`), which a typed Coop card is drawn without. A
+  scan marked GS1 is stored and drawn as `GS1_128` whatever the catalogue says. Not yet tested at a till:
+  [[gs1-128-drawn-as-code-128]].
 
 ## Tests
 
