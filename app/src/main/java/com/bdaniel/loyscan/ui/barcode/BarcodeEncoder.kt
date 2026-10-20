@@ -60,6 +60,7 @@ object BarcodeEncoder {
 
     private fun tryEncode(content: String, format: BarcodeFormat): EncodedBarcode? {
         val zxingFormat = format.toZxing() ?: return null
+        if (zxingFormat == ZxingFormat.CODE_128 && content.any { it in CODE_128_ESCAPES }) return null
         return try {
             // Size 0: the smallest matrix, one pixel per module (and one row for 1D); the screen scales it.
             val matrix = MultiFormatWriter().encode(content.withFnc1For(format), zxingFormat, 0, 0, hintsFor(content))
@@ -89,6 +90,12 @@ object BarcodeEncoder {
         if (format == BarcodeFormat.GS1_128) "$CODE_128_FNC1$this" else this
 
     private const val CODE_128_FNC1 = 'ñ'
+
+    /**
+     * ZXing's Code 128 writer writes FNC1–FNC4 for U+00F1–U+00F4 (`ñ` `ò` `ó` `ô`) without an error, so content holding
+     * one of these letters would be drawn with a function character in its place (#46). Such content skips Code 128.
+     */
+    private val CODE_128_ESCAPES = CODE_128_FNC1..'ô'
 
     /** [EncodedBarcode] adds the quiet zone. */
     private val NO_MARGIN = mapOf(EncodeHintType.MARGIN to 0)

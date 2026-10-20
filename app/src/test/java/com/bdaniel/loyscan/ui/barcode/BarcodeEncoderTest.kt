@@ -92,6 +92,21 @@ class BarcodeEncoderTest {
     }
 
     @Test
+    fun code128ContentWithAnEscapeCharacter_fallsBackToQr() { // #46
+        // ZXing's Code 128 writer writes FNC1-FNC4 for these four characters instead of the letter, and raises no error.
+        listOf('ñ', 'ò', 'ó', 'ô').forEach { letter ->
+            val content = "Loy${letter}42"
+            listOf(BarcodeFormat.CODE_128, BarcodeFormat.GS1_128, BarcodeFormat.DATABAR).forEach { format ->
+
+                val barcode = BarcodeEncoder.encode(content, format)!!
+
+                assertWithMessage("$format $content").that(barcode.format).isEqualTo(BarcodeFormat.QR_CODE)
+                assertWithMessage("$format $content").that(decode(barcode)).isEqualTo(content)
+            }
+        }
+    }
+
+    @Test
     fun latin1Content_isEncodedWithoutACharsetHeader() {
         // A UTF-8 hint makes ZXing prepend an ECI header, which the card's own barcode doesn't have: a till may pass
         // it on as a prefix or reject the code. ZXing's reader strips it, so compare with a hint-free encoding.

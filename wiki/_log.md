@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-20 · Code 128 content holding `ñ` `ò` `ó` `ô` (ZXing's FNC1–FNC4 escapes) falls back to QR instead of drawing function characters · integrations/zxing-core · #46
 - 2026-10-20 · review fix: the GS1 mark of a non-Code-128 scan reaches the dialog only; a card has nowhere to keep it · integrations/zxing-cpp · review of #33
 - 2026-10-20 · `GS1_128` format: a Code 128 scan marked GS1 is stored and drawn as GS1-128 (FNC1 via ZXing's U+00F1 escape, not the GS1_FORMAT hint: correction on zxing-core); Coop's catalogue entry still open · tech-debt/gs1-128-drawn-as-code-128, tech-debt/_index, integrations/zxing-core, integrations/zxing-cpp, features/barcode-scanner, features/store-catalogue, hacks/scanner-result-dialog-until-add-card-flow, decisions/2026-10-09-card-number-rule-engine, glossary · #33
 - 2026-10-20 · device check: GS1-128 scans marked GS1, plain Code 128 and DataBar as expected; #33's payoff now includes storing a scan's GS1 mark · integrations/zxing-cpp, features/barcode-scanner, tech-debt/gs1-128-drawn-as-code-128 · review of #41

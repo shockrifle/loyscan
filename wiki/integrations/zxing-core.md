@@ -34,8 +34,10 @@ Java, no Android or network code. Only its writers are used, in `BarcodeEncoder`
   ZXing's reader reports symbology identifier `]C1` for it and `]C0` for plain Code 128. *Correction 2026-10-20:* this
   page used to say `GS1_FORMAT` adds the FNC1.
 - **Those four characters are never letters in Code 128.** Because of the same escape mapping, Code 128 content that
-  contains `ñ`, `ò`, `ó` or `ô` is written with a function character in that place, not the letter, and no error is
-  raised, so it doesn't fall back to QR. Nothing handles this yet.
+  contains `ñ`, `ò`, `ó` or `ô` would be written with a function character in that place, not the letter, and no error
+  is raised. So `BarcodeEncoder` skips Code 128 (and GS1-128) for such content (`CODE_128_ESCAPES`), and the chain
+  moves on to QR, in ISO-8859-1 without an ECI header. This applies to a DataBar card's Code 128 fallback too. Test:
+  `BarcodeEncoderTest.code128ContentWithAnEscapeCharacter_fallsBackToQr` (#46).
 - **Rejection is an exception.** 1D writers throw `IllegalArgumentException` for content they can't hold (EAN-13 with
   the wrong length or check digit, a non-ASCII character in Code 128, an odd-length ITF); the 2D writers throw
   `WriterException` when content is too long. `BarcodeEncoder` catches both and moves to the next format.
