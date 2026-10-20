@@ -58,6 +58,7 @@ class CardNumberRulesTest {
         val any = CardNumberRules.parse("""[{ "id": "any", "format": "QR_CODE", "charset": "ANY" }]""").single()
         assertEquals("", any.separators)
         assertEquals(emptyList<String>(), rule.coreStartsWith)
+        assertEquals(0, rule.dropLeading)
     }
 
     @Test
@@ -71,6 +72,10 @@ class CardNumberRulesTest {
                 checkDigit = CheckDigit(CheckDigitAlgorithm.GTIN_MOD10, CheckDigit.Mode.APPEND),
             ),
             CardNumberRule(id = "c", format = BarcodeFormat.CODE_128, coreStartsWith = listOf("99", "123")),
+            CardNumberRule(
+                id = "d", format = BarcodeFormat.GS1_128, minLength = 18, maxLength = 18, prefix = "9799",
+                coreStartsWith = listOf("634009"), dropLeading = 6,
+            ),
         )
         assertEquals(rules, CardNumberRules.parse(CardNumberRules.toJson(rules)))
     }
@@ -107,6 +112,14 @@ class CardNumberRulesTest {
             """{ "id": "x", "format": "CODE_128", "maxLength": 3, "coreStartsWith": ["1234"] }""",
             // input is upper-cased, so a lower-case start could never match
             """{ "id": "x", "format": "CODE_128", "charset": "ALPHANUMERIC", "case": "UPPER", "coreStartsWith": ["ab"] }""",
+            """{ "id": "x", "format": "CODE_128", "dropLeading": -1 }""",
+            // the dropped digits must be known to read a scan back: a required start has to supply them
+            """{ "id": "x", "format": "CODE_128", "minLength": 9, "dropLeading": 2 }""",
+            """{ "id": "x", "format": "CODE_128", "minLength": 9, "coreStartsWith": ["12", "3"], "dropLeading": 2 }""",
+            // two starts that drop different digits: a scan couldn't tell which were dropped
+            """{ "id": "x", "format": "CODE_128", "minLength": 9, "coreStartsWith": ["12", "34"], "dropLeading": 2 }""",
+            // nothing would be left of the core
+            """{ "id": "x", "format": "CODE_128", "minLength": 2, "maxLength": 9, "coreStartsWith": ["12"], "dropLeading": 2 }""",
         )
         for (rule in invalid) {
             val e = assertThrows(rule, IllegalArgumentException::class.java) { CardNumberRules.parse("[$rule]") }
@@ -132,6 +145,10 @@ class CardNumberRulesTest {
             """{ "id": "upce", "format": "UPC_E", "minLength": 8, "maxLength": 8 }""",
             """{ "id": "itf", "format": "ITF", "minLength": 14, "maxLength": 14 }""",
             """{ "id": "code128-any-length", "format": "CODE_128" }""",
+            // 15 printed digits, the first three left out, check digit appended: 13 digits
+            """{ "id": "ean13-dropped", "format": "EAN_13", "minLength": 15, "maxLength": 15,
+                 "coreStartsWith": ["123"], "dropLeading": 3,
+                 "checkDigit": { "algorithm": "GTIN_MOD10", "mode": "APPEND" } }""",
         )
         assertEquals(valid.size, CardNumberRules.parse(valid.joinToString(",", "[", "]")).size)
     }
@@ -156,6 +173,12 @@ class CardNumberRulesTest {
             """{ "id": "x", "format": "UPC_E", "minLength": 7, "maxLength": 7 }""",
             """{ "id": "x", "format": "ITF", "minLength": 13, "maxLength": 13 }""",
             """{ "id": "x", "format": "ITF", "minLength": 12, "maxLength": 14 }""",
+            // 13 printed digits, two left out: 11
+            """{ "id": "x", "format": "EAN_13", "minLength": 13, "maxLength": 13, "coreStartsWith": ["12"], "dropLeading": 2,
+                 "checkDigit": { "algorithm": "GTIN_MOD10", "mode": "VERIFY" } }""",
+            // VERIFY covers the printed number, not what is left of it in the barcode
+            """{ "id": "x", "format": "EAN_13", "minLength": 15, "maxLength": 15, "coreStartsWith": ["12"], "dropLeading": 2,
+                 "checkDigit": { "algorithm": "GTIN_MOD10", "mode": "VERIFY" } }""",
         )
         for (rule in invalid) {
             val e = assertThrows(rule, IllegalArgumentException::class.java) { CardNumberRules.parse("[$rule]") }

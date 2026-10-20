@@ -156,6 +156,62 @@ class CardNumberEngineTest {
         assertNull(match(scannedB, BarcodeFormat.EAN_13, eanStoreA))
     }
 
+    // --- dropped leading digits (#43) ---
+
+    /**
+     * A made-up store whose card prints 12 digits starting "4321" (the last one a Luhn check digit), and whose
+     * barcode holds "77" and the printed number without its first four digits.
+     */
+    private val droppedStart = CardNumberRule(
+        id = "dropped-start",
+        format = BarcodeFormat.GS1_128,
+        minLength = 12,
+        maxLength = 12,
+        prefix = "77",
+        checkDigit = CheckDigit(CheckDigitAlgorithm.LUHN, Mode.VERIFY),
+        coreStartsWith = listOf("4321"),
+        dropLeading = 4,
+        display = Display(pattern = "#### #### ####"),
+    )
+
+    private fun luhn(payload: String) = payload + CheckDigitAlgorithm.LUHN.compute(payload)
+
+    @Test
+    fun barcodeContent_leavesOutTheDroppedLeadingDigits() {
+        val printed = luhn("43210000123")
+
+        assertEquals(Validation.Valid(printed), validate(printed, droppedStart))
+        assertEquals("77" + printed.drop(4), barcodeContent(printed, droppedStart))
+        assertEquals("4321 0000 123" + printed.last(), displayNumber(printed, droppedStart))
+    }
+
+    @Test
+    fun match_putsTheDroppedDigitsBackFromTheRequiredStart() {
+        val printed = luhn("43210000123")
+
+        assertEquals(RuleMatch(printed, formatMatches = true), match("77" + printed.drop(4), BarcodeFormat.GS1_128, droppedStart))
+    }
+
+    @Test
+    fun match_withDroppedDigits_stillChecksTheFullPrintedNumber() {
+        val printed = luhn("43210000123")
+        val wrongCheck = printed.dropLast(1) + ((printed.last() - '0' + 1) % 10)
+
+        assertNull(match("77" + wrongCheck.drop(4), null, droppedStart))  // Luhn is over all 12 printed digits
+        assertNull(match("78" + printed.drop(4), null, droppedStart))     // wrong prefix
+        assertNull(match("77" + printed.drop(3), null, droppedStart))     // one digit too many
+    }
+
+    @Test
+    fun match_withDroppedDigits_triesEachAllowedStart() {
+        // The starts share the four dropped digits and differ in the fifth, which stays in the barcode.
+        val rule = droppedStart.copy(id = "two-starts", coreStartsWith = listOf("43215", "43216"))
+        val printed = luhn("43216000123")
+
+        assertEquals(printed, match(barcodeContent(printed, rule), null, rule)?.core)
+        assertNull(match(barcodeContent(luhn("43217000123"), droppedStart), null, rule))
+    }
+
     // --- barcode content ---
 
     @Test

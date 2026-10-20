@@ -98,8 +98,10 @@ object CardNumberEngine {
         val leadingPad = if (rule.padLength > 0 && rest.length == rule.padLength) {
             rest.takeWhile { it == rule.padChar }.length
         } else 0
+        // Dropped leading digits are the same in every allowed start (checked by the rule), so they can be put back.
+        val dropped = rule.coreStartsWith.firstOrNull()?.take(rule.dropLeading).orEmpty()
         val core = (leadingPad downTo 0).asSequence()
-            .map { rest.substring(it) }
+            .map { dropped + rest.substring(it) }
             .firstOrNull { candidate -> validate(candidate, rule) == Validation.Valid(candidate) && build(candidate, rule) == content }
             ?: return null
         return RuleMatch(core, formatMatches = format == null || format == rule.format)
@@ -107,7 +109,7 @@ object CardNumberEngine {
 
     private fun build(core: String, rule: CardNumberRule?): String {
         if (rule == null) return core
-        val body = rule.prefix + core.padStart(rule.padLength, rule.padChar) + rule.suffix
+        val body = rule.prefix + core.drop(rule.dropLeading).padStart(rule.padLength, rule.padChar) + rule.suffix
         val check = rule.checkDigit
         return if (check?.mode == Mode.APPEND) body + check.algorithm.compute(body) else body
     }

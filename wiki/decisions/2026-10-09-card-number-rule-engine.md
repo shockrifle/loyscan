@@ -28,9 +28,17 @@ The store catalogue ([#3](https://github.com/shockrifle/loyscan/issues/3)) has t
   that is only the beginning of an allowed start (`12` for `123`) is `TOO_SHORT` instead, whatever `minLength` says,
   so live typing isn't flagged early and no `minLength` constraint is needed. It is a separate field from `prefix`
   because `prefix` is added to the barcode, while `coreStartsWith` only checks what the user typed or scanned.
-- Barcode content = `prefix + core.padStart(padLength, padChar) + suffix`, plus a check digit computed over all
-  of that when the mode is `APPEND`. `VERIFY` means the core's last digit is already a check digit over the rest
-  of the core, so it is validated but nothing is added.
+- Since 2026-10-20 (#43), `dropLeading`: how many leading core characters the barcode leaves out. Tesco's Clubcard
+  prints 18 digits starting `634009`, but its barcode holds `9799` and only the last 12. The core stays the full
+  printed number, so validation (incl. a `VERIFY` check digit over all 18 digits) and the display number are about
+  what the user sees on the card. A rule with `dropLeading` must list `coreStartsWith`, every start at least that
+  long and all beginning with the same dropped characters, and `minLength` must be longer. That keeps `match`
+  working: it puts the one known dropped string back in front of what the barcode holds and checks the result like
+  any other core, so a scan still gives the printed number. A count was chosen over a "drop this string" field so
+  that `coreStartsWith` remains the single place that says what the card must start with.
+- Barcode content = `prefix + core.drop(dropLeading).padStart(padLength, padChar) + suffix`, plus a check digit
+  computed over all of that when the mode is `APPEND`. `VERIFY` means the core's last digit is already a check
+  digit over the rest of the core, so it is validated but nothing is added.
 - Defaults never rewrite content silently. `case` defaults to `NONE` because barcodes are case-sensitive, so a rule
   opts in to `UPPER` or `LOWER`. `separators` defaults to `"-"`, or to `""` for charset `ANY`, where a hyphen may be
   part of the number. The default is an expression on `charset`, and kotlinx-serialization handles it in both
@@ -56,7 +64,7 @@ The store catalogue ([#3](https://github.com/shockrifle/loyscan/issues/3)) has t
 - "Invalid" includes content that can't fit the rule's barcode format (`CardNumberRule.requireFitsFormat`).
   EAN-8, EAN-13, UPC-A and UPC-E need digits only, at exactly 8, 13, 12 and 8 characters for every allowed core
   length. EAN-8, EAN-13 and UPC-A also need a `GTIN_MOD10` check digit over the whole content: `APPEND`, or
-  `VERIFY` with no prefix, suffix or padding. ITF needs one fixed, even length. Known gaps: UPC-E's check digit
+  `VERIFY` with no prefix, suffix, padding or dropped digits. ITF needs one fixed, even length. Known gaps: UPC-E's check digit
   (computed on the expanded UPC-A number) isn't modelled, and the character sets of CODE_39 and CODABAR aren't
   checked. The renderer's fallback in [#4](https://github.com/shockrifle/loyscan/issues/4) covers both.
 

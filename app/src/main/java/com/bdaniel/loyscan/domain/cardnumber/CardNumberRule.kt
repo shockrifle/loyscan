@@ -9,7 +9,8 @@ import kotlinx.serialization.Serializable
  *
  * Terms: the **core number** is what the user types / what is printed on the card, after normalisation;
  * the **barcode content** is what the barcode encodes:
- * `prefix + core left-padded to padLength + suffix [+ check digit if mode = APPEND]`.
+ * `prefix + core without its first dropLeading characters, left-padded to padLength + suffix
+ * [+ check digit if mode = APPEND]`.
  *
  * Invalid definitions fail at construction (and so at JSON parse time).
  */
@@ -37,6 +38,11 @@ data class CardNumberRule(
      * number is the core. Checked on the core, not the barcode content, so [prefix] is not part of it.
      */
     val coreStartsWith: List<String> = emptyList(),
+    /**
+     * How many leading characters of the core the barcode leaves out, e.g. a card that prints a fixed issuer number
+     * the barcode doesn't hold. They must be the same in every allowed [coreStartsWith], so a scan can put them back.
+     */
+    val dropLeading: Int = 0,
     val display: Display? = null,
 ) {
     @Serializable
@@ -96,6 +102,16 @@ data class CardNumberRule(
             require(start.length <= maxLength) { "$id: coreStartsWith \"$start\" is longer than maxLength" }
             require(case.apply(start) == start) { "$id: coreStartsWith \"$start\" can't match after case $case" }
         }
+        require(dropLeading >= 0) { "$id: dropLeading must be >= 0" }
+        if (dropLeading > 0) {
+            require(coreStartsWith.isNotEmpty() && coreStartsWith.all { it.length >= dropLeading }) {
+                "$id: dropLeading needs every coreStartsWith to be at least $dropLeading long"
+            }
+            require(coreStartsWith.map { it.take(dropLeading) }.distinct().size == 1) {
+                "$id: every coreStartsWith must begin with the same $dropLeading dropped characters"
+            }
+            require(minLength > dropLeading) { "$id: minLength must be greater than dropLeading" }
+        }
         if (display != null) require('#' in display.pattern) { "$id: display pattern has no '#'" }
         requireFitsFormat()
     }
@@ -129,15 +145,15 @@ data class CardNumberRule(
         if (format in setOf(BarcodeFormat.EAN_8, BarcodeFormat.EAN_13, BarcodeFormat.UPC_A)) {
             val check = checkDigit
             val coversContent = check?.mode == CheckDigit.Mode.APPEND ||
-                (prefix.isEmpty() && suffix.isEmpty() && padLength == 0)
+                (prefix.isEmpty() && suffix.isEmpty() && padLength == 0 && dropLeading == 0)
             require(check?.algorithm == CheckDigitAlgorithm.GTIN_MOD10 && coversContent) {
                 "$id: $format needs a GTIN_MOD10 check digit over the whole content " +
-                    "(APPEND, or VERIFY without prefix, suffix or padding)"
+                    "(APPEND, or VERIFY without prefix, suffix, padding or dropped digits)"
             }
         }
     }
 
     private fun contentLength(coreLength: Int): Long =
-        prefix.length + suffix.length + maxOf(coreLength, padLength).toLong() +
+        prefix.length + suffix.length + maxOf(coreLength - dropLeading, padLength).toLong() +
             if (checkDigit?.mode == CheckDigit.Mode.APPEND) 1 else 0
 }
