@@ -23,4 +23,6 @@ scan as GS1 (`ScannedBarcode.gs1`, #41), but a card has nowhere to keep the mark
 ## How to pay it down
 Test at a Coop till ([#31](https://github.com/shockrifle/loyscan/issues/31)). If plain Code 128 doesn't scan, add
 `GS1_128`, draw it with a leading FNC1 (ZXing's `EncodeHintType.GS1_FORMAT` in `BarcodeEncoder`), and switch
-`hu-coop` to it.
+`hu-coop` to it. A Coop till that reads plain Code 128 settles only `hu-coop`: a Code 128 scan marked GS1
+(`ScannedBarcode.gs1`, e.g. a Tesco Clubcard) must still be stored and drawn as GS1-128, so `GS1_128` is needed
+either way (#33's last criterion).

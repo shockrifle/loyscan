@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-20 · device check: GS1-128 scans marked GS1, plain Code 128 and DataBar as expected; #33's payoff now includes storing a scan's GS1 mark · integrations/zxing-cpp, features/barcode-scanner, tech-debt/gs1-128-drawn-as-code-128 · review of #41
 - 2026-10-19 · review fixes: zxing-cpp's GS1 content type stated with its exceptions (empty, unprocessable ECI); the interim dialog no longer shows "GS1 DataBar · GS1" · integrations/zxing-cpp · review of #41
 - 2026-10-19 · scanner marks GS1 data (`ScannedBarcode.gs1`, from zxing-cpp's content type); the interim dialog shows it · integrations/zxing-cpp, features/barcode-scanner, tech-debt/gs1-128-drawn-as-code-128, hacks/scanner-result-dialog-until-add-card-flow · #41
 - 2026-10-19 · catalogue facts checked on real cards (photos decoded): Decathlon rule added, confirmed leading digits required for Decathlon/dm/Penny/Rossmann/IKEA Family; Tesco found to be GS1-128 with a barcode the rule model can't build (#43) · features/store-catalogue, tech-debt/rules-cannot-require-leading-digits, tech-debt/gs1-128-drawn-as-code-128, tech-debt/_index · #31
