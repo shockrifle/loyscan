@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-20 · `hu-tesco` gets a GS1-128 rule: `9799` + the printed number without `634009`; typed and scanned Clubcards agree · features/store-catalogue, tech-debt/gs1-128-drawn-as-code-128, workflows/add-a-catalogue-store · #43
 - 2026-10-20 · rule engine: `dropLeading` leaves leading core digits out of the barcode; a required start puts them back on a scan · decisions/2026-10-09-card-number-rule-engine · #43
 - 2026-10-20 · Code 128 content holding `ñ` `ò` `ó` `ô` (ZXing's FNC1–FNC4 escapes) falls back to QR instead of drawing function characters · integrations/zxing-core · #46
 - 2026-10-20 · review fix: the GS1 mark of a non-Code-128 scan reaches the dialog only; a card has nowhere to keep it · integrations/zxing-cpp · review of #33

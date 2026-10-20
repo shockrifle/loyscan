@@ -4,7 +4,9 @@ import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.domain.cardnumber.CardNumberEngine
+import com.bdaniel.loyscan.domain.cardnumber.RuleMatch
 import com.bdaniel.loyscan.domain.cardnumber.Validation
 import com.bdaniel.loyscan.domain.catalogue.StoreCatalogue
 import com.google.common.truth.Truth.assertThat
@@ -39,6 +41,7 @@ class ShippedCatalogueTest {
         Vector("hu-rossmann", "9991234567890", "9991234567890", "9991234567890"),
         Vector("hu-shell-clubsmart", "70044200012345678", "70044200012345678", "7004 4200 0123 4567 8"),
         Vector("hu-supershop", "5540000012345678", "5540000012345678", "5540 0000 1234 5678"),
+        Vector("hu-tesco", "634009123456789012", "9799123456789012", "634009 1234 5678 9012"),
     )
 
     @Test
@@ -66,16 +69,29 @@ class ShippedCatalogueTest {
                 .isInstanceOf(Validation.Valid::class.java)
             assertWithMessage(v.storeId).that(CardNumberEngine.barcodeContent(v.printed, rule)).isEqualTo(v.barcodeContent)
             assertWithMessage(v.storeId).that(CardNumberEngine.displayNumber(v.printed, rule)).isEqualTo(v.display)
-            // A scan of that barcode reads back as the same store's card (the add-card flow's check, #6).
+            // A scan of that barcode reads back as the same store's card (the add-card flow's check, #6), with the
+            // printed number.
             assertWithMessage(v.storeId).that(CardNumberEngine.match(v.barcodeContent, rule!!.format, rule)?.core)
-                .isNotNull()
+                .isEqualTo(v.printed)
         }
+    }
+
+    /** #43: the barcode leaves out the first six printed digits, and a scan puts them back. */
+    @Test
+    fun tescoScan_matchesWithThePrintedNumber_whetherReadAsGs1_128OrPlainCode128() {
+        val rule = shipped.single { it.id == "hu-tesco" }.cardNumberRule!!
+
+        assertThat(rule.format).isEqualTo(BarcodeFormat.GS1_128)
+        assertThat(CardNumberEngine.match("9799123456789012", BarcodeFormat.GS1_128, rule))
+            .isEqualTo(RuleMatch("634009123456789012", formatMatches = true))
+        assertThat(CardNumberEngine.match("9799123456789012", BarcodeFormat.CODE_128, rule))
+            .isEqualTo(RuleMatch("634009123456789012", formatMatches = false))
     }
 
     /** The stores whose leading digits were confirmed on a real card (#31) tell each other's scans apart. */
     @Test
     fun storesWithConfirmedLeadingDigits_rejectOtherStoresCards() {
-        val confirmed = setOf("hu-decathlon", "hu-dm", "hu-ikea-family", "hu-penny", "hu-rossmann")
+        val confirmed = setOf("hu-decathlon", "hu-dm", "hu-ikea-family", "hu-penny", "hu-rossmann", "hu-tesco")
         for (id in confirmed) {
             val rule = shipped.single { it.id == id }.cardNumberRule!!
             for (other in vectors.filter { it.storeId != id }) {

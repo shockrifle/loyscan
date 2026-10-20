@@ -25,7 +25,7 @@ from the content, but reports `formatMatches = false` against `hu-coop`'s `CODE_
 must not treat that as a different store.
 
 Tesco's real Clubcard barcode is GS1-128 with AI `97` (seen 2026-10-19, #31). A scanned one is stored and drawn as
-`GS1_128`; a typed one can't be built by a rule yet ([#43](https://github.com/shockrifle/loyscan/issues/43)).
+`GS1_128`, and so is a typed one: `hu-tesco`'s rule is `GS1_128` (#43, 2026-10-20).
 
 The mark of other GS1 carriers isn't kept: `LoyaltyCard` has no GS1 field, so a scanned GS1 Data Matrix or GS1 QR
 would be saved and drawn without GS1 mode, and a DataBar as plain Code 128 ([[zxing-cpp]] → Contract).

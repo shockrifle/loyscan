@@ -44,7 +44,7 @@ why it has no logos, and why it is loaded this way: [[2026-10-13-curated-store-c
 
 ## Contents and known gaps
 
-- **16 Hungarian stores (2026-10-13), 11 with a card-number rule. Some number facts are still provisional.** The
+- **16 Hungarian stores (2026-10-13), 12 with a card-number rule. Some number facts are still provisional.** The
   retailers' public pages confirm that each programme exists, and most of the colours. The first barcode formats and
   rules came from an existing app's catalogue, which the user accepted for the first entries
   ([[2026-10-13-curated-store-catalogue]]). On 2026-10-19, decoding photos of real cards confirmed Decathlon, dm,
@@ -53,13 +53,15 @@ why it has no logos, and why it is loaded this way: [[2026-10-13-curated-store-c
 - **The core is the full printed number.** EAN-13 stores use 13 digits with a `GTIN_MOD10` `VERIFY` check and no
   prefix, because the card prints all 13 digits. Since 2026-10-19 the stores whose leading digits were seen on a real
   card require them (`coreStartsWith`): Decathlon `209`, dm `241`, Penny `994`, Rossmann `999`, IKEA Family
-  `627598042`. Other starts that the first catalogue listed (Penny `9980`/`9981`, dm `90`, Rossmann `2`) were left
+  `627598042`, and since 2026-10-20 Tesco `634009`. Other starts that the first catalogue listed (Penny `9980`/`9981`, dm `90`, Rossmann `2`) were left
   out until a card shows them. Auchan still accepts any EAN-13, so `CardNumberEngine.match` can't tell it from the
   others (matters for #6): [[rules-cannot-require-leading-digits]].
-- **A typed Tesco number doesn't give its barcode.** The Clubcard prints 18 digits (`634009…`), but its barcode holds
-  `9799` + the last 12 of them. A rule can't drop leading digits, so `hu-tesco` has no rule and a typed card is drawn
-  as the printed number. A scanned card is stored right
-  ([#43](https://github.com/shockrifle/loyscan/issues/43)).
+- **Tesco's barcode leaves out the first six printed digits.** The Clubcard prints 18 digits starting `634009`, with a
+  Luhn check digit, and its barcode is GS1-128 holding `9799` + the last 12 of them (one card seen, 2026-10-19, #31).
+  `hu-tesco`'s rule (since 2026-10-20, #43) builds that from the typed number with `dropLeading`, and a scan reads back
+  as the printed number ([[2026-10-09-card-number-rule-engine]]). Unconfirmed: whether `99` after AI `97` is the same
+  on every card. If another card shows a different pair, the prefix is wrong for it, and its scan won't match
+  `hu-tesco`.
 - **Coop is catalogued as plain Code 128.** Its barcode starts with Application Identifier `90`, and a till that parses
   GS1 may expect the leading FNC1 of GS1-128 (`BarcodeFormat.GS1_128`), which a typed Coop card is drawn without. A
   scan marked GS1 is stored and drawn as `GS1_128` whatever the catalogue says. Not yet tested at a till:

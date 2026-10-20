@@ -40,6 +40,8 @@ never the answer to copy.
   and the format checks are in [[2026-10-09-card-number-rule-engine]]. For a fixed-length number, set
   `minLength == maxLength`. If the printed number has fixed leading digits that are part of the core (e.g. a full
   EAN-13 starting `999`), list them in `coreStartsWith` once confirmed, so other stores' cards don't match the rule.
+  If the barcode leaves out leading printed digits (`hu-tesco`), keep them in the core and set `dropLeading` to their
+  count; they must also be in `coreStartsWith`, so a scan can put them back.
 - No `logo`: the catalogue ships none ([[2026-10-13-curated-store-catalogue]]).
 - Keep the array sorted by id.
 
