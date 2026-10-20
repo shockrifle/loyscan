@@ -13,7 +13,8 @@ never the answer to copy.
 - brand colour (`#RRGGBB`, from the retailer's own site, not sampled from a logo on white);
 - barcode format;
 - the printed number: its length, fixed leading digits, check digit, how it's grouped;
-- how the barcode content relates to the printed number: the same, or with a prefix, padding or check digit added.
+- how the barcode content relates to the printed number: the same, or with a prefix, padding or check digit
+  added, or with leading printed digits left out.
 
 ## 2. Write the entry
 

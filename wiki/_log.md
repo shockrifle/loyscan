@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-20 · review fixes: `634009` is one-card-unconfirmed too, and a different start gives a wrong display number, not just no match; dropped digits named in the catalogue checklist · features/store-catalogue, workflows/add-a-catalogue-store · review of #43
 - 2026-10-20 · `hu-tesco` gets a GS1-128 rule: `9799` + the printed number without `634009`; typed and scanned Clubcards agree · features/store-catalogue, tech-debt/gs1-128-drawn-as-code-128, workflows/add-a-catalogue-store · #43
 - 2026-10-20 · rule engine: `dropLeading` leaves leading core digits out of the barcode; a required start puts them back on a scan · decisions/2026-10-09-card-number-rule-engine · #43
 - 2026-10-20 · Code 128 content holding `ñ` `ò` `ó` `ô` (ZXing's FNC1–FNC4 escapes) falls back to QR instead of drawing function characters · integrations/zxing-core · #46

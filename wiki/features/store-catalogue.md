@@ -59,9 +59,12 @@ why it has no logos, and why it is loaded this way: [[2026-10-13-curated-store-c
 - **Tesco's barcode leaves out the first six printed digits.** The Clubcard prints 18 digits starting `634009`, with a
   Luhn check digit, and its barcode is GS1-128 holding `9799` + the last 12 of them (one card seen, 2026-10-19, #31).
   `hu-tesco`'s rule (since 2026-10-20, #43) builds that from the typed number with `dropLeading`, and a scan reads back
-  as the printed number ([[2026-10-09-card-number-rule-engine]]). Unconfirmed: whether `99` after AI `97` is the same
-  on every card. If another card shows a different pair, the prefix is wrong for it, and its scan won't match
-  `hu-tesco`.
+  as the printed number ([[2026-10-09-card-number-rule-engine]]). Unconfirmed, both from that one card: whether `99`
+  after AI `97` and the start `634009` are the same on every card. With a different `99` pair, a scan doesn't match
+  `hu-tesco`, and a typed card validates but is drawn with `9799`, which isn't its barcode. With a different start,
+  the barcode doesn't hold it, so a scan gets `634009` put back, and when the difference is two digits or more the
+  Luhn check can still pass (about 1 in 10). The card then shows a printed number that isn't the one on it, though its
+  barcode is still right.
 - **Coop is catalogued as plain Code 128.** Its barcode starts with Application Identifier `90`, and a till that parses
   GS1 may expect the leading FNC1 of GS1-128 (`BarcodeFormat.GS1_128`), which a typed Coop card is drawn without. A
   scan marked GS1 is stored and drawn as `GS1_128` whatever the catalogue says. Not yet tested at a till:

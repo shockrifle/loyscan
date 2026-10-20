@@ -67,7 +67,7 @@ data class CardNumberRule(
     data class CheckDigit(val algorithm: CheckDigitAlgorithm, val mode: Mode) {
         @Serializable
         enum class Mode {
-            /** Computed over `prefix + padded core + suffix` and appended to the barcode content. */
+            /** Computed over `prefix + padded core (without its dropped digits) + suffix` and appended to the barcode content. */
             APPEND,
 
             /** The core's last digit is a check digit over the core's other digits; validated, not added. */
