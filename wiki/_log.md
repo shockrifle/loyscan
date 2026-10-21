@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-21 · GS1 Data Matrix / QR scans kept as `GS1_DATA_MATRIX` / `GS1_QR_CODE` and drawn in GS1 mode; GS1 data falls back to GS1-128, then GS1 QR (DataBar now drawn as GS1-128); new decision page · decisions/2026-10-21-gs1-mark-as-barcode-format, decisions/_index, decisions/2026-10-21-gs1-scans-shown-as-hri, decisions/2026-10-09-card-number-rule-engine, integrations/zxing-core, integrations/zxing-cpp, integrations/_index, tech-debt/gs1-128-drawn-as-code-128, features/card-detail, features/barcode-scanner, glossary · #45
 - 2026-10-21 · review fix: the `]C1`/`]C0` sentence names GS1-128 again and comes before the separator text, which made it read as if about the DataBar fallback · integrations/zxing-core · review of #42
 - 2026-10-21 · display number of a GS1 scan no rule matches is its HRI `(01)…(10)…`; other scanned control characters show as a space; new decision page · decisions/2026-10-21-gs1-scans-shown-as-hri, decisions/_index, features/card-detail, integrations/zxing-cpp, glossary, index · #42
 - 2026-10-21 · GS1-128: a scanned GS1 separator (U+001D) is drawn as FNC1, not a literal GS; ZXing reads it back as GS only with ASSUME_GS1 · integrations/zxing-core · #42

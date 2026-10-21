@@ -32,6 +32,8 @@ the field boundaries visible (the user's choice over a plain space).
   taken from ZXing core 3.5.3's `FieldParser`. An unassigned prefix makes the whole content fall back to option 1;
   new GS1 AIs with a new prefix need a line in `AI_LENGTH`.
 - A scanned DataBar card without a matching rule now reads `(01)09012345678901`, not `0109012345678901`.
-- GS1 Data Matrix and QR scans fall back to option 1, since their GS1 mark isn't stored (#45).
+- GS1 Data Matrix and QR scans are shown this way too since #45, which stores their mark as a format
+  ([[2026-10-21-gs1-mark-as-barcode-format]]). A GS1 Aztec or PDF417 falls back to option 1, since its mark isn't
+  stored.
 - Tests: `Gs1Test`, `LoyaltyCardTest.scannedGs1Card_displaysTheContentAsPrintedUnderGs1Barcodes`,
   `scannedDataBarCard_isGs1Data_too`, `scannedContentWithControlCharacters_displaysEachRunAsASpace`.

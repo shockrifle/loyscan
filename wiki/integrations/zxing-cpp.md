@@ -38,12 +38,13 @@ Code: `app/src/main/java/com/bdaniel/loyscan/ui/scanner/ZxingCppFrameReader.kt` 
   the symbology identifier's modifier (`]C1`). Both come from one flag: `Content::type()` returns `GS1` when
   `symbology.aiFlag == AIFlag::GS1`, unless the content is empty (`TEXT`; dropped anyway) or has an ECI it can't
   process (`UNKNOWN_ECI`; GS1-128 carries no ECIs) (`core/src/Content.cpp:432-442` in 3.1.1). The app reads the
-  content type. A Code 128 marked GS1 becomes `BarcodeFormat.GS1_128` (`scannedBarcode`, #33), so it is drawn back
-  with its FNC1 ([[zxing-core]]). Other formats keep their own, with the mark, but `LoyaltyCard` has no field for it,
-  so a saved GS1 Data Matrix or QR would be drawn without GS1 mode, and DataBar falls back to plain Code 128. DataBar is always GS1, so a DataBar
+  content type. A Code 128 marked GS1 becomes `BarcodeFormat.GS1_128` (`scannedBarcode`, #33), a Data Matrix or QR
+  `GS1_DATA_MATRIX` / `GS1_QR_CODE` (#45, [[2026-10-21-gs1-mark-as-barcode-format]]), so they are drawn back with
+  their FNC1 ([[zxing-core]]). Aztec and PDF417 keep their own format with the mark, which a saved card loses (ZXing
+  core can't write them in GS1 mode). DataBar is always GS1, so a DataBar
   scan is marked too; the interim dialog doesn't repeat "GS1" after a name that already starts with it (DataBar,
   GS1-128). Tests: `ZxingCppResultsTest.aGs1Code128Result_isAGs1_128Scan`, `aPlainCode128Result_isNotGs1`,
-  `ZxingCppFormatsTest.scannedBarcode_code128MarkedGs1_isGs1_128`. Checked on a device (2026-10-20): a GS1-128 barcode reads as Code 128 marked GS1, a
+  `ZxingCppFormatsTest.scannedBarcode_code128MarkedGs1_isGs1_128`, `scannedBarcode_dataMatrixAndQrMarkedGs1_areTheirGs1Formats`. Checked on a device (2026-10-20): a GS1-128 barcode reads as Code 128 marked GS1, a
   plain Code 128 unmarked, DataBar marked (shown in the interim dialog).
 - **Dropped results are logged** (`firstScannedBarcode`, `Timber.d` "Dropped a … result", format only, never the
   content). Test: `ZxingCppResultsTest`.

@@ -22,7 +22,7 @@ UUID string.
 - Header text color: white if the brand color's luminance is < 0.5, else black.
 - The number shown is `LoyaltyCard.displayNumber`: the number formatted by the store's card-number rule (for a
   scanned card, the core the rule recovers from the scan), or the raw number when there is no rule or no match
-  ([[2026-10-12-data-model-v2]]). A GS1 scan (`GS1_128`, DataBar) with no matching rule is shown as printed under
+  ([[2026-10-12-data-model-v2]]). A GS1 scan (`BarcodeFormat.isGs1`: the `GS1_` formats, DataBar) with no matching rule is shown as printed under
   GS1 barcodes, `(01)09501101020917(10)12AB`; any other scanned content shows each run of control characters as a
   space ([[2026-10-21-gs1-scans-shown-as-hri]], #42).
 - **Opening a card counts a use:** `DetailViewModel`'s `init` calls `LoyaltyCardRepository.recordUse(cardId)`, which
@@ -30,11 +30,11 @@ UUID string.
   ViewModel, so a rotation doesn't count again (a restore after process death does). `updatedAt` is left alone: a
   use isn't an edit of the card. These fields feed the list's "most / recently used" sort (#7).
 - **Barcode:** below the label and store name, on a white rounded card with 16dp padding in both themes; the barcode
-  carries its own quiet zone ([[zxing-core]]). `BarcodeEncoder` encodes `barcodeContent` in `barcodeFormat`, falling back to `CODE_128`, then QR
+  carries its own quiet zone ([[zxing-core]]). `BarcodeEncoder` encodes `barcodeContent` in `barcodeFormat`, falling back to `CODE_128`, then QR (GS1 data: `GS1_128`, then GS1 QR)
   ([[zxing-core]]); nothing is drawn for empty content. 1D barcodes are 120dp high across the card; 2D ones keep
   their aspect ratio at full width. Its content description is "Barcode".
 - **Fallback note:** when the barcode is drawn in a format other than the card's `barcodeFormat`, a `bodySmall` line
-  under it names the format drawn, e.g. a DataBar card shows "Shown as Code 128" (#35). The name is
+  under it names the format drawn, e.g. a DataBar card shows "Shown as GS1-128" (#35, #45). The name is
   `BarcodeFormat.displayName`. A card drawn in its own format shows no note. Tests:
   `DetailScreenTest.cardDrawnInAFallbackFormat_namesTheFormatDrawn`, `contentNotEvenCode128CanHold_namesQrAsTheFormatDrawn`,
   `cardDrawnInItsOwnFormat_showsNoFormatNote`.

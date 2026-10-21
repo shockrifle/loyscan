@@ -12,10 +12,11 @@ required by `Modifier.sharedElement`. See [[card-transition]].
 card-number rule (`CardNumberEngine.barcodeContent`); equals the raw number when there is no rule.
 See [[2026-10-09-card-number-rule-engine]].
 
-**Barcode format** — The symbology, enum `domain/BarcodeFormat.kt` (ZXing names, plus `DATABAR*` and `GS1_128`). A card's
+**Barcode format** — The symbology, enum `domain/BarcodeFormat.kt` (ZXing names, plus `DATABAR*` and the `GS1_` formats). A card's
 `barcodeFormat` is derived: `scannedFormat` (column `loyalty_cards.scannedFormat`), else the store rule's
 format, else `Store.defaultBarcodeFormat` ([[2026-10-12-data-model-v2]]). Drawn on the detail screen with ZXing
-core, falling back to `CODE_128`, then QR, when the format can't hold the content or has no writer (DataBar):
+core, falling back to `CODE_128`, then QR (GS1 data: `GS1_128`, then `GS1_QR_CODE`), when the format can't hold
+the content or has no writer (DataBar):
 [[zxing-core]]. Stored as the enum name. Was a free-form string before #1.
 
 **Brand** — Old name of **Store** (`domain/Brand.kt`, table `brands`) until #1. "Brand colour" is still
@@ -68,7 +69,8 @@ separators removed, letter case applied). Rules turn it into barcode content. Se
 
 **GS1-128** — Code 128 with a leading FNC1, which tells the reader the content is GS1 data (Application
 Identifiers such as `90` or `97`). `BarcodeFormat.GS1_128`: scanned as a Code 128 marked GS1 ([[zxing-cpp]]),
-drawn with the FNC1 ([[zxing-core]]). See [[gs1-128-drawn-as-code-128]].
+drawn with the FNC1 ([[zxing-core]]). See [[gs1-128-drawn-as-code-128]]. `GS1_DATA_MATRIX` and `GS1_QR_CODE` are
+the same for Data Matrix and QR ([[2026-10-21-gs1-mark-as-barcode-format]]).
 
 **GS1 HRI** — Human-readable interpretation: GS1 data as printed under its barcode, each Application Identifier in
 brackets, `(01)09501101020917(10)12AB`. `Gs1.humanReadable` (`domain/Gs1.kt`) builds it for the display number of a

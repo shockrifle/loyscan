@@ -59,13 +59,21 @@ fun Format.toBarcodeFormat(): BarcodeFormat? = when (this) {
 
 /**
  * A decoded result as a [ScannedBarcode], or `null` when it has no text or a format the app can't store. [text] is
- * kept exactly: it becomes the card's number as scanned (`LoyaltyCard.number`). [gs1] marks GS1 data. A Code 128
- * marked GS1 is a GS1-128 barcode: Code 128 with a leading FNC1 that the text doesn't show, so it becomes
- * [BarcodeFormat.GS1_128] and is drawn back with the FNC1.
+ * kept exactly: it becomes the card's number as scanned (`LoyaltyCard.number`). [gs1] marks GS1 data: a symbology
+ * with a leading FNC1 that the text doesn't show. A Code 128, Data Matrix or QR code marked GS1 becomes its `GS1_`
+ * format, so it is drawn back with the FNC1 (#33, #45).
  */
 fun scannedBarcode(format: Format, text: String?, gs1: Boolean = false): ScannedBarcode? {
     if (text.isNullOrEmpty()) return null
     val symbology = format.toBarcodeFormat() ?: return null
-    val barcodeFormat = if (gs1 && symbology == BarcodeFormat.CODE_128) BarcodeFormat.GS1_128 else symbology
+    val barcodeFormat = if (gs1) symbology.gs1Format() ?: symbology else symbology
     return ScannedBarcode(text, barcodeFormat, gs1)
+}
+
+/** The GS1 form of a symbology the app can draw in GS1 mode; ZXing core can't for Aztec or PDF417. */
+private fun BarcodeFormat.gs1Format(): BarcodeFormat? = when (this) {
+    BarcodeFormat.CODE_128 -> BarcodeFormat.GS1_128
+    BarcodeFormat.DATA_MATRIX -> BarcodeFormat.GS1_DATA_MATRIX
+    BarcodeFormat.QR_CODE -> BarcodeFormat.GS1_QR_CODE
+    else -> null
 }

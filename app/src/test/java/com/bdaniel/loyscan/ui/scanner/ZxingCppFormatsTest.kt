@@ -10,11 +10,12 @@ import zxingcpp.BarcodeReader.Format
 class ZxingCppFormatsTest {
 
     @Test
-    fun everyAppFormat_isLookedForAndMappedBack() { // GS1-128 is a Code 128 marked GS1, not a zxing-cpp format
+    fun everyAppFormat_isLookedForAndMappedBack() { // the GS1_ formats are a symbology marked GS1, not zxing-cpp formats
         val readable = SCANNED_FORMATS.flatMap { it.members() }.mapNotNull { it.toBarcodeFormat() }.toSet()
+        val markedGs1 = listOf(Format.CODE_128, Format.DATA_MATRIX, Format.QR_CODE_MODEL_2)
+            .map { scannedBarcode(it, "90", gs1 = true)!!.format }
 
-        assertThat(readable + scannedBarcode(Format.CODE_128, "90", gs1 = true)!!.format)
-            .containsExactlyElementsIn(BarcodeFormat.entries)
+        assertThat(readable + markedGs1).containsExactlyElementsIn(BarcodeFormat.entries)
     }
 
     @Test
@@ -91,11 +92,22 @@ class ZxingCppFormatsTest {
     }
 
     @Test
-    fun scannedBarcode_otherFormatsMarkedGs1_keepTheirFormat() { // DataBar is always GS1; QR and Data Matrix may be
+    fun scannedBarcode_dataMatrixAndQrMarkedGs1_areTheirGs1Formats() { // #45: so the card keeps its FNC1 when drawn
+        assertThat(scannedBarcode(Format.DATA_MATRIX, "0109012345678901", gs1 = true))
+            .isEqualTo(ScannedBarcode("0109012345678901", BarcodeFormat.GS1_DATA_MATRIX, gs1 = true))
+        assertThat(scannedBarcode(Format.QR_CODE_MODEL_2, "0109012345678901", gs1 = true))
+            .isEqualTo(ScannedBarcode("0109012345678901", BarcodeFormat.GS1_QR_CODE, gs1 = true))
+        assertThat(scannedBarcode(Format.QR_CODE_MODEL_2, "0109012345678901"))
+            .isEqualTo(ScannedBarcode("0109012345678901", BarcodeFormat.QR_CODE))
+    }
+
+    @Test
+    fun scannedBarcode_otherFormatsMarkedGs1_keepTheirFormat() {
+        // DataBar is always GS1. ZXing core can't write Aztec or PDF417 in GS1 mode, so they keep only the scan's mark.
         assertThat(scannedBarcode(Format.DATA_BAR_OMNI, "0109012345678901", gs1 = true))
             .isEqualTo(ScannedBarcode("0109012345678901", BarcodeFormat.DATABAR, gs1 = true))
-        assertThat(scannedBarcode(Format.QR_CODE_MODEL_2, "0109012345678901", gs1 = true))
-            .isEqualTo(ScannedBarcode("0109012345678901", BarcodeFormat.QR_CODE, gs1 = true))
+        assertThat(scannedBarcode(Format.AZTEC_CODE, "0109012345678901", gs1 = true))
+            .isEqualTo(ScannedBarcode("0109012345678901", BarcodeFormat.AZTEC, gs1 = true))
     }
 
     @Test

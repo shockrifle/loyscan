@@ -19,6 +19,7 @@ inferred.
 - [[2026-10-13-curated-store-catalogue]] — own curated store list (no logos, slug ids), synced into Room on every open; demo cards debug-only
 - [[2026-10-16-zxing-cpp-for-scanning]] — zxing-cpp 3.1.1 + CameraX for scanning: reads all DataBar, no Play Services; not ML Kit
 - [[2026-10-21-gs1-scans-shown-as-hri]] — a GS1 scan no rule matches is shown as `(01)…(10)…`; other control characters as a space
+- [[2026-10-21-gs1-mark-as-barcode-format]] — a GS1 Data Matrix or QR scan is stored as `GS1_DATA_MATRIX` / `GS1_QR_CODE`, not a flag; GS1 data falls back to GS1-128, then GS1 QR
 
 ## Superseded
 

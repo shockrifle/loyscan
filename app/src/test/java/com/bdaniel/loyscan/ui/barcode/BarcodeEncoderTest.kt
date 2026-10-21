@@ -18,8 +18,9 @@ import com.google.zxing.common.HybridBinarizer
 import org.junit.Test
 
 /**
- * Every [BarcodeFormat] either encodes in its own format or falls back (CODE_128, then QR), and what is encoded
- * reads back as the content: each barcode is decoded with ZXing's own reader. Example numbers only.
+ * Every [BarcodeFormat] either encodes in its own format or falls back (CODE_128, then QR; for GS1 data GS1-128, then
+ * GS1 QR), and what is encoded reads back as the content: each barcode is decoded with ZXing's own reader. Example
+ * numbers only.
  */
 class BarcodeEncoderTest {
 
@@ -32,12 +33,14 @@ class BarcodeEncoderTest {
             BarcodeFormat.CODE_93 to ("LOY-42" to BarcodeFormat.CODE_93),
             BarcodeFormat.CODE_128 to ("Loy42-x" to BarcodeFormat.CODE_128),
             BarcodeFormat.DATA_MATRIX to ("LoyScan 0042" to BarcodeFormat.DATA_MATRIX),
-            // ZXing has no DataBar writer, so these fall back to CODE_128.
-            BarcodeFormat.DATABAR to ("0123456789012" to BarcodeFormat.CODE_128),
-            BarcodeFormat.DATABAR_EXPANDED to ("0123456789012" to BarcodeFormat.CODE_128),
-            BarcodeFormat.DATABAR_LIMITED to ("0123456789012" to BarcodeFormat.CODE_128),
+            // ZXing has no DataBar writer, so these fall back to GS1-128: DataBar always holds GS1 data.
+            BarcodeFormat.DATABAR to ("0109012345678901" to BarcodeFormat.GS1_128),
+            BarcodeFormat.DATABAR_EXPANDED to ("0109012345678901" to BarcodeFormat.GS1_128),
+            BarcodeFormat.DATABAR_LIMITED to ("0109012345678901" to BarcodeFormat.GS1_128),
             BarcodeFormat.EAN_8 to ("96385074" to BarcodeFormat.EAN_8),
             BarcodeFormat.GS1_128 to ("9799123456789012" to BarcodeFormat.GS1_128),
+            BarcodeFormat.GS1_DATA_MATRIX to ("0109012345678901" to BarcodeFormat.GS1_DATA_MATRIX),
+            BarcodeFormat.GS1_QR_CODE to ("0109012345678901" to BarcodeFormat.GS1_QR_CODE),
             BarcodeFormat.EAN_13 to ("5901234123457" to BarcodeFormat.EAN_13),
             BarcodeFormat.ITF to ("12345678" to BarcodeFormat.ITF),
             BarcodeFormat.PDF_417 to ("LoyScan 0042" to BarcodeFormat.PDF_417),
@@ -88,6 +91,68 @@ class BarcodeEncoderTest {
     }
 
     @Test
+    fun gs1DataMatrixAndQr_areDrawnInGs1Mode() { // #45: a scanned GS1 Data Matrix or QR keeps its FNC1
+        // Symbology identifiers: "]d2" Data Matrix and "]Q3" QR with FNC1 in the first position; "]d1" / "]Q1" without.
+        val expected = mapOf(
+            BarcodeFormat.GS1_DATA_MATRIX to "]d2",
+            BarcodeFormat.DATA_MATRIX to "]d1",
+            BarcodeFormat.GS1_QR_CODE to "]Q3",
+            BarcodeFormat.QR_CODE to "]Q1",
+        )
+
+        expected.forEach { (format, identifier) ->
+            val barcode = BarcodeEncoder.encode("0109012345678901", format)!!
+
+            assertWithMessage(format.name).that(read(barcode).resultMetadata[ResultMetadataType.SYMBOLOGY_IDENTIFIER])
+                .isEqualTo(identifier)
+            assertWithMessage(format.name).that(decode(barcode)).isEqualTo("0109012345678901")
+        }
+    }
+
+    @Test
+    fun gs1DataMatrixAndQr_separatorReadsBackAsASeparator() { // #45: the FNC1 between two fields, held as GS (#42)
+        val content = "0109501101020917" + "1012AB" + "21XYZ"
+        listOf(BarcodeFormat.GS1_DATA_MATRIX, BarcodeFormat.GS1_QR_CODE).forEach { format ->
+
+            val barcode = BarcodeEncoder.encode(content, format)!!
+
+            assertWithMessage(format.name).that(barcode.format).isEqualTo(format)
+            assertWithMessage(format.name).that(decode(barcode)).isEqualTo(content)
+        }
+    }
+
+    @Test
+    fun gs1Qr_percentSignIsNotReadAsASeparator() { // #45
+        // In a GS1 QR code's alphanumeric mode a single % stands for FNC1, and %% for the % sign itself.
+        val barcode = BarcodeEncoder.encode("91AB%12", BarcodeFormat.GS1_QR_CODE)!!
+
+        assertThat(decode(barcode)).isEqualTo("91AB%12")
+    }
+
+    @Test
+    fun dataBar_isDrawnAsGs1_128() { // #45: ZXing can't write DataBar; its fallback keeps the GS1 mark
+        listOf(BarcodeFormat.DATABAR, BarcodeFormat.DATABAR_EXPANDED, BarcodeFormat.DATABAR_LIMITED).forEach { format ->
+
+            val barcode = read(BarcodeEncoder.encode("0109012345678901", format)!!)
+
+            assertWithMessage(format.name).that(barcode.resultMetadata[ResultMetadataType.SYMBOLOGY_IDENTIFIER])
+                .isEqualTo("]C1")
+        }
+    }
+
+    @Test
+    fun gs1ContentCode128CannotHold_fallsBackToGs1Qr() { // #45: GS1 data stays GS1 in every fallback
+        listOf(BarcodeFormat.GS1_128, BarcodeFormat.DATABAR).forEach { format ->
+
+            val barcode = BarcodeEncoder.encode("91Kártya", format)!!
+
+            assertWithMessage(format.name).that(barcode.format).isEqualTo(BarcodeFormat.GS1_QR_CODE)
+            assertWithMessage(format.name).that(read(barcode).resultMetadata[ResultMetadataType.SYMBOLOGY_IDENTIFIER])
+                .isEqualTo("]Q3")
+        }
+    }
+
+    @Test
     fun contentTheFormatCannotHold_fallsBackToCode128() {
         // Not 12/13 digits: a typed number saved anyway against an EAN-13 rule.
         val barcode = BarcodeEncoder.encode("12345", BarcodeFormat.EAN_13)!!
@@ -115,11 +180,16 @@ class BarcodeEncoderTest {
         // ZXing's Code 128 writer writes FNC1-FNC4 for these four characters instead of the letter, and raises no error.
         listOf('ñ', 'ò', 'ó', 'ô').forEach { letter ->
             val content = "Loy${letter}42"
-            listOf(BarcodeFormat.CODE_128, BarcodeFormat.GS1_128, BarcodeFormat.DATABAR).forEach { format ->
+            mapOf(
+                BarcodeFormat.CODE_128 to BarcodeFormat.QR_CODE,
+                // GS1 data falls back to GS1 QR (#45).
+                BarcodeFormat.GS1_128 to BarcodeFormat.GS1_QR_CODE,
+                BarcodeFormat.DATABAR to BarcodeFormat.GS1_QR_CODE,
+            ).forEach { (format, drawnAs) ->
 
                 val barcode = BarcodeEncoder.encode(content, format)!!
 
-                assertWithMessage("$format $content").that(barcode.format).isEqualTo(BarcodeFormat.QR_CODE)
+                assertWithMessage("$format $content").that(barcode.format).isEqualTo(drawnAs)
                 assertWithMessage("$format $content").that(decode(barcode)).isEqualTo(content)
             }
         }
@@ -155,6 +225,8 @@ class BarcodeEncoderTest {
             BarcodeFormat.ITF to ("12345678" to 10),
             BarcodeFormat.QR_CODE to ("LoyScan 0042" to 4),
             BarcodeFormat.DATA_MATRIX to ("LoyScan 0042" to 1),
+            BarcodeFormat.GS1_QR_CODE to ("0109012345678901" to 4),
+            BarcodeFormat.GS1_DATA_MATRIX to ("0109012345678901" to 1),
             BarcodeFormat.PDF_417 to ("LoyScan 0042" to 2),
         )
         minimum.forEach { (format, contentAndModules) ->
@@ -204,8 +276,13 @@ class BarcodeEncoderTest {
     /**
      * Draws [barcode] at 4 px per module (linear ones 40 rows high), with no margin beyond its own: every barcode must
      * carry the quiet zone a reader needs, whatever the screen puts around it. Then reads it with ZXing.
+     *
+     * ZXing's Data Matrix reader returns every FNC1 as GS, the leading one too (its identifier, "]d2", already says the
+     * data is GS1); a GS1 reader drops that one, so it is dropped here.
      */
-    private fun decode(barcode: EncodedBarcode): String = read(barcode).text
+    private fun decode(barcode: EncodedBarcode): String = read(barcode).text.let {
+        if (barcode.format == BarcodeFormat.GS1_DATA_MATRIX) it.removePrefix("") else it
+    }
 
     private fun read(barcode: EncodedBarcode, vararg hints: DecodeHintType): Result {
         val scale = 4

@@ -27,8 +27,9 @@ must not treat that as a different store.
 Tesco's real Clubcard barcode is GS1-128 with AI `97` (seen 2026-10-19, #31). A scanned one is stored and drawn as
 `GS1_128`, and so is a typed one: `hu-tesco`'s rule is `GS1_128` (#43, 2026-10-20).
 
-The mark of other GS1 carriers isn't kept: `LoyaltyCard` has no GS1 field, so a scanned GS1 Data Matrix or GS1 QR
-would be saved and drawn without GS1 mode, and a DataBar as plain Code 128 ([[zxing-cpp]] → Contract).
+Other GS1 carriers keep their mark since #45 (2026-10-21): a GS1 Data Matrix or QR scan is stored as
+`GS1_DATA_MATRIX` / `GS1_QR_CODE` and drawn in GS1 mode, and a DataBar falls back to GS1-128
+([[2026-10-21-gs1-mark-as-barcode-format]]).
 
 ## How to pay it down
 Test at a Coop till ([#31](https://github.com/shockrifle/loyscan/issues/31)). If plain Code 128 doesn't scan, switch

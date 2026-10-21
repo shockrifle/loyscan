@@ -88,8 +88,17 @@ class LoyaltyCardTest {
     }
 
     @Test
+    fun scannedGs1DataMatrixOrQrCard_isGs1Data_too() { // #45
+        listOf(BarcodeFormat.GS1_DATA_MATRIX, BarcodeFormat.GS1_QR_CODE).forEach { format ->
+            val card = aLoyaltyCard(store = aStore(cardNumberRule = null), number = "0109012345678901" + "10AB", scannedFormat = format)
+
+            assertThat(card.displayNumber).isEqualTo("(01)09012345678901(10)AB")
+        }
+    }
+
+    @Test
     fun scannedContentWithControlCharacters_displaysEachRunAsASpace() { // #42
-        // Not known to be GS1 (a Data Matrix's mark isn't stored, #45), or marked GS1 but not a valid element string.
+        // Not GS1 (a Data Matrix not marked GS1), or marked GS1 but not a valid element string.
         listOf(
             Triple("AB\u001D\u001ECD\u001D", BarcodeFormat.DATA_MATRIX, "AB CD"),
             Triple("14AB\u001D21XY", BarcodeFormat.GS1_128, "14AB 21XY"),
