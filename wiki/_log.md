@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-21 · review fix: the `]C1`/`]C0` sentence names GS1-128 again and comes before the separator text, which made it read as if about the DataBar fallback · integrations/zxing-core · review of #42
 - 2026-10-21 · display number of a GS1 scan no rule matches is its HRI `(01)…(10)…`; other scanned control characters show as a space; new decision page · decisions/2026-10-21-gs1-scans-shown-as-hri, decisions/_index, features/card-detail, integrations/zxing-cpp, glossary, index · #42
 - 2026-10-21 · GS1-128: a scanned GS1 separator (U+001D) is drawn as FNC1, not a literal GS; ZXing reads it back as GS only with ASSUME_GS1 · integrations/zxing-core · #42
 - 2026-10-20 · review fixes: `634009` is one-card-unconfirmed too, and a different start gives a wrong display number, not just no match; dropped digits named in the catalogue checklist · features/store-catalogue, workflows/add-a-catalogue-store · review of #43

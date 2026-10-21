@@ -37,6 +37,9 @@ class Gs1Test {
             "", // nothing
             "14123456", // AI prefix 14 isn't assigned
             "AB1234", // an AI is digits
+            "41A1234567890128", // also after its first two
+            "310X000125",
+            "0109501\u001D01020917", // a field of predefined length holds no separator
             "01123", // AI 01 holds 14 digits
             "10\u001D21XYZ", // empty field
             "10AB\u001D", // nothing after the separator
