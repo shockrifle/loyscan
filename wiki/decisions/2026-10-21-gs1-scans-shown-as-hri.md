@@ -30,7 +30,8 @@ the field boundaries visible (the user's choice over a plain space).
 - An AI's length follows from its first two digits. A field ends after its predefined length (GS1's table of
   predefined-length AIs, e.g. `01`: 14 digits) or else at the next GS or the end of the data. The prefix table is
   taken from ZXing core 3.5.3's `FieldParser`. An unassigned prefix makes the whole content fall back to option 1;
-  new GS1 AIs with a new prefix need a line in `AI_LENGTH`.
+  new GS1 AIs with a new prefix need a line in `AI_LENGTH`. Since #45 the same check decides whether a GS1 card that
+  falls back keeps its FNC1 ([[zxing-core]] → Contract), so a missing prefix also draws such a card without it.
 - A scanned DataBar card without a matching rule now reads `(01)09012345678901`, not `0109012345678901`.
 - GS1 Data Matrix and QR scans are shown this way too since #45, which stores their mark as a format
   ([[2026-10-21-gs1-mark-as-barcode-format]]). A GS1 Aztec or PDF417 falls back to option 1, since its mark isn't

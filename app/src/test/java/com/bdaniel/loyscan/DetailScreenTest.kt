@@ -106,7 +106,8 @@ class DetailScreenTest {
 
     @Test
     fun cardDrawnInAFallbackFormat_namesTheFormatDrawn() { // #35: ZXing can't write DataBar; GS1 data stays GS1 (#45)
-        setScreen(card = aLoyaltyCard(store = aStore(defaultBarcodeFormat = BarcodeFormat.DATABAR), number = "0109012345678901"))
+        val dataBarStore = aStore(defaultBarcodeFormat = BarcodeFormat.DATABAR)
+        setScreen(card = aLoyaltyCard(store = dataBarStore, number = "0109012345678901"))
 
         composeRule.onNodeWithText("Shown as GS1-128").assertIsDisplayed()
     }
@@ -193,7 +194,8 @@ class DetailScreenTest {
 
     @Test
     fun scanMode_forAFallbackCard_showsNoFormatNote() { // #37: the note stays on the detail card
-        setScreen(card = aLoyaltyCard(store = aStore(defaultBarcodeFormat = BarcodeFormat.DATABAR), number = "0109012345678901"))
+        val dataBarStore = aStore(defaultBarcodeFormat = BarcodeFormat.DATABAR)
+        setScreen(card = aLoyaltyCard(store = dataBarStore, number = "0109012345678901"))
         composeRule.onNodeWithContentDescription("Barcode").performTouchInput { doubleClick() }
 
         val inScanMode = hasAnyAncestor(hasTestTag("scanMode"))

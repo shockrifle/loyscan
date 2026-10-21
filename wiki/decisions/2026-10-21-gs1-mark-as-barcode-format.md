@@ -36,5 +36,5 @@ another field. A flag would also mean nothing on most formats (EAN-13, ITF, …)
   did against a `CODE_128` rule ([[gs1-128-drawn-as-code-128]] → Risk). The add-card flow (#6) must not read that as
   another store. Found in review.
 - Tests: `BarcodeEncoderTest.gs1DataMatrixAndQr_areDrawnInGs1Mode`, `dataBar_isDrawnAsGs1_128`,
-  `gs1ContentCode128CannotHold_fallsBackToGs1Qr`, `ZxingCppFormatsTest.scannedBarcode_dataMatrixAndQrMarkedGs1_areTheirGs1Formats`,
+  `gs1ContentCode128CannotHold_fallsBackToGs1Qr`, `nonGs1ContentOnAGs1Card_fallsBackWithoutTheGs1Mark`, `ZxingCppFormatsTest.scannedBarcode_dataMatrixAndQrMarkedGs1_areTheirGs1Formats`,
   `LoyaltyCardTest.scannedGs1DataMatrixOrQrCard_isGs1Data_too`.
