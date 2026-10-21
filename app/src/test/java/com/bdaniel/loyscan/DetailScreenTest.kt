@@ -106,7 +106,7 @@ class DetailScreenTest {
 
     @Test
     fun cardDrawnInAFallbackFormat_namesTheFormatDrawn() { // #35: ZXing can't write DataBar; GS1 data stays GS1 (#45)
-        setScreen(card = aLoyaltyCard(store = aStore(defaultBarcodeFormat = BarcodeFormat.DATABAR), number = "0042"))
+        setScreen(card = aLoyaltyCard(store = aStore(defaultBarcodeFormat = BarcodeFormat.DATABAR), number = "0109012345678901"))
 
         composeRule.onNodeWithText("Shown as GS1-128").assertIsDisplayed()
     }
@@ -193,13 +193,13 @@ class DetailScreenTest {
 
     @Test
     fun scanMode_forAFallbackCard_showsNoFormatNote() { // #37: the note stays on the detail card
-        setScreen(card = aLoyaltyCard(store = aStore(defaultBarcodeFormat = BarcodeFormat.DATABAR), number = "0042"))
+        setScreen(card = aLoyaltyCard(store = aStore(defaultBarcodeFormat = BarcodeFormat.DATABAR), number = "0109012345678901"))
         composeRule.onNodeWithContentDescription("Barcode").performTouchInput { doubleClick() }
 
         val inScanMode = hasAnyAncestor(hasTestTag("scanMode"))
         // The card does fall back: the detail card under the overlay has the note.
         composeRule.onNode(hasText("Shown as GS1-128") and !inScanMode, useUnmergedTree = true).assertExists()
-        composeRule.onNode(hasText("0042") and inScanMode, useUnmergedTree = true).assertIsDisplayed()
+        composeRule.onNode(hasText("0109012345678901") and inScanMode, useUnmergedTree = true).assertIsDisplayed()
         composeRule.onNode(hasText("Shown as", substring = true) and inScanMode, useUnmergedTree = true)
             .assertDoesNotExist()
     }

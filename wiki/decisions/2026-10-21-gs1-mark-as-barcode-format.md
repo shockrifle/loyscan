@@ -18,7 +18,8 @@ be drawn without the FNC1, so a GS1-parsing till reads `]d1` / `]Q1` instead of 
 Option 2 (product choice, 2026-10-21). The scanner maps a Data Matrix or QR marked GS1 to its `GS1_` format
 (`scannedBarcode` in `app/src/main/java/com/bdaniel/loyscan/ui/scanner/ZxingCppFormats.kt`), and `BarcodeEncoder` draws
 it in GS1 mode ([[zxing-core]] → Quirks). In the same change, GS1 data that has to fall back (every DataBar, which
-ZXing can't write) is drawn as GS1-128, then GS1 QR, instead of plain Code 128, then QR. GS1 QR as the second step was
+ZXing can't write) is drawn as GS1-128, then GS1 QR, instead of plain Code 128, then QR, if the content is a GS1
+element string; otherwise without the mark (found in review). GS1 QR as the second step was
 also the user's choice.
 
 ## Why
@@ -30,6 +31,10 @@ another field. A flag would also mean nothing on most formats (EAN-13, ITF, …)
 - A GS1 Aztec or PDF417 scan keeps its plain format: ZXing core 3.5.3 can't write either in GS1 mode, so a saved one
   loses the mark. `ScannedBarcode.gs1` still says what was scanned.
 - A format picker (custom stores, #6) lists formats from this enum. Whether it offers the `GS1_` ones is not decided.
+- `CardNumberEngine.match` compares formats exactly, so a GS1 QR or Data Matrix scan now reports
+  `formatMatches = false` against a `QR_CODE` / `DATA_MATRIX` rule (e.g. `hu-ikea-family`), as a GS1-128 scan already
+  did against a `CODE_128` rule ([[gs1-128-drawn-as-code-128]] → Risk). The add-card flow (#6) must not read that as
+  another store. Found in review.
 - Tests: `BarcodeEncoderTest.gs1DataMatrixAndQr_areDrawnInGs1Mode`, `dataBar_isDrawnAsGs1_128`,
   `gs1ContentCode128CannotHold_fallsBackToGs1Qr`, `ZxingCppFormatsTest.scannedBarcode_dataMatrixAndQrMarkedGs1_areTheirGs1Formats`,
   `LoyaltyCardTest.scannedGs1DataMatrixOrQrCard_isGs1Data_too`.

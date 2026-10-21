@@ -9,7 +9,9 @@ Java, no Android or network code. Only its writers are used, in `BarcodeEncoder`
 
 - `BarcodeEncoder.encode(content, format)` returns an `EncodedBarcode` (module grid + the format actually used) or
   `null` for empty content. It tries the card's format, then `CODE_128`, then `QR_CODE` (#4); for a GS1 format
-  (`BarcodeFormat.isGs1`) `GS1_128`, then `GS1_QR_CODE`, so GS1 data keeps its mark (#45). The returned `format`
+  (`BarcodeFormat.isGs1`) whose content is a GS1 element string (`Gs1.humanReadable`) `GS1_128`, then `GS1_QR_CODE`,
+  so GS1 data keeps its mark (#45). Other content, e.g. a number typed for a DataBar store, falls back without an
+  FNC1, which would make a GS1 till reject it. Test: `BarcodeEncoderTest.nonGs1ContentOnAGs1Card_fallsBackWithoutTheGs1Mark`. The returned `format`
   says which one worked.
 - Encoding is at size 0×0: ZXing then returns the smallest matrix, one pixel per module, and a single row for 1D
   formats. The screen scales it (`barcodeRects`): whole-pixel modules when there's room, so all bars of one width
@@ -41,7 +43,8 @@ Java, no Android or network code. Only its writers are used, in `BarcodeEncoder`
   GS1-128, so the same applies to it (#45).
 - **GS1 Data Matrix and GS1 QR come from hints** (#45). `EncodeHintType.GS1_FORMAT` makes the 2D writers start with
   FNC1, but `DataMatrixWriter` reads it only together with `DATA_MATRIX_COMPACT` (its minimal encoder, which also
-  writes each GS as FNC1); its default encoder ignores it (3.5.3 source). In a QR code a GS in byte mode already is
+  writes each GS as FNC1, per its source; a read-back test can't check this, since ZXing's reader returns a literal GS
+  and an FNC1 alike); its default encoder ignores it (3.5.3 source). In a QR code a GS in byte mode already is
   GS1's FNC1. In alphanumeric mode, which ZXing picks when every character fits it, a single `%` means FNC1 and the
   `%` sign is `%%`; ZXing doesn't escape it, so `BarcodeEncoder` doubles `%` for such content (`withFnc1For`). ZXing's
   reader reports `]d2` / `]Q3` for them (`]d1` / `]Q1` plain). Its Data Matrix reader returns every FNC1 as GS, the

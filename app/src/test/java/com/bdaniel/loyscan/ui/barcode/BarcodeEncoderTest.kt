@@ -1,6 +1,7 @@
 package com.bdaniel.loyscan.ui.barcode
 
 import com.bdaniel.loyscan.domain.BarcodeFormat
+import com.bdaniel.loyscan.domain.Gs1
 import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
 import com.google.zxing.BinaryBitmap
@@ -111,6 +112,8 @@ class BarcodeEncoderTest {
 
     @Test
     fun gs1DataMatrixAndQr_separatorReadsBackAsASeparator() { // #45: the FNC1 between two fields, held as GS (#42)
+        // Reading back can't tell an FNC1 from a literal GS: ZXing's Data Matrix reader returns both as GS. That the
+        // compact encoder writes FNC1 for it is from its source (MinimalEncoder's fnc1 parameter), not this test.
         val content = "0109501101020917" + "1012AB" + "21XYZ"
         listOf(BarcodeFormat.GS1_DATA_MATRIX, BarcodeFormat.GS1_QR_CODE).forEach { format ->
 
@@ -127,6 +130,15 @@ class BarcodeEncoderTest {
         val barcode = BarcodeEncoder.encode("91AB%12", BarcodeFormat.GS1_QR_CODE)!!
 
         assertThat(decode(barcode)).isEqualTo("91AB%12")
+    }
+
+    @Test
+    fun nonGs1ContentOnAGs1Card_fallsBackWithoutTheGs1Mark() { // #45 review: an FNC1 would make a GS1 till reject it
+        // Not a GS1 element string (AI 00 needs 18 digits), e.g. a number typed for a store whose format is DataBar.
+        val barcode = BarcodeEncoder.encode("0042", BarcodeFormat.DATABAR)!!
+
+        assertThat(barcode.format).isEqualTo(BarcodeFormat.CODE_128)
+        assertThat(read(barcode).resultMetadata[ResultMetadataType.SYMBOLOGY_IDENTIFIER]).isEqualTo("]C0")
     }
 
     @Test
@@ -179,13 +191,13 @@ class BarcodeEncoderTest {
     fun code128ContentWithAnEscapeCharacter_fallsBackToQr() { // #46
         // ZXing's Code 128 writer writes FNC1-FNC4 for these four characters instead of the letter, and raises no error.
         listOf('ñ', 'ò', 'ó', 'ô').forEach { letter ->
-            val content = "Loy${letter}42"
             mapOf(
-                BarcodeFormat.CODE_128 to BarcodeFormat.QR_CODE,
+                (BarcodeFormat.CODE_128 to "Loy${letter}42") to BarcodeFormat.QR_CODE,
                 // GS1 data falls back to GS1 QR (#45).
-                BarcodeFormat.GS1_128 to BarcodeFormat.GS1_QR_CODE,
-                BarcodeFormat.DATABAR to BarcodeFormat.GS1_QR_CODE,
-            ).forEach { (format, drawnAs) ->
+                (BarcodeFormat.GS1_128 to "91Loy${letter}42") to BarcodeFormat.GS1_QR_CODE,
+                (BarcodeFormat.DATABAR to "91Loy${letter}42") to BarcodeFormat.GS1_QR_CODE,
+            ).forEach { (formatAndContent, drawnAs) ->
+                val (format, content) = formatAndContent
 
                 val barcode = BarcodeEncoder.encode(content, format)!!
 
@@ -281,7 +293,7 @@ class BarcodeEncoderTest {
      * data is GS1); a GS1 reader drops that one, so it is dropped here.
      */
     private fun decode(barcode: EncodedBarcode): String = read(barcode).text.let {
-        if (barcode.format == BarcodeFormat.GS1_DATA_MATRIX) it.removePrefix("") else it
+        if (barcode.format == BarcodeFormat.GS1_DATA_MATRIX) it.removePrefix(Gs1.SEPARATOR.toString()) else it
     }
 
     private fun read(barcode: EncodedBarcode, vararg hints: DecodeHintType): Result {

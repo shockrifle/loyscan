@@ -53,12 +53,14 @@ object BarcodeEncoder {
 
     /**
      * Encodes [content] in [format]; if that format can't hold it (no ZXing writer, as for DataBar, or content the
-     * format rejects), in CODE_128, then in QR. GS1 data falls back to GS1-128, then GS1 QR, so it keeps its GS1 mark
-     * (#45). `null` for empty content, or content not even QR can hold.
+     * format rejects), in CODE_128, then in QR. GS1 data on a GS1 card falls back to GS1-128, then GS1 QR, so it keeps
+     * its GS1 mark (#45). Other content, e.g. a number typed for a DataBar store, gets no FNC1: a GS1 till would
+     * reject it.
+     * `null` for empty content, or content not even QR can hold.
      */
     fun encode(content: String, format: BarcodeFormat): EncodedBarcode? {
         if (content.isEmpty()) return null
-        val fallbacks = if (format.isGs1) GS1_FALLBACKS else FALLBACKS
+        val fallbacks = if (format.isGs1 && Gs1.humanReadable(content) != null) GS1_FALLBACKS else FALLBACKS
         return (listOf(format) + fallbacks).distinct().firstNotNullOfOrNull { tryEncode(content, it) }
     }
 
@@ -96,7 +98,8 @@ object BarcodeEncoder {
      * byte mode is already how GS1 writes FNC1.
      */
     private fun gs1HintsFor(format: BarcodeFormat): Map<EncodeHintType, Any> = when (format) {
-        BarcodeFormat.GS1_DATA_MATRIX -> mapOf(EncodeHintType.GS1_FORMAT to true, EncodeHintType.DATA_MATRIX_COMPACT to true)
+        BarcodeFormat.GS1_DATA_MATRIX ->
+            mapOf(EncodeHintType.GS1_FORMAT to true, EncodeHintType.DATA_MATRIX_COMPACT to true)
         BarcodeFormat.GS1_QR_CODE -> mapOf(EncodeHintType.GS1_FORMAT to true)
         else -> emptyMap()
     }
