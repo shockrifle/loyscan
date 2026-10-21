@@ -26,6 +26,7 @@ class ScannerViewModel(private val hintDelay: Duration) : ViewModel() {
         val torchOn: Boolean = false,
         val showHint: Boolean = false,
         val cameraFailed: Boolean = false,
+        val cameraUnavailable: Boolean = false,
     )
 
     private val _state = MutableStateFlow(State())
@@ -44,6 +45,9 @@ class ScannerViewModel(private val hintDelay: Duration) : ViewModel() {
             }
         }
     }
+
+    /** A camera error after opening, or its end (#40); the camera stays open, so it can come back. */
+    fun onCameraAvailable(available: Boolean) = _state.update { it.copy(cameraUnavailable = !available) }
 
     fun onCameraFailed() = _state.update { it.copy(cameraFailed = true) }
 

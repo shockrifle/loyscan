@@ -16,6 +16,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.lifecycle.LifecycleOwner
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.emptyFlow
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -28,7 +31,11 @@ class CameraXScannerTest {
     @get:Rule
     val composeRule = createAndroidComposeRule<ComponentActivity>()
 
-    private class FakeCamera(override val hasTorch: Boolean) : OpenCamera {
+    /** [available] ends at once unless a test passes a flow of its own: the camera must stay open either way. */
+    private class FakeCamera(
+        override val hasTorch: Boolean,
+        override val available: Flow<Boolean> = emptyFlow(),
+    ) : OpenCamera {
         val torch = mutableListOf<Boolean>()
         var closed = false
 
@@ -60,7 +67,13 @@ class CameraXScannerTest {
     private val started = mutableListOf<Boolean>()
     private var failures = 0
     private val scanned = mutableListOf<ScannedBarcode>()
-    private val events = CameraEvents(onStarted = { started += it }, onFailed = { failures++ }, onScanned = { scanned += it })
+    private val availability = mutableListOf<Boolean>()
+    private val events = CameraEvents(
+        onStarted = { started += it },
+        onFailed = { failures++ },
+        onAvailable = { availability += it },
+        onScanned = { scanned += it },
+    )
 
     private var torchOn by mutableStateOf(false)
     private var shown by mutableStateOf(true)
@@ -76,6 +89,38 @@ class CameraXScannerTest {
         setContent(FakeOpener { FakeCamera(hasTorch = true) })
 
         composeRule.runOnIdle { assertThat(started).containsExactly(true) }
+    }
+
+    @Test
+    fun aCameraErrorAfterOpening_isReported_andSoIsItsRecovery() { // #40: e.g. another app takes the camera, then lets go
+        val available = MutableSharedFlow<Boolean>(extraBufferCapacity = 8)
+        val camera = FakeCamera(hasTorch = false, available)
+        val opener = FakeOpener { camera }
+        setContent(opener)
+
+        composeRule.runOnIdle { available.tryEmit(false) }
+        composeRule.runOnIdle { available.tryEmit(true) }
+
+        composeRule.runOnIdle {
+            assertThat(availability).containsExactly(false, true).inOrder()
+            assertThat(opener.opens).isEqualTo(1)
+            assertThat(camera.closed).isFalse()
+            assertThat(failures).isEqualTo(0)
+        }
+    }
+
+    @Test
+    fun theTorch_isSwitchedOnAgainWhenTheCameraIsBack() { // #40: CameraX reopens the camera with the torch off
+        val available = MutableSharedFlow<Boolean>(extraBufferCapacity = 8)
+        val camera = FakeCamera(hasTorch = true, available)
+        torchOn = true
+        setContent(FakeOpener { camera })
+        composeRule.runOnIdle { available.tryEmit(false) }
+        composeRule.runOnIdle { camera.torch.clear() }
+
+        composeRule.runOnIdle { available.tryEmit(true) }
+
+        composeRule.runOnIdle { assertThat(camera.torch).containsExactly(true) }
     }
 
     @Test

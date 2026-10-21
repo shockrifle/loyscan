@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-21 · scanner: a CameraX camera-state error after binding shows "camera isn't available" over the kept preview; it returns when the camera is open again · features/barcode-scanner · #40
 - 2026-10-21 · re-review fix: an AI prefix missing from `AI_LENGTH` now also costs a falling-back GS1 card its FNC1 · decisions/2026-10-21-gs1-scans-shown-as-hri, decisions/2026-10-21-gs1-mark-as-barcode-format · review of #45
 - 2026-10-21 · review fixes: non-GS1 content on a GS1 card falls back without the FNC1; `formatMatches` compares exactly, so GS1 QR/Data Matrix scans mismatch plain rules (recorded for #6); the Data Matrix FNC1-for-GS claim is from ZXing's source, not a test · decisions/2026-10-21-gs1-mark-as-barcode-format, tech-debt/gs1-128-drawn-as-code-128, integrations/zxing-core · review of #45
 - 2026-10-21 · GS1 Data Matrix / QR scans kept as `GS1_DATA_MATRIX` / `GS1_QR_CODE` and drawn in GS1 mode; GS1 data falls back to GS1-128, then GS1 QR (DataBar now drawn as GS1-128); new decision page · decisions/2026-10-21-gs1-mark-as-barcode-format, decisions/_index, decisions/2026-10-21-gs1-scans-shown-as-hri, decisions/2026-10-09-card-number-rule-engine, integrations/zxing-core, integrations/zxing-cpp, integrations/_index, tech-debt/gs1-128-drawn-as-code-128, features/card-detail, features/barcode-scanner, glossary · #45

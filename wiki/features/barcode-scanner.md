@@ -25,9 +25,17 @@ directly and a scan is only shown in a dialog: [[scanner-result-dialog-until-add
   flag is saved).
 - **Camera.** The back camera, bound to the destination's lifecycle: it stops on pause and when the screen is left.
   If binding fails (no back camera, CameraX can't initialise) or zxing-cpp's native library is missing for the ABI,
-  the screen says the camera couldn't be opened and keeps "Enter manually". Errors CameraX reports only after
-  binding, through `cameraInfo.cameraState` (camera in use by another app, disconnected), are not watched: the
-  preview stays black, and the hint and "Enter manually" are the way out.
+  the screen says the camera couldn't be opened and keeps "Enter manually".
+- **Camera errors after binding** (#40). CameraX reports them through `cameraInfo.cameraState` (camera in use by
+  another app, disconnected, too many cameras open, disabled by policy). Any state with an error makes the screen say
+  the camera isn't available, over the preview, with "Enter manually"; the torch and the hint are hidden. The camera
+  stays bound, so when CameraX opens it again (a recoverable error cleared, e.g. the other app let it go), the state
+  is `OPEN` and the preview is back without leaving the screen; the torch is set again, since the camera reopens with
+  it off. Other states without an error (closing on pause,
+  opening on resume) change nothing (`cameraAvailability` in `ui/scanner/CameraScanner.kt`). A critical error that
+  never clears leaves the message up. The LiveData is read through a small bridge, `observeAsFlow`, not
+  lifecycle-livedata's `asFlow`, which the app has only as a transitive dependency of CameraX. Not yet checked on a
+  device.
 - **Scan.** Each analysis frame (about 1280×720) is read on a background thread; the first barcode found is handed
   to `directions.onScanned` on the main thread. Later frames keep being read, but `ScannerViewModel.onScanned`
   drops them, so one scan navigates once.
@@ -44,7 +52,9 @@ directly and a scan is only shown in a dialog: [[scanner-result-dialog-until-add
   `FakeCameraPermission`. Covers each permission state, the first-scan-only rule, torch, hint, camera failure.
 - `ScannerViewModelTest`: hint timing with virtual time (`ScannerViewModel(hintDelay)`), torch, one scan.
 - `CameraXScannerTest`: the camera lifecycle with a fake `CameraOpener` (open, a frame's barcode reaching
-  `onScanned`, torch also after a pause, close on leave, failures) and the analysis settings (`scannerUseCases`).
+  `onScanned`, an error after opening and its recovery, torch also after a pause, close on leave, failures) and the
+  analysis settings (`scannerUseCases`).
+- `CameraAvailabilityTest`: which `CameraState`s mean unavailable / available again; `LiveDataFlowTest`: the bridge.
 - `ScanAnalyzerTest`: frames closed, barcodes delivered on the callback executor, unreadable frames skipped.
 - `CameraPermissionTest`: the real permission state, with the system dialog replaced by an `ActivityResultRegistry`
   that answers at once (or leaves the request open, for the rotation test) and Robolectric's permission and rationale shadows.
@@ -61,4 +71,3 @@ device check found DataBar never scanned: [[2026-10-19-zxing-cpp-3-0-databar]].
 
 - Saving a scan as a card, and "Enter manually" leading to a form: [#6](https://github.com/shockrifle/loyscan/issues/6).
 - Tap to focus and zoom. CameraX's continuous autofocus is used.
-- Reacting to camera errors after binding (see Camera above).

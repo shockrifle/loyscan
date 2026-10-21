@@ -87,4 +87,15 @@ class ScannerViewModelTest {
 
         assertThat(viewModel.state.value.cameraFailed).isTrue()
     }
+
+    @Test
+    fun cameraUnavailable_isShown_untilItIsAvailableAgain() = runTest { // #40
+        val viewModel = ScannerViewModel(hintDelay = 8.seconds)
+
+        viewModel.onCameraAvailable(false)
+        assertThat(viewModel.state.value.cameraUnavailable).isTrue()
+
+        viewModel.onCameraAvailable(true)
+        assertThat(viewModel.state.value.cameraUnavailable).isFalse()
+    }
 }

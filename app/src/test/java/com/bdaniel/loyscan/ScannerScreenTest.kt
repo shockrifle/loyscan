@@ -201,4 +201,31 @@ class ScannerScreenTest {
 
         composeRule.onNodeWithText("Card won't scan?", substring = true).assertDoesNotExist()
     }
+
+    @Test
+    fun cameraUnavailableAfterOpening_isExplained_withTheCameraKept() { // #40: so it can come back
+        setScreen(FakeCameraPermission(Status.GRANTED), hintDelay = Duration.ZERO)
+        composeRule.runOnIdle { events!!.onStarted(true) }
+
+        composeRule.runOnIdle { events!!.onAvailable(false) }
+
+        composeRule.onNodeWithText("The camera isn't available", substring = true).assertIsDisplayed()
+        composeRule.onNodeWithText("Enter manually").assertIsDisplayed()
+        composeRule.onNodeWithTag("camera").assertExists()
+        composeRule.onNodeWithText("Card won't scan?", substring = true).assertDoesNotExist()
+        composeRule.onNodeWithContentDescription("Turn on torch").assertDoesNotExist()
+    }
+
+    @Test
+    fun cameraAvailableAgain_showsThePreviewAgain() { // #40
+        setScreen(FakeCameraPermission(Status.GRANTED))
+        composeRule.runOnIdle { events!!.onStarted(true) }
+        composeRule.runOnIdle { events!!.onAvailable(false) }
+
+        composeRule.runOnIdle { events!!.onAvailable(true) }
+
+        composeRule.onNodeWithText("The camera isn't available", substring = true).assertDoesNotExist()
+        composeRule.onNodeWithTag("camera").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Turn on torch").assertIsDisplayed()
+    }
 }

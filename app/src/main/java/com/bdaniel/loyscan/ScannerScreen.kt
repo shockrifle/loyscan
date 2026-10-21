@@ -65,7 +65,7 @@ fun ScannerScreen(
                     }
                 },
                 actions = {
-                    if (permission.status == Status.GRANTED && state.torchAvailable) {
+                    if (permission.status == Status.GRANTED && state.torchAvailable && !state.cameraUnavailable) {
                         IconToggleButton(checked = state.torchOn, onCheckedChange = { viewModel.toggleTorch() }) {
                             Icon(
                                 Icons.Default.Flashlight,
@@ -88,10 +88,23 @@ fun ScannerScreen(
                             CameraEvents(
                                 onStarted = viewModel::onCameraStarted,
                                 onFailed = viewModel::onCameraFailed,
+                                onAvailable = viewModel::onCameraAvailable,
                                 onScanned = { if (viewModel.onScanned()) directions.onScanned(it) },
                             )
                         }
                         camera(state.torchOn, events, Modifier.fillMaxSize().background(Color.Black))
+                        // Over the camera, which stays open: CameraX opens it again when the error clears (#40).
+                        if (state.cameraUnavailable) {
+                            Box(
+                                Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Message(
+                                    "The camera isn't available. It may be in use by another app. Enter the number " +
+                                        "from the card instead.",
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -100,7 +113,8 @@ fun ScannerScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                if (state.showHint && permission.status == Status.GRANTED && !state.cameraFailed) {
+                val cameraRunning = permission.status == Status.GRANTED && !state.cameraFailed && !state.cameraUnavailable
+                if (state.showHint && cameraRunning) {
                     Card(Modifier.fillMaxWidth()) {
                         Text(
                             "Card won't scan? Hold it flat and steady, about 15 cm from the camera, in good light. " +

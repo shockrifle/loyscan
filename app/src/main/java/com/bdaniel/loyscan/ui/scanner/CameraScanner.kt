@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Size
 import androidx.camera.compose.CameraXViewfinder
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.CameraState
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
@@ -24,19 +25,31 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.Observer
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.bdaniel.loyscan.domain.ScannedBarcode
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.mapNotNull
 import timber.log.Timber
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 
-/** What the camera reports to the scanner screen. Called on the main thread. */
+/**
+ * What the camera reports to the scanner screen. Called on the main thread. [onAvailable] follows errors CameraX reports
+ * after opening (another app has the camera, it was disconnected): `false` while there is one, `true` once it is open
+ * again.
+ */
 class CameraEvents(
     val onStarted: (torchAvailable: Boolean) -> Unit,
     val onFailed: () -> Unit,
+    val onAvailable: (available: Boolean) -> Unit,
     val onScanned: (ScannedBarcode) -> Unit,
 )
 
@@ -53,6 +66,10 @@ val CameraXScanner: ScannerCamera = { torchOn, events, modifier ->
 /** A camera bound to a lifecycle. */
 interface OpenCamera {
     val hasTorch: Boolean
+
+    /** `false` when the camera reports an error, `true` when it is open again ([cameraAvailability]). */
+    val available: Flow<Boolean>
+
     fun enableTorch(on: Boolean)
 
     /** Unbinds the preview and analysis. */
@@ -70,6 +87,17 @@ fun interface CameraOpener {
         analyzer: ImageAnalysis.Analyzer,
         analyzerExecutor: Executor,
     ): OpenCamera
+}
+
+/**
+ * Whether a camera state CameraX reports after binding means the camera can be used: `false` with any error (some
+ * clear up on their own, e.g. when another app lets the camera go, and CameraX opens it again), `true` once it is
+ * open, `null` for the other states, which come and go on pause and resume.
+ */
+internal fun cameraAvailability(state: CameraState): Boolean? = when {
+    state.error != null -> false
+    state.type == CameraState.Type.OPEN -> true
+    else -> null
 }
 
 /** Reads a barcode from one frame; `null` when there is none. Called on the analysis thread. */
@@ -110,6 +138,7 @@ internal fun CameraXScannerContent(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val currentEvents by rememberUpdatedState(events)
+    val currentTorchOn by rememberUpdatedState(torchOn)
     var surfaceRequest by remember { mutableStateOf<SurfaceRequest?>(null) }
     var camera by remember { mutableStateOf<OpenCamera?>(null) }
 
@@ -121,6 +150,11 @@ internal fun CameraXScannerContent(
             opened = opener.open(lifecycleOwner, { surfaceRequest = it }, analyzer, analysisExecutor)
             camera = opened
             currentEvents.onStarted(opened.hasTorch)
+            opened.available.collect { available ->
+                // CameraX opens the camera again with the torch off, as after a pause.
+                if (available) opened.enableTorch(currentTorchOn)
+                currentEvents.onAvailable(available)
+            }
             awaitCancellation()
         } catch (e: CancellationException) {
             throw e
@@ -179,6 +213,8 @@ private class ProcessCameraOpener(private val context: Context) : CameraOpener {
         val camera = provider.bindToLifecycle(lifecycleOwner, CameraSelector.DEFAULT_BACK_CAMERA, preview, analysis)
         return object : OpenCamera {
             override val hasTorch = camera.cameraInfo.hasFlashUnit()
+            override val available: Flow<Boolean> =
+                camera.cameraInfo.cameraState.observeAsFlow().mapNotNull(::cameraAvailability).distinctUntilChanged()
             override fun enableTorch(on: Boolean) {
                 camera.cameraControl.enableTorch(on)
             }
@@ -188,4 +224,14 @@ private class ProcessCameraOpener(private val context: Context) : CameraOpener {
             }
         }
     }
+}
+
+/**
+ * A [LiveData]'s values as a flow, observed while collected. Collect it on the main thread, as LiveData asks. Own code,
+ * not lifecycle-livedata's `asFlow`, which the app has only as a transitive dependency of CameraX.
+ */
+internal fun <T : Any> LiveData<T>.observeAsFlow(): Flow<T> = callbackFlow {
+    val observer = Observer<T> { trySend(it) }
+    observeForever(observer)
+    awaitClose { removeObserver(observer) }
 }
