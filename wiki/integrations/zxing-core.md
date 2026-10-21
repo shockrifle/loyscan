@@ -31,6 +31,11 @@ Java, no Android or network code. Only its writers are used, in `BarcodeEncoder`
   and `FORCE_CODE_SET` (checked in its bytecode, 2026-10-20), and the GS1 hint is read only by 2D writers. Instead,
   the Code 128 writer writes FNC1–FNC4 for the characters U+00F1–U+00F4 (`ñ` `ò` `ó` `ô`), so `BarcodeEncoder` puts
   U+00F1 in front of `GS1_128` content (`withFnc1For`). Test: `BarcodeEncoderTest.gs1_128_isCode128WithALeadingFnc1`.
+  The FNC1 that ends a variable-length GS1 field comes from a scan as GS (U+001D, [[zxing-cpp]] → Contract), and is
+  drawn as FNC1 too, as the GS1 spec asks. As itself, GS would be a literal character in code set A, which also needs a
+  code set switch (#42). Test: `BarcodeEncoderTest.gs1_128_separatorIsDrawnAsFnc1`. ZXing's own reader returns such an
+  FNC1 as GS only with `DecodeHintType.ASSUME_GS1`, and then puts `]C1` in front of the text. A DataBar card's Code 128
+  fallback is plain Code 128, so a GS in it stays a literal GS (#45).
   ZXing's reader reports symbology identifier `]C1` for it and `]C0` for plain Code 128. *Correction 2026-10-20:* this
   page used to say `GS1_FORMAT` adds the FNC1.
 - **Those four characters are never letters in Code 128.** Because of the same escape mapping, Code 128 content that

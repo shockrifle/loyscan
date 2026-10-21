@@ -84,12 +84,14 @@ object BarcodeEncoder {
 
     /**
      * GS1-128 is Code 128 with a leading FNC1. ZXing's Code 128 writer ignores `EncodeHintType.GS1_FORMAT` (only its
-     * 2D writers read it); it writes FNC1 for the escape character U+00F1 instead.
+     * 2D writers read it); it writes FNC1 for the escape character U+00F1 instead. A scan holds the FNC1 between two
+     * GS1 fields as GS (U+001D), as scanners send it (#42); it is drawn as FNC1 too, not as a literal GS.
      */
     private fun String.withFnc1For(format: BarcodeFormat): String =
-        if (format == BarcodeFormat.GS1_128) "$CODE_128_FNC1$this" else this
+        if (format == BarcodeFormat.GS1_128) CODE_128_FNC1 + replace(GS1_SEPARATOR, CODE_128_FNC1) else this
 
     private const val CODE_128_FNC1 = 'ñ'
+    private const val GS1_SEPARATOR = '\u001D'
 
     /**
      * ZXing's Code 128 writer writes FNC1–FNC4 for U+00F1–U+00F4 (`ñ` `ò` `ó` `ô`) without an error, so content holding

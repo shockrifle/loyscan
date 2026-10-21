@@ -69,6 +69,25 @@ class BarcodeEncoderTest {
     }
 
     @Test
+    fun gs1_128_separatorIsDrawnAsFnc1() { // #42: zxing-cpp returns the FNC1 between two GS1 fields as GS (U+001D)
+        val content = "0109501101020917" + "1012AB\u001D" + "21XYZ"
+        // ZXing's Code 128 writer writes FNC1 for U+00F1; a GS as itself would be a literal character in code set A.
+        val fnc1 = EncodedBarcode(
+            BarcodeFormat.GS1_128,
+            MultiFormatWriter().encode(
+                "ñ0109501101020917" + "1012ABñ" + "21XYZ", ZxingFormat.CODE_128, 0, 0, mapOf(EncodeHintType.MARGIN to 0),
+            ),
+        )
+
+        val barcode = BarcodeEncoder.encode(content, BarcodeFormat.GS1_128)!!
+
+        assertThat(barcode.bars()).isEqualTo(fnc1.bars())
+        // ZXing's reader returns a later FNC1 as GS only when told the data is GS1 (zxing-cpp always does), and then
+        // puts the symbology identifier in front: "]C1" is Code 128 with FNC1 in the first position.
+        assertThat(read(barcode, DecodeHintType.ASSUME_GS1).text).isEqualTo("]C1$content")
+    }
+
+    @Test
     fun contentTheFormatCannotHold_fallsBackToCode128() {
         // Not 12/13 digits: a typed number saved anyway against an EAN-13 rule.
         val barcode = BarcodeEncoder.encode("12345", BarcodeFormat.EAN_13)!!
@@ -171,6 +190,9 @@ class BarcodeEncoderTest {
         assertThat(qr.height).isEqualTo(qr.width)
     }
 
+    /** A 1D barcode's row as text, `1` for a dark module: short enough to read in a failure message. */
+    private fun EncodedBarcode.bars() = (0 until width).joinToString("") { if (this[it, 0]) "1" else "0" }
+
     private fun BitMatrix.modules() = (0 until height).map { y -> (0 until width).map { x -> this[x, y] } }
 
     /** The modules of the symbol [like] is, without the quiet zone [EncodedBarcode] adds around it. */
@@ -185,7 +207,7 @@ class BarcodeEncoderTest {
      */
     private fun decode(barcode: EncodedBarcode): String = read(barcode).text
 
-    private fun read(barcode: EncodedBarcode): Result {
+    private fun read(barcode: EncodedBarcode, vararg hints: DecodeHintType): Result {
         val scale = 4
         val width = barcode.width * scale
         val rows = if (barcode.isLinear) 40 else barcode.height * scale
@@ -195,7 +217,7 @@ class BarcodeEncoderTest {
         }
         val bitmap = BinaryBitmap(HybridBinarizer(RGBLuminanceSource(width, rows, pixels)))
         return try {
-            MultiFormatReader().decode(bitmap, mapOf(DecodeHintType.TRY_HARDER to true))
+            MultiFormatReader().decode(bitmap, (hints.toList() + DecodeHintType.TRY_HARDER).associateWith { true })
         } catch (e: NotFoundException) {
             throw AssertionError("${barcode.format} didn't read back", e)
         }
