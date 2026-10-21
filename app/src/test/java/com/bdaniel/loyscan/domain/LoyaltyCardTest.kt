@@ -70,6 +70,37 @@ class LoyaltyCardTest {
     }
 
     @Test
+    fun scannedGs1Card_displaysTheContentAsPrintedUnderGs1Barcodes() { // #42: no GS (U+001D) in the display number
+        val content = "0109501101020917" + "1012AB\u001D" + "21XYZ"
+        listOf(aStore(cardNumberRule = null), ruledStore).forEach { store ->
+            val card = aLoyaltyCard(store = store, number = content, scannedFormat = BarcodeFormat.GS1_128)
+
+            assertThat(card.displayNumber).isEqualTo("(01)09501101020917(10)12AB(21)XYZ")
+            assertThat(card.barcodeContent).isEqualTo(content)
+        }
+    }
+
+    @Test
+    fun scannedDataBarCard_isGs1Data_too() {
+        val card = aLoyaltyCard(store = aStore(cardNumberRule = null), number = "0109012345678901", scannedFormat = BarcodeFormat.DATABAR)
+
+        assertThat(card.displayNumber).isEqualTo("(01)09012345678901")
+    }
+
+    @Test
+    fun scannedContentWithControlCharacters_displaysEachRunAsASpace() { // #42
+        // Not known to be GS1 (a Data Matrix's mark isn't stored, #45), or marked GS1 but not a valid element string.
+        listOf(
+            Triple("AB\u001D\u001ECD\u001D", BarcodeFormat.DATA_MATRIX, "AB CD"),
+            Triple("14AB\u001D21XY", BarcodeFormat.GS1_128, "14AB 21XY"),
+        ).forEach { (content, format, shown) ->
+            val card = aLoyaltyCard(store = aStore(cardNumberRule = null), number = content, scannedFormat = format)
+
+            assertThat(card.displayNumber).isEqualTo(shown)
+        }
+    }
+
+    @Test
     fun barcodeFormat_isTheScannedFormat_whenTheCardWasScanned() {
         val card = aLoyaltyCard(store = ruledStore, scannedFormat = BarcodeFormat.QR_CODE)
 

@@ -22,7 +22,9 @@ UUID string.
 - Header text color: white if the brand color's luminance is < 0.5, else black.
 - The number shown is `LoyaltyCard.displayNumber`: the number formatted by the store's card-number rule (for a
   scanned card, the core the rule recovers from the scan), or the raw number when there is no rule or no match
-  ([[2026-10-12-data-model-v2]]).
+  ([[2026-10-12-data-model-v2]]). A GS1 scan (`GS1_128`, DataBar) with no matching rule is shown as printed under
+  GS1 barcodes, `(01)09501101020917(10)12AB`; any other scanned content shows each run of control characters as a
+  space ([[2026-10-21-gs1-scans-shown-as-hri]], #42).
 - **Opening a card counts a use:** `DetailViewModel`'s `init` calls `LoyaltyCardRepository.recordUse(cardId)`, which
   adds 1 to `useCount` and sets `lastUsedAt` to now in one `UPDATE` (`LoyaltyCardDao.recordUse`). Once per
   ViewModel, so a rotation doesn't count again (a restore after process death does). `updatedAt` is left alone: a

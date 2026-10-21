@@ -28,4 +28,8 @@ enum class BarcodeFormat(
     QR_CODE("QR code"),
     UPC_A("UPC-A"),
     UPC_E("UPC-E"),
+    ;
+
+    /** Always holds GS1 data. Other formats can too (Data Matrix, QR), but [LoyaltyCard] doesn't keep that mark (#45). */
+    val isGs1: Boolean get() = this == GS1_128 || this == DATABAR || this == DATABAR_EXPANDED || this == DATABAR_LIMITED
 }

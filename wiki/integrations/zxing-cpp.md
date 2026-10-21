@@ -19,7 +19,9 @@ Code: `app/src/main/java/com/bdaniel/loyscan/ui/scanner/ZxingCppFrameReader.kt` 
   `(01)09012345678901`, which would change the card's number. `PLAIN` gives the barcode's own characters. The GS1
   FNC1 at the start is not part of the text; later FNC1 separators come through as the GS character (U+001D)
   (zxing-cpp behaviour as documented upstream). On a device, DataBar and DataBar Stacked read as `01` + digits, no
-  brackets; the separator itself needs a DataBar Expanded and is not yet checked (#42). Test:
+  brackets; the separator itself needs a DataBar Expanded and is not yet checked on a device. The GS stays in the
+  stored scan; it is drawn as FNC1 ([[zxing-core]] → Quirks) and shown as a GS1 field boundary
+  ([[2026-10-21-gs1-scans-shown-as-hri]], #42). Test:
   `ZxingCppFormatsTest.theReader_looksForTheAppsFormatsAndReturnsPlainText`.
 - **Formats.** In 3.1 a format value's low byte is the symbology and its high byte the variant; high byte `' '`
   (0x20) is the family, and asking for a family asks for every variant of it (`members()`). Results come back as

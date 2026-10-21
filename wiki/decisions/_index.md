@@ -18,6 +18,7 @@ inferred.
 - [[2026-10-12-data-model-v2]] — stores and cards with string ids; barcode content and display number derived; lists and rules as JSON
 - [[2026-10-13-curated-store-catalogue]] — own curated store list (no logos, slug ids), synced into Room on every open; demo cards debug-only
 - [[2026-10-16-zxing-cpp-for-scanning]] — zxing-cpp 3.1.1 + CameraX for scanning: reads all DataBar, no Play Services; not ML Kit
+- [[2026-10-21-gs1-scans-shown-as-hri]] — a GS1 scan no rule matches is shown as `(01)…(10)…`; other control characters as a space
 
 ## Superseded
 

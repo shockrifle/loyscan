@@ -70,6 +70,10 @@ separators removed, letter case applied). Rules turn it into barcode content. Se
 Identifiers such as `90` or `97`). `BarcodeFormat.GS1_128`: scanned as a Code 128 marked GS1 ([[zxing-cpp]]),
 drawn with the FNC1 ([[zxing-core]]). See [[gs1-128-drawn-as-code-128]].
 
+**GS1 HRI** — Human-readable interpretation: GS1 data as printed under its barcode, each Application Identifier in
+brackets, `(01)09501101020917(10)12AB`. `Gs1.humanReadable` (`domain/Gs1.kt`) builds it for the display number of a
+GS1 scan; the separator GS (U+001D) between fields isn't shown. See [[2026-10-21-gs1-scans-shown-as-hri]].
+
 **hiltImageLoader()** — Composable in `ui/ImageLoader.kt` that returns the app-wide Coil `ImageLoader` from Hilt
 via `ImageLoaderEntryPoint`. See [[2025-12-12-singleton-image-loader]].
 

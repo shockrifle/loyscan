@@ -30,24 +30,32 @@ data class LoyaltyCard(
 
     /**
      * The number formatted for humans by the store's rule. For a scan, the core number the rule recovers from it;
-     * the scanned content itself when the rule doesn't match.
+     * without a rule that matches, the scanned content as text ([scannedText]).
      */
     val displayNumber: String
         get() {
             val rule = store.cardNumberRule
-            val core = if (scannedFormat != null && rule != null) {
-                CardNumberEngine.match(number, scannedFormat, rule)?.core ?: return number
-            } else {
-                number
-            }
-            return CardNumberEngine.displayNumber(core, rule)
+            if (scannedFormat == null) return CardNumberEngine.displayNumber(number, rule)
+            val match = rule?.let { CardNumberEngine.match(number, scannedFormat, it) }
+                ?: return scannedText(scannedFormat)
+            return CardNumberEngine.displayNumber(match.core, rule)
         }
+
+    /**
+     * GS1 data as printed under its barcode, `(01)…(10)…` (#42). Otherwise, or if it doesn't split into GS1 fields,
+     * the content with each run of control characters (e.g. the GS that separates GS1 fields) shown as one space.
+     */
+    private fun scannedText(format: BarcodeFormat): String =
+        (if (format.isGs1) Gs1.humanReadable(number) else null)
+            ?: number.replace(CONTROL_CHARACTERS, " ").trim()
 
     /** The symbology to draw: as scanned, else the rule's, else the store's default. */
     val barcodeFormat: BarcodeFormat
         get() = scannedFormat ?: store.cardNumberRule?.format ?: store.defaultBarcodeFormat
 
     companion object {
+        private val CONTROL_CHARACTERS = Regex("\\p{Cc}+")
+
         val EMPTY = LoyaltyCard(
             id = "",
             store = Store.EMPTY,
