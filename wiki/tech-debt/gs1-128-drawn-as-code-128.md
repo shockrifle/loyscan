@@ -20,10 +20,10 @@ only added once scans needed it (#33).
 A till that parses GS1 may reject or misread a Coop barcode without FNC1. It is unconfirmed: plain Code 128 may scan
 fine at Coop tills.
 
-A Coop card whose barcode really is GS1-128 is scanned as `GS1_128`. `CardNumberEngine.match` still recovers its core
-from the content, but reports `formatMatches = false` against `hu-coop`'s `CODE_128` rule; the add-card flow (#6)
-must not treat that as a different store. The same holds for a GS1 QR or Data Matrix scan against a plain QR or
-Data Matrix rule (#45).
+A Coop card whose barcode really is GS1-128 is scanned as `GS1_128`. `CardNumberEngine.match` recovers its core from
+the content and, since 2026-10-22 (#47), reports `formatMatches = true` against `hu-coop`'s `CODE_128` rule: it compares
+symbologies (`BarcodeFormat.symbology`), so the GS1 mark doesn't make it another store. Until then it reported `false`.
+The same holds for a GS1 QR or Data Matrix scan against a plain QR or Data Matrix rule (#45), and the reverse.
 
 Tesco's real Clubcard barcode is GS1-128 with AI `97` (seen 2026-10-19, #31). A scanned one is stored and drawn as
 `GS1_128`, and so is a typed one: `hu-tesco`'s rule is `GS1_128` (#43, 2026-10-20).

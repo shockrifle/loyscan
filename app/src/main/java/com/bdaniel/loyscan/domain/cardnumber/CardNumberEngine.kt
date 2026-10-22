@@ -11,7 +11,10 @@ sealed interface Validation {
     enum class Error { EMPTY, INVALID_CHARACTERS, TOO_SHORT, TOO_LONG, WRONG_START, BAD_CHECK_DIGIT }
 }
 
-/** Result of reading scanned barcode content back through a rule. */
+/**
+ * Result of reading scanned barcode content back through a rule. [formatMatches] compares symbologies, so a scan with
+ * the GS1 mark and a rule without it (or the reverse) agree ([BarcodeFormat.symbology], #47).
+ */
 data class RuleMatch(val core: String, val formatMatches: Boolean)
 
 /**
@@ -104,7 +107,7 @@ object CardNumberEngine {
             .map { dropped + rest.substring(it) }
             .firstOrNull { candidate -> validate(candidate, rule) == Validation.Valid(candidate) && build(candidate, rule) == content }
             ?: return null
-        return RuleMatch(core, formatMatches = format == null || format == rule.format)
+        return RuleMatch(core, formatMatches = format == null || format.symbology == rule.format.symbology)
     }
 
     private fun build(core: String, rule: CardNumberRule?): String {

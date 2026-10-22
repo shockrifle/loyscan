@@ -54,7 +54,8 @@ The store catalogue ([#3](https://github.com/shockrifle/loyscan/issues/3)) has t
   A case-insensitive match would save a core whose barcode differs from the one on the card, and Code 128 and QR
   are case-sensitive at the till. When padding is ambiguous (the core may itself start with `padChar`), it tries
   each candidate from shortest to longest, so a core that starts with the pad character still matches when only
-  the longer reading passes the check digit. It reports `formatMatches` separately instead of rejecting on a
+  the longer reading passes the check digit. It reports `formatMatches` (since 2026-10-22, #47: the same symbology, with or without the GS1 mark,
+  `BarcodeFormat.symbology`) separately instead of rejecting on a
   format mismatch, so #6 can rank stores.
 - **Authoring rule:** if a store's numbers have a fixed length, set `minLength == maxLength`. Otherwise a scanned
   `000123456` padded to 9 matches as core `123456`, and the card shows a number that differs from what's printed.

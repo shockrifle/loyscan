@@ -85,7 +85,7 @@ class ShippedCatalogueTest {
         assertThat(CardNumberEngine.match("9799123456789012", BarcodeFormat.GS1_128, rule))
             .isEqualTo(RuleMatch("634009123456789012", formatMatches = true))
         assertThat(CardNumberEngine.match("9799123456789012", BarcodeFormat.CODE_128, rule))
-            .isEqualTo(RuleMatch("634009123456789012", formatMatches = false))
+            .isEqualTo(RuleMatch("634009123456789012", formatMatches = true)) // same symbology (#47)
     }
 
     /** The stores whose leading digits were confirmed on a real card (#31) tell each other's scans apart. */

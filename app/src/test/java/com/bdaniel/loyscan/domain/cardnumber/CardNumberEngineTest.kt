@@ -289,6 +289,23 @@ class CardNumberEngineTest {
     }
 
     @Test
+    fun match_theGs1MarkIsTheSameFormat_eitherWay() { // #47
+        val pairs = listOf(
+            Triple(paddedCode128, "LC000000AB12", BarcodeFormat.GS1_128),
+            Triple(luhnVerified, "4111111111111111", BarcodeFormat.GS1_QR_CODE),
+            Triple(luhnVerified.copy(format = BarcodeFormat.DATA_MATRIX), "4111111111111111", BarcodeFormat.GS1_DATA_MATRIX),
+        )
+        for ((plainRule, content, gs1Format) in pairs) {
+            val gs1Rule = plainRule.copy(format = gs1Format)
+            assertEquals(gs1Format.name, true, match(content, gs1Format, plainRule)?.formatMatches)
+            assertEquals(gs1Format.name, true, match(content, plainRule.format, gs1Rule)?.formatMatches)
+        }
+        // Another symbology still differs, GS1 or not.
+        assertEquals(false, match("LC000000AB12", BarcodeFormat.GS1_QR_CODE, paddedCode128)?.formatMatches)
+        assertEquals(false, match("4111111111111111", BarcodeFormat.DATABAR, luhnVerified.copy(format = BarcodeFormat.GS1_128))?.formatMatches)
+    }
+
+    @Test
     fun match_ambiguousPaddingYieldsShortestCore() {
         // "00AB" padded is indistinguishable from "AB" padded; minLength 4 stops stripping at "00AB".
         assertEquals("00AB", match("LC00000000AB", null, paddedCode128)?.core)

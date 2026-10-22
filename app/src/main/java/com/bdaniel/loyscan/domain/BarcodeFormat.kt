@@ -37,4 +37,13 @@ enum class BarcodeFormat(
     val isGs1: Boolean
         get() = this == GS1_128 || this == GS1_DATA_MATRIX || this == GS1_QR_CODE ||
             this == DATABAR || this == DATABAR_EXPANDED || this == DATABAR_LIMITED
+
+    /** The symbology without the GS1 mark: a `GS1_` format's plain one, any other format itself (#47). */
+    val symbology: BarcodeFormat
+        get() = when (this) {
+            GS1_128 -> CODE_128
+            GS1_DATA_MATRIX -> DATA_MATRIX
+            GS1_QR_CODE -> QR_CODE
+            else -> this
+        }
 }
