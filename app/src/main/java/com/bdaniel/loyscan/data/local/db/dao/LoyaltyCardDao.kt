@@ -42,6 +42,9 @@ interface LoyaltyCardDao {
     @Query("DELETE FROM loyalty_cards WHERE id = :id")
     suspend fun deleteById(id: String)
 
+    @Query("SELECT COUNT(*) FROM loyalty_cards WHERE storeId = :storeId")
+    fun countForStore(storeId: String): Flow<Int>
+
     // Usage isn't an edit of the card, so updatedAt stays as it is.
     @Query("UPDATE loyalty_cards SET useCount = useCount + 1, lastUsedAt = :at WHERE id = :id")
     suspend fun recordUse(id: String, at: Instant)

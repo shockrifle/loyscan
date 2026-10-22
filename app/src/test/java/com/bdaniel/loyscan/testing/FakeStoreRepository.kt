@@ -25,6 +25,24 @@ class FakeStoreRepository(stores: List<Store> = emptyList()) : StoreRepository {
         stores.value += store
     }
 
+    /** When set, [delete] throws it instead of deleting. */
+    var deleteFailure: Exception? = null
+
+    /** When set, [delete] suspends until it completes, as a Room delete in progress does. */
+    var deleteGate: CompletableDeferred<Unit>? = null
+
+    /** How many times [delete] was called. */
+    var deleteCalls = 0
+        private set
+
+    /** Like the Room repository: removes a custom store; a catalogue store stays. Cards are the card fake's. */
+    override suspend fun delete(id: String) {
+        deleteCalls++
+        deleteGate?.await()
+        deleteFailure?.let { throw it }
+        stores.value = stores.value.filterNot { it.id == id && it.isCustom }
+    }
+
     /** When set, [update] throws it instead of saving. */
     var updateFailure: Exception? = null
 

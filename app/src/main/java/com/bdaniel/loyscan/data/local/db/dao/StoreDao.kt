@@ -28,6 +28,10 @@ interface StoreDao {
     )
     suspend fun updateCustom(id: String, name: String, color: String, defaultBarcodeFormat: BarcodeFormat, updatedAt: Instant)
 
+    /** Deletes a custom store (#53); the foreign key deletes its cards. A catalogue store is left alone. */
+    @Query("DELETE FROM stores WHERE id = :id AND isCustom = 1")
+    suspend fun deleteCustom(id: String)
+
     @Query("SELECT * FROM stores")
     fun getAll(): Flow<List<StoreEntity>>
 

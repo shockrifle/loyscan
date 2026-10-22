@@ -105,6 +105,18 @@ class RoomLoyaltyCardRepositoryTest {
         assertThat(repository.getByIdWithStore(cardId(99)).first()).isNull()
     }
 
+    @Test
+    fun countForStore_countsThatStoresCards_andFollowsChanges() = runTest { // #53
+        db.storeDao().insert(aStoreEntity(id = "empty", name = "Empty Store"))
+
+        assertThat(repository.countForStore("other").first()).isEqualTo(1)
+        assertThat(repository.countForStore("empty").first()).isEqualTo(0)
+
+        repository.add(aLoyaltyCard(id = cardId(4), store = store))
+
+        assertThat(repository.countForStore("other").first()).isEqualTo(2)
+    }
+
     private companion object {
         val NOW: Instant = Instant.parse("2026-05-05T05:05:05Z")
     }

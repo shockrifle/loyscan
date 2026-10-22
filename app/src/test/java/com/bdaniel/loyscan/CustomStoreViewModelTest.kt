@@ -5,7 +5,10 @@ import androidx.navigation.testing.invoke
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.cash.turbine.test
 import com.bdaniel.loyscan.domain.BarcodeFormat
+import com.bdaniel.loyscan.testing.FakeLoyaltyCardRepository
 import com.bdaniel.loyscan.testing.FakeStoreRepository
+import com.bdaniel.loyscan.testing.aLoyaltyCard
+import com.bdaniel.loyscan.testing.cardId
 import com.bdaniel.loyscan.testing.MainDispatcherRule
 import com.bdaniel.loyscan.testing.aStore
 import com.google.common.truth.Truth.assertThat
@@ -28,6 +31,7 @@ class CustomStoreViewModelTest {
 
     private val now = Instant.parse("2026-10-22T10:00:00Z")
     private val stores = FakeStoreRepository(listOf(aStore(id = "existing", name = "Existing Store")))
+    private val cards = FakeLoyaltyCardRepository()
 
     @Test
     fun theForm_startsWithNoName_theFirstColourAndCode128_andCantBeCreated() = runTest {
@@ -273,6 +277,83 @@ class CustomStoreViewModelTest {
         }
     }
 
+    @Test
+    fun editingAStore_saysHowManyCardsItHas() = runTest { // #53
+        stores.stores.value += custom
+        cards.cards.value = listOf(
+            aLoyaltyCard(id = cardId(1), store = custom),
+            aLoyaltyCard(id = cardId(2), store = custom),
+            aLoyaltyCard(id = cardId(3), store = stores.stores.value.first()),
+        )
+
+        editViewModel().state.test {
+            assertThat(expectMostRecentItem().cardCount).isEqualTo(2)
+        }
+    }
+
+    @Test
+    fun delete_removesTheStore_andSaysItIsDeleted() = runTest { // #53
+        stores.stores.value += custom
+        val viewModel = editViewModel()
+
+        viewModel.state.test {
+            skipItems(1)
+            viewModel.delete()
+
+            val state = expectMostRecentItem()
+            assertThat(state.deletion).isEqualTo(Deletion.DELETED)
+            assertThat(state.storeGone).isFalse()
+            assertThat(stores.stores.value.map { it.id }).containsExactly("existing")
+        }
+    }
+
+    @Test
+    fun aSecondDeleteWhileTheFirstIsDeleting_deletesOnce() = runTest { // #53: a double tap
+        stores.stores.value += custom
+        val viewModel = editViewModel()
+        val gate = CompletableDeferred<Unit>()
+        stores.deleteGate = gate
+
+        viewModel.state.test {
+            skipItems(1)
+            viewModel.delete()
+            viewModel.delete()
+            gate.complete(Unit)
+            viewModel.delete()
+
+            assertThat(expectMostRecentItem().deletion).isEqualTo(Deletion.DELETED)
+            assertThat(stores.deleteCalls).isEqualTo(1)
+        }
+    }
+
+    @Test
+    fun aFailedDelete_saysSo_canBeTriedAgain_andIsForgottenWhenDismissed() = runTest { // #53
+        stores.stores.value += custom
+        stores.deleteFailure = IllegalStateException("delete failed")
+        val viewModel = editViewModel()
+
+        viewModel.state.test {
+            skipItems(1)
+            viewModel.delete()
+            assertThat(expectMostRecentItem().deletion).isEqualTo(Deletion.FAILED)
+
+            viewModel.dismissDeletion()
+            assertThat(expectMostRecentItem().deletion).isEqualTo(Deletion.NONE)
+
+            stores.deleteFailure = null
+            viewModel.delete()
+            assertThat(expectMostRecentItem().deletion).isEqualTo(Deletion.DELETED)
+        }
+    }
+
+    @Test
+    fun aNewStore_orOneThatIsGone_isNotDeleted() = runTest { // #53
+        viewModel().delete()
+        editViewModel("existing").delete()
+
+        assertThat(stores.deleteCalls).isEqualTo(0)
+    }
+
     private val custom = aStore(
         id = "custom",
         name = "My Shop",
@@ -285,5 +366,5 @@ class CustomStoreViewModelTest {
     private fun editViewModel(storeId: String = custom.id) = viewModel(SavedStateHandle(route = CustomStore(storeId)))
 
     private fun viewModel(handle: SavedStateHandle = SavedStateHandle()) =
-        CustomStoreViewModel(handle, stores, Clock.fixed(now, ZoneOffset.UTC))
+        CustomStoreViewModel(handle, stores, cards, Clock.fixed(now, ZoneOffset.UTC))
 }

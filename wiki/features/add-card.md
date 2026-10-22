@@ -99,6 +99,6 @@ stores already in the database, and custom stores). Everything runs offline on t
 
 ## Not implemented
 
-From #6: "frequently added" stores for the user's country, and "add another". A custom store can be edited from
-the picker ([[edit-store]]), but not deleted, so one abandoned before its first card stays in the picker. A GS1 Aztec or PDF417 scan loses its GS1
+From #6: "frequently added" stores for the user's country, and "add another". A custom store abandoned before its
+first card stays in the picker until it is deleted there ([[edit-store]]). A GS1 Aztec or PDF417 scan loses its GS1
 mark when saved (#48).

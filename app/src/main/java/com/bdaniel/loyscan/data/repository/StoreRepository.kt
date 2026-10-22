@@ -16,4 +16,7 @@ interface StoreRepository {
      * nothing for a catalogue store or an unknown id.
      */
     suspend fun update(store: Store)
+
+    /** Deletes a custom store and its cards (#53). Does nothing for a catalogue store or an unknown id. */
+    suspend fun delete(id: String)
 }

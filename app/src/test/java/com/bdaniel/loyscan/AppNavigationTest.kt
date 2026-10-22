@@ -14,6 +14,7 @@ import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.bdaniel.loyscan.data.local.db.AppDatabase
+import com.bdaniel.loyscan.testing.STORE_ID
 import com.bdaniel.loyscan.testing.aLoyaltyCardEntity
 import com.bdaniel.loyscan.testing.aStoreEntity
 import com.bdaniel.loyscan.testing.cardId
@@ -192,6 +193,27 @@ class AppNavigationTest {
         composeRule.onNodeWithContentDescription("Back").performClick()
         composeRule.waitUntil { composeRule.onAllNodes(hasText("My Gym")).fetchSemanticsNodes().isNotEmpty() }
         composeRule.onNodeWithText("My Shop").assertDoesNotExist()
+    }
+
+    @Test
+    fun deletingACustomStore_fromThePicker_deletesItsCardsToo() { // #53
+        runBlocking {
+            db.storeDao().insert(aStoreEntity(id = "custom", name = "My Shop", isCustom = true))
+            db.loyaltyCardDao().insert(aLoyaltyCardEntity(id = cardId(2), storeId = "custom", number = "4242"))
+        }
+        composeRule.onNodeWithContentDescription("Add card").performClick()
+        composeRule.waitUntil { composeRule.onAllNodes(hasText("My Shop")).fetchSemanticsNodes().isNotEmpty() }
+
+        composeRule.onNodeWithContentDescription("Edit My Shop").performClick()
+        composeRule.waitUntil { composeRule.onAllNodes(hasText("Edit store")).fetchSemanticsNodes().isNotEmpty() }
+        composeRule.onNodeWithContentDescription("Delete").performClick()
+        composeRule.onNodeWithText("Its card is deleted with it.").assertIsDisplayed()
+        composeRule.onNodeWithText("Delete").performClick()
+
+        composeRule.waitUntil { composeRule.onAllNodes(hasText("Choose store")).fetchSemanticsNodes().isNotEmpty() }
+        composeRule.onNodeWithText("My Shop").assertDoesNotExist()
+        assertThat(runBlocking { db.loyaltyCardDao().getAllWithStore().first() }.map { it.loyaltyCard.storeId })
+            .containsExactly(STORE_ID)
     }
 
     private val brightness get() = composeRule.activity.window.attributes.screenBrightness

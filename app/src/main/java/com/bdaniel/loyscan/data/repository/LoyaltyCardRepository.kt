@@ -25,4 +25,7 @@ interface LoyaltyCardRepository {
 
     /** Deletes the card. Does nothing for an unknown id. */
     suspend fun delete(id: String)
+
+    /** How many cards the store [storeId] has, updated as cards change (#53). */
+    fun countForStore(storeId: String): Flow<Int>
 }

@@ -15,7 +15,10 @@ import androidx.compose.ui.test.performTextInput
 import androidx.lifecycle.SavedStateHandle
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.bdaniel.loyscan.domain.BarcodeFormat
+import com.bdaniel.loyscan.testing.FakeLoyaltyCardRepository
 import com.bdaniel.loyscan.testing.FakeStoreRepository
+import com.bdaniel.loyscan.testing.aLoyaltyCard
+import com.bdaniel.loyscan.testing.cardId
 import com.bdaniel.loyscan.testing.SOME_INSTANT
 import com.bdaniel.loyscan.testing.aStore
 import androidx.navigation.testing.invoke
@@ -33,6 +36,7 @@ class CustomStoreScreenTest {
     val composeRule = createComposeRule()
 
     private val stores = FakeStoreRepository()
+    private val cards = FakeLoyaltyCardRepository()
     private val scanned = mutableListOf<String>()
     private var backs = 0
 
@@ -132,8 +136,85 @@ class CustomStoreScreenTest {
         composeRule.onNodeWithText("Save").assertDoesNotExist()
     }
 
+    @Test
+    fun deletingAStore_saysHowManyCardsGoWithIt_andReturnsOnceDeleted() { // #53
+        val store = aStore(id = "custom", name = "My Shop", isCustom = true)
+        stores.stores.value = listOf(store)
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store), aLoyaltyCard(id = cardId(2), store = store))
+        setScreen(CustomStore("custom"))
+
+        composeRule.onNodeWithContentDescription("Delete").performClick()
+
+        composeRule.onNodeWithText("Delete My Shop?").assertIsDisplayed()
+        composeRule.onNodeWithText("Its 2 cards are deleted with it.").assertIsDisplayed()
+        composeRule.onNodeWithText("Delete").performClick()
+        composeRule.runOnIdle {
+            assertThat(stores.stores.value).isEmpty()
+            assertThat(backs).isEqualTo(1)
+        }
+    }
+
+    @Test
+    fun theDeleteDialog_namesTheStoreAsSaved_notAnUnsavedRename() { // #53
+        stores.stores.value = listOf(aStore(id = "custom", name = "My Shop", isCustom = true))
+        setScreen(CustomStore("custom"))
+
+        composeRule.onNodeWithTag(CUSTOM_STORE_NAME_TAG).performTextInput(" Renamed")
+        composeRule.onNodeWithContentDescription("Delete").performClick()
+
+        composeRule.onNodeWithText("Delete My Shop?").assertIsDisplayed()
+    }
+
+    @Test
+    fun deletingAStoreWithOneCard_saysSo() { // #53
+        val store = aStore(id = "custom", name = "My Shop", isCustom = true)
+        stores.stores.value = listOf(store)
+        cards.cards.value = listOf(aLoyaltyCard(store = store))
+        setScreen(CustomStore("custom"))
+
+        composeRule.onNodeWithContentDescription("Delete").performClick()
+
+        composeRule.onNodeWithText("Its card is deleted with it.").assertIsDisplayed()
+    }
+
+    @Test
+    fun deletingAStoreWithoutCards_saysSo_andCancelKeepsIt() { // #53
+        stores.stores.value = listOf(aStore(id = "custom", name = "My Shop", isCustom = true))
+        setScreen(CustomStore("custom"))
+
+        composeRule.onNodeWithContentDescription("Delete").performClick()
+        composeRule.onNodeWithText("It has no cards.").assertIsDisplayed()
+        composeRule.onNodeWithText("Cancel").performClick()
+
+        composeRule.onNodeWithText("Delete My Shop?").assertDoesNotExist()
+        composeRule.runOnIdle {
+            assertThat(stores.stores.value).hasSize(1)
+            assertThat(backs).isEqualTo(0)
+        }
+    }
+
+    @Test
+    fun aDeleteThatFails_saysSo_inTheDialog() { // #53
+        stores.stores.value = listOf(aStore(id = "custom", name = "My Shop", isCustom = true))
+        stores.deleteFailure = IllegalStateException("delete failed")
+        setScreen(CustomStore("custom"))
+
+        composeRule.onNodeWithContentDescription("Delete").performClick()
+        composeRule.onNodeWithText("Delete").performClick()
+
+        composeRule.onNodeWithText("The store couldn't be deleted. Try again.").assertIsDisplayed()
+        composeRule.runOnIdle { assertThat(backs).isEqualTo(0) }
+    }
+
+    @Test
+    fun aNewStore_hasNoDeleteAction() { // #53
+        setScreen()
+
+        composeRule.onNodeWithContentDescription("Delete").assertDoesNotExist()
+    }
+
     private fun setScreen(route: CustomStore = CustomStore()) {
-        val viewModel = CustomStoreViewModel(SavedStateHandle(route = route), stores, Clock.fixed(SOME_INSTANT, ZoneOffset.UTC))
+        val viewModel = CustomStoreViewModel(SavedStateHandle(route = route), stores, cards, Clock.fixed(SOME_INSTANT, ZoneOffset.UTC))
         val directions = CustomStoreDirections(toScanner = { scanned += it }, toBack = { backs++ })
         composeRule.setContent { CustomStoreScreen(directions = directions, viewModel = viewModel) }
     }

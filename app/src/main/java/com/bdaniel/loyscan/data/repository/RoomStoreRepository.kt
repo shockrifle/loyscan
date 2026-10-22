@@ -20,4 +20,8 @@ class RoomStoreRepository @Inject constructor(private val storeDao: StoreDao) : 
     override suspend fun update(store: Store) {
         storeDao.updateCustom(store.id, store.name, store.color, store.defaultBarcodeFormat, store.updatedAt)
     }
+
+    override suspend fun delete(id: String) {
+        storeDao.deleteCustom(id)
+    }
 }

@@ -90,11 +90,11 @@ class DetailViewModelTest {
         repository.cards.value += aLoyaltyCard(id = cardId(2))
         val viewModel = DetailViewModel(SavedStateHandle(route = Detail(cardId = cardId(2), color = "#336699")), repository)
 
-        assertThat(viewModel.deletion.value).isEqualTo(DetailViewModel.Deletion.NONE)
+        assertThat(viewModel.deletion.value).isEqualTo(Deletion.NONE)
 
         viewModel.delete()
 
-        assertThat(viewModel.deletion.value).isEqualTo(DetailViewModel.Deletion.DELETED)
+        assertThat(viewModel.deletion.value).isEqualTo(Deletion.DELETED)
         assertThat(repository.cards.value.map { it.id }).containsExactly(cardId(1))
     }
 
@@ -105,12 +105,12 @@ class DetailViewModelTest {
         val viewModel = DetailViewModel(SavedStateHandle(route = Detail(cardId = cardId(1), color = "#336699")), repository)
 
         viewModel.delete()
-        assertThat(viewModel.deletion.value).isEqualTo(DetailViewModel.Deletion.DELETING)
+        assertThat(viewModel.deletion.value).isEqualTo(Deletion.DELETING)
         viewModel.delete()
         gate.complete(Unit)
         viewModel.delete()
 
-        assertThat(viewModel.deletion.value).isEqualTo(DetailViewModel.Deletion.DELETED)
+        assertThat(viewModel.deletion.value).isEqualTo(Deletion.DELETED)
         assertThat(repository.deleteCalls).isEqualTo(1)
     }
 
@@ -122,7 +122,7 @@ class DetailViewModelTest {
 
         viewModel.dismissDeletion()
 
-        assertThat(viewModel.deletion.value).isEqualTo(DetailViewModel.Deletion.NONE)
+        assertThat(viewModel.deletion.value).isEqualTo(Deletion.NONE)
     }
 
     @Test
@@ -131,12 +131,12 @@ class DetailViewModelTest {
         val viewModel = DetailViewModel(SavedStateHandle(route = Detail(cardId = cardId(1), color = "#336699")), repository)
 
         viewModel.delete()
-        assertThat(viewModel.deletion.value).isEqualTo(DetailViewModel.Deletion.FAILED)
+        assertThat(viewModel.deletion.value).isEqualTo(Deletion.FAILED)
         assertThat(repository.cards.value).hasSize(1)
 
         repository.deleteFailure = null
         viewModel.delete()
-        assertThat(viewModel.deletion.value).isEqualTo(DetailViewModel.Deletion.DELETED)
+        assertThat(viewModel.deletion.value).isEqualTo(Deletion.DELETED)
         assertThat(repository.cards.value).isEmpty()
     }
 }

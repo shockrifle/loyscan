@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.bdaniel.loyscan.data.repository.LoyaltyCardRepository
 import com.bdaniel.loyscan.data.repository.StoreRepository
 import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.domain.Store
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -41,6 +43,12 @@ data class CustomStoreState(
     val storeGone: Boolean = false,
     /** The edit is saved. */
     val saved: Boolean = false,
+    /** The edited store's name as saved, which the delete confirmation names; `null` when creating. */
+    val storedName: String? = null,
+    /** How many cards the edited store has; they are deleted with it. */
+    val cardCount: Int = 0,
+    /** Where deleting the edited store stands; [Deletion.DELETED] once it is gone. */
+    val deletion: Deletion = Deletion.NONE,
 ) {
     val canSave: Boolean get() = ready && name.isNotBlank() && !saving && createdStoreId == null && !saved
 }
@@ -48,12 +56,14 @@ data class CustomStoreState(
 /**
  * "Other card" in the store picker (#6): a store that isn't in the catalogue, with a name, a colour and the barcode
  * format its typed numbers are drawn in. Creating it saves it, so the card is then added for it like for any store.
- * With [CustomStore.storeId] it edits that custom store instead (#53): the form starts as the store.
+ * With [CustomStore.storeId] it edits that custom store instead (#53): the form starts as the store, which can also be
+ * deleted with its cards.
  */
 @HiltViewModel
 class CustomStoreViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val storeRepository: StoreRepository,
+    cardRepository: LoyaltyCardRepository,
     private val clock: Clock,
 ) : ViewModel() {
 
@@ -72,9 +82,12 @@ class CustomStoreViewModel @Inject constructor(
     private val color = savedStateHandle.getStateFlow<String?>(COLOR, null)
     private val format = savedStateHandle.getStateFlow<BarcodeFormat?>(FORMAT, null)
     private val progress = MutableStateFlow(Progress())
+    private val cardCount = route.storeId?.let(cardRepository::countForStore) ?: flowOf(0)
+    private val deletion = MutableStateFlow(Deletion.NONE)
 
     val state: StateFlow<CustomStoreState> =
-        combine(edited, name, color, format, progress) { edited, name, color, format, progress ->
+        combine(edited, name, color, format, combine(progress, cardCount, deletion, ::Triple)) {
+                edited, name, color, format, (progress, cardCount, deletion) ->
             val inputs = inputs(edited, name, color, format)
             CustomStoreState(
                 name = inputs.name,
@@ -85,8 +98,12 @@ class CustomStoreViewModel @Inject constructor(
                 createdStoreId = progress.createdStoreId,
                 editing = route.storeId != null,
                 ready = edited is Edited.New || edited is Edited.Found,
-                storeGone = edited is Edited.Gone,
+                // Deleting it makes it gone too; the screen is leaving then, so that isn't news.
+                storeGone = edited is Edited.Gone && deletion != Deletion.DELETED,
                 saved = progress.saved,
+                storedName = (edited as? Edited.Found)?.store?.name,
+                cardCount = cardCount,
+                deletion = deletion,
             )
         }.stateIn(
             scope = viewModelScope,
@@ -140,6 +157,29 @@ class CustomStoreViewModel @Inject constructor(
                 Progress(saveFailed = true)
             }
         }
+    }
+
+    /** Deletes the edited store and its cards (#53). If that fails, [CustomStoreState.deletion] says so. */
+    fun delete() {
+        val store = (edited.value as? Edited.Found)?.store ?: return
+        if (deletion.value == Deletion.DELETING || deletion.value == Deletion.DELETED) return
+        deletion.value = Deletion.DELETING
+        viewModelScope.launch {
+            deletion.value = try {
+                storeRepository.delete(store.id)
+                Deletion.DELETED
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) { // as a failed card delete (#8): said in the dialog
+                Timber.e(e, "Couldn't delete the store")
+                Deletion.FAILED
+            }
+        }
+    }
+
+    /** The delete dialog was closed: a failure is forgotten, so the dialog opens afresh next time. */
+    fun dismissDeletion() {
+        if (deletion.value == Deletion.FAILED) deletion.value = Deletion.NONE
     }
 
     /** The fields as shown: what was changed, else the edited store's, else a new store's defaults. */

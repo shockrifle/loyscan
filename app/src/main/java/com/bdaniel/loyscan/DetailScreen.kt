@@ -80,7 +80,7 @@ fun SharedTransitionScope.DetailScreen(
     val deletion by viewModel.deletion.collectAsState()
     var confirmingDelete by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(deletion) {
-        if (deletion == DetailViewModel.Deletion.DELETED) directions.toBack()
+        if (deletion == Deletion.DELETED) directions.toBack()
     }
     // At the till the barcode must be readable, whatever the user's brightness setting.
     FullBrightness()
@@ -194,10 +194,10 @@ fun SharedTransitionScope.DetailScreen(
         if (scanMode && barcode != null) {
             ScanMode(barcode, card.displayNumber, onExit = { scanMode = false })
         }
-        if (confirmingDelete && deletion != DetailViewModel.Deletion.DELETED) {
+        if (confirmingDelete && deletion != Deletion.DELETED) {
             ConfirmDelete(
-                failed = deletion == DetailViewModel.Deletion.FAILED,
-                deleting = deletion == DetailViewModel.Deletion.DELETING,
+                failed = deletion == Deletion.FAILED,
+                deleting = deletion == Deletion.DELETING,
                 onConfirm = viewModel::delete,
                 onDismiss = {
                     confirmingDelete = false

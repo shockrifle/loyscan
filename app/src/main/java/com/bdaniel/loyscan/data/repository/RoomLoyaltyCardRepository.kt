@@ -5,6 +5,7 @@ import com.bdaniel.loyscan.data.mapper.toDomainModel
 import com.bdaniel.loyscan.data.mapper.toEdit
 import com.bdaniel.loyscan.data.mapper.toEntity
 import com.bdaniel.loyscan.domain.LoyaltyCard
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.time.Clock
 import javax.inject.Inject
@@ -27,4 +28,6 @@ class RoomLoyaltyCardRepository @Inject constructor(
     override suspend fun update(card: LoyaltyCard) = loyaltyCardDao.update(card.toEdit())
 
     override suspend fun delete(id: String) = loyaltyCardDao.deleteById(id)
+
+    override fun countForStore(storeId: String): Flow<Int> = loyaltyCardDao.countForStore(storeId)
 }

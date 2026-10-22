@@ -14,6 +14,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -23,11 +24,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -44,7 +49,8 @@ const val CUSTOM_STORE_NAME_TAG = "customStoreName"
 
 /**
  * "Other card": a store that isn't listed, with a name, a colour and the barcode format for its typed numbers.
- * Creating it opens the scanner for it. Editing a custom store (#53) saves it and goes back.
+ * Creating it opens the scanner for it. Editing a custom store (#53) saves it and goes back; it can also be deleted,
+ * after a confirmation that says how many cards go with it.
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -53,12 +59,13 @@ fun CustomStoreScreen(
     viewModel: CustomStoreViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
+    var confirmingDelete by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(state.createdStoreId) {
         state.createdStoreId?.let(directions.toScanner)
     }
-    LaunchedEffect(state.saved) {
-        if (state.saved) directions.toBack()
+    LaunchedEffect(state.saved, state.deletion) {
+        if (state.saved || state.deletion == Deletion.DELETED) directions.toBack()
     }
 
     Scaffold(
@@ -70,12 +77,32 @@ fun CustomStoreScreen(
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 },
+                actions = {
+                    if (state.editing && state.ready) {
+                        IconButton(onClick = { confirmingDelete = true }) {
+                            Icon(Icons.Default.Delete, contentDescription = "Delete")
+                        }
+                    }
+                },
             )
         },
         containerColor = Color.Transparent,
     ) { innerPadding ->
         if (state.storeGone) {
             Text("This store is no longer available.", modifier = Modifier.padding(innerPadding).padding(16.dp))
+        }
+        if (confirmingDelete && state.ready && state.deletion != Deletion.DELETED) {
+            ConfirmDelete(
+                storeName = state.storedName.orEmpty(),
+                cardCount = state.cardCount,
+                failed = state.deletion == Deletion.FAILED,
+                deleting = state.deletion == Deletion.DELETING,
+                onConfirm = viewModel::delete,
+                onDismiss = {
+                    confirmingDelete = false
+                    viewModel.dismissDeletion()
+                },
+            )
         }
         if (!state.ready) return@Scaffold
         Column(
@@ -135,4 +162,33 @@ fun CustomStoreScreen(
             }
         }
     }
+}
+
+/** Asks before deleting the store, saying how many cards go with it. A failed delete is said here, and "Delete" tries again. */
+@Composable
+private fun ConfirmDelete(
+    storeName: String,
+    cardCount: Int,
+    failed: Boolean,
+    deleting: Boolean,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Delete $storeName?") },
+        text = {
+            Text(
+                when {
+                    failed -> "The store couldn't be deleted. Try again."
+                    cardCount == 0 -> "It has no cards."
+                    cardCount == 1 -> "Its card is deleted with it."
+                    else -> "Its $cardCount cards are deleted with it."
+                },
+                color = if (failed) MaterialTheme.colorScheme.error else Color.Unspecified,
+            )
+        },
+        confirmButton = { TextButton(onClick = onConfirm, enabled = !deleting) { Text("Delete") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+    )
 }

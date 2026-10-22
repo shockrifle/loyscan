@@ -21,13 +21,14 @@ All paths below are under `app/src/main/java/com/bdaniel/loyscan/` unless writte
 | **Navigation** | `Navigation.kt`, `MainActivity.kt` (`AppNavigation`) | `@Serializable` routes + `NavController.*Directions()` factories | See [[2025-12-09-type-safe-navigation-directions]]. |
 | **DI** | `di/DatabaseModule.kt`, `di/ImageLoaderModule.kt`, `di/RepositoryModule.kt` | `@Module @InstallIn(SingletonComponent)` providers; `@Binds` repository interface → Room impl | Implementations use `@Inject constructor`. |
 
-Note: `LoyaltyCardRepository`'s writes are `recordUse(id)` (opening a card counts a use, #4), `delete(id)` and `update(card)` (#8), and
+Note: `LoyaltyCardRepository` also counts a store's cards (`countForStore`, a `Flow<Int>`, #53). Its writes are `recordUse(id)` (opening a card counts a use, #4), `delete(id)` and `update(card)` (#8), and
 `add(card)` (the add-card flow, #6), which maps the domain card to its row with `LoyaltyCard.toEntity()` (`data/mapper/LoyaltyCardMapper.kt`).
 `update` writes only the columns an edit changes, through Room's partial `@Update(entity = …)` with `LoyaltyCardEdit`
 (`LoyaltyCard.toEdit()`), so usage and creation time are never overwritten from a stale copy ([[edit-card]]).
 `StoreRepository` reads every store (`getAll`), adds one (`add(store)`, a custom store, #6; mapped with
-`Store.toEntity()`) and edits a custom store (`update(store)`, #53: `StoreDao.updateCustom`, an `UPDATE … AND isCustom = 1`
-that never touches a catalogue row, [[edit-store]]), an interface with `RoomStoreRepository` behind it since #6; its
+`Store.toEntity()`) and edits or deletes a custom store (`update(store)`, `delete(id)`, #53: `StoreDao.updateCustom` / `deleteCustom`,
+`… AND isCustom = 1`, so a catalogue row is never touched; the cards go by `ON DELETE CASCADE`, [[edit-store]]), an
+interface with `RoomStoreRepository` behind it since #6; its
 unused entity-taking `insert` was dropped then, and `getById` once the card form needed every store (2026-10-22). `StoreDao.getById` stays: no production code
 reads it, but it is this page's single-row query example and tests use it to read a store back. When a feature needs more writes, add them to the interface in domain
 terms, with domain→entity mappers. Time comes from an injected `java.time.Clock`

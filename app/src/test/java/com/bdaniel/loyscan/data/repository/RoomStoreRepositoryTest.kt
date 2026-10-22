@@ -96,4 +96,26 @@ class RoomStoreRepositoryTest {
         assertThat(cards.getValue(cardId(1)).barcodeFormat).isEqualTo(BarcodeFormat.QR_CODE)
         assertThat(cards.getValue(cardId(2)).barcodeFormat).isEqualTo(BarcodeFormat.EAN_13)
     }
+
+    @Test
+    fun delete_removesACustomStore_andItsCards() = runTest { // #53
+        repository.add(aStore(id = "custom", name = "Custom Store", countryCodes = emptyList(), isCustom = true))
+        db.loyaltyCardDao().insert(aLoyaltyCardEntity(id = cardId(1), storeId = "custom"))
+        db.loyaltyCardDao().insert(aLoyaltyCardEntity(id = cardId(2), storeId = "first"))
+
+        repository.delete("custom")
+
+        assertThat(repository.getAll().first().map { it.id }).containsExactly("first", "second")
+        assertThat(db.loyaltyCardDao().getAllWithStore().first().map { it.loyaltyCard.id }).containsExactly(cardId(2))
+    }
+
+    @Test
+    fun delete_leavesACatalogueStoreAndItsCards() = runTest { // #53: catalogue stores can't be deleted
+        db.loyaltyCardDao().insert(aLoyaltyCardEntity(id = cardId(1), storeId = "first"))
+
+        repository.delete("first")
+
+        assertThat(repository.getAll().first().map { it.id }).containsExactly("first", "second")
+        assertThat(db.loyaltyCardDao().getAllWithStore().first()).hasSize(1)
+    }
 }

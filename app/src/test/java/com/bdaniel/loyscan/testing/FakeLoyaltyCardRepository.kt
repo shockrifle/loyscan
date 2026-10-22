@@ -62,6 +62,8 @@ class FakeLoyaltyCardRepository(
         }
     }
 
+    override fun countForStore(storeId: String): Flow<Int> = cards.map { all -> all.count { it.store.id == storeId } }
+
     override suspend fun delete(id: String) {
         deleteCalls++
         deleteGate?.await()

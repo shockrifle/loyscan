@@ -67,6 +67,4 @@ class DetailViewModel @Inject constructor(
     fun dismissDeletion() {
         if (_deletion.value == Deletion.FAILED) _deletion.value = Deletion.NONE
     }
-
-    enum class Deletion { NONE, DELETING, DELETED, FAILED }
 }
