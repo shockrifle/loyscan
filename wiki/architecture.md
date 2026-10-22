@@ -126,7 +126,7 @@ here exist; read them next to the code.
    value.
    Then `DetailViewModel` reads `savedStateHandle.toRoute<Detail>().cardId`, then
    `repository.getByIdWithStore(cardId).filterNotNull().stateIn(…, initialValue = LoyaltyCard.EMPTY)`
-   (`DetailViewModel.kt:23-37`).
+   (`DetailViewModel.kt:30-42`).
 9. **Detail UI.** *Test first:* `DetailScreenTest`: it shows the label and the display number (formatted by the
    store's rule), the back arrow calls `toBack`, and an empty or malformed route color doesn't crash.
    Then `DetailScreen` paints the top bar and header with the **route** color (available on frame 1), and fills
