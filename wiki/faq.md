@@ -2,11 +2,6 @@
 
 Questions that took real effort to answer once. Newest at the bottom; keep answers short and sourced.
 
-### Why can't I write `List<Foo>` in the `com.bdaniel.loyscan` package?
-Because the navigation route `object List` (`app/src/main/java/com/bdaniel/loyscan/Navigation.kt:9-10`)
-shadows `kotlin.collections.List` in that package. Use type inference, `kotlin.collections.List<Foo>`, or
-move code into a sub-package. See [[list-route-shadows-kotlin-list]].
-
 ### My debug build still shows the "Brand A" … demo cards.
 The demo seed was removed (#55), but it only ever ran when the DB file was created, so an older install keeps its
 rows. Clear app data once: see [[reset-local-database]] and [[seed-data]]. Catalogue changes, by contrast, apply on

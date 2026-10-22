@@ -43,6 +43,9 @@ See [[2026-10-09-card-number-rule-engine]].
 **Card number** — `LoyaltyCard.number`: the raw input, as typed or exactly as scanned (`scannedFormat` set).
 Barcode content and display number are derived from it on read ([[2026-10-12-data-model-v2]]).
 
+**CardList** — Navigation route `object CardList` (`Navigation.kt:9-10`), the start destination: "My Cards".
+Was `object List` until #17, which shadowed `kotlin.collections.List` — [[list-route-shadows-kotlin-list]].
+
 **`card/{id}`** — The shared-content key that links a list tile to the detail screen in the shared-element transition.
 Was `item/{id}` before `45a33e1`.
 
@@ -81,9 +84,6 @@ via `ImageLoaderEntryPoint`. See [[2025-12-12-singleton-image-loader]].
 
 **KSP** — Kotlin Symbol Processing; runs the Hilt and Room compilers. Replaced kapt in `ae2118e` —
 [[2025-12-08-ksp-instead-of-kapt]].
-
-**List** — Navigation route `object List` (`Navigation.kt:9-10`), the start destination. **Shadows
-`kotlin.collections.List`** in the root package — [[list-route-shadows-kotlin-list]].
 
 **Label** — `LoyaltyCard.label`: the user's own optional name for a card (e.g. "Coffee Bean Club"). Was `name`
 until #1.

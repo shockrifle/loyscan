@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-22 · hack removed: route `List` renamed to `CardList`; faq entry dropped · hacks/list-route-shadows-kotlin-list, hacks/_index, glossary, faq, decisions/2025-12-09-type-safe-navigation-directions, features/add-card, features/edit-card · #17
 - 2026-10-22 · issue triage: stale facts corrected, #32 resolved (Auchan's prefix moved to #52), #15 folded into #7, Möbelix noted as a catch-all · tech-debt/no-room-migrations (freeze `2.json`, not `1.json`), tech-debt/rules-cannot-require-leading-digits (resolved), tech-debt/list-screen-bypasses-image-loader, tech-debt/_index, decisions/2026-10-22-store-suggestion-trigger, features/card-list, features/store-catalogue · review of all open issues
 - 2026-10-22 · review fix: tests of a custom store's new format reaching its cards listed; trailing space removed · edit-store, add-card · review of #53
 - 2026-10-22 · review fix: a custom store gone while its delete is under way isn't said to be gone · edit-store · review of #53

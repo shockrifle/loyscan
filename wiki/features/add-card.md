@@ -70,7 +70,7 @@ stores already in the database, and custom stores). Everything runs offline on t
     pattern), the field says "Shown as 1234 5674" under it.
 - **Label** is optional; blank is stored as `null`.
 - **Save** writes the card once (a second tap does nothing): a new UUID, `createdAt` = `updatedAt` = now from the
-  injected `Clock`, no use yet. Then the card's detail opens in place of the flow (`popUpTo<List>()`), so back from it
+  injected `Clock`, no use yet. Then the card's detail opens in place of the flow (`popUpTo<CardList>()`), so back from it
   returns to the list. That opening isn't counted as a use (`Detail.countUse = false`): it is the end of adding the
   card, not showing it at a till.
 - **A failed save** (`LoyaltyCardRepository.add` throws, e.g. the database is full or can't be written) leaves the

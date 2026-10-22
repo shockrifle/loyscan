@@ -34,8 +34,8 @@ class AddCardDirectionsTest {
                 navigatorProvider.addNavigator(ComposeNavigator())
                 navigatorProvider.addNavigator(DialogNavigator())
             }
-            NavHost(navController, startDestination = List) {
-                composable<List> {}
+            NavHost(navController, startDestination = CardList) {
+                composable<CardList> {}
                 composable<StorePicker> {}
                 composable<CustomStore> {}
                 composable<Scanner> {}
@@ -148,7 +148,7 @@ class AddCardDirectionsTest {
         composeRule.runOnIdle {
             assertThat(navController.currentBackStackEntry!!.toRoute<Detail>())
                 .isEqualTo(Detail("new-card", "#112233", countUse = false))
-            assertThat(navController.previousBackStackEntry?.destination?.hasRoute(List::class)).isTrue()
+            assertThat(navController.previousBackStackEntry?.destination?.hasRoute(CardList::class)).isTrue()
         }
     }
 
@@ -173,7 +173,7 @@ class AddCardDirectionsTest {
 
         composeRule.runOnIdle {
             assertThat(navController.currentBackStackEntry!!.toRoute<Detail>()).isEqualTo(Detail("a-card", "#445566", countUse = false))
-            assertThat(navController.previousBackStackEntry?.destination?.hasRoute(List::class)).isTrue()
+            assertThat(navController.previousBackStackEntry?.destination?.hasRoute(CardList::class)).isTrue()
         }
     }
 
@@ -181,7 +181,7 @@ class AddCardDirectionsTest {
     fun backFromThePicker_returnsToTheList() {
         composeRule.runOnIdle { navController.storePickerDirections().toBack() }
 
-        composeRule.runOnIdle { assertThat(currentIs<List>()).isTrue() }
+        composeRule.runOnIdle { assertThat(currentIs<CardList>()).isTrue() }
     }
 
     private inline fun <reified T : Any> currentIs() = navController.currentBackStackEntry?.destination?.hasRoute(T::class) == true

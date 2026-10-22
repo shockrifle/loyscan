@@ -213,7 +213,7 @@ class CustomStoreViewModel @Inject constructor(
     data class Swatch(val name: String, val hex: String)
 
     companion object {
-        val COLORS: kotlin.collections.List<Swatch> = listOf(
+        val COLORS: List<Swatch> = listOf(
             Swatch("Blue", "#1E5AA8"),
             Swatch("Red", "#C62828"),
             Swatch("Green", "#2E7D32"),
@@ -225,7 +225,7 @@ class CustomStoreViewModel @Inject constructor(
         )
 
         /** Decided in #47: [BarcodeFormat.forCustomStores]. */
-        val FORMATS: kotlin.collections.List<BarcodeFormat> = BarcodeFormat.forCustomStores
+        val FORMATS: List<BarcodeFormat> = BarcodeFormat.forCustomStores
 
         private const val NAME = "name"
         private const val COLOR = "color"

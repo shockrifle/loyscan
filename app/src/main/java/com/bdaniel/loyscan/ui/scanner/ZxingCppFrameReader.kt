@@ -24,7 +24,7 @@ class ZxingCppFrameReader : FrameReader {
  * GS1 modifier (`]C1` for GS1-128, `]e0` for DataBar, `]d2` for Data Matrix, `]Q3` for QR), unless the content is
  * empty (dropped anyway) or carries an ECI it can't process (`UNKNOWN_ECI`, which GS1-128 doesn't use).
  */
-internal fun firstScannedBarcode(results: kotlin.collections.List<BarcodeReader.Result>): ScannedBarcode? {
+internal fun firstScannedBarcode(results: List<BarcodeReader.Result>): ScannedBarcode? {
     for (result in results) {
         scannedBarcode(result.format, result.text, gs1 = result.contentType == BarcodeReader.ContentType.GS1)?.let { return it }
         Timber.d("Dropped a %s result (%s)", result.format, if (result.text.isNullOrEmpty()) "no text" else "format not stored")

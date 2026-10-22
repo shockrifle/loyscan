@@ -48,10 +48,10 @@ fun SharedTransitionScope.AppNavigation(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
     NavHost(
         navController = navController,
-        startDestination = List,
+        startDestination = CardList,
         modifier = modifier
     ) {
-        composable<List> {
+        composable<CardList> {
             ListScreen(
                 animatedVisibilityScope = this,
                 directions = navController.listDirections()

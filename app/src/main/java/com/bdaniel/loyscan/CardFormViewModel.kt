@@ -56,7 +56,7 @@ data class CardFormState(
      * rule or its rule can't have produced it, and those naming the scan's GS1 format when this rule names the same
      * symbology without the mark. Ranked as [com.bdaniel.loyscan.domain.matchingScan] does. [CardFormViewModel.switchStore] picks one.
      */
-    val suggestedStores: kotlin.collections.List<Store> = emptyList(),
+    val suggestedStores: List<Store> = emptyList(),
     /** The form edits an existing card (#8) rather than adding one. */
     val editing: Boolean = false,
     /** The stores have loaded and none has the form's id: it was deleted while the form was open (#51). */
@@ -198,7 +198,7 @@ class CardFormViewModel @Inject constructor(
 
     private fun formState(
         storeId: String,
-        stores: kotlin.collections.List<Store>,
+        stores: List<Store>,
         original: LoyaltyCard?,
         changedLabel: String?,
         changedNumber: String?,
@@ -260,10 +260,10 @@ class CardFormViewModel @Inject constructor(
      */
     private fun suggestedStores(
         store: Store,
-        stores: kotlin.collections.List<Store>,
+        stores: List<Store>,
         draft: LoyaltyCard,
         ruleReadsScan: Boolean,
-    ): kotlin.collections.List<Store> {
+    ): List<Store> {
         val format = draft.scannedFormat ?: return emptyList()
         val matching = stores.filter { it.id != store.id }.matchingScan(draft.number, format)
         if (!ruleReadsScan) return matching

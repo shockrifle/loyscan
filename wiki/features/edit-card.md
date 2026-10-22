@@ -30,7 +30,7 @@ number of one card. Deleting a card is on [[card-detail]].
   `createdAt`, the use count, `lastUsedAt`, the note and the photo paths stay as stored even if they changed after the
   form loaded the card. A blank label is saved as `null`.
 - **After saving**, `CardFormDirections.toCard` opens the card in place of the card and its form
-  (`popUpTo<List>()`, `Detail.countUse = false`), the same direction as after adding. The new `Detail` route carries
+  (`popUpTo<CardList>()`, `Detail.countUse = false`), the same direction as after adding. The new `Detail` route carries
   the store's current colour, which matters when the store was switched. Back returns to the list.
 - A failed save keeps the form open with "The card couldn't be saved. Try again.", as when adding (#49).
 - A card that no longer exists (deleted, or a stale route) leaves the form empty and it can't be saved.

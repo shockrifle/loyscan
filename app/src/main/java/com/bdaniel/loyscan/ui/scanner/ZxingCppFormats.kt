@@ -21,7 +21,7 @@ val SCANNED_FORMATS: Set<Format> = setOf(
  * The formats a value stands for when the reader is asked for it. In zxing-cpp 3.1 a format's low byte names the
  * symbology and its high byte the variant, `' '` (0x20) meaning the whole symbology.
  */
-internal fun Format.members(): kotlin.collections.List<Format> =
+internal fun Format.members(): List<Format> =
     if (value shr 8 == 0x20) Format.entries.filter { it.value and 0xFF == value and 0xFF } else listOf(this)
 
 /**

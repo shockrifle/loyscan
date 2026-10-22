@@ -6,10 +6,11 @@ below.
 
 ## Active
 
-- [[list-route-shadows-kotlin-list]] — route `object List` hides `kotlin.collections.List`; types are inferred instead
+None.
 
 ## Removed
 
+- [[list-route-shadows-kotlin-list]] — route `object List` hid `kotlin.collections.List`; renamed to `CardList` (#17)
 - [[scanner-result-dialog-until-add-card-flow]] — a scan was only shown in a dialog, and "Enter manually" went back;
   replaced by the card form (#39)
 - [[line-based-sql-seed-parser]] — the seed SQL had to be one statement per line; replaced by the catalogue loader and

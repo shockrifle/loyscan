@@ -7,7 +7,7 @@ import com.bdaniel.loyscan.domain.ScannedBarcode
 import kotlinx.serialization.Serializable
 
 @Serializable
-object List
+object CardList
 
 @Immutable
 data class ListDirections(
@@ -135,7 +135,7 @@ data class CardFormDirections(
 fun NavController.cardFormDirections() = CardFormDirections(
     toCard = { id, color ->
         navigate(Detail(id, color, countUse = false)) {
-            popUpTo<List>()
+            popUpTo<CardList>()
         }
     },
     toBack = { navigateUp() }
