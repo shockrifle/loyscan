@@ -10,5 +10,13 @@ class FakeStoreRepository(stores: List<Store> = emptyList()) : StoreRepository {
 
     val stores = MutableStateFlow(stores)
 
+    /** When set, [add] throws it instead of saving, as Room does on a failed insert. */
+    var addFailure: Exception? = null
+
     override fun getAll(): Flow<List<Store>> = stores
+
+    override suspend fun add(store: Store) {
+        addFailure?.let { throw it }
+        stores.value += store
+    }
 }

@@ -59,3 +59,19 @@ fun StoreEntity.toDomainModel(): Store {
         updatedAt = updatedAt
     )
 }
+
+/** The store's row. */
+fun Store.toEntity(): StoreEntity {
+    return StoreEntity(
+        id = id,
+        name = name,
+        color = color,
+        logo = logo,
+        aliases = aliases,
+        countryCodes = countryCodes,
+        defaultBarcodeFormat = defaultBarcodeFormat,
+        cardNumberRule = cardNumberRule,
+        isCustom = isCustom,
+        updatedAt = updatedAt
+    )
+}

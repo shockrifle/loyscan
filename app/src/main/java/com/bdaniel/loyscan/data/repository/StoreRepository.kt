@@ -7,4 +7,7 @@ import kotlinx.coroutines.flow.Flow
 interface StoreRepository {
 
     fun getAll(): Flow<List<Store>>
+
+    /** Saves a new store, e.g. a custom one the user created (#6). */
+    suspend fun add(store: Store)
 }

@@ -41,4 +41,13 @@ class RoomStoreRepositoryTest {
             aStore(id = "second", name = "Second Store", color = "#112233"),
         )
     }
+
+    @Test
+    fun add_insertsTheStore_andGetAllEmitsIt() = runTest {
+        val custom = aStore(id = "custom", name = "Custom Store", countryCodes = emptyList(), isCustom = true)
+
+        repository.add(custom)
+
+        assertThat(repository.getAll().first()).contains(custom)
+    }
 }

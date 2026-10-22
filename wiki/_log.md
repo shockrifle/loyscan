@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-22 · updated · architecture · `StoreRepository.add` for custom stores (#6)
 - 2026-10-22 · review fix: the trigger decision's Why no longer calls every reading store a better match for a store without a rule · decisions/2026-10-22-store-suggestion-trigger · review of #6, round 3
 - 2026-10-22 · review fix: exact-format stores are offered only for a GS1 scan the picked plain rule reads, not for a plain read of a GS1 rule's card or another symbology; catch-all false hints recorded · decisions/2026-10-22-store-suggestion-trigger, features/add-card · review of #6, round 2
 - 2026-10-22 · review fix: the card form also offers stores when the picked store has no rule, and exact-format stores when its rule reads a scan only by symbology; decision page added; `StoreDao.getById` kept as a test-only query · decisions/2026-10-22-store-suggestion-trigger, decisions/_index, index, features/add-card, architecture · review of #6

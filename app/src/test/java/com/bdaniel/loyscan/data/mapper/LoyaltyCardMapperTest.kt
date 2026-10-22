@@ -87,4 +87,9 @@ class LoyaltyCardMapperTest {
     fun toEntity_copiesEveryFieldAndKeepsOnlyTheStoreId() {
         assertThat(withStore.toDomainModel().toEntity()).isEqualTo(withStore.loyaltyCard)
     }
+
+    @Test
+    fun storeToEntity_copiesEveryField() {
+        assertThat(withStore.store.toDomainModel().toEntity()).isEqualTo(withStore.store)
+    }
 }
