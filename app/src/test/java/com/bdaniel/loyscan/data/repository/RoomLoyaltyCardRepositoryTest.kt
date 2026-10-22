@@ -71,6 +71,13 @@ class RoomLoyaltyCardRepositoryTest {
     }
 
     @Test
+    fun delete_removesTheCard() = runTest {
+        repository.delete(cardId(3))
+
+        assertThat(repository.getByIdWithStore(cardId(3)).first()).isNull()
+    }
+
+    @Test
     fun getByIdWithStore_unknownId_emitsNull() = runTest {
         assertThat(repository.getByIdWithStore(cardId(99)).first()).isNull()
     }

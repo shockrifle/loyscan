@@ -19,6 +19,7 @@ import com.google.common.truth.Truth.assertThat
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import org.junit.Rule
@@ -134,6 +135,20 @@ class AppNavigationTest {
         composeRule.onNodeWithContentDescription("Back").performClick()
         composeRule.waitUntil { composeRule.onAllNodes(hasText("My Cards")).fetchSemanticsNodes().isNotEmpty() }
         composeRule.onNodeWithText("My Shop").assertIsDisplayed()
+    }
+
+    @Test
+    fun deletingACard_afterConfirming_returnsToTheListWithoutIt() { // #8
+        composeRule.waitUntil { composeRule.onAllNodes(hasText("Test Store")).fetchSemanticsNodes().isNotEmpty() }
+        composeRule.onNodeWithText("Test Store").performClick()
+        composeRule.waitUntil { composeRule.onAllNodes(hasText("Gold card")).fetchSemanticsNodes().isNotEmpty() }
+
+        composeRule.onNodeWithContentDescription("Delete").performClick()
+        composeRule.onNodeWithText("Delete").performClick()
+
+        composeRule.waitUntil { composeRule.onAllNodes(hasText("My Cards")).fetchSemanticsNodes().isNotEmpty() }
+        composeRule.waitUntil { composeRule.onAllNodes(hasText("Test Store")).fetchSemanticsNodes().isEmpty() }
+        assertThat(runBlocking { db.loyaltyCardDao().getAllWithStore().first() }).isEmpty()
     }
 
     private val brightness get() = composeRule.activity.window.attributes.screenBrightness

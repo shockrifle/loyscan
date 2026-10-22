@@ -22,4 +22,6 @@ class RoomLoyaltyCardRepository @Inject constructor(
     override suspend fun recordUse(id: String) = loyaltyCardDao.recordUse(id, clock.instant())
 
     override suspend fun add(card: LoyaltyCard) = loyaltyCardDao.insert(card.toEntity())
+
+    override suspend fun delete(id: String) = loyaltyCardDao.deleteById(id)
 }

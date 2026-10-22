@@ -1,7 +1,6 @@
 package com.bdaniel.loyscan.data.local.db.dao
 
 import androidx.room.Dao
-import androidx.room.Delete
 import androidx.room.Embedded
 import androidx.room.Insert
 import androidx.room.Query
@@ -29,8 +28,8 @@ interface LoyaltyCardDao {
     @Update
     suspend fun update(loyaltyCard: LoyaltyCardEntity)
 
-    @Delete
-    suspend fun delete(loyaltyCard: LoyaltyCardEntity)
+    @Query("DELETE FROM loyalty_cards WHERE id = :id")
+    suspend fun deleteById(id: String)
 
     // Usage isn't an edit of the card, so updatedAt stays as it is.
     @Query("UPDATE loyalty_cards SET useCount = useCount + 1, lastUsedAt = :at WHERE id = :id")

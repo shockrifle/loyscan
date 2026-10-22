@@ -58,13 +58,22 @@ UUID string.
   its room). It keeps the screen on (`KeepScreenOn()`, `FLAG_KEEP_SCREEN_ON`, same
   resumed-only rule as the brightness). A tap anywhere or back closes it. Its open state survives rotation
   (`rememberSaveable`). 1D barcodes are not rotated to the long side.
-- Back arrow → `directions.toBack()` → `navigateUp()`. The Edit icon is a no-op (`DetailScreen.kt:96`,
+- Back arrow → `directions.toBack()` → `navigateUp()`. The Edit icon is a no-op (`DetailScreen.kt`,
   `/* TODO */`).
+- **Delete** (#8): the top bar's Delete icon asks "Delete this card?" ("It is removed from this phone for good.").
+  "Cancel" or a tap outside closes the dialog. "Delete" calls `DetailViewModel.delete()` →
+  `LoyaltyCardRepository.delete(id)` (`LoyaltyCardDao.deleteById`, one `DELETE`), and once it is gone
+  (`Deletion.DELETED`) the screen goes back (`directions.toBack()`, to the list). Until then the card stays on screen:
+  the card flow skips the `null` a deleted card emits. A failed delete (the repository throws) is logged with Timber,
+  and the dialog says "The card couldn't be deleted. Try again."; "Delete" tries again (as a failed save does, #49).
+  Tests: `DetailViewModelTest.delete_…`, `DetailScreenTest.deleteAction_…`, `confirmingDelete_…`,
+  `aDeleteThatFails_…`, `AppNavigationTest.deletingACard_afterConfirming_returnsToTheListWithoutIt`.
 - The whole `Scaffold` is the shared element `card/{id}` — [[card-transition]].
 
-## Not implemented (as of 2026-10-15)
+## Not implemented (as of 2026-10-22)
 
-- Editing and deleting cards (#8). Adding is [[add-card]].
+- Editing cards (#8). Adding is [[add-card]]. Deleting several cards at once waits for the list's multi-select (#7),
+  and deleting a card's photo files for photos (#10); nothing stores photos yet.
 
 ## Known issues
 

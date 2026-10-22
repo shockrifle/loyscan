@@ -18,6 +18,9 @@ class FakeLoyaltyCardRepository(
     /** When set, [add] throws it instead of saving, as Room does on a failed insert. */
     var addFailure: Exception? = null
 
+    /** When set, [delete] throws it instead of deleting. */
+    var deleteFailure: Exception? = null
+
     override fun getAllWithStore(): Flow<List<LoyaltyCard>> = cards
 
     override fun getByIdWithStore(id: String): Flow<LoyaltyCard?> =
@@ -31,5 +34,10 @@ class FakeLoyaltyCardRepository(
     override suspend fun add(card: LoyaltyCard) {
         addFailure?.let { throw it }
         cards.value += card
+    }
+
+    override suspend fun delete(id: String) {
+        deleteFailure?.let { throw it }
+        cards.value = cards.value.filterNot { it.id == id }
     }
 }

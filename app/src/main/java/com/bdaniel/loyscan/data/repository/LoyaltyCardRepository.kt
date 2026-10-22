@@ -16,4 +16,7 @@ interface LoyaltyCardRepository {
 
     /** Saves a new card. Its store must already exist. */
     suspend fun add(card: LoyaltyCard)
+
+    /** Deletes the card. Does nothing for an unknown id. */
+    suspend fun delete(id: String)
 }

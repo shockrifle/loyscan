@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-22 · updated · card-detail, architecture · deleting a card from its detail screen, with a confirmation (#8)
 - 2026-10-22 · updated · add-card, 2026-10-22-custom-stores · the format message says "isn't a valid <format> number", true for a short EAN too (#47 review, round 3)
 - 2026-10-22 · updated · add-card, 2026-10-22-custom-stores, zxing-core · an EAN/UPC number one digit short is flagged, not completed with a check digit (#47 review, round 2)
 - 2026-10-22 · updated · add-card, 2026-10-22-custom-stores · the card form flags a typed number a rule-less store's format can't hold (#47 review)

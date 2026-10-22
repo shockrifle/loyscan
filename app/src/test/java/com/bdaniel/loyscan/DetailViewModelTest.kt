@@ -83,4 +83,32 @@ class DetailViewModelTest {
             expectNoEvents()
         }
     }
+
+    @Test
+    fun delete_deletesTheRoutedCard_andSaysSo() = runTest {
+        repository.cards.value += aLoyaltyCard(id = cardId(2))
+        val viewModel = DetailViewModel(SavedStateHandle(route = Detail(cardId = cardId(2), color = "#336699")), repository)
+
+        assertThat(viewModel.deletion.value).isEqualTo(DetailViewModel.Deletion.NONE)
+
+        viewModel.delete()
+
+        assertThat(viewModel.deletion.value).isEqualTo(DetailViewModel.Deletion.DELETED)
+        assertThat(repository.cards.value.map { it.id }).containsExactly(cardId(1))
+    }
+
+    @Test
+    fun delete_thatFails_keepsTheCard_saysSo_andCanBeTriedAgain() = runTest { // the delete mustn't crash, as a save (#49)
+        repository.deleteFailure = IllegalStateException("disk I/O error")
+        val viewModel = DetailViewModel(SavedStateHandle(route = Detail(cardId = cardId(1), color = "#336699")), repository)
+
+        viewModel.delete()
+        assertThat(viewModel.deletion.value).isEqualTo(DetailViewModel.Deletion.FAILED)
+        assertThat(repository.cards.value).hasSize(1)
+
+        repository.deleteFailure = null
+        viewModel.delete()
+        assertThat(viewModel.deletion.value).isEqualTo(DetailViewModel.Deletion.DELETED)
+        assertThat(repository.cards.value).isEmpty()
+    }
 }

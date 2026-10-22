@@ -49,11 +49,13 @@ class DetailScreenTest {
 
     private val keepsScreenOn get() = composeRule.activity.window.attributes.flags and FLAG_KEEP_SCREEN_ON != 0
 
-    private fun setScreen(color: String = "#336699", card: LoyaltyCard = this.card, onBack: () -> Unit = {}) {
-        val viewModel = DetailViewModel(
-            SavedStateHandle(route = Detail(cardId = card.id, color = color)),
-            FakeLoyaltyCardRepository(listOf(card)),
-        )
+    private fun setScreen(
+        color: String = "#336699",
+        card: LoyaltyCard = this.card,
+        repository: FakeLoyaltyCardRepository = FakeLoyaltyCardRepository(listOf(card)),
+        onBack: () -> Unit = {},
+    ) {
+        val viewModel = DetailViewModel(SavedStateHandle(route = Detail(cardId = card.id, color = color)), repository)
         composeRule.setContent {
             SharedTransitionLayout {
                 AnimatedVisibility(visible = true) {
@@ -224,6 +226,48 @@ class DetailScreenTest {
         composeRule.onNodeWithContentDescription("Back").performClick()
 
         assertThat(wentBack).isTrue()
+    }
+
+    @Test
+    fun deleteAction_asksFirst_andCancelKeepsTheCard() { // #8
+        val repository = FakeLoyaltyCardRepository(listOf(card))
+        var wentBack = false
+        setScreen(repository = repository, onBack = { wentBack = true })
+
+        composeRule.onNodeWithContentDescription("Delete").performClick()
+        composeRule.onNodeWithText("Delete this card?").assertIsDisplayed()
+        composeRule.onNodeWithText("Cancel").performClick()
+
+        composeRule.onNodeWithText("Delete this card?").assertDoesNotExist()
+        assertThat(repository.cards.value.map { it.id }).containsExactly(card.id)
+        assertThat(wentBack).isFalse()
+    }
+
+    @Test
+    fun confirmingDelete_deletesTheCard_andGoesBack() { // #8
+        val repository = FakeLoyaltyCardRepository(listOf(card))
+        var wentBack = false
+        setScreen(repository = repository, onBack = { wentBack = true })
+
+        composeRule.onNodeWithContentDescription("Delete").performClick()
+        composeRule.onNodeWithText("Delete").performClick()
+
+        composeRule.waitUntil { wentBack }
+        assertThat(repository.cards.value).isEmpty()
+    }
+
+    @Test
+    fun aDeleteThatFails_saysSo_andStaysOnTheCard() { // #8
+        val repository = FakeLoyaltyCardRepository(listOf(card)).apply { deleteFailure = IllegalStateException("disk I/O error") }
+        var wentBack = false
+        setScreen(repository = repository, onBack = { wentBack = true })
+
+        composeRule.onNodeWithContentDescription("Delete").performClick()
+        composeRule.onNodeWithText("Delete").performClick()
+
+        composeRule.onNodeWithText("The card couldn't be deleted. Try again.").assertIsDisplayed()
+        assertThat(repository.cards.value.map { it.id }).containsExactly(card.id)
+        assertThat(wentBack).isFalse()
     }
 
     @Test

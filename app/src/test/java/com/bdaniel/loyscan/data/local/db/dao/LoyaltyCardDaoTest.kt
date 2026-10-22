@@ -128,6 +128,27 @@ class LoyaltyCardDaoTest {
     }
 
     @Test
+    fun deleteById_deletesThatCardOnly() = runTest {
+        db.storeDao().insert(aStoreEntity())
+        dao.insert(aLoyaltyCardEntity(id = cardId(1)))
+        dao.insert(aLoyaltyCardEntity(id = cardId(2)))
+
+        dao.deleteById(cardId(1))
+
+        assertThat(dao.getAllWithStore().first().map { it.loyaltyCard.id }).containsExactly(cardId(2))
+    }
+
+    @Test
+    fun deleteById_unknownId_deletesNothing() = runTest {
+        db.storeDao().insert(aStoreEntity())
+        dao.insert(aLoyaltyCardEntity(id = cardId(1)))
+
+        dao.deleteById(cardId(99))
+
+        assertThat(dao.getAllWithStore().first()).hasSize(1)
+    }
+
+    @Test
     fun deletingAStore_deletesItsCards() = runTest {
         val store = aStoreEntity(id = "doomed")
         db.storeDao().insert(store)

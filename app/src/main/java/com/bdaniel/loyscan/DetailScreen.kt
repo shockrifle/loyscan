@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -27,9 +28,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -74,6 +77,11 @@ fun SharedTransitionScope.DetailScreen(
     viewModel: DetailViewModel = hiltViewModel()
 ) {
     val card by viewModel.card.collectAsState()
+    val deletion by viewModel.deletion.collectAsState()
+    var confirmingDelete by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(deletion) {
+        if (deletion == DetailViewModel.Deletion.DELETED) directions.toBack()
+    }
     // At the till the barcode must be readable, whatever the user's brightness setting.
     FullBrightness()
     val brandColor = color.toBrandColorOrNull() ?: MaterialTheme.colorScheme.surfaceVariant
@@ -95,6 +103,9 @@ fun SharedTransitionScope.DetailScreen(
                     actions = {
                         IconButton(onClick = { /* TODO: Handle edit */ }) {
                             Icon(Icons.Default.Edit, contentDescription = "Edit")
+                        }
+                        IconButton(onClick = { confirmingDelete = true }) {
+                            Icon(Icons.Default.Delete, contentDescription = "Delete")
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
@@ -183,7 +194,32 @@ fun SharedTransitionScope.DetailScreen(
         if (scanMode && barcode != null) {
             ScanMode(barcode, card.displayNumber, onExit = { scanMode = false })
         }
+        if (confirmingDelete && deletion != DetailViewModel.Deletion.DELETED) {
+            ConfirmDelete(
+                failed = deletion == DetailViewModel.Deletion.FAILED,
+                deleting = deletion == DetailViewModel.Deletion.DELETING,
+                onConfirm = viewModel::delete,
+                onDismiss = { confirmingDelete = false },
+            )
+        }
     }
+}
+
+/** Asks before deleting the card. A failed delete is said here, and "Delete" tries again. */
+@Composable
+private fun ConfirmDelete(failed: Boolean, deleting: Boolean, onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Delete this card?") },
+        text = {
+            Text(
+                if (failed) "The card couldn't be deleted. Try again." else "It is removed from this phone for good.",
+                color = if (failed) MaterialTheme.colorScheme.error else Color.Unspecified,
+            )
+        },
+        confirmButton = { TextButton(onClick = onConfirm, enabled = !deleting) { Text("Delete") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+    )
 }
 
 /**
