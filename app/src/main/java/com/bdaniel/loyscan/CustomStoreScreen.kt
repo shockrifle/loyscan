@@ -44,7 +44,7 @@ const val CUSTOM_STORE_NAME_TAG = "customStoreName"
 
 /**
  * "Other card": a store that isn't listed, with a name, a colour and the barcode format for its typed numbers.
- * Creating it opens the scanner for it.
+ * Creating it opens the scanner for it. Editing a custom store (#53) saves it and goes back.
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -57,11 +57,14 @@ fun CustomStoreScreen(
     LaunchedEffect(state.createdStoreId) {
         state.createdStoreId?.let(directions.toScanner)
     }
+    LaunchedEffect(state.saved) {
+        if (state.saved) directions.toBack()
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("New store") },
+                title = { Text(if (state.editing) "Edit store" else "New store") },
                 navigationIcon = {
                     IconButton(onClick = directions.toBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -71,6 +74,10 @@ fun CustomStoreScreen(
         },
         containerColor = Color.Transparent,
     ) { innerPadding ->
+        if (state.storeGone) {
+            Text("This store is no longer available.", modifier = Modifier.padding(innerPadding).padding(16.dp))
+        }
+        if (!state.ready) return@Scaffold
         Column(
             Modifier.padding(innerPadding).verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -116,15 +123,15 @@ fun CustomStoreScreen(
                 "A scanned card keeps the barcode it was scanned in.",
                 style = MaterialTheme.typography.bodyMedium,
             )
-            if (state.createFailed) {
+            if (state.saveFailed) {
                 Text(
                     "The store couldn't be saved. Try again.",
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodyMedium,
                 )
             }
-            Button(onClick = viewModel::create, enabled = state.canCreate, modifier = Modifier.fillMaxWidth()) {
-                Text("Create")
+            Button(onClick = viewModel::save, enabled = state.canSave, modifier = Modifier.fillMaxWidth()) {
+                Text(if (state.editing) "Save" else "Create")
             }
         }
     }

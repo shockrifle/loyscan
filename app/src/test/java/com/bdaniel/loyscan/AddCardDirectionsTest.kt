@@ -83,6 +83,16 @@ class AddCardDirectionsTest {
     }
 
     @Test
+    fun editingACustomStore_opensItsFormOverThePicker() { // #53
+        composeRule.runOnIdle { navController.storePickerDirections().toEditStore("custom-store") }
+
+        composeRule.runOnIdle {
+            assertThat(navController.currentBackStackEntry!!.toRoute<CustomStore>()).isEqualTo(CustomStore("custom-store"))
+            assertThat(navController.previousBackStackEntry?.destination?.hasRoute(StorePicker::class)).isTrue()
+        }
+    }
+
+    @Test
     fun backFromTheCustomStoreForm_returnsToThePicker() {
         composeRule.runOnIdle { navController.storePickerDirections().toCustomStore() }
         composeRule.runOnIdle { navController.customStoreDirections().toBack() }

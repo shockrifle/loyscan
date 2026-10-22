@@ -49,19 +49,22 @@ object StorePicker
 data class StorePickerDirections(
     val toStore: (storeId: String) -> Unit,
     val toCustomStore: () -> Unit,
+    /** Edits the custom store [storeId] (#53). */
+    val toEditStore: (storeId: String) -> Unit,
     val toBack: () -> Unit
 )
 
 fun NavController.storePickerDirections() = StorePickerDirections(
     toStore = { storeId -> navigate(Scanner(storeId)) },
-    toCustomStore = { navigate(CustomStore) },
+    toCustomStore = { navigate(CustomStore()) },
+    toEditStore = { storeId -> navigate(CustomStore(storeId)) },
     toBack = { navigateUp() }
 )
 
 
-/** "Other card": a store that isn't listed, created before its card is added. */
+/** "Other card": a store that isn't listed, created before its card is added. With [storeId], edits that custom store (#53). */
 @Serializable
-object CustomStore
+data class CustomStore(val storeId: String? = null)
 
 @Immutable
 data class CustomStoreDirections(

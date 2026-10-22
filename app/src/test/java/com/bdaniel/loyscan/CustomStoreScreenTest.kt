@@ -17,6 +17,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.testing.FakeStoreRepository
 import com.bdaniel.loyscan.testing.SOME_INSTANT
+import com.bdaniel.loyscan.testing.aStore
+import androidx.navigation.testing.invoke
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -102,8 +104,36 @@ class CustomStoreScreenTest {
         assertThat(backs).isEqualTo(1)
     }
 
-    private fun setScreen() {
-        val viewModel = CustomStoreViewModel(SavedStateHandle(), stores, Clock.fixed(SOME_INSTANT, ZoneOffset.UTC))
+    @Test
+    fun editingAStore_showsItsValues_andSavingItReturns() { // #53
+        stores.stores.value = listOf(aStore(id = "custom", name = "My Shop", color = CustomStoreViewModel.COLORS[2].hex, isCustom = true))
+        setScreen(CustomStore("custom"))
+
+        composeRule.onNodeWithText("Edit store").assertIsDisplayed()
+        composeRule.onNodeWithText("My Shop").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription(CustomStoreViewModel.COLORS[2].name).assertIsSelected()
+        composeRule.onNodeWithText("Create").assertDoesNotExist()
+        composeRule.onNodeWithText(BarcodeFormat.QR_CODE.displayName).performScrollTo().performClick()
+        composeRule.onNodeWithText("Save").performScrollTo().performClick()
+
+        composeRule.runOnIdle {
+            assertThat(stores.stores.value.single().defaultBarcodeFormat).isEqualTo(BarcodeFormat.QR_CODE)
+            assertThat(backs).isEqualTo(1)
+            assertThat(scanned).isEmpty()
+        }
+    }
+
+    @Test
+    fun editingAStoreThatIsGone_saysSo_withoutAForm() { // #53
+        setScreen(CustomStore("gone"))
+
+        composeRule.onNodeWithText("This store is no longer available.").assertIsDisplayed()
+        composeRule.onNodeWithTag(CUSTOM_STORE_NAME_TAG).assertDoesNotExist()
+        composeRule.onNodeWithText("Save").assertDoesNotExist()
+    }
+
+    private fun setScreen(route: CustomStore = CustomStore()) {
+        val viewModel = CustomStoreViewModel(SavedStateHandle(route = route), stores, Clock.fixed(SOME_INSTANT, ZoneOffset.UTC))
         val directions = CustomStoreDirections(toScanner = { scanned += it }, toBack = { backs++ })
         composeRule.setContent { CustomStoreScreen(directions = directions, viewModel = viewModel) }
     }

@@ -25,6 +25,7 @@ class StorePickerScreenTest {
     private val picked = mutableListOf<String>()
     private var backs = 0
     private var customStores = 0
+    private val edited = mutableListOf<String>()
 
     @Test
     fun showsEveryStore() {
@@ -81,6 +82,17 @@ class StorePickerScreenTest {
     }
 
     @Test
+    fun aCustomStoresEditButton_opensItsForm_andACatalogueStoreHasNone() { // #53
+        setScreen(aStore(id = "first", name = "First Store"), aStore(id = "custom", name = "My Shop", isCustom = true))
+
+        composeRule.onNodeWithContentDescription("Edit My Shop").performClick()
+
+        assertThat(edited).containsExactly("custom")
+        assertThat(picked).isEmpty()
+        composeRule.onNodeWithContentDescription("Edit First Store").assertDoesNotExist()
+    }
+
+    @Test
     fun back_goesBack() {
         setScreen()
 
@@ -94,6 +106,7 @@ class StorePickerScreenTest {
         val directions = StorePickerDirections(
             toStore = { picked += it },
             toCustomStore = { customStores++ },
+            toEditStore = { edited += it },
             toBack = { backs++ },
         )
         composeRule.setContent { StorePickerScreen(directions = directions, viewModel = viewModel) }

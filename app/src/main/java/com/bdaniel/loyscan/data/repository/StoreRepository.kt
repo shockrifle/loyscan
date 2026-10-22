@@ -10,4 +10,10 @@ interface StoreRepository {
 
     /** Saves a new store, e.g. a custom one the user created (#6). */
     suspend fun add(store: Store)
+
+    /**
+     * Saves an edit of a custom store (#53): its name, colour, barcode format for typed numbers and `updatedAt`. Does
+     * nothing for a catalogue store or an unknown id.
+     */
+    suspend fun update(store: Store)
 }

@@ -36,7 +36,10 @@ const val STORE_SEARCH_TAG = "storeSearch"
 // Not a store id: catalogue ids are slugs and custom ones UUIDs.
 private const val OTHER_CARD_KEY = "other card"
 
-/** First step of adding a card: pick the store, searching by name or alias, or "Other card" for one that isn't listed. */
+/**
+ * First step of adding a card: pick the store, searching by name or alias, or "Other card" for one that isn't listed.
+ * A custom store has an Edit button (#53).
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StorePickerScreen(
@@ -89,6 +92,15 @@ fun StorePickerScreen(
                                     .clip(CircleShape)
                                     .background(store.color.toBrandColorOrNull() ?: MaterialTheme.colorScheme.surfaceVariant)
                             )
+                        },
+                        trailingContent = if (store.isCustom) {
+                            {
+                                IconButton(onClick = { directions.toEditStore(store.id) }) {
+                                    Icon(Icons.Default.Edit, contentDescription = "Edit ${store.name}")
+                                }
+                            }
+                        } else {
+                            null
                         },
                         modifier = Modifier.clickable { directions.toStore(store.id) },
                     )

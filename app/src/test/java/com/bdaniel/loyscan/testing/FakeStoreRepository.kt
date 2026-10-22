@@ -24,4 +24,21 @@ class FakeStoreRepository(stores: List<Store> = emptyList()) : StoreRepository {
         addFailure?.let { throw it }
         stores.value += store
     }
+
+    /** When set, [update] throws it instead of saving. */
+    var updateFailure: Exception? = null
+
+    /** Like the Room repository: only a custom store's name, colour, format and `updatedAt` change. */
+    override suspend fun update(store: Store) {
+        updateFailure?.let { throw it }
+        stores.value = stores.value.map {
+            if (it.id != store.id || !it.isCustom) it
+            else it.copy(
+                name = store.name,
+                color = store.color,
+                defaultBarcodeFormat = store.defaultBarcodeFormat,
+                updatedAt = store.updatedAt,
+            )
+        }
+    }
 }

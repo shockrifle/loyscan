@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-22 · created edit-store; updated add-card, 2026-10-22-custom-stores, architecture, features/_index, index · editing a custom store from the store picker (#53)
 - 2026-10-22 · review fix: the catalogue decision's index summary says the demo cards were removed · decisions/_index · review of #55
 - 2026-10-22 · updated · seed-data (now a removal note), architecture, faq (demo-cards question rewritten), add-card, store-catalogue, reset-local-database, coil-image-loading, integrations/_index, 2026-10-13-curated-store-catalogue, glossary, index, features/_index, tdd, CLAUDE · debug demo cards removed (#55)
 - 2026-10-22 · review fix: DetailViewModel and DetailScreen entry-point line references updated · architecture, card-detail · review of #8, round 2

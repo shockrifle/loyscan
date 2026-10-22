@@ -8,6 +8,7 @@ One page per non-trivial user-visible feature or flow. Lead with what the user e
 - [[card-transition]] — list ↔ detail shared-element animation
 - [[add-card]] — adding a card: store picker, scanner, form with live check, save (#6, in progress)
 - [[edit-card]] — editing a card's label and number in the same form (#8, in progress)
+- [[edit-store]] — editing a custom store's name, colour and format from the picker (#53)
 - [[barcode-scanner]] — camera scanner (CameraX + zxing-cpp), permission flow, torch, hint
 - [[store-catalogue]] — the shipped store list, synced into the database on every open
 - [[seed-data]] — the former debug demo cards (removed, #55)

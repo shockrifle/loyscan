@@ -16,4 +16,8 @@ class RoomStoreRepository @Inject constructor(private val storeDao: StoreDao) : 
     override suspend fun add(store: Store) {
         storeDao.insert(store.toEntity())
     }
+
+    override suspend fun update(store: Store) {
+        storeDao.updateCustom(store.id, store.name, store.color, store.defaultBarcodeFormat, store.updatedAt)
+    }
 }

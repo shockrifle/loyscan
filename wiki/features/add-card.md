@@ -20,7 +20,8 @@ stores already in the database, and custom stores). Everything runs offline on t
   name. The search field narrows it to stores whose name or an alias contains the text, ignoring case and accents
   (`StoreSearch.search`: NFD, combining marks removed), so "mobelix" finds "Möbelix". Sorting uses the same key. With
   no match the screen says "No store matches “…”". Tapping a store opens the scanner for it. "Other card", first in
-  the list and shown whatever the search, opens the custom-store form.
+  the list and shown whatever the search, opens the custom-store form. A custom store's row has an Edit button
+  ([[edit-store]]).
 - **Custom store** ([[2026-10-22-custom-stores]]): a name (required, trimmed), one of eight colours (the first picked
   by default) and the barcode format for the store's typed numbers (Code 128 by default; the 13 formats of
   `BarcodeFormat.forCustomStores`, no GS1 or DataBar, #47). A scan keeps its own format. "Create" saves the store once
@@ -98,6 +99,6 @@ stores already in the database, and custom stores). Everything runs offline on t
 
 ## Not implemented
 
-From #6: "frequently added" stores for the user's country, and "add another". A custom store can't be edited or
-deleted, and one abandoned before its first card stays in the picker. A GS1 Aztec or PDF417 scan loses its GS1
+From #6: "frequently added" stores for the user's country, and "add another". A custom store can be edited from
+the picker ([[edit-store]]), but not deleted, so one abandoned before its first card stays in the picker. A GS1 Aztec or PDF417 scan loses its GS1
 mark when saved (#48).

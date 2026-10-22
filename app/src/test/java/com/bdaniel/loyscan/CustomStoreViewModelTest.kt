@@ -1,6 +1,8 @@
 package com.bdaniel.loyscan
 
 import androidx.lifecycle.SavedStateHandle
+import androidx.navigation.testing.invoke
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.cash.turbine.test
 import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.testing.FakeStoreRepository
@@ -11,11 +13,14 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
 import java.util.UUID
 
+/** Reads its route (`CustomStore.storeId`), which needs a Bundle, so it runs on Robolectric. */
+@RunWith(AndroidJUnit4::class)
 class CustomStoreViewModelTest {
 
     @get:Rule
@@ -31,7 +36,7 @@ class CustomStoreViewModelTest {
             assertThat(state.name).isEmpty()
             assertThat(state.color).isEqualTo(CustomStoreViewModel.COLORS.first().hex)
             assertThat(state.format).isEqualTo(BarcodeFormat.CODE_128)
-            assertThat(state.canCreate).isFalse()
+            assertThat(state.canSave).isFalse()
         }
     }
 
@@ -48,10 +53,10 @@ class CustomStoreViewModelTest {
             skipItems(1)
 
             viewModel.onNameChange("My Shop")
-            assertThat(awaitItem().canCreate).isTrue()
+            assertThat(awaitItem().canSave).isTrue()
 
             viewModel.onNameChange("   ")
-            assertThat(awaitItem().canCreate).isFalse()
+            assertThat(awaitItem().canSave).isFalse()
         }
     }
 
@@ -66,7 +71,7 @@ class CustomStoreViewModelTest {
 
         viewModel.state.test {
             skipItems(1)
-            viewModel.create()
+            viewModel.save()
 
             val created = expectMostRecentItem().createdStoreId
             val saved = stores.stores.value.single { it.id == created }
@@ -93,8 +98,8 @@ class CustomStoreViewModelTest {
         val viewModel = viewModel()
         viewModel.onNameChange("My Shop")
 
-        viewModel.create()
-        viewModel.create()
+        viewModel.save()
+        viewModel.save()
 
         assertThat(stores.stores.value.filter { it.isCustom }).hasSize(1)
     }
@@ -106,8 +111,8 @@ class CustomStoreViewModelTest {
         val gate = CompletableDeferred<Unit>()
         stores.addGate = gate
 
-        viewModel.create()
-        viewModel.create()
+        viewModel.save()
+        viewModel.save()
         gate.complete(Unit)
 
         assertThat(stores.stores.value.filter { it.isCustom }).hasSize(1)
@@ -118,7 +123,7 @@ class CustomStoreViewModelTest {
         val viewModel = viewModel()
         viewModel.onNameChange(" ")
 
-        viewModel.create()
+        viewModel.save()
 
         assertThat(stores.stores.value.filter { it.isCustom }).isEmpty()
     }
@@ -133,16 +138,16 @@ class CustomStoreViewModelTest {
             viewModel.onNameChange("My Shop")
             skipItems(1)
 
-            viewModel.create()
+            viewModel.save()
             val failed = expectMostRecentItem()
-            assertThat(failed.createFailed).isTrue()
+            assertThat(failed.saveFailed).isTrue()
             assertThat(failed.createdStoreId).isNull()
-            assertThat(failed.canCreate).isTrue()
+            assertThat(failed.canSave).isTrue()
 
             stores.addFailure = null
-            viewModel.create()
+            viewModel.save()
             val created = expectMostRecentItem()
-            assertThat(created.createFailed).isFalse()
+            assertThat(created.saveFailed).isFalse()
             assertThat(created.createdStoreId).isNotNull()
         }
     }
@@ -163,6 +168,121 @@ class CustomStoreViewModelTest {
             assertThat(state.format).isEqualTo(BarcodeFormat.QR_CODE)
         }
     }
+
+    @Test
+    fun editingAStore_startsAsTheStore() = runTest { // #53
+        stores.stores.value += custom
+
+        editViewModel().state.test {
+            val state = expectMostRecentItem()
+            assertThat(state.editing).isTrue()
+            assertThat(state.ready).isTrue()
+            assertThat(state.name).isEqualTo("My Shop")
+            assertThat(state.color).isEqualTo(CustomStoreViewModel.COLORS[4].hex)
+            assertThat(state.format).isEqualTo(BarcodeFormat.EAN_13)
+            assertThat(state.canSave).isTrue()
+        }
+    }
+
+    @Test
+    fun savingAnEdit_writesTheNewNameColourAndFormat_andSaysItIsSaved() = runTest { // #53
+        stores.stores.value += custom
+        val viewModel = editViewModel()
+
+        viewModel.state.test {
+            skipItems(1)
+            viewModel.onNameChange(" My Gym ")
+            viewModel.onColorChange(CustomStoreViewModel.COLORS[1].hex)
+            viewModel.onFormatChange(BarcodeFormat.QR_CODE)
+            viewModel.save()
+
+            val state = expectMostRecentItem()
+            assertThat(state.saved).isTrue()
+            assertThat(state.createdStoreId).isNull()
+            assertThat(stores.stores.value.single { it.id == custom.id }).isEqualTo(
+                custom.copy(
+                    name = "My Gym",
+                    color = CustomStoreViewModel.COLORS[1].hex,
+                    defaultBarcodeFormat = BarcodeFormat.QR_CODE,
+                    updatedAt = now,
+                )
+            )
+            assertThat(stores.stores.value).hasSize(2)
+        }
+    }
+
+    @Test
+    fun aFailedEdit_saysSo_andCanBeTriedAgain() = runTest { // #53
+        stores.stores.value += custom
+        stores.updateFailure = IllegalStateException("update failed")
+        val viewModel = editViewModel()
+
+        viewModel.state.test {
+            skipItems(1)
+            viewModel.onNameChange("My Gym")
+            viewModel.save()
+            val failed = expectMostRecentItem()
+            assertThat(failed.saveFailed).isTrue()
+            assertThat(failed.saved).isFalse()
+            assertThat(failed.canSave).isTrue()
+
+            stores.updateFailure = null
+            viewModel.save()
+            assertThat(expectMostRecentItem().saved).isTrue()
+            assertThat(stores.stores.value.single { it.id == custom.id }.name).isEqualTo("My Gym")
+        }
+    }
+
+    @Test
+    fun editingAStoreThatIsGone_saysSo_andCantBeSaved() = runTest { // #53
+        val viewModel = editViewModel()
+
+        viewModel.state.test {
+            val state = expectMostRecentItem()
+            assertThat(state.storeGone).isTrue()
+            assertThat(state.ready).isFalse()
+            assertThat(state.canSave).isFalse()
+            viewModel.save()
+            assertThat(stores.stores.value).hasSize(1)
+        }
+    }
+
+    @Test
+    fun aCatalogueStore_cantBeEdited() = runTest { // #53
+        val viewModel = editViewModel("existing")
+
+        viewModel.state.test {
+            assertThat(expectMostRecentItem().storeGone).isTrue()
+            viewModel.onNameChange("Renamed")
+            viewModel.save()
+            assertThat(expectMostRecentItem().canSave).isFalse()
+            assertThat(stores.stores.value.single().name).isEqualTo("Existing Store")
+        }
+    }
+
+    @Test
+    fun anEdit_isRestoredAfterProcessDeath() = runTest { // #53
+        stores.stores.value += custom
+        val handle = SavedStateHandle(route = CustomStore(custom.id))
+        viewModel(handle).onNameChange("My Gym")
+
+        viewModel(SavedStateHandle(handle.keys().associateWith { handle.get<Any?>(it) })).state.test {
+            val state = expectMostRecentItem()
+            assertThat(state.name).isEqualTo("My Gym")
+            assertThat(state.format).isEqualTo(BarcodeFormat.EAN_13)
+        }
+    }
+
+    private val custom = aStore(
+        id = "custom",
+        name = "My Shop",
+        color = CustomStoreViewModel.COLORS[4].hex,
+        countryCodes = emptyList(),
+        defaultBarcodeFormat = BarcodeFormat.EAN_13,
+        isCustom = true,
+    )
+
+    private fun editViewModel(storeId: String = custom.id) = viewModel(SavedStateHandle(route = CustomStore(storeId)))
 
     private fun viewModel(handle: SavedStateHandle = SavedStateHandle()) =
         CustomStoreViewModel(handle, stores, Clock.fixed(now, ZoneOffset.UTC))

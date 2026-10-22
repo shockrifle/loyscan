@@ -6,7 +6,9 @@ import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
 import com.bdaniel.loyscan.data.local.db.entity.StoreEntity
+import com.bdaniel.loyscan.domain.BarcodeFormat
 import kotlinx.coroutines.flow.Flow
+import java.time.Instant
 
 @Dao
 interface StoreDao {
@@ -18,6 +20,13 @@ interface StoreDao {
 
     @Delete
     suspend fun delete(store: StoreEntity)
+
+    /** What editing a custom store changes (#53). A catalogue store is left alone: the catalogue owns it. */
+    @Query(
+        "UPDATE stores SET name = :name, color = :color, defaultBarcodeFormat = :defaultBarcodeFormat, " +
+            "updatedAt = :updatedAt WHERE id = :id AND isCustom = 1"
+    )
+    suspend fun updateCustom(id: String, name: String, color: String, defaultBarcodeFormat: BarcodeFormat, updatedAt: Instant)
 
     @Query("SELECT * FROM stores")
     fun getAll(): Flow<List<StoreEntity>>
