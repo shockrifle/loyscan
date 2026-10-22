@@ -11,6 +11,7 @@ import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.domain.LoyaltyCard
 import com.bdaniel.loyscan.domain.Store
 import com.bdaniel.loyscan.domain.cardnumber.CardNumberEngine
+import com.bdaniel.loyscan.domain.matchingScan
 import com.bdaniel.loyscan.domain.cardnumber.Validation
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
@@ -48,6 +49,11 @@ data class CardFormState(
     val saveFailed: Boolean = false,
     /** The id of the saved card, once it is saved. */
     val savedCardId: String? = null,
+    /**
+     * Other stores whose rule reads the scan, when this store's rule can't have produced it (#6): those whose rule names
+     * the scan's symbology first, then by name. [CardFormViewModel.switchStore] picks one.
+     */
+    val suggestedStores: kotlin.collections.List<Store> = emptyList(),
 ) {
     /** Anything but an empty number can be saved, an invalid one "anyway". */
     val canSave: Boolean get() = store != null && check != NumberCheck.Empty && !saving && savedCardId == null
@@ -62,7 +68,10 @@ data class CardFormState(
     }
 }
 
-/** Last step of adding a card: the label and number for the routed store, from a scan or typed. */
+/**
+ * Last step of adding a card: the label and number for the routed store, from a scan or typed. The store can be switched
+ * to one whose rule reads the scan; the scan and label stay.
+ */
 @HiltViewModel
 class CardFormViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
@@ -74,6 +83,9 @@ class CardFormViewModel @Inject constructor(
     private val route = savedStateHandle.toRoute<CardForm>()
     private val scan = route.scannedContent?.let { content -> route.scannedFormat?.let { content to it } }
 
+    /** The routed store, until [switchStore] picks another. */
+    private val storeId = savedStateHandle.getStateFlow(STORE_ID, route.storeId)
+
     private val label = savedStateHandle.getStateFlow(LABEL, "")
 
     /** `null` while the number is the untouched scan. */
@@ -82,8 +94,8 @@ class CardFormViewModel @Inject constructor(
     private val progress = MutableStateFlow(Progress())
 
     val state: StateFlow<CardFormState> =
-        combine(storeRepository.getById(route.storeId), label, typedNumber, progress) { store, label, typed, progress ->
-            formState(store, label, typed, progress)
+        combine(storeId, storeRepository.getAll(), label, typedNumber, progress) { id, stores, label, typed, progress ->
+            formState(id, stores, label, typed, progress)
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
@@ -98,6 +110,11 @@ class CardFormViewModel @Inject constructor(
         // A scan shown as something other than its content can't be edited, or the rendering would become the number.
         if (!state.value.numberEditable) return
         savedStateHandle[TYPED_NUMBER] = number
+    }
+
+    /** Makes the form [storeId]'s, keeping the scan and the label; for a store from [CardFormState.suggestedStores]. */
+    fun switchStore(storeId: String) {
+        savedStateHandle[STORE_ID] = storeId
     }
 
     /** Drops the scan, for a number typed from the card instead. */
@@ -144,7 +161,14 @@ class CardFormViewModel @Inject constructor(
         )
     }
 
-    private fun formState(store: Store?, label: String, typed: String?, progress: Progress): CardFormState {
+    private fun formState(
+        storeId: String,
+        stores: kotlin.collections.List<Store>,
+        label: String,
+        typed: String?,
+        progress: Progress,
+    ): CardFormState {
+        val store = stores.firstOrNull { it.id == storeId }
         if (store == null) return CardFormState(label = label, number = typed.orEmpty())
         val draft = draft(store, typed)
         val scannedFormat = draft.scannedFormat
@@ -174,6 +198,11 @@ class CardFormViewModel @Inject constructor(
             saving = progress.saving,
             saveFailed = progress.saveFailed,
             savedCardId = progress.savedCardId,
+            suggestedStores = if (check == NumberCheck.ScanDoesNotMatchStore && scannedFormat != null) {
+                stores.filter { it.id != store.id }.matchingScan(draft.number, scannedFormat)
+            } else {
+                emptyList()
+            },
         )
     }
 
@@ -184,6 +213,7 @@ class CardFormViewModel @Inject constructor(
     )
 
     private companion object {
+        const val STORE_ID = "chosenStoreId"
         const val LABEL = "label"
         const val TYPED_NUMBER = "typedNumber"
     }

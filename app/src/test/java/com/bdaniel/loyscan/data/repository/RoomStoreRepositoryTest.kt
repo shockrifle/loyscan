@@ -41,14 +41,4 @@ class RoomStoreRepositoryTest {
             aStore(id = "second", name = "Second Store", color = "#112233"),
         )
     }
-
-    @Test
-    fun getById_returnsTheDomainStore() = runTest {
-        assertThat(repository.getById("second").first()).isEqualTo(aStore(id = "second", name = "Second Store", color = "#112233"))
-    }
-
-    @Test
-    fun getById_unknownId_emitsNull() = runTest {
-        assertThat(repository.getById("missing").first()).isNull()
-    }
 }

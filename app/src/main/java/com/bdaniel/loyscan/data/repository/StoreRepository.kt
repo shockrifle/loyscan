@@ -7,7 +7,4 @@ import kotlinx.coroutines.flow.Flow
 interface StoreRepository {
 
     fun getAll(): Flow<List<Store>>
-
-    /** Emits `null` while no store has this id. */
-    fun getById(id: String): Flow<Store?>
 }

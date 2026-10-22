@@ -45,7 +45,8 @@ const val CARD_LABEL_TAG = "cardLabel"
 
 /**
  * Last step of adding a card: the number (scanned or typed), checked live against the store's rule, and an optional
- * label. A number that fails the check can still be saved ("Save anyway"); saving opens the new card.
+ * label. A number that fails the check can still be saved ("Save anyway"); a scan another store's rule reads offers
+ * that store. Saving opens the new card.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -108,6 +109,14 @@ fun CardFormScreen(
             )
             if (!state.numberEditable) {
                 TextButton(onClick = viewModel::typeNumberInstead) { Text("Type the number instead") }
+            }
+            if (state.suggestedStores.isNotEmpty()) {
+                Column {
+                    Text("It looks like a card from:", style = MaterialTheme.typography.bodyMedium)
+                    state.suggestedStores.forEach { suggested ->
+                        TextButton(onClick = { viewModel.switchStore(suggested.id) }) { Text(suggested.name) }
+                    }
+                }
             }
             state.barcodeFormat?.let { format ->
                 Text(

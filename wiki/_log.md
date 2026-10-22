@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-22 · card form: when the picked store's rule rejects a scan, every other store whose rule reads it is offered (same symbology first, then by name), and tapping one switches the form's store; `StoreRepository.getById` dropped · features/add-card, architecture · #6, #47
 - 2026-10-22 · `CardNumberEngine.match` compares symbologies (`BarcodeFormat.symbology`), so a GS1 scan and a plain rule of the same symbology agree, and the reverse · decisions/2026-10-09-card-number-rule-engine, decisions/2026-10-21-gs1-mark-as-barcode-format, tech-debt/gs1-128-drawn-as-code-128 · #47
 - 2026-10-22 · review fixes: the failed-save example names a reachable cause; a store removed while the form is open empties the form; every exception is caught and is logged only in debug builds · features/add-card · review of #49
 - 2026-10-22 · card form: a failed save is logged and leaves the form open with "The card couldn't be saved. Try again." instead of crashing; `FakeLoyaltyCardRepository.addFailure` makes `add` throw · features/add-card, workflows/tdd · #49

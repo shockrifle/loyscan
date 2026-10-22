@@ -10,6 +10,4 @@ import javax.inject.Singleton
 class RoomStoreRepository @Inject constructor(private val storeDao: StoreDao) : StoreRepository {
 
     override fun getAll() = storeDao.getAll().map { stores -> stores.map { it.toDomainModel() } }
-
-    override fun getById(id: String) = storeDao.getById(id).map { it?.toDomainModel() }
 }

@@ -36,10 +36,19 @@ stores already in the database). Everything runs offline on the local database.
   - typed: `CardNumberEngine.validate`; each error has a message (too short, too long, characters the store doesn't
     use, wrong start, check digit). An empty field can't be saved.
   - untouched scan: `CardNumberEngine.match`; if the rule can't have produced the content, "This barcode doesn't
-    look like a <store> card." `RuleMatch.formatMatches` is ignored, so a GS1 scan of a store whose rule names the
-    plain symbology isn't flagged (#47). A store without a rule accepts any scan.
-  - **"Save anyway":** with a problem shown, the button says "Save anyway" and saves the card as it is. Suggesting
-    another store whose rule matches the scan isn't implemented.
+    look like a <store> card." `RuleMatch.formatMatches` is ignored, so a scan whose symbology differs from the
+    rule's isn't flagged; a GS1 scan and a plain rule of the same symbology agree anyway (#47). A store without a rule
+    accepts any scan.
+  - **Another store** (step 5 of #6): when the picked store's rule rejects the scan, the form lists every other store
+    whose rule reads it, under "It looks like a card from:" (`matchingScan` in `domain/StoreSearch.kt`): those whose
+    rule names the scan's symbology (with or without the GS1 mark) first, then by name. Every match is offered, so the
+    user chooses when several rules read the same number (e.g. a rule without a required start reads any valid
+    EAN-13). Stores without a rule are never offered, and nothing is offered when the picked store has no rule, reads
+    the scan, or the number is typed: product choices, 2026-10-22. Tapping one makes the form that store's
+    (`CardFormViewModel.switchStore`): the scan and the label stay, the check runs against the new rule, and the card
+    is saved for it. The chosen store is kept in the `SavedStateHandle`, so back still returns to the picker and the
+    choice survives process death. The form reads every store for this (`StoreRepository.getAll`).
+  - **"Save anyway":** with a problem shown, the button says "Save anyway" and saves the card as it is.
   - The field isn't reformatted while typing. When the card will show the number differently (the rule's display
     pattern), the field says "Shown as 1234 5674" under it.
 - **Label** is optional; blank is stored as `null`.
@@ -53,15 +62,16 @@ stores already in the database). Everything runs offline on the local database.
   shows the message instead of crashing; it is logged with Timber, which logs nothing in release builds. A store
   removed while the form is open leaves the form empty (the store is gone), not this message; nothing removes a
   store yet.
-- Label and typed number are kept in the `SavedStateHandle`, so they survive process death.
+- Label, typed number and a switched store are kept in the `SavedStateHandle`, so they survive process death.
 
 ## Tests
 
-- `domain/StoreSearchTest`: matching (name, alias, case, accents) and order.
+- `domain/StoreSearchTest`: matching (name, alias, case, accents) and order; stores whose rule reads a scan, incl. a
+  GS1 scan against a plain rule and the reverse (#47).
 - `StorePickerViewModelTest`, `StorePickerScreenTest`.
 - `CardFormViewModelTest`: checks for typed numbers and scans (incl. the GS1 case), editing a scan, which scans are
   read-only, what is saved (typed, untouched scan, edited scan), one save only, a failed save and saving again, an unknown
-  store, restore after process death. The card saved is built from the same draft the state shows, so the two can't disagree. `CardFormScreenTest`: messages, "Save anyway", the scan line, save → opens the card, a failed save says so.
+  store, restore after process death, the stores offered for a scan, and switching to one (kept after process death). The card saved is built from the same draft the state shows, so the two can't disagree. `CardFormScreenTest`: messages, "Save anyway", the scan line, another store offered and switched to, save → opens the card, a failed save says so.
 - `AddCardDirectionsTest`: where each step's directions lead, incl. GS1 separators surviving the route.
 - `DetailViewModelTest.opening_aCardJustAdded_countsNoUse`.
 - `AppNavigationTest`: picker → scanner → back, and adding a card by hand end to end.
@@ -69,5 +79,5 @@ stores already in the database). Everything runs offline on the local database.
 ## Not implemented
 
 From #6: "frequently added" stores for the user's country, custom stores (and picking a barcode format for them),
-suggesting another store when a scan matches it better, and "add another". A GS1 Aztec or PDF417 scan loses its GS1
+and "add another". A GS1 Aztec or PDF417 scan loses its GS1
 mark when saved (#48).

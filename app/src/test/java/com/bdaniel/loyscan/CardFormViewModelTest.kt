@@ -41,7 +41,10 @@ class CardFormViewModelTest {
     )
     private val store = aStore(id = "ruled", name = "Ruled Store", color = "#112233", cardNumberRule = rule)
     private val plainStore = aStore(id = "plain", name = "Plain Store", defaultBarcodeFormat = BarcodeFormat.QR_CODE)
-    private val stores = FakeStoreRepository(listOf(store, plainStore))
+    // The same rule, but the number must start with 9; and the same rule for QR codes.
+    private val nineStore = aStore(id = "nine", name = "Nine Store", cardNumberRule = rule.copy(coreStartsWith = listOf("9")))
+    private val qrStore = aStore(id = "qr", name = "A QR Store", cardNumberRule = rule.copy(format = BarcodeFormat.QR_CODE))
+    private val stores = FakeStoreRepository(listOf(store, plainStore, nineStore, qrStore))
     private val cards = FakeLoyaltyCardRepository()
 
     @Test
@@ -304,6 +307,78 @@ class CardFormViewModelTest {
             val saved = expectMostRecentItem()
             assertThat(saved.saveFailed).isFalse()
             assertThat(saved.savedCardId).isEqualTo(cards.cards.value.single().id)
+        }
+    }
+
+    @Test
+    fun aScanThePickedStoresRuleRejects_suggestsEveryStoreWhoseRuleReadsIt_sameSymbologyFirst() = runTest { // #6
+        viewModel(CardForm("nine", scannedContent = "12345674", scannedFormat = BarcodeFormat.CODE_128)).state.test {
+            val state = awaitLoaded()
+            assertThat(state.check).isEqualTo(NumberCheck.ScanDoesNotMatchStore)
+            assertThat(state.suggestedStores).containsExactly(store, qrStore).inOrder()
+        }
+    }
+
+    @Test
+    fun aScanThePickedStoreReads_orAStoreWithoutARule_suggestsNothing() = runTest {
+        viewModel(CardForm("ruled", scannedContent = "12345674", scannedFormat = BarcodeFormat.CODE_128)).state.test {
+            assertThat(awaitLoaded().suggestedStores).isEmpty()
+        }
+        viewModel(CardForm("plain", scannedContent = "12345674", scannedFormat = BarcodeFormat.CODE_128)).state.test {
+            assertThat(awaitLoaded().suggestedStores).isEmpty()
+        }
+    }
+
+    @Test
+    fun aTypedNumber_suggestsNothing() = runTest {
+        val viewModel = viewModel(CardForm("nine"))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.onNumberChange("12345674")
+
+            val state = awaitItem()
+            assertThat(state.check).isEqualTo(NumberCheck.Invalid(setOf(Validation.Error.WRONG_START)))
+            assertThat(state.suggestedStores).isEmpty()
+        }
+    }
+
+    @Test
+    fun switchingToASuggestedStore_keepsTheScanAndTheLabel_andSavesTheCardForThatStore() = runTest {
+        val viewModel = viewModel(CardForm("nine", scannedContent = "12345674", scannedFormat = BarcodeFormat.CODE_128))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.onLabelChange("Mine")
+            viewModel.switchStore("ruled")
+
+            val state = expectMostRecentItem()
+            assertThat(state.store).isEqualTo(store)
+            assertThat(state.label).isEqualTo("Mine")
+            assertThat(state.number).isEqualTo("1234 5674")
+            assertThat(state.scannedFormat).isEqualTo(BarcodeFormat.CODE_128)
+            assertThat(state.check).isEqualTo(NumberCheck.Valid)
+            assertThat(state.suggestedStores).isEmpty()
+
+            viewModel.save()
+            expectMostRecentItem()
+            val saved = cards.cards.value.single()
+            assertThat(saved.store.id).isEqualTo("ruled")
+            assertThat(saved.number).isEqualTo("12345674")
+            assertThat(saved.scannedFormat).isEqualTo(BarcodeFormat.CODE_128)
+            assertThat(saved.label).isEqualTo("Mine")
+        }
+    }
+
+    @Test
+    fun aSwitchedStore_isRestoredAfterProcessDeath() = runTest {
+        val handle = SavedStateHandle(route = CardForm("nine", scannedContent = "12345674", scannedFormat = BarcodeFormat.CODE_128))
+        viewModel(handle).switchStore("ruled")
+
+        val restored = SavedStateHandle(handle.keys().associateWith { handle.get<Any?>(it) })
+
+        viewModel(restored).state.test {
+            assertThat(awaitLoaded().store).isEqualTo(store)
         }
     }
 

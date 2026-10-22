@@ -47,6 +47,8 @@ class CardFormScreenTest {
         display = CardNumberRule.Display(pattern = "#### ####"),
     )
     private val store = aStore(id = "ruled", name = "Ruled Store", color = "#112233", cardNumberRule = rule)
+    // The same rule, but the number must start with 9.
+    private val nineStore = aStore(id = "nine", name = "Nine Store", cardNumberRule = rule.copy(coreStartsWith = listOf("9")))
     private val cards = FakeLoyaltyCardRepository()
     private val opened = mutableListOf<Pair<String, String>>()
     private var backs = 0
@@ -80,10 +82,25 @@ class CardFormScreenTest {
     }
 
     @Test
+    fun aScanAnotherStoresRuleReads_offersThatStore_andTappingItMakesTheFormThatStores() { // #6
+        setScreen(CardForm("nine", scannedContent = "12345674", scannedFormat = BarcodeFormat.CODE_128))
+        composeRule.onNodeWithText("This barcode doesn't look like a Nine Store card.").assertIsDisplayed()
+        composeRule.onNodeWithText("It looks like a card from:").assertIsDisplayed()
+
+        composeRule.onNodeWithText("Ruled Store").performScrollTo().performClick()
+
+        composeRule.onNodeWithText("Nine Store").assertDoesNotExist()
+        composeRule.onNodeWithText("It looks like a card from:").assertDoesNotExist()
+        composeRule.onNodeWithText("Ruled Store").assertIsDisplayed()
+        composeRule.onNodeWithText("Save").assertIsEnabled()
+    }
+
+    @Test
     fun aScanTheStoreDoesNotUse_saysSo_andOffersSaveAnyway() {
         setScreen(CardForm("ruled", scannedContent = "ABC", scannedFormat = BarcodeFormat.QR_CODE))
 
         composeRule.onNodeWithText("This barcode doesn't look like a Ruled Store card.").assertIsDisplayed()
+        composeRule.onNodeWithText("It looks like a card from:").assertDoesNotExist() // no other store reads it
         composeRule.onNodeWithText("Save anyway").assertIsEnabled()
     }
 
@@ -148,7 +165,7 @@ class CardFormScreenTest {
     private fun setScreen(route: CardForm) {
         val viewModel = CardFormViewModel(
             SavedStateHandle(route = route),
-            FakeStoreRepository(listOf(store, aStore(id = "plain", name = "Plain Store"))),
+            FakeStoreRepository(listOf(store, aStore(id = "plain", name = "Plain Store"), nineStore)),
             cards,
             Clock.fixed(SOME_INSTANT, ZoneOffset.UTC),
         )

@@ -23,8 +23,8 @@ All paths below are under `app/src/main/java/com/bdaniel/loyscan/` unless writte
 
 Note: `LoyaltyCardRepository`'s writes are `recordUse(id)` (opening a card counts a use, #4) and `add(card)` (the
 add-card flow, #6), which maps the domain card to its row with `LoyaltyCard.toEntity()` (`data/mapper/LoyaltyCardMapper.kt`).
-`StoreRepository` is read-only (`getAll`, `getById`), an interface with `RoomStoreRepository` behind it since #6; its
-unused entity-taking `insert` was dropped then. When a feature needs more writes, add them to the interface in domain
+`StoreRepository` is read-only (`getAll`), an interface with `RoomStoreRepository` behind it since #6; its
+unused entity-taking `insert` was dropped then, and `getById` once the card form needed every store (2026-10-22). When a feature needs more writes, add them to the interface in domain
 terms, with domain→entity mappers. Time comes from an injected `java.time.Clock`
 (`di/ClockModule.kt`), so tests pass `Clock.fixed(…)`.
 
