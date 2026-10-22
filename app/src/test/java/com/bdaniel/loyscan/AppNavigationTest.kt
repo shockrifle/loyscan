@@ -79,13 +79,15 @@ class AppNavigationTest {
     }
 
     @Test
-    fun addCard_opensTheScanner_andBackReturnsToTheList() {
+    fun addCard_opensTheStorePicker_pickingAStoreOpensTheScanner_andBackReturnsToThePicker() {
         composeRule.onNodeWithContentDescription("Add card").performClick()
+        composeRule.waitUntil { composeRule.onAllNodes(hasText("Choose store")).fetchSemanticsNodes().isNotEmpty() }
 
+        composeRule.onNodeWithText("Test Store").performClick()
         composeRule.waitUntil { composeRule.onAllNodes(hasText("Scan card")).fetchSemanticsNodes().isNotEmpty() }
 
         composeRule.onNodeWithContentDescription("Back").performClick()
-        composeRule.onNodeWithText("My Cards").assertIsDisplayed()
+        composeRule.waitUntil { composeRule.onAllNodes(hasText("Choose store")).fetchSemanticsNodes().isNotEmpty() }
         composeRule.onNodeWithText("Scan card").assertDoesNotExist()
     }
 

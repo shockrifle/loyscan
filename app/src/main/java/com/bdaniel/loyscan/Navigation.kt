@@ -12,7 +12,7 @@ object List
 @Immutable
 data class ListDirections(
     val toCard: (id: String, color: String) -> Unit,
-    val toScanner: () -> Unit,
+    val toAddCard: () -> Unit,
     val toBack: () -> Unit
 )
 
@@ -20,7 +20,7 @@ fun NavController.listDirections() = ListDirections(
     toCard = { id, color ->
         navigate(Detail(id, color))
     },
-    toScanner = { navigate(Scanner) },
+    toAddCard = { navigate(StorePicker) },
     toBack = { navigateUp() }
 )
 
@@ -38,8 +38,25 @@ fun NavController.detailDirections() = DetailDirections(
 )
 
 
+/** First step of adding a card (#6): which store it is for. */
 @Serializable
-object Scanner
+object StorePicker
+
+@Immutable
+data class StorePickerDirections(
+    val toStore: (storeId: String) -> Unit,
+    val toBack: () -> Unit
+)
+
+fun NavController.storePickerDirections() = StorePickerDirections(
+    toStore = { storeId -> navigate(Scanner(storeId)) },
+    toBack = { navigateUp() }
+)
+
+
+/** Scans the card being added for the store [storeId]. */
+@Serializable
+data class Scanner(val storeId: String)
 
 @Immutable
 data class ScannerDirections(

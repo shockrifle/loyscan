@@ -37,7 +37,7 @@ class ListScreenTest {
         val card = aLoyaltyCard(id = cardId(5), store = aStore(name = "Test Store", color = "#AA0000"))
         val viewModel = ListViewModel(FakeLoyaltyCardRepository(listOf(card)))
         var navigatedTo: Pair<String, String>? = null
-        val directions = ListDirections(toCard = { id, color -> navigatedTo = id to color }, toScanner = {}, toBack = {})
+        val directions = ListDirections(toCard = { id, color -> navigatedTo = id to color }, toAddCard = {}, toBack = {})
 
         composeRule.setContent {
             SharedTransitionLayout {
@@ -68,13 +68,13 @@ class ListScreenTest {
     }
 
     @Test
-    fun addCard_opensTheScanner() {
-        var scannerOpened = 0
-        setScreen(directions = ListDirections(toCard = { _, _ -> }, toScanner = { scannerOpened++ }, toBack = {}))
+    fun addCard_startsAddingACard() {
+        var addCardOpened = 0
+        setScreen(directions = ListDirections(toCard = { _, _ -> }, toAddCard = { addCardOpened++ }, toBack = {}))
 
         composeRule.onNodeWithContentDescription("Add card").performClick()
 
-        assertThat(scannerOpened).isEqualTo(1)
+        assertThat(addCardOpened).isEqualTo(1)
     }
 
     @Test
@@ -91,7 +91,7 @@ class ListScreenTest {
 
     private fun setScreen(
         vararg cards: LoyaltyCard,
-        directions: ListDirections = ListDirections(toCard = { _, _ -> }, toScanner = {}, toBack = {}),
+        directions: ListDirections = ListDirections(toCard = { _, _ -> }, toAddCard = {}, toBack = {}),
     ) {
         val viewModel = ListViewModel(FakeLoyaltyCardRepository(cards.toList()))
         composeRule.setContent {

@@ -60,7 +60,7 @@ fun SharedTransitionScope.ListScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = directions.toScanner) {
+            FloatingActionButton(onClick = directions.toAddCard) {
                 Icon(Icons.Default.Add, contentDescription = "Add card")
             }
         },

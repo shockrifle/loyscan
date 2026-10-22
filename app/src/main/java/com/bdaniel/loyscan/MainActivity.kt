@@ -66,6 +66,9 @@ fun SharedTransitionScope.AppNavigation(modifier: Modifier = Modifier) {
                 directions = navController.detailDirections()
             )
         }
+        composable<StorePicker> {
+            StorePickerScreen(directions = navController.storePickerDirections())
+        }
         composable<Scanner> {
             ScannerScreen(directions = navController.scannerDirections())
         }

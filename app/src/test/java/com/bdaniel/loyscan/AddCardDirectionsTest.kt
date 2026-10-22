@@ -19,9 +19,9 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/** Where the scanner's directions lead, on a navigation graph with the app's routes and empty screens. */
+/** Where the add-card flow's directions lead, on a navigation graph with the app's routes and empty screens. */
 @RunWith(AndroidJUnit4::class)
-class ScannerDirectionsTest {
+class AddCardDirectionsTest {
 
     @get:Rule
     val composeRule = createComposeRule()
@@ -37,15 +37,32 @@ class ScannerDirectionsTest {
             }
             NavHost(navController, startDestination = List) {
                 composable<List> {}
+                composable<StorePicker> {}
                 composable<Scanner> {}
                 dialog<ScanResult> {}
             }
         }
-        composeRule.runOnIdle { navController.listDirections().toScanner() }
+        composeRule.runOnIdle { navController.listDirections().toAddCard() }
+    }
+
+    @Test
+    fun addCard_opensTheStorePicker() {
+        composeRule.runOnIdle { assertThat(currentIs<StorePicker>()).isTrue() }
+    }
+
+    @Test
+    fun pickingAStore_opensTheScannerForIt() {
+        composeRule.runOnIdle { navController.storePickerDirections().toStore("some-store") }
+
+        composeRule.runOnIdle {
+            assertThat(navController.currentBackStackEntry!!.toRoute<Scanner>()).isEqualTo(Scanner("some-store"))
+            assertThat(navController.previousBackStackEntry?.destination?.hasRoute(StorePicker::class)).isTrue()
+        }
     }
 
     @Test
     fun aScan_showsItsResultOverTheList() {
+        composeRule.runOnIdle { navController.storePickerDirections().toStore("some-store") }
         composeRule.runOnIdle {
             navController.scannerDirections().onScanned(ScannedBarcode("5901234123457", BarcodeFormat.EAN_13))
         }
@@ -53,12 +70,12 @@ class ScannerDirectionsTest {
         composeRule.runOnIdle {
             val entry = navController.currentBackStackEntry!!
             assertThat(entry.toRoute<ScanResult>()).isEqualTo(ScanResult("5901234123457", BarcodeFormat.EAN_13))
-            assertThat(navController.previousBackStackEntry?.destination?.hasRoute(List::class)).isTrue()
         }
     }
 
     @Test
     fun aGs1Scan_keepsItsGs1MarkInTheResult() { // #41
+        composeRule.runOnIdle { navController.storePickerDirections().toStore("some-store") }
         composeRule.runOnIdle {
             navController.scannerDirections().onScanned(ScannedBarcode("9799123456789012", BarcodeFormat.GS1_128, gs1 = true))
         }
@@ -70,9 +87,11 @@ class ScannerDirectionsTest {
     }
 
     @Test
-    fun enterManually_returnsToTheList() {
-        composeRule.runOnIdle { navController.scannerDirections().toManualEntry() }
+    fun backFromThePicker_returnsToTheList() {
+        composeRule.runOnIdle { navController.storePickerDirections().toBack() }
 
-        composeRule.runOnIdle { assertThat(navController.currentBackStackEntry?.destination?.hasRoute(List::class)).isTrue() }
+        composeRule.runOnIdle { assertThat(currentIs<List>()).isTrue() }
     }
+
+    private inline fun <reified T : Any> currentIs() = navController.currentBackStackEntry?.destination?.hasRoute(T::class) == true
 }

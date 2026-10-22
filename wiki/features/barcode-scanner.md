@@ -2,13 +2,13 @@
 
 A full-screen camera view that reads a card's barcode and hands on the first scan: its content exactly as decoded,
 its format, and whether it holds GS1 data (a Code 128, Data Matrix or QR marked GS1 is handed on as `GS1_128`, `GS1_DATA_MATRIX` or
-`GS1_QR_CODE`: [[zxing-cpp]] → Contract). Offline, without Play Services ([[2026-10-16-zxing-cpp-for-scanning]], [[zxing-cpp]]). Until the
-add-card flow ([#6](https://github.com/shockrifle/loyscan/issues/6)) exists, the list's "Add card" button opens it
-directly and a scan is only shown in a dialog: [[scanner-result-dialog-until-add-card-flow]].
+`GS1_QR_CODE`: [[zxing-cpp]] → Contract). Offline, without Play Services ([[2026-10-16-zxing-cpp-for-scanning]], [[zxing-cpp]]). It is the step
+after the store picker of [[add-card]]; until the card form exists, a scan is only shown in a dialog:
+[[scanner-result-dialog-until-add-card-flow]].
 
 **Entry points** (under `app/src/main/java/com/bdaniel/loyscan/`):
 - `ScannerScreen.kt:46`, `ScannerScreen`; state in `ScannerViewModel.kt`.
-- Route `Scanner`, `ScannerDirections` and `scannerDirections()` in `Navigation.kt:41-63`; registered in
+- Route `Scanner(storeId)`, `ScannerDirections` and `scannerDirections()` in `Navigation.kt:41-63`; registered in
   `MainActivity.kt:69-74`.
 - `ui/scanner/`: `CameraPermission.kt` (permission state), `CameraScanner.kt` (CameraX, `ScanAnalyzer`),
   `ZxingCppFrameReader.kt` and `ZxingCppFormats.kt` (decoding).
@@ -62,7 +62,7 @@ directly and a scan is only shown in a dialog: [[scanner-result-dialog-until-add
 - `CameraPermissionTest`: the real permission state, with the system dialog replaced by an `ActivityResultRegistry`
   that answers at once (or leaves the request open, for the rotation test) and Robolectric's permission and rationale shadows.
 - `ZxingCppFormatsTest`, `ZxingCppResultsTest`, `NoPlayServicesTest`: see [[zxing-cpp]].
-- `ScannerDirectionsTest`, `AppNavigationTest.addCard_opensTheScanner_andBackReturnsToTheList`: navigation.
+- `AddCardDirectionsTest`, `AppNavigationTest.addCard_opensTheStorePicker_pickingAStoreOpensTheScanner_andBackReturnsToThePicker`: navigation.
 
 Not covered by JVM tests: `ProcessCameraOpener` and `ZxingCppFrameReader.read`, which need a camera and the native
 library. Checked on a device (Android 15, 2026-10-19, final build): EAN-13, Code 128, QR, PDF417, GS1 DataBar and
