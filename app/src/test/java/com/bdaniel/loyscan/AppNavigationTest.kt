@@ -9,6 +9,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.bdaniel.loyscan.data.local.db.AppDatabase
@@ -111,6 +112,28 @@ class AppNavigationTest {
         composeRule.onNodeWithContentDescription("Back").performClick()
         composeRule.waitUntil { composeRule.onAllNodes(hasText("My Cards")).fetchSemanticsNodes().isNotEmpty() }
         assertThat(composeRule.onAllNodes(hasText("Test Store")).fetchSemanticsNodes()).hasSize(2)
+    }
+
+    @Test
+    fun addingACardForANewCustomStore_createsTheStore_savesTheCard_andTheListShowsIt() { // #6
+        composeRule.onNodeWithContentDescription("Add card").performClick()
+        composeRule.waitUntil { composeRule.onAllNodes(hasText("Other card")).fetchSemanticsNodes().isNotEmpty() }
+        composeRule.onNodeWithText("Other card").performClick()
+        composeRule.waitUntil { composeRule.onAllNodes(hasText("New store")).fetchSemanticsNodes().isNotEmpty() }
+
+        composeRule.onNodeWithTag(CUSTOM_STORE_NAME_TAG).performTextInput("My Shop")
+        composeRule.onNodeWithText("Create").performScrollTo().performClick()
+        composeRule.waitUntil { composeRule.onAllNodes(hasText("Enter manually")).fetchSemanticsNodes().isNotEmpty() }
+        composeRule.onNodeWithText("Enter manually").performClick()
+        composeRule.waitUntil { composeRule.onAllNodes(hasText("Card number")).fetchSemanticsNodes().isNotEmpty() }
+        composeRule.onNodeWithText("My Shop").assertIsDisplayed()
+        composeRule.onNodeWithTag(CARD_NUMBER_TAG).performTextInput("4242")
+        composeRule.onNodeWithText("Save").performClick()
+
+        composeRule.waitUntil { composeRule.onAllNodes(hasText("4242")).fetchSemanticsNodes().isNotEmpty() }
+        composeRule.onNodeWithContentDescription("Back").performClick()
+        composeRule.waitUntil { composeRule.onAllNodes(hasText("My Cards")).fetchSemanticsNodes().isNotEmpty() }
+        composeRule.onNodeWithText("My Shop").assertIsDisplayed()
     }
 
     private val brightness get() = composeRule.activity.window.attributes.screenBrightness

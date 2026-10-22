@@ -33,6 +33,15 @@ enum class BarcodeFormat(
     UPC_E("UPC-E"),
     ;
 
+    companion object {
+        /**
+         * The formats a custom store's typed numbers can be drawn in (#47): each one ZXing core can write as itself.
+         * Not the GS1 formats (a typed number isn't GS1 data, so GS1-128 would put an FNC1 in front of it) nor DataBar
+         * (no writer). A GS1 card keeps its format by being scanned ([wiki: 2026-10-22-custom-stores]).
+         */
+        val forCustomStores: List<BarcodeFormat> = entries.filter { !it.isGs1 }
+    }
+
     /** Always holds GS1 data. */
     val isGs1: Boolean
         get() = this == GS1_128 || this == GS1_DATA_MATRIX || this == GS1_QR_CODE ||

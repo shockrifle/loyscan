@@ -20,6 +20,7 @@ inferred.
 - [[2026-10-16-zxing-cpp-for-scanning]] — zxing-cpp 3.1.1 + CameraX for scanning: reads all DataBar, no Play Services; not ML Kit
 - [[2026-10-21-gs1-scans-shown-as-hri]] — a GS1 scan no rule matches is shown as `(01)…(10)…`; other control characters as a space
 - [[2026-10-21-gs1-mark-as-barcode-format]] — a GS1 Data Matrix or QR scan is stored as `GS1_DATA_MATRIX` / `GS1_QR_CODE`, not a flag; GS1 data falls back to GS1-128, then GS1 QR
+- [[2026-10-22-custom-stores]] — "Other card" saves a custom store on its own screen, with the barcode format for its typed numbers; the picker offers the 13 formats ZXing core writes as themselves, no GS1 or DataBar
 - [[2026-10-22-store-suggestion-trigger]] — the card form offers other stores for a scan the picked store rejects, reads only by symbology, or has no rule for; exact format ranks first
 
 ## Superseded

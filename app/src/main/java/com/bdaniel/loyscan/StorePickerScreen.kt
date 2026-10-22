@@ -33,7 +33,10 @@ import com.bdaniel.loyscan.ui.toBrandColorOrNull
 
 const val STORE_SEARCH_TAG = "storeSearch"
 
-/** First step of adding a card: pick the store, searching by name or alias. */
+// Not a store id: catalogue ids are slugs and custom ones UUIDs.
+private const val OTHER_CARD_KEY = "other card"
+
+/** First step of adding a card: pick the store, searching by name or alias, or "Other card" for one that isn't listed. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StorePickerScreen(
@@ -68,6 +71,14 @@ fun StorePickerScreen(
                 Text("No store matches “${query.trim()}”", modifier = Modifier.padding(16.dp))
             }
             LazyColumn {
+                item(key = OTHER_CARD_KEY) {
+                    ListItem(
+                        headlineContent = { Text("Other card") },
+                        supportingContent = { Text("A store that isn't listed") },
+                        leadingContent = { Icon(Icons.Default.Add, contentDescription = null) },
+                        modifier = Modifier.clickable(onClick = directions.toCustomStore),
+                    )
+                }
                 items(stores, key = { it.id }) { store ->
                     ListItem(
                         headlineContent = { Text(store.name) },

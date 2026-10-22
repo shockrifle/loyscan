@@ -30,7 +30,8 @@ another field. A flag would also mean nothing on most formats (EAN-13, ITF, …)
 ## Consequences
 - A GS1 Aztec or PDF417 scan keeps its plain format: ZXing core 3.5.3 can't write either in GS1 mode, so a saved one
   loses the mark. `ScannedBarcode.gs1` still says what was scanned.
-- A format picker (custom stores, #6) lists formats from this enum. Whether it offers the `GS1_` ones is not decided.
+- The custom-store format picker (#6) offers no `GS1_` format and no DataBar: `BarcodeFormat.forCustomStores`, decided
+  in #47 ([[2026-10-22-custom-stores]]). A GS1 card keeps its mark by being scanned.
 - `CardNumberEngine.match` compared formats exactly, so a GS1 QR or Data Matrix scan reported
   `formatMatches = false` against a `QR_CODE` / `DATA_MATRIX` rule (e.g. `hu-ikea-family`), as a GS1-128 scan
   did against a `CODE_128` rule ([[gs1-128-drawn-as-code-128]] → Risk). Found in review. Since 2026-10-22 (#47) it

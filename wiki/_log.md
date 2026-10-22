@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-22 · created 2026-10-22-custom-stores; updated add-card, 2026-10-21-gs1-mark-as-barcode-format, decisions/_index, index · custom stores ("Other card") and the format picker's list (#6, #47)
 - 2026-10-22 · updated · architecture · `StoreRepository.add` for custom stores (#6)
 - 2026-10-22 · review fix: the trigger decision's Why no longer calls every reading store a better match for a store without a rule · decisions/2026-10-22-store-suggestion-trigger · review of #6, round 3
 - 2026-10-22 · review fix: exact-format stores are offered only for a GS1 scan the picked plain rule reads, not for a plain read of a GS1 rule's card or another symbology; catch-all false hints recorded · decisions/2026-10-22-store-suggestion-trigger, features/add-card · review of #6, round 2

@@ -24,6 +24,7 @@ class StorePickerScreenTest {
 
     private val picked = mutableListOf<String>()
     private var backs = 0
+    private var customStores = 0
 
     @Test
     fun showsEveryStore() {
@@ -62,6 +63,24 @@ class StorePickerScreenTest {
     }
 
     @Test
+    fun otherCard_opensTheCustomStoreForm() {
+        setScreen(aStore(id = "first", name = "First Store"))
+
+        composeRule.onNodeWithText("Other card").performClick()
+
+        assertThat(customStores).isEqualTo(1)
+    }
+
+    @Test
+    fun otherCard_isOfferedWhenTheSearchMatchesNothing() {
+        setScreen(aStore(id = "first", name = "First Store"))
+
+        composeRule.onNodeWithTag(STORE_SEARCH_TAG).performTextInput("xyz")
+
+        composeRule.onNodeWithText("Other card").assertIsDisplayed()
+    }
+
+    @Test
     fun back_goesBack() {
         setScreen()
 
@@ -72,7 +91,11 @@ class StorePickerScreenTest {
 
     private fun setScreen(vararg stores: Store) {
         val viewModel = StorePickerViewModel(FakeStoreRepository(stores.toList()))
-        val directions = StorePickerDirections(toStore = { picked += it }, toBack = { backs++ })
+        val directions = StorePickerDirections(
+            toStore = { picked += it },
+            toCustomStore = { customStores++ },
+            toBack = { backs++ },
+        )
         composeRule.setContent { StorePickerScreen(directions = directions, viewModel = viewModel) }
     }
 }

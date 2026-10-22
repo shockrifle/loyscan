@@ -62,6 +62,29 @@ class BarcodeEncoderTest {
     }
 
     @Test
+    fun everyFormatACustomStoreCanPick_isDrawnAsItself() { // #47: a typed number never needs a fallback format
+        val examples = mapOf(
+            BarcodeFormat.CODABAR to "123456",
+            BarcodeFormat.CODE_39 to "LOY-42",
+            BarcodeFormat.CODE_93 to "LOY-42",
+            BarcodeFormat.EAN_8 to "96385074",
+            BarcodeFormat.EAN_13 to "5901234123457",
+            BarcodeFormat.ITF to "12345678",
+            BarcodeFormat.UPC_A to "036000291452",
+            BarcodeFormat.UPC_E to "01234565",
+        )
+
+        BarcodeFormat.forCustomStores.forEach { format ->
+            val content = examples[format] ?: "LoyScan 0042".takeIf { format != BarcodeFormat.CODE_128 } ?: "Loy42-x"
+
+            val barcode = BarcodeEncoder.encode(content, format)
+
+            assertWithMessage(format.name).that(barcode!!.format).isEqualTo(format)
+            assertWithMessage(format.name).that(decode(barcode)).isEqualTo(content)
+        }
+    }
+
+    @Test
     fun gs1_128_isCode128WithALeadingFnc1() { // #33: the FNC1 tells a till the content is GS1 data
         val gs1 = read(BarcodeEncoder.encode("9799123456789012", BarcodeFormat.GS1_128)!!)
         val plain = read(BarcodeEncoder.encode("9799123456789012", BarcodeFormat.CODE_128)!!)

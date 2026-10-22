@@ -37,6 +37,7 @@ class AddCardDirectionsTest {
             NavHost(navController, startDestination = List) {
                 composable<List> {}
                 composable<StorePicker> {}
+                composable<CustomStore> {}
                 composable<Scanner> {}
                 composable<CardForm> {}
                 composable<Detail> {}
@@ -58,6 +59,35 @@ class AddCardDirectionsTest {
             assertThat(navController.currentBackStackEntry!!.toRoute<Scanner>()).isEqualTo(Scanner("some-store"))
             assertThat(navController.previousBackStackEntry?.destination?.hasRoute(StorePicker::class)).isTrue()
         }
+    }
+
+    @Test
+    fun otherCard_opensTheCustomStoreForm() {
+        composeRule.runOnIdle { navController.storePickerDirections().toCustomStore() }
+
+        composeRule.runOnIdle {
+            assertThat(currentIs<CustomStore>()).isTrue()
+            assertThat(navController.previousBackStackEntry?.destination?.hasRoute(StorePicker::class)).isTrue()
+        }
+    }
+
+    @Test
+    fun creatingACustomStore_replacesItsFormWithTheScannerForIt() {
+        composeRule.runOnIdle { navController.storePickerDirections().toCustomStore() }
+        composeRule.runOnIdle { navController.customStoreDirections().toScanner("new-store") }
+
+        composeRule.runOnIdle {
+            assertThat(navController.currentBackStackEntry!!.toRoute<Scanner>()).isEqualTo(Scanner("new-store"))
+            assertThat(navController.previousBackStackEntry?.destination?.hasRoute(StorePicker::class)).isTrue()
+        }
+    }
+
+    @Test
+    fun backFromTheCustomStoreForm_returnsToThePicker() {
+        composeRule.runOnIdle { navController.storePickerDirections().toCustomStore() }
+        composeRule.runOnIdle { navController.customStoreDirections().toBack() }
+
+        composeRule.runOnIdle { assertThat(currentIs<StorePicker>()).isTrue() }
     }
 
     @Test

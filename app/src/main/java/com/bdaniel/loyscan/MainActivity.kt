@@ -68,6 +68,9 @@ fun SharedTransitionScope.AppNavigation(modifier: Modifier = Modifier) {
         composable<StorePicker> {
             StorePickerScreen(directions = navController.storePickerDirections())
         }
+        composable<CustomStore> {
+            CustomStoreScreen(directions = navController.customStoreDirections())
+        }
         composable<Scanner> {
             ScannerScreen(directions = navController.scannerDirections(it.toRoute<Scanner>().storeId))
         }

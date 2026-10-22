@@ -46,11 +46,34 @@ object StorePicker
 @Immutable
 data class StorePickerDirections(
     val toStore: (storeId: String) -> Unit,
+    val toCustomStore: () -> Unit,
     val toBack: () -> Unit
 )
 
 fun NavController.storePickerDirections() = StorePickerDirections(
     toStore = { storeId -> navigate(Scanner(storeId)) },
+    toCustomStore = { navigate(CustomStore) },
+    toBack = { navigateUp() }
+)
+
+
+/** "Other card": a store that isn't listed, created before its card is added. */
+@Serializable
+object CustomStore
+
+@Immutable
+data class CustomStoreDirections(
+    val toScanner: (storeId: String) -> Unit,
+    val toBack: () -> Unit
+)
+
+/** The created store's scanner replaces the form, so back returns to the picker, where the new store is listed. */
+fun NavController.customStoreDirections() = CustomStoreDirections(
+    toScanner = { storeId ->
+        navigate(Scanner(storeId)) {
+            popUpTo<CustomStore> { inclusive = true }
+        }
+    },
     toBack = { navigateUp() }
 )
 

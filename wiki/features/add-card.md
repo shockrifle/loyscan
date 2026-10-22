@@ -3,13 +3,14 @@
 The list's "Add card" button starts adding a card: pick the store, scan its barcode (or enter the number by hand),
 check the number and give the card a label, then save it. The new card opens. Issue
 [#6](https://github.com/shockrifle/loyscan/issues/6); this page describes the slice that exists (catalogue and other
-stores already in the database). Everything runs offline on the local database.
+stores already in the database, and custom stores). Everything runs offline on the local database.
 
 **Entry points** (under `app/src/main/java/com/bdaniel/loyscan/`):
 - `StorePickerScreen.kt`, `StorePickerViewModel.kt`; search in `domain/StoreSearch.kt`.
+- `CustomStoreScreen.kt`, `CustomStoreViewModel.kt` ("Other card"); formats in `BarcodeFormat.forCustomStores`.
 - [[barcode-scanner]] (`ScannerScreen.kt`), unchanged except for where its directions lead.
 - `CardFormScreen.kt`, `CardFormViewModel.kt` (`CardFormState`).
-- Routes and directions in `Navigation.kt`: `StorePicker`, `Scanner(storeId)`,
+- Routes and directions in `Navigation.kt`: `StorePicker`, `CustomStore`, `Scanner(storeId)`,
   `CardForm(storeId, scannedContent?, scannedFormat?)`; `ListDirections.toAddCard` starts the flow. Saving uses
   `LoyaltyCardRepository.add`.
 
@@ -18,7 +19,16 @@ stores already in the database). Everything runs offline on the local database.
 - **Store picker.** Every store in the database (catalogue, custom and, in debug builds, demo stores), sorted by
   name. The search field narrows it to stores whose name or an alias contains the text, ignoring case and accents
   (`StoreSearch.search`: NFD, combining marks removed), so "mobelix" finds "Möbelix". Sorting uses the same key. With
-  no match the screen says "No store matches “…”". Tapping a store opens the scanner for it.
+  no match the screen says "No store matches “…”". Tapping a store opens the scanner for it. "Other card", first in
+  the list and shown whatever the search, opens the custom-store form.
+- **Custom store** ([[2026-10-22-custom-stores]]): a name (required, trimmed), one of eight colours (the first picked
+  by default) and the barcode format for the store's typed numbers (Code 128 by default; the 13 formats of
+  `BarcodeFormat.forCustomStores`, no GS1 or DataBar, #47). A scan keeps its own format. "Create" saves the store once
+  (`StoreRepository.add`: UUID id, `isCustom = true`, no rule); a failed save says "The store couldn't be saved. Try
+  again." and leaves the form open, as a failed card save does. The scanner for the new store then replaces the form,
+  so back returns to the picker, which now lists the store. The rest of the flow is the same as for any store; with no
+  rule, any number is valid and a scan another store's rule reads gets that store as a hint. The fields survive
+  process death.
 - **Scanner → form.** A scan, or "Enter manually", *replaces* the scanner with the form (`popUpTo<Scanner>
   { inclusive = true }`), so back from the form returns to the picker, not to a scanner that has already handed on
   its one scan.
@@ -71,16 +81,19 @@ stores already in the database). Everything runs offline on the local database.
 
 - `domain/StoreSearchTest`: matching (name, alias, case, accents) and order; stores whose rule reads a scan, incl. a
   GS1 scan against a plain rule and the reverse (#47).
-- `StorePickerViewModelTest`, `StorePickerScreenTest`.
+- `StorePickerViewModelTest`, `StorePickerScreenTest` (incl. "Other card").
+- `CustomStoreViewModelTest` (defaults, a blank name, what is saved, one save only, a failed save, process death),
+  `CustomStoreScreenTest`; the format list in `domain/BarcodeFormatTest` and
+  `BarcodeEncoderTest.everyFormatACustomStoreCanPick_isDrawnAsItself`; `RoomStoreRepositoryTest.add_…`.
 - `CardFormViewModelTest`: checks for typed numbers and scans (incl. the GS1 case), editing a scan, which scans are
   read-only, what is saved (typed, untouched scan, edited scan), one save only, a failed save and saving again, an unknown
   store, restore after process death, the stores offered for a scan, and switching to one (kept after process death). The card saved is built from the same draft the state shows, so the two can't disagree. `CardFormScreenTest`: messages, "Save anyway", the scan line, another store offered and switched to, save → opens the card, a failed save says so.
 - `AddCardDirectionsTest`: where each step's directions lead, incl. GS1 separators surviving the route.
 - `DetailViewModelTest.opening_aCardJustAdded_countsNoUse`.
-- `AppNavigationTest`: picker → scanner → back, and adding a card by hand end to end.
+- `AppNavigationTest`: picker → scanner → back, adding a card by hand end to end, and for a new custom store.
 
 ## Not implemented
 
-From #6: "frequently added" stores for the user's country, custom stores (and picking a barcode format for them),
-and "add another". A GS1 Aztec or PDF417 scan loses its GS1
+From #6: "frequently added" stores for the user's country, and "add another". A custom store can't be edited or
+deleted, and one abandoned before its first card stays in the picker. A GS1 Aztec or PDF417 scan loses its GS1
 mark when saved (#48).
