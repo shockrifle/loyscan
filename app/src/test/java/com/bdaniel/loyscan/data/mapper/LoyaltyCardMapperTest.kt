@@ -82,4 +82,9 @@ class LoyaltyCardMapperTest {
 
         assertThat(listOf(withStore, other).toDomainModel().map { it.id }).containsExactly(cardId(3), cardId(4)).inOrder()
     }
+
+    @Test
+    fun toEntity_copiesEveryFieldAndKeepsOnlyTheStoreId() {
+        assertThat(withStore.toDomainModel().toEntity()).isEqualTo(withStore.loyaltyCard)
+    }
 }

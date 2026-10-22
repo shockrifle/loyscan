@@ -2,6 +2,8 @@ package com.bdaniel.loyscan.di
 
 import com.bdaniel.loyscan.data.repository.LoyaltyCardRepository
 import com.bdaniel.loyscan.data.repository.RoomLoyaltyCardRepository
+import com.bdaniel.loyscan.data.repository.RoomStoreRepository
+import com.bdaniel.loyscan.data.repository.StoreRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -13,4 +15,7 @@ abstract class RepositoryModule {
 
     @Binds
     abstract fun bindLoyaltyCardRepository(impl: RoomLoyaltyCardRepository): LoyaltyCardRepository
+
+    @Binds
+    abstract fun bindStoreRepository(impl: RoomStoreRepository): StoreRepository
 }

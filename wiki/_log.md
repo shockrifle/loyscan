@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-22 · `StoreRepository` is an interface over Room (domain stores, `getById`); `LoyaltyCardRepository.add` saves a card through `LoyaltyCard.toEntity()` · architecture, workflows/tdd · #6
 - 2026-10-22 · review fixes: the camera-state pipeline (dedupe included) is tested; recovery after another app took the camera checked on a device, Chrome in split screen · features/barcode-scanner · review of #40
 - 2026-10-21 · scanner: a CameraX camera-state error after binding shows "camera isn't available" over the kept preview; it returns when the camera is open again · features/barcode-scanner · #40
 - 2026-10-21 · re-review fix: an AI prefix missing from `AI_LENGTH` now also costs a falling-back GS1 card its FNC1 · decisions/2026-10-21-gs1-scans-shown-as-hri, decisions/2026-10-21-gs1-mark-as-barcode-format · review of #45

@@ -60,7 +60,7 @@ Shared helpers are in `testing/`:
 - **Fixture builders**, `aLoyaltyCard()`, `aStore()`, `aStoreEntity()`, `aLoyaltyCardEntity()`: every field has a
   default, so a test names only what it is about. Add a builder when you add a model. Use example data only,
   never real stores.
-- **Fakes**, e.g. `FakeLoyaltyCardRepository` (a `MutableStateFlow` you set): a fake implements the real
+- **Fakes**, e.g. `FakeLoyaltyCardRepository` and `FakeStoreRepository` (each a `MutableStateFlow` you set): a fake implements the real
   interface *and its edge cases*. For example, `getByIdWithStore` emits `null` for a missing id, as Room does.
   When you change an interface's contract, change the fake in the same commit. No mocking library.
 - **`MainDispatcherRule`** for anything that uses `viewModelScope`. A timer in a ViewModel takes its duration as a

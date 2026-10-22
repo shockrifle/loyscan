@@ -14,17 +14,18 @@ All paths below are under `app/src/main/java/com/bdaniel/loyscan/` unless writte
 |---|---|---|---|
 | **Persistence** | `data/local/db/` — `AppDatabase`, `entity/*Entity`, `dao/*Dao` | Room tables, queries returning `Flow` | Entities never leave `data/`. A card's store is loaded with `@Relation` (see `LoyaltyCardWithStore`). `Converters` maps lists, rules and `Instant`s to columns. |
 | **Mapping** | `data/mapper/LoyaltyCardMapper.kt` | `LoyaltyCardWithStore.toDomainModel()`, `StoreEntity.toDomainModel()` | Extension functions, one direction (DB → domain). |
-| **Repository** | `data/repository/` — `LoyaltyCardRepository` (interface) + `RoomLoyaltyCardRepository` (`@Singleton` impl); `StoreRepository` | Exposes `Flow<domain>` | ViewModels depend on the **interface**, so tests pass a fake (see Testing seams). Reads return domain models. |
+| **Repository** | `data/repository/` — `LoyaltyCardRepository` and `StoreRepository` (interfaces) + `RoomLoyaltyCardRepository` / `RoomStoreRepository` (`@Singleton` impls) | Exposes `Flow<domain>` | ViewModels depend on the **interface**, so tests pass a fake (see Testing seams). Reads return domain models. |
 | **Domain** | `domain/` — `LoyaltyCard`, `Store`, `BarcodeFormat`; `domain/cardnumber/` — card-number rule engine ([[2026-10-09-card-number-rule-engine]]) | Plain data classes with an `EMPTY` sentinel; pure-Kotlin logic. Barcode content, display number and barcode format are derived on read (`LoyaltyCard`), never stored ([[2026-10-12-data-model-v2]]) | No Android/Room imports — unit-tested on the JVM. |
 | **Presentation state** | root package — `ListViewModel`, `DetailViewModel`, `ScannerViewModel` (UI state only, no repository) | `@HiltViewModel`; turn repository Flows into `StateFlow` via `stateIn(viewModelScope, WhileSubscribed(5_000), initial)` | Route args read with `savedStateHandle.toRoute<Route>()`. |
 | **UI** | root package — `ListScreen`, `DetailScreen`; `ui/` — theme, icons, `hiltImageLoader()`; `ui/barcode/` — ZXing encoding and barcode drawing ([[zxing-core]]); `ui/scanner/` — camera, permission and zxing-cpp decoding for `ScannerScreen` ([[zxing-cpp]]) | Composables, extensions on `SharedTransitionScope` | Screens receive a `*Directions` object, never a `NavController`. |
 | **Navigation** | `Navigation.kt`, `MainActivity.kt` (`AppNavigation`) | `@Serializable` routes + `NavController.*Directions()` factories | See [[2025-12-09-type-safe-navigation-directions]]. |
 | **DI** | `di/DatabaseModule.kt`, `di/ImageLoaderModule.kt`, `di/RepositoryModule.kt` | `@Module @InstallIn(SingletonComponent)` providers; `@Binds` repository interface → Room impl | Implementations use `@Inject constructor`. |
 
-Note: `LoyaltyCardRepository`'s only write is `recordUse(id)` (opening a card counts a use, #4); the unused
-entity-taking `insert/delete` were dropped when it became an interface (#26). `StoreRepository` is still a concrete
-class whose `insert` takes an **entity**, and nothing injects it. When a feature needs more writes, add them to the
-interface in domain terms, with domain→entity mappers. Time comes from an injected `java.time.Clock`
+Note: `LoyaltyCardRepository`'s writes are `recordUse(id)` (opening a card counts a use, #4) and `add(card)` (the
+add-card flow, #6), which maps the domain card to its row with `LoyaltyCard.toEntity()` (`data/mapper/LoyaltyCardMapper.kt`).
+`StoreRepository` is read-only (`getAll`, `getById`), an interface with `RoomStoreRepository` behind it since #6; its
+unused entity-taking `insert` was dropped then. When a feature needs more writes, add them to the interface in domain
+terms, with domain→entity mappers. Time comes from an injected `java.time.Clock`
 (`di/ClockModule.kt`), so tests pass `Clock.fixed(…)`.
 
 ### Composition / DI
@@ -45,7 +46,8 @@ interface in domain terms, with domain→entity mappers. Time comes from an inje
 Tests run on the JVM (`./gradlew testDebugUnitTest`, see [[build-and-run]]); shared helpers live in
 `app/src/test/java/com/bdaniel/loyscan/testing/`.
 
-- **ViewModels** are constructed directly with `FakeLoyaltyCardRepository` (a `MutableStateFlow` of domain cards)
+- **ViewModels** are constructed directly with `FakeLoyaltyCardRepository` / `FakeStoreRepository` (each a
+  `MutableStateFlow` of domain models)
   and `MainDispatcherRule` in place of `Dispatchers.Main`. A route-reading ViewModel gets
   `SavedStateHandle(route = Detail(…))` from navigation-testing.
 - **Screens** take the ViewModel and a `*Directions` object as parameters, so a test passes a fake-backed
@@ -57,7 +59,7 @@ Tests run on the JVM (`./gradlew testDebugUnitTest`, see [[build-and-run]]); sha
   untested. A permission request is answered by an `ActivityResultRegistry` provided through
   `LocalActivityResultRegistryOwner` (`CameraPermissionTest`).
 - **DAOs and the repository** are tested against `Room.inMemoryDatabaseBuilder` (`LoyaltyCardDaoTest`,
-  `RoomLoyaltyCardRepositoryTest`). Database callbacks are tested on a real database too: an on-disk one that is
+  `RoomLoyaltyCardRepositoryTest`, `RoomStoreRepositoryTest`). Database callbacks are tested on a real database too: an on-disk one that is
   closed and reopened for the catalogue loader (`CatalogueDatabaseCallbackTest`), in-memory for the demo seed
   (`DemoSeedCallbackTest`, in `src/testDebug` because the class only exists in debug builds).
 - **The wired-up app** (`MainActivity`, Hilt, navigation) runs in `@HiltAndroidTest`s on Robolectric.

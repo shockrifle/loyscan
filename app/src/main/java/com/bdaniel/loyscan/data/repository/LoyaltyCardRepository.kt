@@ -13,4 +13,7 @@ interface LoyaltyCardRepository {
 
     /** Counts one use of the card, now. Does nothing for an unknown id. */
     suspend fun recordUse(id: String)
+
+    /** Saves a new card. Its store must already exist. */
+    suspend fun add(card: LoyaltyCard)
 }

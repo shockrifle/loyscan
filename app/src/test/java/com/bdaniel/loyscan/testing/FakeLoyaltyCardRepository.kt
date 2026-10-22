@@ -24,4 +24,8 @@ class FakeLoyaltyCardRepository(
     override suspend fun recordUse(id: String) {
         cards.value = cards.value.map { if (it.id == id) it.copy(useCount = it.useCount + 1, lastUsedAt = now) else it }
     }
+
+    override suspend fun add(card: LoyaltyCard) {
+        cards.value += card
+    }
 }

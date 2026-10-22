@@ -1,6 +1,7 @@
 package com.bdaniel.loyscan.data.mapper
 
 import com.bdaniel.loyscan.data.local.db.dao.LoyaltyCardWithStore
+import com.bdaniel.loyscan.data.local.db.entity.LoyaltyCardEntity
 import com.bdaniel.loyscan.data.local.db.entity.StoreEntity
 import com.bdaniel.loyscan.domain.LoyaltyCard
 import com.bdaniel.loyscan.domain.Store
@@ -23,6 +24,24 @@ fun LoyaltyCardWithStore.toDomainModel(): LoyaltyCard {
         frontPhotoPath = loyaltyCard.frontPhotoPath,
         backPhotoPath = loyaltyCard.backPhotoPath,
         updatedAt = loyaltyCard.updatedAt
+    )
+}
+
+/** The card's row; its store is referenced by id only. */
+fun LoyaltyCard.toEntity(): LoyaltyCardEntity {
+    return LoyaltyCardEntity(
+        id = id,
+        storeId = store.id,
+        label = label,
+        number = number,
+        scannedFormat = scannedFormat,
+        createdAt = createdAt,
+        lastUsedAt = lastUsedAt,
+        useCount = useCount,
+        note = note,
+        frontPhotoPath = frontPhotoPath,
+        backPhotoPath = backPhotoPath,
+        updatedAt = updatedAt
     )
 }
 

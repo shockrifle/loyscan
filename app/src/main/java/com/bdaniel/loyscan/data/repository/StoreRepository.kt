@@ -1,16 +1,13 @@
 package com.bdaniel.loyscan.data.repository
 
-import com.bdaniel.loyscan.data.local.db.dao.StoreDao
-import com.bdaniel.loyscan.data.local.db.entity.StoreEntity
-import javax.inject.Inject
-import javax.inject.Singleton
+import com.bdaniel.loyscan.domain.Store
+import kotlinx.coroutines.flow.Flow
 
-@Singleton
-class StoreRepository @Inject constructor(private val storeDao: StoreDao) {
+/** Stores as domain models. ViewModels depend on this; tests swap in a fake. */
+interface StoreRepository {
 
-    fun getAll() = storeDao.getAll()
+    fun getAll(): Flow<List<Store>>
 
-    suspend fun insert(store: StoreEntity) {
-        storeDao.insert(store)
-    }
+    /** Emits `null` while no store has this id. */
+    fun getById(id: String): Flow<Store?>
 }

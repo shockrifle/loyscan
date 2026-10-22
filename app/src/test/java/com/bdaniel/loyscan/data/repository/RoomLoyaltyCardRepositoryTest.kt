@@ -4,6 +4,7 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.bdaniel.loyscan.data.local.db.AppDatabase
+import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.testing.aLoyaltyCard
 import com.bdaniel.loyscan.testing.aLoyaltyCardEntity
 import com.bdaniel.loyscan.testing.aStore
@@ -58,6 +59,15 @@ class RoomLoyaltyCardRepositoryTest {
         repository.recordUse(cardId(3))
 
         assertThat(repository.getByIdWithStore(cardId(3)).first()).isEqualTo(card.copy(useCount = 1, lastUsedAt = NOW))
+    }
+
+    @Test
+    fun add_storesTheCard_andItReadsBackWithItsStore() = runTest {
+        val added = aLoyaltyCard(id = cardId(4), store = store, label = null, number = "5901234123457", scannedFormat = BarcodeFormat.EAN_13)
+
+        repository.add(added)
+
+        assertThat(repository.getByIdWithStore(cardId(4)).first()).isEqualTo(added)
     }
 
     @Test
