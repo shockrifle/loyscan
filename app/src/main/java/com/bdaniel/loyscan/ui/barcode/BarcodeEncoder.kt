@@ -64,6 +64,22 @@ object BarcodeEncoder {
         return (listOf(format) + fallbacks).distinct().firstNotNullOfOrNull { tryEncode(content, it) }
     }
 
+    /**
+     * Whether [content] is drawn in [format] exactly as it is: no fallback, and no check digit added. ZXing's EAN and UPC
+     * writers accept the number without its check digit and compute one, so a typed number one digit short would be
+     * drawn as a different, valid-looking number (#47 review).
+     */
+    fun holdsAsIs(content: String, format: BarcodeFormat): Boolean =
+        FULL_LENGTH[format]?.let { content.length == it } != false && encode(content, format)?.format == format
+
+    /** The length with the check digit, for the formats whose ZXing writer also takes one digit fewer. */
+    private val FULL_LENGTH = mapOf(
+        BarcodeFormat.EAN_8 to 8,
+        BarcodeFormat.EAN_13 to 13,
+        BarcodeFormat.UPC_A to 12,
+        BarcodeFormat.UPC_E to 8,
+    )
+
     private val FALLBACKS = listOf(BarcodeFormat.CODE_128, BarcodeFormat.QR_CODE)
     private val GS1_FALLBACKS = listOf(BarcodeFormat.GS1_128, BarcodeFormat.GS1_QR_CODE)
 

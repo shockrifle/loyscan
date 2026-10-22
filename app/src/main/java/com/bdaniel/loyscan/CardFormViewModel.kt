@@ -67,7 +67,8 @@ data class CardFormState(
 
         /**
          * A typed number for a store without a rule that the store's barcode format can't hold (e.g. not an EAN-13 for
-         * an EAN-13 store): the card would be drawn in a fallback format instead (#47 review).
+         * an EAN-13 store, or one digit short, which ZXing would complete with a check digit): the card would be drawn in a
+         * fallback format or as another number (#47 review).
          */
         data class DoesNotFitFormat(val format: BarcodeFormat) : NumberCheck
 
@@ -189,7 +190,7 @@ class CardFormViewModel @Inject constructor(
             when (val validation = CardNumberEngine.validate(typed.orEmpty(), rule)) {
                 is Validation.Valid ->
                     // Without a rule nothing else checks the number against the store's format.
-                    if (rule == null && BarcodeEncoder.encode(draft.barcodeContent, draft.barcodeFormat)?.format != draft.barcodeFormat) {
+                    if (rule == null && !BarcodeEncoder.holdsAsIs(draft.barcodeContent, draft.barcodeFormat)) {
                         NumberCheck.DoesNotFitFormat(draft.barcodeFormat)
                     } else {
                         NumberCheck.Valid

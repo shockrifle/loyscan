@@ -38,12 +38,13 @@ would mark a plain number as GS1 and make a GS1 till misread it. The GS1 Data Ma
 the mark for non-GS1 content, so they would only be named wrongly. DataBar has no ZXing writer and would be drawn as
 something else. A card whose barcode carries the GS1 mark keeps it by being scanned, since a scan keeps its own format.
 Every listed format draws as itself (`BarcodeEncoderTest.everyFormatACustomStoreCanPick_isDrawnAsItself`), though the
-number still has to fit it (EAN-13 needs 13 digits; one that doesn't fit falls back to Code 128, then QR).
+number still has to fit it. One that doesn't fit falls back to Code 128, then QR; an EAN or UPC number one digit short
+would get a check digit ZXing computes, i.e. become another number.
 
 ## Consequences
 - A custom store abandoned before its first card stays in the picker. Nothing edits or deletes a custom store yet.
-- A typed number the picked format can't hold (e.g. a wrong EAN-13 check digit) would be drawn in Code 128 or QR
-  ([[zxing-core]]). The card form says "This number can't be drawn as <format>." and offers "Save anyway", for any
+- A typed number the picked format can't hold as it is (a wrong EAN-13 check digit, or one digit short) would be
+  drawn in Code 128 or QR, or completed with a computed check digit ([[zxing-core]], `BarcodeEncoder.holdsAsIs`). The card form says "This number can't be drawn as <format>." and offers "Save anyway", for any
   store without a rule (also `hu-libri`, EAN-13). Found in review; `CardFormViewModelTest.aTypedNumberTheFormatOf…`.
 - Tests: `CustomStoreViewModelTest`, `CustomStoreScreenTest`, `AddCardDirectionsTest`, `BarcodeFormatTest`,
   `BarcodeEncoderTest`, `RoomStoreRepositoryTest`, and `AppNavigationTest.addingACardForANewCustomStore_…`.

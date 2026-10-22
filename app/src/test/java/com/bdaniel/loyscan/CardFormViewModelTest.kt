@@ -91,6 +91,18 @@ class CardFormViewModelTest {
     }
 
     @Test
+    fun aTypedNumberOneDigitShortOfAnEan13_isFlagged_notCompletedWithACheckDigit() = runTest { // #47 review, round 2
+        val viewModel = viewModel(CardForm("ean"))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.onNumberChange("590123412345")
+
+            assertThat(awaitItem().check).isEqualTo(NumberCheck.DoesNotFitFormat(BarcodeFormat.EAN_13))
+        }
+    }
+
+    @Test
     fun aTypedNumberTheFormatOfAStoreWithoutARuleHolds_isValid() = runTest {
         val viewModel = viewModel(CardForm("ean"))
 

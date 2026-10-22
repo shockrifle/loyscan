@@ -45,7 +45,8 @@ stores already in the database, and custom stores). Everything runs offline on t
 - **Live check** against the store's card-number rule ([[2026-10-09-card-number-rule-engine]]), on every change:
   - typed: `CardNumberEngine.validate`; each error has a message (too short, too long, characters the store doesn't
     use, wrong start, check digit). An empty field can't be saved. A store without a rule accepts any number its
-    barcode format can hold; one it can't hold (`BarcodeEncoder` would fall back) gets "This number can't be drawn as
+    barcode format can hold as it is; one it can't (`BarcodeEncoder.holdsAsIs`: it would fall back, or an EAN/UPC
+    number one digit short would get a computed check digit) gets "This number can't be drawn as
     <format>." (`NumberCheck.DoesNotFitFormat`; found in review of the custom-store slice).
   - untouched scan: `CardNumberEngine.match`; if the rule can't have produced the content, "This barcode doesn't
     look like a <store> card." `RuleMatch.formatMatches` is ignored, so a scan whose symbology differs from the

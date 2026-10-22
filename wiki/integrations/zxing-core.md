@@ -29,6 +29,10 @@ Java, no Android or network code. Only its writers are used, in `BarcodeEncoder`
 - **No DataBar writers.** ZXing core reads `RSS_14` / `RSS_EXPANDED` but can't write them, and has no DataBar
   Limited at all. `DATABAR*` cards are always drawn as `GS1_128` with the same content (as `CODE_128` until #45), and
   the detail screen says so under the barcode ([[card-detail]] → Fallback note). Whether tills accept that is unknown.
+- **EAN and UPC writers complete a short number.** The EAN-13, EAN-8, UPC-A and UPC-E writers also accept the number
+  without its check digit (12, 7, 11, 7 digits) and add the one they compute, so a typed number one digit short draws
+  as a different, valid-looking number. `BarcodeEncoder.holdsAsIs` requires the full length; the card form uses it for
+  stores without a rule ([[add-card]]). Found in review, 2026-10-22. Test: `BarcodeEncoderTest.holdsAsIs_…`.
 - **GS1-128 needs an escape character, not a hint.** ZXing has no GS1-128 format: it is Code 128 with a leading FNC1.
   `EncodeHintType.GS1_FORMAT` doesn't add that FNC1 to Code 128. In 3.5.3 `Code128Writer` reads only `CODE128_COMPACT`
   and `FORCE_CODE_SET` (checked in its bytecode, 2026-10-20), and the GS1 hint is read only by 2D writers. Instead,

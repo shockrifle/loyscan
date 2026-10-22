@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-22 · updated · add-card, 2026-10-22-custom-stores, zxing-core · an EAN/UPC number one digit short is flagged, not completed with a check digit (#47 review, round 2)
 - 2026-10-22 · updated · add-card, 2026-10-22-custom-stores · the card form flags a typed number a rule-less store's format can't hold (#47 review)
 - 2026-10-22 · created 2026-10-22-custom-stores; updated add-card, 2026-10-21-gs1-mark-as-barcode-format, decisions/_index, index · custom stores ("Other card") and the format picker's list (#6, #47)
 - 2026-10-22 · updated · architecture · `StoreRepository.add` for custom stores (#6)

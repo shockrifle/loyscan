@@ -85,6 +85,25 @@ class BarcodeEncoderTest {
     }
 
     @Test
+    fun holdsAsIs_isFalseForANumberZxingWouldCompleteWithACheckDigit() { // #47 review: one digit short still encodes
+        assertThat(BarcodeEncoder.holdsAsIs("5901234123457", BarcodeFormat.EAN_13)).isTrue()
+        assertThat(BarcodeEncoder.holdsAsIs("590123412345", BarcodeFormat.EAN_13)).isFalse()
+        assertThat(BarcodeEncoder.holdsAsIs("96385074", BarcodeFormat.EAN_8)).isTrue()
+        assertThat(BarcodeEncoder.holdsAsIs("9638507", BarcodeFormat.EAN_8)).isFalse()
+        assertThat(BarcodeEncoder.holdsAsIs("036000291452", BarcodeFormat.UPC_A)).isTrue()
+        assertThat(BarcodeEncoder.holdsAsIs("03600029145", BarcodeFormat.UPC_A)).isFalse()
+        assertThat(BarcodeEncoder.holdsAsIs("01234565", BarcodeFormat.UPC_E)).isTrue()
+        assertThat(BarcodeEncoder.holdsAsIs("0123456", BarcodeFormat.UPC_E)).isFalse()
+    }
+
+    @Test
+    fun holdsAsIs_isFalseForContentThatFallsBack() {
+        assertThat(BarcodeEncoder.holdsAsIs("5901234123458", BarcodeFormat.EAN_13)).isFalse()
+        assertThat(BarcodeEncoder.holdsAsIs("LoyScan", BarcodeFormat.CODE_128)).isTrue()
+        assertThat(BarcodeEncoder.holdsAsIs("", BarcodeFormat.CODE_128)).isFalse()
+    }
+
+    @Test
     fun gs1_128_isCode128WithALeadingFnc1() { // #33: the FNC1 tells a till the content is GS1 data
         val gs1 = read(BarcodeEncoder.encode("9799123456789012", BarcodeFormat.GS1_128)!!)
         val plain = read(BarcodeEncoder.encode("9799123456789012", BarcodeFormat.CODE_128)!!)
