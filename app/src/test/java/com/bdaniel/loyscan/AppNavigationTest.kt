@@ -62,10 +62,10 @@ class AppNavigationTest {
 
     @Test
     fun tappingACard_opensItsDetail_andBackReturnsToTheList() {
-        composeRule.waitUntil { composeRule.onAllNodes(hasText("Test Store")).fetchSemanticsNodes().isNotEmpty() }
+        waitForText("Test Store")
         composeRule.onNodeWithText("Test Store").performClick()
 
-        composeRule.waitUntil { composeRule.onAllNodes(hasText("Gold card")).fetchSemanticsNodes().isNotEmpty() }
+        waitForText("Gold card")
         composeRule.onNodeWithText("0042").assertIsDisplayed()
 
         composeRule.onNodeWithContentDescription("Back").performClick()
@@ -75,10 +75,10 @@ class AppNavigationTest {
 
     @Test
     fun detailsFullBrightness_isRestoredOnBack() {
-        composeRule.waitUntil { composeRule.onAllNodes(hasText("Test Store")).fetchSemanticsNodes().isNotEmpty() }
+        waitForText("Test Store")
         composeRule.onNodeWithText("Test Store").performClick()
         // The destination is resumed, and brightens, only once the enter transition has finished.
-        composeRule.waitUntil(5_000) { brightness == BRIGHTNESS_OVERRIDE_FULL }
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) { brightness == BRIGHTNESS_OVERRIDE_FULL }
 
         composeRule.onNodeWithContentDescription("Back").performClick()
         composeRule.waitForIdle()
@@ -89,88 +89,88 @@ class AppNavigationTest {
     @Test
     fun addCard_opensTheStorePicker_pickingAStoreOpensTheScanner_andBackReturnsToThePicker() {
         composeRule.onNodeWithContentDescription("Add card").performClick()
-        composeRule.waitUntil { composeRule.onAllNodes(hasText("Choose store")).fetchSemanticsNodes().isNotEmpty() }
+        waitForText("Choose store")
 
         composeRule.onNodeWithText("Test Store").performClick()
-        composeRule.waitUntil { composeRule.onAllNodes(hasText("Scan card")).fetchSemanticsNodes().isNotEmpty() }
+        waitForText("Scan card")
 
         composeRule.onNodeWithContentDescription("Back").performClick()
-        composeRule.waitUntil { composeRule.onAllNodes(hasText("Choose store")).fetchSemanticsNodes().isNotEmpty() }
+        waitForText("Choose store")
         composeRule.onNodeWithText("Scan card").assertDoesNotExist()
     }
 
     @Test
     fun addingACardByHand_savesIt_opensIt_andBackReturnsToTheListWithIt() {
         composeRule.onNodeWithContentDescription("Add card").performClick()
-        composeRule.waitUntil { composeRule.onAllNodes(hasText("Choose store")).fetchSemanticsNodes().isNotEmpty() }
+        waitForText("Choose store")
         composeRule.onNodeWithText("Test Store").performClick()
-        composeRule.waitUntil { composeRule.onAllNodes(hasText("Enter manually")).fetchSemanticsNodes().isNotEmpty() }
+        waitForText("Enter manually")
         composeRule.onNodeWithText("Enter manually").performClick()
-        composeRule.waitUntil { composeRule.onAllNodes(hasText("Card number")).fetchSemanticsNodes().isNotEmpty() }
+        waitForText("Card number")
 
         composeRule.onNodeWithTag(CARD_LABEL_TAG).performTextInput("Silver card")
         composeRule.onNodeWithTag(CARD_NUMBER_TAG).performTextInput("777")
         composeRule.onNodeWithText("Save").performClick()
 
-        composeRule.waitUntil { composeRule.onAllNodes(hasText("Silver card")).fetchSemanticsNodes().isNotEmpty() }
+        waitForText("Silver card")
         composeRule.onNodeWithText("777").assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Back").performClick()
-        composeRule.waitUntil { composeRule.onAllNodes(hasText("My Cards")).fetchSemanticsNodes().isNotEmpty() }
+        waitForText("My Cards")
         assertThat(composeRule.onAllNodes(hasText("Test Store")).fetchSemanticsNodes()).hasSize(2)
     }
 
     @Test
     fun addingACardForANewCustomStore_createsTheStore_savesTheCard_andTheListShowsIt() { // #6
         composeRule.onNodeWithContentDescription("Add card").performClick()
-        composeRule.waitUntil { composeRule.onAllNodes(hasText("Other card")).fetchSemanticsNodes().isNotEmpty() }
+        waitForText("Other card")
         composeRule.onNodeWithText("Other card").performClick()
-        composeRule.waitUntil { composeRule.onAllNodes(hasText("New store")).fetchSemanticsNodes().isNotEmpty() }
+        waitForText("New store")
 
         composeRule.onNodeWithTag(CUSTOM_STORE_NAME_TAG).performTextInput("My Shop")
         composeRule.onNodeWithText("Create").performScrollTo().performClick()
-        composeRule.waitUntil { composeRule.onAllNodes(hasText("Enter manually")).fetchSemanticsNodes().isNotEmpty() }
+        waitForText("Enter manually")
         composeRule.onNodeWithText("Enter manually").performClick()
-        composeRule.waitUntil { composeRule.onAllNodes(hasText("Card number")).fetchSemanticsNodes().isNotEmpty() }
+        waitForText("Card number")
         composeRule.onNodeWithText("My Shop").assertIsDisplayed()
         composeRule.onNodeWithTag(CARD_NUMBER_TAG).performTextInput("4242")
         composeRule.onNodeWithText("Save").performClick()
 
-        composeRule.waitUntil { composeRule.onAllNodes(hasText("4242")).fetchSemanticsNodes().isNotEmpty() }
+        waitForText("4242")
         composeRule.onNodeWithContentDescription("Back").performClick()
-        composeRule.waitUntil { composeRule.onAllNodes(hasText("My Cards")).fetchSemanticsNodes().isNotEmpty() }
+        waitForText("My Cards")
         composeRule.onNodeWithText("My Shop").assertIsDisplayed()
     }
 
     @Test
     fun editingACardsLabel_savesIt_showsTheCard_andBackReturnsToTheList() { // #8
-        composeRule.waitUntil { composeRule.onAllNodes(hasText("Test Store")).fetchSemanticsNodes().isNotEmpty() }
+        waitForText("Test Store")
         composeRule.onNodeWithText("Test Store").performClick()
-        composeRule.waitUntil { composeRule.onAllNodes(hasText("Gold card")).fetchSemanticsNodes().isNotEmpty() }
+        waitForText("Gold card")
 
         composeRule.onNodeWithContentDescription("Edit").performClick()
-        composeRule.waitUntil { composeRule.onAllNodes(hasText("Edit card")).fetchSemanticsNodes().isNotEmpty() }
+        waitForText("Edit card")
         composeRule.onNodeWithTag(CARD_LABEL_TAG).performTextClearance()
         composeRule.onNodeWithTag(CARD_LABEL_TAG).performTextInput("Silver card")
         composeRule.onNodeWithText("Save").performClick()
 
-        composeRule.waitUntil { composeRule.onAllNodes(hasText("Silver card")).fetchSemanticsNodes().isNotEmpty() }
+        waitForText("Silver card")
         composeRule.onNodeWithText("0042").assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Back").performClick()
-        composeRule.waitUntil { composeRule.onAllNodes(hasText("My Cards")).fetchSemanticsNodes().isNotEmpty() }
+        waitForText("My Cards")
         assertThat(runBlocking { db.loyaltyCardDao().getAllWithStore().first() }.single().loyaltyCard.label).isEqualTo("Silver card")
     }
 
     @Test
     fun deletingACard_afterConfirming_returnsToTheListWithoutIt() { // #8
-        composeRule.waitUntil { composeRule.onAllNodes(hasText("Test Store")).fetchSemanticsNodes().isNotEmpty() }
+        waitForText("Test Store")
         composeRule.onNodeWithText("Test Store").performClick()
-        composeRule.waitUntil { composeRule.onAllNodes(hasText("Gold card")).fetchSemanticsNodes().isNotEmpty() }
+        waitForText("Gold card")
 
         composeRule.onNodeWithContentDescription("Delete").performClick()
         composeRule.onNodeWithText("Delete").performClick()
 
-        composeRule.waitUntil { composeRule.onAllNodes(hasText("My Cards")).fetchSemanticsNodes().isNotEmpty() }
-        composeRule.waitUntil { composeRule.onAllNodes(hasText("Test Store")).fetchSemanticsNodes().isEmpty() }
+        waitForText("My Cards")
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) { composeRule.onAllNodes(hasText("Test Store")).fetchSemanticsNodes().isEmpty() }
         assertThat(runBlocking { db.loyaltyCardDao().getAllWithStore().first() }).isEmpty()
     }
 
@@ -181,18 +181,18 @@ class AppNavigationTest {
             db.loyaltyCardDao().insert(aLoyaltyCardEntity(id = cardId(2), storeId = "custom", number = "4242"))
         }
         composeRule.onNodeWithContentDescription("Add card").performClick()
-        composeRule.waitUntil { composeRule.onAllNodes(hasText("My Shop")).fetchSemanticsNodes().isNotEmpty() }
+        waitForText("My Shop")
 
         composeRule.onNodeWithContentDescription("Edit My Shop").performClick()
-        composeRule.waitUntil { composeRule.onAllNodes(hasText("Edit store")).fetchSemanticsNodes().isNotEmpty() }
+        waitForText("Edit store")
         composeRule.onNodeWithTag(CUSTOM_STORE_NAME_TAG).performTextClearance()
         composeRule.onNodeWithTag(CUSTOM_STORE_NAME_TAG).performTextInput("My Gym")
         composeRule.onNodeWithText("Save").performScrollTo().performClick()
 
-        composeRule.waitUntil { composeRule.onAllNodes(hasText("Choose store")).fetchSemanticsNodes().isNotEmpty() }
+        waitForText("Choose store")
         composeRule.onNodeWithText("My Gym").assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Back").performClick()
-        composeRule.waitUntil { composeRule.onAllNodes(hasText("My Gym")).fetchSemanticsNodes().isNotEmpty() }
+        waitForText("My Gym")
         composeRule.onNodeWithText("My Shop").assertDoesNotExist()
     }
 
@@ -203,18 +203,18 @@ class AppNavigationTest {
             db.loyaltyCardDao().insert(aLoyaltyCardEntity(id = cardId(2), storeId = "custom", label = "Gym card", number = "4242"))
         }
         composeRule.onNodeWithContentDescription("Add card").performClick()
-        composeRule.waitUntil { composeRule.onAllNodes(hasText("My Shop")).fetchSemanticsNodes().isNotEmpty() }
+        waitForText("My Shop")
         composeRule.onNodeWithContentDescription("Edit My Shop").performClick()
-        composeRule.waitUntil { composeRule.onAllNodes(hasText("Edit store")).fetchSemanticsNodes().isNotEmpty() }
+        waitForText("Edit store")
         // 4242 isn't an EAN-13, so the card is now drawn in the fallback and the detail says so.
         composeRule.onNodeWithText(BarcodeFormat.EAN_13.displayName).performScrollTo().performClick()
         composeRule.onNodeWithText("Save").performScrollTo().performClick()
-        composeRule.waitUntil { composeRule.onAllNodes(hasText("Choose store")).fetchSemanticsNodes().isNotEmpty() }
+        waitForText("Choose store")
         composeRule.onNodeWithContentDescription("Back").performClick()
 
-        composeRule.waitUntil { composeRule.onAllNodes(hasText("My Shop")).fetchSemanticsNodes().isNotEmpty() }
+        waitForText("My Shop")
         composeRule.onNodeWithText("My Shop").performClick()
-        composeRule.waitUntil { composeRule.onAllNodes(hasText("Gym card")).fetchSemanticsNodes().isNotEmpty() }
+        waitForText("Gym card")
         composeRule.onNodeWithText("Shown as ${BarcodeFormat.CODE_128.displayName}").assertIsDisplayed()
     }
 
@@ -225,19 +225,25 @@ class AppNavigationTest {
             db.loyaltyCardDao().insert(aLoyaltyCardEntity(id = cardId(2), storeId = "custom", number = "4242"))
         }
         composeRule.onNodeWithContentDescription("Add card").performClick()
-        composeRule.waitUntil { composeRule.onAllNodes(hasText("My Shop")).fetchSemanticsNodes().isNotEmpty() }
+        waitForText("My Shop")
 
         composeRule.onNodeWithContentDescription("Edit My Shop").performClick()
-        composeRule.waitUntil { composeRule.onAllNodes(hasText("Edit store")).fetchSemanticsNodes().isNotEmpty() }
+        waitForText("Edit store")
         composeRule.onNodeWithContentDescription("Delete").performClick()
         composeRule.onNodeWithText("Its card is deleted with it.").assertIsDisplayed()
         composeRule.onNodeWithText("Delete").performClick()
 
-        composeRule.waitUntil { composeRule.onAllNodes(hasText("Choose store")).fetchSemanticsNodes().isNotEmpty() }
+        waitForText("Choose store")
         composeRule.onNodeWithText("My Shop").assertDoesNotExist()
         assertThat(runBlocking { db.loyaltyCardDao().getAllWithStore().first() }.map { it.loyaltyCard.storeId })
             .containsExactly(STORE_ID)
     }
 
+    private fun waitForText(text: String) =
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) { composeRule.onAllNodes(hasText(text)).fetchSemanticsNodes().isNotEmpty() }
+
     private val brightness get() = composeRule.activity.window.attributes.screenBrightness
 }
+
+// waitUntil's 1 s default timed out on a slow CI runner (#56).
+private const val WAIT_TIMEOUT_MS = 10_000L
