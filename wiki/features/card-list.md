@@ -4,7 +4,7 @@ The start destination: a top bar titled "My Cards" and a 2-column grid of card t
 `loyalty_cards`, live-updating from Room.
 
 **Entry points:** `ListScreen` and `CardItem` in `app/src/main/java/com/bdaniel/loyscan/ListScreen.kt`;
-`ListViewModel` (`app/src/main/java/com/bdaniel/loyscan/ListViewModel.kt:11-21`); route `List`
+`ListViewModel` (`app/src/main/java/com/bdaniel/loyscan/ListViewModel.kt:13-23`); route `CardList`
 (`app/src/main/java/com/bdaniel/loyscan/Navigation.kt:9-10`).
 
 ## Behavior
