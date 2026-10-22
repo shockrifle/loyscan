@@ -80,15 +80,15 @@ class StoreSearchTest {
     }
 
     @Test
-    fun matchingScan_aGs1ScanMatchesTheSameSymbologyWithoutTheMark_andTheReverse() { // #47
+    fun matchingScan_aGs1ScanMatchesTheSameSymbologyWithoutTheMark_andTheReverse_afterTheExactFormat() { // #47
         val plain = aStore(id = "plain", name = "B Plain", cardNumberRule = luhn8(BarcodeFormat.CODE_128))
         val gs1 = aStore(id = "gs1", name = "C Gs1", cardNumberRule = luhn8(BarcodeFormat.GS1_128))
         val qr = aStore(id = "qr", name = "A Qr", cardNumberRule = luhn8(BarcodeFormat.QR_CODE))
         val stores = listOf(qr, plain, gs1)
 
-        // Both Code 128 stores rank above the QR store, whichever has the GS1 mark.
+        // The exact format first, then the same symbology with or without the GS1 mark, then another symbology.
         assertThat(stores.matchingScan("12345674", BarcodeFormat.GS1_128).map { it.id })
-            .containsExactly("plain", "gs1", "qr").inOrder()
+            .containsExactly("gs1", "plain", "qr").inOrder()
         assertThat(stores.matchingScan("12345674", BarcodeFormat.CODE_128).map { it.id })
             .containsExactly("plain", "gs1", "qr").inOrder()
     }

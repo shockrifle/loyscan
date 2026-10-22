@@ -50,8 +50,8 @@ data class CardFormState(
     /** The id of the saved card, once it is saved. */
     val savedCardId: String? = null,
     /**
-     * Other stores whose rule reads the scan, when this store's rule can't have produced it (#6): those whose rule names
-     * the scan's symbology first, then by name. [CardFormViewModel.switchStore] picks one.
+     * Other stores whose rule reads the scan, when this store's rule can't have produced it (#6), ranked as
+     * [com.bdaniel.loyscan.domain.matchingScan] does. [CardFormViewModel.switchStore] picks one.
      */
     val suggestedStores: kotlin.collections.List<Store> = emptyList(),
 ) {

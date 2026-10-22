@@ -16,14 +16,22 @@ fun List<Store>.search(query: String): List<Store> {
 
 /**
  * The stores whose card-number rule can have produced the scanned [content] ([CardNumberEngine.match]): those whose
- * rule names the scan's symbology first (with or without the GS1 mark), then by name. A store without a rule is left
- * out, since it would accept any scan.
+ * rule names the scan's exact format first, then those with the same symbology with or without the GS1 mark, then
+ * the rest, each by name. The exact format ranks first because the GS1 mark is evidence too: a Tesco GS1-128 scan is
+ * also 16 digits SuperShop's Code 128 rule reads. A store without a rule is left out, since it would accept any scan.
  */
 fun List<Store>.matchingScan(content: String, format: BarcodeFormat): List<Store> =
     mapNotNull { store ->
-        store.cardNumberRule?.let { CardNumberEngine.match(content, format, it) }?.let { store to it.formatMatches }
+        val rule = store.cardNumberRule ?: return@mapNotNull null
+        val match = CardNumberEngine.match(content, format, rule) ?: return@mapNotNull null
+        val tier = when {
+            rule.format == format -> 0
+            match.formatMatches -> 1
+            else -> 2
+        }
+        store to tier
     }
-        .sortedWith(compareBy<Pair<Store, Boolean>> { !it.second }.thenBy(BY_NAME) { it.first })
+        .sortedWith(compareBy<Pair<Store, Int>> { it.second }.thenBy(BY_NAME) { it.first })
         .map { it.first }
 
 private val BY_NAME = compareBy<Store>({ it.name.searchKey() }, { it.name })

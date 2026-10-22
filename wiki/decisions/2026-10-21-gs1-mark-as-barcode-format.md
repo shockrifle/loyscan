@@ -34,8 +34,10 @@ another field. A flag would also mean nothing on most formats (EAN-13, ITF, …)
 - `CardNumberEngine.match` compared formats exactly, so a GS1 QR or Data Matrix scan reported
   `formatMatches = false` against a `QR_CODE` / `DATA_MATRIX` rule (e.g. `hu-ikea-family`), as a GS1-128 scan
   did against a `CODE_128` rule ([[gs1-128-drawn-as-code-128]] → Risk). Found in review. Since 2026-10-22 (#47) it
-  compares `BarcodeFormat.symbology`, the format without the GS1 mark, so the mark alone never makes a scan another
-  store's.
+  compares `BarcodeFormat.symbology`, the format without the GS1 mark, so the mark alone never rules a store out.
+  The mark is still evidence: the add-card form ranks a store whose rule names the scan's exact format above one
+  that matches only by symbology ([[add-card]]; found in review: SuperShop's Code 128 rule also reads a Tesco
+  GS1-128 barcode).
 - Tests: `BarcodeEncoderTest.gs1DataMatrixAndQr_areDrawnInGs1Mode`, `dataBar_isDrawnAsGs1_128`,
   `gs1ContentCode128CannotHold_fallsBackToGs1Qr`, `nonGs1ContentOnAGs1Card_fallsBackWithoutTheGs1Mark`, `ZxingCppFormatsTest.scannedBarcode_dataMatrixAndQrMarkedGs1_areTheirGs1Formats`,
   `LoyaltyCardTest.scannedGs1DataMatrixOrQrCard_isGs1Data_too`.

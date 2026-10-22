@@ -4,17 +4,21 @@ import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.bdaniel.loyscan.data.mapper.toDomainModel
+import com.bdaniel.loyscan.data.mapper.toStoreEntity
 import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.domain.cardnumber.CardNumberEngine
 import com.bdaniel.loyscan.domain.cardnumber.RuleMatch
 import com.bdaniel.loyscan.domain.cardnumber.Validation
 import com.bdaniel.loyscan.domain.catalogue.StoreCatalogue
+import com.bdaniel.loyscan.domain.matchingScan
 import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.time.Instant
 
 /**
  * The catalogue that ships (`assets/catalogue/stores.json`): it loads, and each store's rule turns a made-up printed
@@ -86,6 +90,17 @@ class ShippedCatalogueTest {
             .isEqualTo(RuleMatch("634009123456789012", formatMatches = true))
         assertThat(CardNumberEngine.match("9799123456789012", BarcodeFormat.CODE_128, rule))
             .isEqualTo(RuleMatch("634009123456789012", formatMatches = true)) // same symbology (#47)
+    }
+
+    /** SuperShop's rule (any 16 digits, Code 128) also reads a Tesco GS1-128 barcode; Tesco's exact format ranks first. */
+    @Test
+    fun aTescoScan_offersTescoFirst() { // review of #6
+        val stores = shipped.map { it.toStoreEntity(Instant.EPOCH).toDomainModel() }
+
+        val matching = stores.matchingScan("9799123456789012", BarcodeFormat.GS1_128).map { it.id }
+
+        assertThat(matching).containsAtLeast("hu-tesco", "hu-supershop")
+        assertThat(matching.first()).isEqualTo("hu-tesco")
     }
 
     /** The stores whose leading digits were confirmed on a real card (#31) tell each other's scans apart. */

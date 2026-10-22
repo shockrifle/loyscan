@@ -41,7 +41,9 @@ stores already in the database). Everything runs offline on the local database.
     accepts any scan.
   - **Another store** (step 5 of #6): when the picked store's rule rejects the scan, the form lists every other store
     whose rule reads it, under "It looks like a card from:" (`matchingScan` in `domain/StoreSearch.kt`): those whose
-    rule names the scan's symbology (with or without the GS1 mark) first, then by name. Every match is offered, so the
+    rule names the scan's exact format first, then the same symbology with or without the GS1 mark, then the rest,
+    each by name. The exact format ranks first because SuperShop's rule (any 16 digits, Code 128) also reads a Tesco
+    GS1-128 barcode (found in review; `ShippedCatalogueTest.aTescoScan_offersTescoFirst`). Every match is offered, so the
     user chooses when several rules read the same number (e.g. a rule without a required start reads any valid
     EAN-13). Stores without a rule are never offered, and nothing is offered when the picked store has no rule, reads
     the scan, or the number is typed: product choices, 2026-10-22. Tapping one makes the form that store's
