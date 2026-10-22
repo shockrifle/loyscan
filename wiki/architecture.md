@@ -145,6 +145,8 @@ Each step is red → green → refactor: the test is written and seen failing be
    New repositories need an interface, an impl, a `@Binds` in `di/RepositoryModule.kt` and a fake in
    `app/src/test/…/testing/`.
 3. `@HiltViewModel` exposing `StateFlow` via `stateIn(viewModelScope, WhileSubscribed(5_000), <EMPTY/initial>)`.
+   If an action guards on `state.value` (e.g. ignores an edit the state forbids), start it `Eagerly` instead: with
+   no subscriber a `WhileSubscribed` state stays at its initial value (`CardFormViewModel.state`, #50).
    Test: constructed with fakes, Turbine on the state, `MainDispatcherRule`.
 4. `@Serializable` route + `*Directions` data class + `NavController.*Directions()` factory in `Navigation.kt`;
    register `composable<Route>` in `AppNavigation`. Test: extend or add an `AppNavigationTest`-style flow, one per

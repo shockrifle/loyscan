@@ -114,13 +114,17 @@ class CardFormViewModel @Inject constructor(
 
     private val progress = MutableStateFlow(Progress())
 
+    /**
+     * Started eagerly, not while subscribed: [onNumberChange] and [save] guard on `state.value`, which must be current
+     * with nothing observing it, or an edit of a read-only scan gets through (#50).
+     */
     val state: StateFlow<CardFormState> =
         combine(storeId, storeRepository.getAll(), original, combine(label, typedNumber, ::Pair), progress) {
                 id, stores, original, (label, typed), progress ->
             formState(id, stores, original, label, typed, progress)
         }.stateIn(
             scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
+            started = SharingStarted.Eagerly,
             initialValue = CardFormState()
         )
 
