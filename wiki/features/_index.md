@@ -10,4 +10,4 @@ One page per non-trivial user-visible feature or flow. Lead with what the user e
 - [[edit-card]] — editing a card's label and number in the same form (#8, in progress)
 - [[barcode-scanner]] — camera scanner (CameraX + zxing-cpp), permission flow, torch, hint
 - [[store-catalogue]] — the shipped store list, synced into the database on every open
-- [[seed-data]] — demo cards, debug builds only
+- [[seed-data]] — the former debug demo cards (removed, #55)

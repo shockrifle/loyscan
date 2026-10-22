@@ -43,7 +43,8 @@ logos. The SQL demo seed was removed, and the demo cards now exist only in debug
 - **Synced in `onOpen`, synchronously, in one transaction.** Rows are inserted or updated by id, and `updatedAt`
   moves only on a real change.
 - **Demo cards are Kotlin code in the debug source set** (`DemoSeedCallback`, `onCreate` only). A release build
-  registers no demo callback (`src/release/.../di/BuildTypeDatabaseCallbacks.kt`).
+  registers no demo callback (`src/release/.../di/BuildTypeDatabaseCallbacks.kt`). (Update 2026-10-22: the demo
+  cards were removed in #55, once cards could be added and deleted; [[seed-data]].)
 
 ## Why
 - Curating keeps the catalogue small enough to check by hand and avoids redistributing someone else's database or

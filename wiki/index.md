@@ -1,7 +1,7 @@
 # LoyScan wiki
 
 LoyScan is a single-module Android app (Kotlin, Jetpack Compose, Hilt, Room) for keeping loyalty cards.
-Today it shows a grid of cards from a local Room database (demo cards in debug builds; a curated store catalogue), and a detail screen
+Today it shows a grid of cards from a local Room database (added by the user; a curated store catalogue), and a detail screen
 reached through a shared-element transition. This wiki is what the code doesn't tell you: why things are
 the way they are, what's fragile, and how to work on it.
 
@@ -23,7 +23,7 @@ the way they are, what's fragile, and how to work on it.
 - [[edit-card]] — editing a card's label and number; deleting is on [[card-detail]]
 - [[barcode-scanner]] — reads a card's barcode with the camera (offline, no Play Services)
 - [[store-catalogue]] — curated store list, synced into the database on every open
-- [[seed-data]] — demo cards, debug builds only
+- [[seed-data]] — the former debug demo cards (removed, #55)
 
 ## How-to
 

@@ -16,7 +16,7 @@ stores already in the database, and custom stores). Everything runs offline on t
 
 ## Behaviour
 
-- **Store picker.** Every store in the database (catalogue, custom and, in debug builds, demo stores), sorted by
+- **Store picker.** Every store in the database (catalogue and custom), sorted by
   name. The search field narrows it to stores whose name or an alias contains the text, ignoring case and accents
   (`StoreSearch.search`: NFD, combining marks removed), so "mobelix" finds "Möbelix". Sorting uses the same key. With
   no match the screen says "No store matches “…”". Tapping a store opens the scanner for it. "Other card", first in

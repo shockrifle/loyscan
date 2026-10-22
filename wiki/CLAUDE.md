@@ -70,8 +70,8 @@ Treat this as a checklist at the end of every non-trivial task:
       network API) → `integrations/`.
 - [ ] **Script / Gradle task / workflow added, renamed, removed** → `scripts/` or `workflows/`.
 - [ ] **New kind of test, fixture or fake** → [[tdd]] (the per-layer table) and [[architecture]] → Testing seams.
-- [ ] **Room schema / DB version changed** → update [[database-schema-changes]], and [[store-catalogue]] /
-      [[seed-data]] if the catalogue format or the demo data changed.
+- [ ] **Room schema / DB version changed** → update [[database-schema-changes]], and [[store-catalogue]] if the
+      catalogue format changed.
 - [ ] **Non-obvious question came up** → [[faq]]. **Domain term came up** → [[glossary]].
 - [ ] **Incident handled / recurring failure found** → `runbooks/`.
 - [ ] **Files dropped in `assets/`** → compile them into the right pages; note the source file name.

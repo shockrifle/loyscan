@@ -3,14 +3,14 @@
 **Use when:**
 - the app crashes on launch after an entity change, with Room's `IllegalStateException` ("Room cannot verify
   the data integrity…") or a missing-migration error ([[database-schema-changes]]);
-- you changed the debug demo cards and want them seeded again ([[seed-data]]).
+- a debug install from before #55 still has the demo stores and cards ([[seed-data]]).
 
 Catalogue changes don't need a reset: they apply on the next open ([[store-catalogue]]).
 
 ## Steps
 
 ```sh
-# 1. Wipe app data (DB, prefs, cache). The next launch recreates loyscan.db (and, in debug, the demo cards).
+# 1. Wipe app data (DB, prefs, cache). The next launch recreates loyscan.db with the catalogue stores only.
 adb shell pm clear com.bdaniel.loyscan
 
 # 2. Relaunch

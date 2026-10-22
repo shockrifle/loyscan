@@ -34,7 +34,7 @@ why it has no logos, and why it is loaded this way: [[2026-10-13-curated-store-c
 - **Never `REPLACE`:** `INSERT OR REPLACE` deletes the old row first, and `ON DELETE CASCADE` would then delete its
   cards. SQLite's `ON CONFLICT … DO UPDATE` needs SQLite 3.24 (API 30, minSdk is 29), so the code reads the row,
   then runs `insert` or `update`.
-- **Leaves other stores alone:** custom stores, the debug demo stores ([[seed-data]]) and entries dropped from the
+- **Leaves other stores alone:** custom stores, the former debug demo stores ([[seed-data]]) and entries dropped from the
   catalogue are not touched. A dropped entry's cards keep working with the last version of its row.
 - **A broken catalogue fails loudly:** a parse error is logged with Timber and rethrown, so the first query
   throws and nothing is written. `ShippedCatalogueTest` loads the real asset on

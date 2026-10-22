@@ -1,7 +1,8 @@
 # Coil image loading (brand logos)
 
-Brand logos are remote URLs loaded with **Coil 2.7.0** (`io.coil-kt:coil-compose`, `coil-svg`). The seed data
-points every logo at **picsum.photos** placeholders (`https://picsum.photos/seed/<n>/200`, since `c4d6bdc`).
+Brand logos are remote URLs loaded with **Coil 2.7.0** (`io.coil-kt:coil-compose`, `coil-svg`). No shipped store
+has a logo today: the catalogue ships none ([[store-catalogue]]), and the debug demo stores that pointed at
+**picsum.photos** placeholders were removed in #55 ([[seed-data]]).
 This requires `android.permission.INTERNET`.
 
 ## Contract
@@ -18,5 +19,5 @@ This requires `android.permission.INTERNET`.
   (`io.coil-kt.coil3`) and packages, and needs an explicit network-fetcher artifact.
 - `AsyncImage` **without** `imageLoader =` silently uses Coil's own default singleton, which has no SVG support
   and no logging. The list screen does this today: [[list-screen-bypasses-image-loader]].
-- picsum.photos returns random photos, not logos. That's fine for demo data. Offline devices just show an empty
-  box (no placeholder or error drawable is set).
+- No placeholder or error drawable is set, so a logo that can't load (e.g. offline) shows an empty box. The former
+  demo stores used `picsum.photos` placeholders ([[seed-data]], removed in #55).

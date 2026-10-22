@@ -27,7 +27,7 @@ used for `Store.color`.
 Drives card tile and detail header backgrounds; text on it is black/white by luminance (< 0.5 → white).
 Also travels in the `Detail` route — see [[2025-12-12-brand-color-in-route]].
 
-**Brand logo** — `Store.logo`, a nullable image URL (seed uses `https://picsum.photos/seed/<n>/200`). `null` or
+**Brand logo** — `Store.logo`, a nullable image URL (no shipped store has one today). `null` or
 blank means "show the store name as text instead". Loaded with Coil — [[coil-image-loading]].
 
 **Catalogue store** — A store from the shipped catalogue `app/src/main/assets/catalogue/stores.json`
@@ -96,8 +96,8 @@ until #1.
 
 **`loyscan.db`** — The on-device SQLite file name (`di/DatabaseModule.kt`, `provideAppDatabase`).
 
-**`loyscan.sql`** — The former demo seed script, run line by line on DB creation. Removed in #18; the demo cards are
-now debug-only Kotlin ([[seed-data]]).
+**`loyscan.sql`** — The former demo seed script, run line by line on DB creation. Removed in #18; the demo cards then became
+debug-only Kotlin, removed in #55 ([[seed-data]]).
 
 **Mapper** — `toDomainModel()` extension functions in `data/mapper/` converting Room results to domain models.
 

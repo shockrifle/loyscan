@@ -23,7 +23,6 @@ object DatabaseModule {
                 AppDatabase::class.java, "loyscan.db"
         )
                 .addCallback(CatalogueDatabaseCallback.fromAssets(context))
-                .apply { buildTypeDatabaseCallbacks().forEach(::addCallback) }
                 .build()
     }
 

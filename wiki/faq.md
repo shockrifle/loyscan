@@ -7,10 +7,10 @@ Because the navigation route `object List` (`app/src/main/java/com/bdaniel/loysc
 shadows `kotlin.collections.List` in that package. Use type inference, `kotlin.collections.List<Foo>`, or
 move code into a sub-package. See [[list-route-shadows-kotlin-list]].
 
-### I changed the demo cards but the app still shows the old ones.
-The debug demo seed only runs in `RoomDatabase.Callback.onCreate`, when the DB file is first created. Clear app
-data: see [[reset-local-database]] and [[seed-data]]. Catalogue changes, by contrast, apply on the next open
-([[store-catalogue]]).
+### My debug build still shows the "Brand A" … demo cards.
+The demo seed was removed (#55), but it only ever ran when the DB file was created, so an older install keeps its
+rows. Clear app data once: see [[reset-local-database]] and [[seed-data]]. Catalogue changes, by contrast, apply on
+the next open ([[store-catalogue]]).
 
 ### I added a field to an entity and the app crashes on launch.
 The DB is at `version = 2` with no migrations (`AppDatabase.kt:11`). Bump the version and either add a

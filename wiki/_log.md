@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-22 · updated · seed-data (now a removal note), architecture, faq (demo-cards question rewritten), add-card, store-catalogue, reset-local-database, coil-image-loading, integrations/_index, 2026-10-13-curated-store-catalogue, glossary, index, features/_index, tdd, CLAUDE · debug demo cards removed (#55)
 - 2026-10-22 · review fix: DetailViewModel and DetailScreen entry-point line references updated · architecture, card-detail · review of #8, round 2
 - 2026-10-22 · review fix: closing the delete dialog forgets a failed delete; stale DetailScreen/DetailViewModel line references updated · card-detail, architecture, card-transition, shared-element-key-from-async-state · review of #8
 - 2026-10-22 · created edit-card; updated card-detail, add-card, architecture, 2026-10-12-data-model-v2, features/_index, index · editing a card's label and number in the card form (#8)
