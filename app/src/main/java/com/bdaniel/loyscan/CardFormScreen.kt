@@ -122,6 +122,13 @@ fun CardFormScreen(
                 label = { Text("Label (optional)") },
                 singleLine = true,
             )
+            if (state.saveFailed) {
+                Text(
+                    "The card couldn't be saved. Try again.",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
             Button(onClick = viewModel::save, enabled = state.canSave, modifier = Modifier.fillMaxWidth()) {
                 Text(if (problem != null) "Save anyway" else "Save")
             }

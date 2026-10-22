@@ -47,6 +47,9 @@ stores already in the database). Everything runs offline on the local database.
   injected `Clock`, no use yet. Then the card's detail opens in place of the flow (`popUpTo<List>()`), so back from it
   returns to the list. That opening isn't counted as a use (`Detail.countUse = false`): it is the end of adding the
   card, not showing it at a till.
+- **A failed save** (`LoyaltyCardRepository.add` throws, e.g. a foreign-key error if the store was removed while the
+  form was open) is logged and leaves the form open with "The card couldn't be saved. Try again." above the button,
+  which saves again. Cancellation isn't caught. Before #49 the failure crashed the app.
 - Label and typed number are kept in the `SavedStateHandle`, so they survive process death.
 
 ## Tests
@@ -54,8 +57,8 @@ stores already in the database). Everything runs offline on the local database.
 - `domain/StoreSearchTest`: matching (name, alias, case, accents) and order.
 - `StorePickerViewModelTest`, `StorePickerScreenTest`.
 - `CardFormViewModelTest`: checks for typed numbers and scans (incl. the GS1 case), editing a scan, which scans are
-  read-only, what is saved (typed, untouched scan, edited scan), one save only, an unknown store, restore after process
-  death. The card saved is built from the same draft the state shows, so the two can't disagree. `CardFormScreenTest`: messages, "Save anyway", the scan line, save → opens the card.
+  read-only, what is saved (typed, untouched scan, edited scan), one save only, a failed save and saving again, an unknown
+  store, restore after process death. The card saved is built from the same draft the state shows, so the two can't disagree. `CardFormScreenTest`: messages, "Save anyway", the scan line, save → opens the card, a failed save says so.
 - `AddCardDirectionsTest`: where each step's directions lead, incl. GS1 separators surviving the route.
 - `DetailViewModelTest.opening_aCardJustAdded_countsNoUse`.
 - `AppNavigationTest`: picker → scanner → back, and adding a card by hand end to end.

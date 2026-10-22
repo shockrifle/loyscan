@@ -285,6 +285,29 @@ class CardFormViewModelTest {
     }
 
     @Test
+    fun aFailedSave_keepsTheFormOpen_saysSo_andCanBeSavedAgain() = runTest { // #49
+        val viewModel = viewModel(CardForm("plain", scannedContent = "123", scannedFormat = BarcodeFormat.QR_CODE))
+        cards.addFailure = IllegalStateException("insert failed")
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.save()
+
+            val failed = expectMostRecentItem()
+            assertThat(failed.saveFailed).isTrue()
+            assertThat(failed.savedCardId).isNull()
+            assertThat(failed.canSave).isTrue()
+
+            cards.addFailure = null
+            viewModel.save()
+
+            val saved = expectMostRecentItem()
+            assertThat(saved.saveFailed).isFalse()
+            assertThat(saved.savedCardId).isEqualTo(cards.cards.value.single().id)
+        }
+    }
+
+    @Test
     fun anUnknownStore_cantBeSaved() = runTest {
         val viewModel = viewModel(CardForm("missing", scannedContent = "123", scannedFormat = BarcodeFormat.QR_CODE))
 

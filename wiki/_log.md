@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-22 · card form: a failed save is logged and leaves the form open with "The card couldn't be saved. Try again." instead of crashing; `FakeLoyaltyCardRepository.addFailure` makes `add` throw · features/add-card, workflows/tdd · #49
 - 2026-10-22 · review fixes: a scan shown other than as its content (GS1 as printed) is read-only with "Type the number instead"; architecture Mapping row lists `toEntity`; hack page gets its SHA · features/add-card, architecture, hacks/scanner-result-dialog-until-add-card-flow · review of #6
 - 2026-10-22 · add card, form: a scan or "Enter manually" opens a card form with a live check against the store's rule, "Save anyway", save opens the new card (not counted as a use); interim scan dialog removed · features/add-card, features/barcode-scanner, features/card-detail, hacks/scanner-result-dialog-until-add-card-flow (removed), hacks/_index, features/_index, index · #6, #39
 - 2026-10-22 · add card, store picker: "Add card" opens a picker (search by name or alias, ignoring case and accents), then the scanner for the store · features/add-card (new), features/card-list, features/barcode-scanner, hacks/scanner-result-dialog-until-add-card-flow, workflows/tdd, index · #6

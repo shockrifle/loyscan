@@ -13,12 +13,14 @@ import com.bdaniel.loyscan.domain.Store
 import com.bdaniel.loyscan.domain.cardnumber.CardNumberEngine
 import com.bdaniel.loyscan.domain.cardnumber.Validation
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.time.Clock
 import java.util.UUID
 import javax.inject.Inject
@@ -42,6 +44,8 @@ data class CardFormState(
     val shownAs: String? = null,
     val barcodeFormat: BarcodeFormat? = null,
     val saving: Boolean = false,
+    /** The last save failed; the form stays open to try again. */
+    val saveFailed: Boolean = false,
     /** The id of the saved card, once it is saved. */
     val savedCardId: String? = null,
 ) {
@@ -101,7 +105,10 @@ class CardFormViewModel @Inject constructor(
         savedStateHandle[TYPED_NUMBER] = ""
     }
 
-    /** Saves the card once; [CardFormState.savedCardId] then names it. */
+    /**
+     * Saves the card once; [CardFormState.savedCardId] then names it. If saving fails, [CardFormState.saveFailed] says
+     * so and the card can be saved again.
+     */
     fun save() {
         val current = state.value
         val store = current.store
@@ -115,8 +122,15 @@ class CardFormViewModel @Inject constructor(
             updatedAt = now,
         )
         viewModelScope.launch {
-            cardRepository.add(card)
-            progress.value = Progress(savedCardId = card.id)
+            progress.value = try {
+                cardRepository.add(card)
+                Progress(savedCardId = card.id)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) { // e.g. the store was removed while the form was open (#49)
+                Timber.e(e, "Couldn't save the card")
+                Progress(saveFailed = true)
+            }
         }
     }
 
@@ -158,11 +172,16 @@ class CardFormViewModel @Inject constructor(
             shownAs = draft.displayNumber.takeIf { check != NumberCheck.Empty && it != number.trim() },
             barcodeFormat = draft.barcodeFormat,
             saving = progress.saving,
+            saveFailed = progress.saveFailed,
             savedCardId = progress.savedCardId,
         )
     }
 
-    private data class Progress(val saving: Boolean = false, val savedCardId: String? = null)
+    private data class Progress(
+        val saving: Boolean = false,
+        val saveFailed: Boolean = false,
+        val savedCardId: String? = null,
+    )
 
     private companion object {
         const val LABEL = "label"

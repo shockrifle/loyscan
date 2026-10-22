@@ -124,6 +124,19 @@ class CardFormScreenTest {
     }
 
     @Test
+    fun aFailedSave_saysSo_andStaysOpen() { // #49
+        cards.addFailure = IllegalStateException("insert failed")
+        setScreen(CardForm("ruled"))
+
+        composeRule.onNodeWithTag(CARD_NUMBER_TAG).performTextInput("12345674")
+        composeRule.onNodeWithText("Save").performScrollTo().performClick()
+
+        composeRule.onNodeWithText("The card couldn't be saved. Try again.").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Save").assertIsEnabled()
+        assertThat(opened).isEmpty()
+    }
+
+    @Test
     fun back_goesBack() {
         setScreen(CardForm("ruled"))
 

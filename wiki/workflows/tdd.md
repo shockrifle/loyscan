@@ -61,7 +61,8 @@ Shared helpers are in `testing/`:
   default, so a test names only what it is about. Add a builder when you add a model. Use example data only,
   never real stores.
 - **Fakes**, e.g. `FakeLoyaltyCardRepository` and `FakeStoreRepository` (each a `MutableStateFlow` you set): a fake implements the real
-  interface *and its edge cases*. For example, `getByIdWithStore` emits `null` for a missing id, as Room does.
+  interface *and its edge cases*. For example, `getByIdWithStore` emits `null` for a missing id, as Room does. A failure the code must
+  survive is a switch on the fake: `FakeLoyaltyCardRepository.addFailure` makes `add` throw.
   When you change an interface's contract, change the fake in the same commit. No mocking library.
 - **`MainDispatcherRule`** for anything that uses `viewModelScope`. A timer in a ViewModel takes its duration as a
   constructor parameter (`ScannerViewModel(hintDelay)`): `advanceTimeBy` tests it in virtual time, and a screen test
