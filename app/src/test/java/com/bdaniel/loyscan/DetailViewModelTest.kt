@@ -9,6 +9,8 @@ import com.bdaniel.loyscan.testing.FakeLoyaltyCardRepository
 import com.bdaniel.loyscan.testing.MainDispatcherRule
 import com.bdaniel.loyscan.testing.SOME_INSTANT
 import com.bdaniel.loyscan.testing.aLoyaltyCard
+import com.bdaniel.loyscan.testing.aStore
+import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.testing.cardId
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.CompletableDeferred
@@ -82,6 +84,28 @@ class DetailViewModelTest {
             assertThat(awaitItem().id).isEqualTo(cardId(1))
             repository.cards.value = emptyList()
             expectNoEvents()
+        }
+    }
+
+    @Test
+    fun aStoreFormatChange_redrawsATypedCard_butNotAScannedOne() = runTest { // #53: a custom store's format is edited
+        val store = aStore(isCustom = true, defaultBarcodeFormat = BarcodeFormat.CODE_128)
+        repository.cards.value = listOf(
+            aLoyaltyCard(id = cardId(1), store = store, number = "4242"),
+            aLoyaltyCard(id = cardId(2), store = store, number = "5901234123457", scannedFormat = BarcodeFormat.EAN_13),
+        )
+        val typed = DetailViewModel(SavedStateHandle(route = Detail(cardId = cardId(1), color = "#336699", countUse = false)), repository)
+        val scanned = DetailViewModel(SavedStateHandle(route = Detail(cardId = cardId(2), color = "#336699", countUse = false)), repository)
+
+        typed.card.test {
+            assertThat(awaitItem().barcodeFormat).isEqualTo(BarcodeFormat.CODE_128)
+            // What the Room repository emits once the store's row changes: every card with the edited store.
+            val edited = store.copy(defaultBarcodeFormat = BarcodeFormat.QR_CODE)
+            repository.cards.value = repository.cards.value.map { it.copy(store = edited) }
+            assertThat(awaitItem().barcodeFormat).isEqualTo(BarcodeFormat.QR_CODE)
+        }
+        scanned.card.test {
+            assertThat(awaitItem().barcodeFormat).isEqualTo(BarcodeFormat.EAN_13)
         }
     }
 

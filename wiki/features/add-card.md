@@ -76,7 +76,7 @@ stores already in the database, and custom stores). Everything runs offline on t
 - **A failed save** (`LoyaltyCardRepository.add` throws, e.g. the database is full or can't be written) leaves the
   form open with "The card couldn't be saved. Try again." above the button, which saves again. Cancellation isn't
   caught. Before #49 the failure crashed the app. Every exception is caught, so a bug that makes every save fail
-  shows the message instead of crashing; it is logged with Timber, which logs nothing in release builds. 
+  shows the message instead of crashing; it is logged with Timber, which logs nothing in release builds.
 - **A store deleted while the form is open** (a custom store, [[edit-store]]; #51): once the stores have loaded and
   none has the form's id, the form says "This store is no longer available." with no fields and no Save
   (`CardFormState.storeGone`). Tests: `CardFormViewModelTest.aStoreRemovedWhileTheFormIsOpen_…`,

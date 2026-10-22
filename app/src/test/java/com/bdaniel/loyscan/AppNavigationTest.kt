@@ -14,6 +14,7 @@ import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.bdaniel.loyscan.data.local.db.AppDatabase
+import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.testing.STORE_ID
 import com.bdaniel.loyscan.testing.aLoyaltyCardEntity
 import com.bdaniel.loyscan.testing.aStoreEntity
@@ -193,6 +194,28 @@ class AppNavigationTest {
         composeRule.onNodeWithContentDescription("Back").performClick()
         composeRule.waitUntil { composeRule.onAllNodes(hasText("My Gym")).fetchSemanticsNodes().isNotEmpty() }
         composeRule.onNodeWithText("My Shop").assertDoesNotExist()
+    }
+
+    @Test
+    fun aCustomStoresNewFormat_redrawsItsTypedCard() { // #53
+        runBlocking {
+            db.storeDao().insert(aStoreEntity(id = "custom", name = "My Shop", isCustom = true))
+            db.loyaltyCardDao().insert(aLoyaltyCardEntity(id = cardId(2), storeId = "custom", label = "Gym card", number = "4242"))
+        }
+        composeRule.onNodeWithContentDescription("Add card").performClick()
+        composeRule.waitUntil { composeRule.onAllNodes(hasText("My Shop")).fetchSemanticsNodes().isNotEmpty() }
+        composeRule.onNodeWithContentDescription("Edit My Shop").performClick()
+        composeRule.waitUntil { composeRule.onAllNodes(hasText("Edit store")).fetchSemanticsNodes().isNotEmpty() }
+        // 4242 isn't an EAN-13, so the card is now drawn in the fallback and the detail says so.
+        composeRule.onNodeWithText(BarcodeFormat.EAN_13.displayName).performScrollTo().performClick()
+        composeRule.onNodeWithText("Save").performScrollTo().performClick()
+        composeRule.waitUntil { composeRule.onAllNodes(hasText("Choose store")).fetchSemanticsNodes().isNotEmpty() }
+        composeRule.onNodeWithContentDescription("Back").performClick()
+
+        composeRule.waitUntil { composeRule.onAllNodes(hasText("My Shop")).fetchSemanticsNodes().isNotEmpty() }
+        composeRule.onNodeWithText("My Shop").performClick()
+        composeRule.waitUntil { composeRule.onAllNodes(hasText("Gym card")).fetchSemanticsNodes().isNotEmpty() }
+        composeRule.onNodeWithText("Shown as ${BarcodeFormat.CODE_128.displayName}").assertIsDisplayed()
     }
 
     @Test

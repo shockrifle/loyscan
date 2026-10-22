@@ -56,5 +56,8 @@ Catalogue stores have no Edit button and can't be changed or deleted. Issue [#53
   `aCustomStoresNewFormat_drawsItsTypedCards_butNotItsScannedOnes`, `delete_removesACustomStore_andItsCards`,
   `delete_leavesACatalogueStoreAndItsCards`; `RoomLoyaltyCardRepositoryTest.countForStore_…`.
 - `StorePickerScreenTest.aCustomStoresEditButton_…`; `AddCardDirectionsTest.editingACustomStore_opensItsFormOverThePicker`.
+- A new format reaching the card: `DetailViewModelTest.aStoreFormatChange_redrawsATypedCard_butNotAScannedOne`, and
+  end to end `AppNavigationTest.aCustomStoresNewFormat_redrawsItsTypedCard` (4242 switched to EAN-13 is drawn in the
+  fallback, so the detail says "Shown as Code 128").
 - `AppNavigationTest.editingACustomStore_fromThePicker_renamesItForItsCards`,
   `deletingACustomStore_fromThePicker_deletesItsCardsToo`.
