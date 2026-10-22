@@ -53,6 +53,14 @@ class CardFormScreenTest {
     // The same rule, but the number must start with 9.
     private val nineStore = aStore(id = "nine", name = "Nine Store", cardNumberRule = rule.copy(coreStartsWith = listOf("9")))
     private val cards = FakeLoyaltyCardRepository()
+    private val stores = FakeStoreRepository(
+        listOf(
+            store,
+            aStore(id = "plain", name = "Plain Store"),
+            nineStore,
+            aStore(id = "ean", name = "Ean Store", defaultBarcodeFormat = BarcodeFormat.EAN_13),
+        )
+    )
     private val opened = mutableListOf<Pair<String, String>>()
     private var backs = 0
 
@@ -216,17 +224,22 @@ class CardFormScreenTest {
         assertThat(backs).isEqualTo(1)
     }
 
+    @Test
+    fun aStoreRemovedWhileTheFormIsOpen_saysItIsNoLongerAvailable_withoutSave() { // #51
+        setScreen(CardForm("plain"))
+        composeRule.onNodeWithText("Plain Store").assertIsDisplayed()
+
+        stores.stores.value = stores.stores.value.filterNot { it.id == "plain" }
+
+        composeRule.onNodeWithText("This store is no longer available.").assertIsDisplayed()
+        composeRule.onNodeWithText("Save").assertDoesNotExist()
+        composeRule.onNodeWithTag(CARD_NUMBER_TAG).assertDoesNotExist()
+    }
+
     private fun setScreen(route: CardForm) {
         val viewModel = CardFormViewModel(
             SavedStateHandle(route = route),
-            FakeStoreRepository(
-                listOf(
-                    store,
-                    aStore(id = "plain", name = "Plain Store"),
-                    nineStore,
-                    aStore(id = "ean", name = "Ean Store", defaultBarcodeFormat = BarcodeFormat.EAN_13),
-                )
-            ),
+            stores,
             cards,
             Clock.fixed(SOME_INSTANT, ZoneOffset.UTC),
         )

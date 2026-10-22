@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-22 · updated · add-card, edit-store · the card form says when its store was deleted while it was open (#51, #53)
 - 2026-10-22 · updated · edit-store, add-card, 2026-10-22-custom-stores, architecture, card-detail, features/_index, index · deleting a custom store with its cards, after a confirmation with the card count (#53)
 - 2026-10-22 · created edit-store; updated add-card, 2026-10-22-custom-stores, architecture, features/_index, index · editing a custom store from the store picker (#53)
 - 2026-10-22 · review fix: the catalogue decision's index summary says the demo cards were removed · decisions/_index · review of #55

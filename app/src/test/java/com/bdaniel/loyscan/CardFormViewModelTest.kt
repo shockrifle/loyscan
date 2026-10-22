@@ -474,6 +474,26 @@ class CardFormViewModelTest {
     }
 
     @Test
+    fun aStoreRemovedWhileTheFormIsOpen_saysSo_andCantBeSaved() = runTest { // #51
+        val viewModel = viewModel(CardForm("plain"))
+
+        viewModel.state.test {
+            assertThat(awaitItem().storeGone).isFalse() // still loading
+            viewModel.onNumberChange("4242")
+            assertThat(expectMostRecentItem().canSave).isTrue()
+
+            stores.stores.value = stores.stores.value.filterNot { it.id == "plain" }
+            val state = expectMostRecentItem()
+            assertThat(state.storeGone).isTrue()
+            assertThat(state.canSave).isFalse()
+            viewModel.save()
+
+            assertThat(cards.cards.value).isEmpty()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun editingATypedCard_startsWithItsStoreLabelAndNumber() = runTest { // #8
         cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, label = "Gold card", number = "12345674"))
 

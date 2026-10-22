@@ -40,7 +40,7 @@ Catalogue stores have no Edit button and can't be changed or deleted. Issue [#53
   (`Deletion.kt`). This also removes a store abandoned before its first card ([[2026-10-22-custom-stores]]).
 - Photo files of the deleted cards aren't deleted: no card has photos yet (#10, as for deleting a card, #8).
 - **A store that isn't there** (deleted, or a catalogue store's id in the route): the form says "This store is no
-  longer available." and can't be saved.
+  longer available." and can't be saved. The card form says the same for a deleted store ([[add-card]], #51).
 
 ## Tests
 

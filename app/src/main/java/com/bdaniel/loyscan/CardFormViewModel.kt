@@ -59,6 +59,8 @@ data class CardFormState(
     val suggestedStores: kotlin.collections.List<Store> = emptyList(),
     /** The form edits an existing card (#8) rather than adding one. */
     val editing: Boolean = false,
+    /** The stores have loaded and none has the form's id: it was deleted while the form was open (#51). */
+    val storeGone: Boolean = false,
 ) {
     /** Anything but an empty number can be saved, an invalid one "anyway". */
     val canSave: Boolean get() = store != null && check != NumberCheck.Empty && !saving && savedCardId == null
@@ -206,9 +208,10 @@ class CardFormViewModel @Inject constructor(
         val label = changedLabel ?: original?.label.orEmpty()
         val typed = typedOrNull(original, changedNumber)
         val store = stores.firstOrNull { it.id == storeId }
-        // Nothing to show until the store has loaded, and the edited card (which may be gone).
+        // Nothing to show until the store has loaded, and the edited card (which may be gone). The stores have loaded
+        // here, so a missing store is gone, e.g. a custom store deleted (#51).
         if (store == null || editing && original == null) {
-            return CardFormState(label = label, number = typed.orEmpty(), editing = editing)
+            return CardFormState(label = label, number = typed.orEmpty(), editing = editing, storeGone = store == null)
         }
         val draft = draft(store, original, changedNumber)
         val scannedFormat = draft.scannedFormat

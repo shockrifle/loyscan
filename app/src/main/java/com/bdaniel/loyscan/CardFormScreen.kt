@@ -75,7 +75,12 @@ fun CardFormScreen(
         },
         containerColor = Color.Transparent,
     ) { innerPadding ->
-        if (store == null) return@Scaffold
+        if (store == null) {
+            if (state.storeGone) {
+                Text("This store is no longer available.", modifier = Modifier.padding(innerPadding).padding(16.dp))
+            }
+            return@Scaffold
+        }
         Column(
             Modifier.padding(innerPadding).verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
