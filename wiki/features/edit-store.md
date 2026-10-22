@@ -36,7 +36,9 @@ Catalogue stores have no Edit button and can't be changed or deleted. Issue [#53
   foreign key's `ON DELETE CASCADE` ([[architecture]] → Worked example, step 1), in the same statement. Then the form
   goes back to the picker, which no longer lists the store. A failed delete says "The store couldn't be deleted. Try
   again." in the dialog, and Delete tries again; closing the dialog forgets the failure, and a delete under way or
-  done isn't repeated. This is the same lifecycle as deleting a card ([[card-detail]]): both use the `Deletion` enum
+  done isn't repeated. Room may re-emit the store list without the store before the delete returns, so a store gone
+  while its delete is under way isn't reported as gone (found in review; `aStoreGoneBeforeItsDeleteReturns_…`). This
+  is the same lifecycle as deleting a card ([[card-detail]]): both use the `Deletion` enum
   (`Deletion.kt`). This also removes a store abandoned before its first card ([[2026-10-22-custom-stores]]).
 - Photo files of the deleted cards aren't deleted: no card has photos yet (#10, as for deleting a card, #8).
 - **A store that isn't there** (deleted, or a catalogue store's id in the route): the form says "This store is no

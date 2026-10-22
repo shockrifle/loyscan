@@ -327,6 +327,26 @@ class CustomStoreViewModelTest {
     }
 
     @Test
+    fun aStoreGoneBeforeItsDeleteReturns_isNotSaidToBeGone() = runTest { // #53 review: Room may re-emit first
+        stores.stores.value += custom
+        val viewModel = editViewModel()
+        val gate = CompletableDeferred<Unit>()
+        stores.deleteGate = gate
+
+        viewModel.state.test {
+            skipItems(1)
+            viewModel.delete()
+            stores.stores.value = stores.stores.value.filterNot { it.id == custom.id }
+
+            val state = expectMostRecentItem()
+            assertThat(state.deletion).isEqualTo(Deletion.DELETING)
+            assertThat(state.storeGone).isFalse()
+            gate.complete(Unit)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun aFailedDelete_saysSo_canBeTriedAgain_andIsForgottenWhenDismissed() = runTest { // #53
         stores.stores.value += custom
         stores.deleteFailure = IllegalStateException("delete failed")

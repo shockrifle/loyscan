@@ -98,8 +98,9 @@ class CustomStoreViewModel @Inject constructor(
                 createdStoreId = progress.createdStoreId,
                 editing = route.storeId != null,
                 ready = edited is Edited.New || edited is Edited.Found,
-                // Deleting it makes it gone too; the screen is leaving then, so that isn't news.
-                storeGone = edited is Edited.Gone && deletion != Deletion.DELETED,
+                // Deleting it makes it gone too, and Room may say so before the delete returns; the screen is leaving
+                // then, so that isn't news.
+                storeGone = edited is Edited.Gone && deletion != Deletion.DELETING && deletion != Deletion.DELETED,
                 saved = progress.saved,
                 storedName = (edited as? Edited.Found)?.store?.name,
                 cardCount = cardCount,
