@@ -148,7 +148,7 @@ fun CardFormScreen(
 /** Why the number may be wrong, or `null` when there is nothing to say. */
 private fun problemText(check: NumberCheck, storeName: String): String? = when (check) {
     NumberCheck.Empty, NumberCheck.Valid -> null
-    is NumberCheck.DoesNotFitFormat -> "This number can't be drawn as ${check.format.displayName}."
+    is NumberCheck.DoesNotFitFormat -> "This isn't a valid ${check.format.displayName} number."
     NumberCheck.ScanDoesNotMatchStore -> "This barcode doesn't look like a $storeName card."
     is NumberCheck.Invalid -> check.errors.sorted().joinToString(" ") { error ->
         when (error) {

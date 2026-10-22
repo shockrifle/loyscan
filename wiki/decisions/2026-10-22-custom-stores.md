@@ -44,7 +44,7 @@ would get a check digit ZXing computes, i.e. become another number.
 ## Consequences
 - A custom store abandoned before its first card stays in the picker. Nothing edits or deletes a custom store yet.
 - A typed number the picked format can't hold as it is (a wrong EAN-13 check digit, or one digit short) would be
-  drawn in Code 128 or QR, or completed with a computed check digit ([[zxing-core]], `BarcodeEncoder.holdsAsIs`). The card form says "This number can't be drawn as <format>." and offers "Save anyway", for any
+  drawn in Code 128 or QR, or completed with a computed check digit ([[zxing-core]], `BarcodeEncoder.holdsAsIs`). The card form says "This isn't a valid <format> number." and offers "Save anyway", for any
   store without a rule (also `hu-libri`, EAN-13). Found in review; `CardFormViewModelTest.aTypedNumberTheFormatOf…`.
 - Tests: `CustomStoreViewModelTest`, `CustomStoreScreenTest`, `AddCardDirectionsTest`, `BarcodeFormatTest`,
   `BarcodeEncoderTest`, `RoomStoreRepositoryTest`, and `AppNavigationTest.addingACardForANewCustomStore_…`.

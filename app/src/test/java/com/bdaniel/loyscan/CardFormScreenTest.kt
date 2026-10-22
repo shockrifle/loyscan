@@ -87,8 +87,17 @@ class CardFormScreenTest {
 
         composeRule.onNodeWithTag(CARD_NUMBER_TAG).performTextInput("1234")
 
-        composeRule.onNodeWithText("This number can't be drawn as EAN-13.").assertIsDisplayed()
+        composeRule.onNodeWithText("This isn't a valid EAN-13 number.").assertIsDisplayed()
         composeRule.onNodeWithText("Save anyway").assertIsEnabled()
+    }
+
+    @Test
+    fun aNumberOneDigitShortOfTheStoresBarcode_isNotCalledUndrawable() { // #47 review, round 3: ZXing would draw it
+        setScreen(CardForm("ean"))
+
+        composeRule.onNodeWithTag(CARD_NUMBER_TAG).performTextInput("590123412345")
+
+        composeRule.onNodeWithText("This isn't a valid EAN-13 number.").assertIsDisplayed()
     }
 
     @Test
