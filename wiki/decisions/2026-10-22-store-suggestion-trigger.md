@@ -8,7 +8,7 @@ Step 5 of #6: "if the scanned content matches another store's rule better, sugge
 before scanning, so a scan can belong to another store. `CardNumberEngine.match` says whether a rule can have
 produced the scan, and `formatMatches` says whether the rule's symbology agrees (since #47 the GS1 mark is ignored
 there, [[2026-10-21-gs1-mark-as-barcode-format]]). The shipped catalogue has loose rules: SuperShop reads any 16
-digits in Code 128, so it also reads a Tesco GS1-128 barcode; Auchan reads any valid EAN-13 (#32); four stores have
+digits in Code 128, so it also reads a Tesco GS1-128 barcode; Auchan reads any valid EAN-13 (#52); four stores have
 no rule at all ([[store-catalogue]]).
 
 ## Options considered
@@ -41,14 +41,17 @@ may only mean the scanner read it as plain Code 128, and the catalogue's
 only GS1 store (Tesco) has a prefix and a check digit that SuperShop's rule lacks. A store without a rule says nothing
 about a scan, so a store that does read it is likelier to be right, though catch-all rules give false hints (see
 Consequences). Option 4 was left out: it needs a notion of how
-specific a rule is, and the case it catches (Auchan) goes away once Auchan's prefix is confirmed (#31, #32). Offering
+specific a rule is, and the case it catches (Auchan) goes away once Auchan's prefix is confirmed (#31, #52). Offering
 every match instead of the best one avoids guessing between stores whose rules read the same number.
 
 ## Consequences
-- With Auchan picked, a dm, Penny or Rossmann scan is still saved as Auchan without a hint, until #32's last criterion.
+- With Auchan picked, a dm, Penny or Rossmann scan is still saved as Auchan without a hint, until Auchan's prefix is
+  confirmed (#52; until 2026-10-22 tracked as #32's last criterion).
 - A store without a rule gets false hints from the catch-all rules: a card whose length fits is offered SuperShop
-  (16 digits), Praktiker (9–10), Shell ClubSmart (17) or mömax (10-digit ITF), with no problem shown. The user picks,
-  so nothing is switched; confirming those stores' prefixes (#31) narrows it. Found in review.
+  (16 digits), Praktiker (9–10), Shell ClubSmart (17), mömax (10-digit ITF) or Auchan (any valid EAN-13), with no
+  problem shown. The user picks, so nothing is switched; confirming those stores' prefixes (#31) narrows it (#52).
+  Found in review. A new catalogue store with a catch-all rule adds to this, e.g. Möbelix, whose cards share mömax's
+  10-digit ITF (#44).
 - A typed number never gets a suggestion.
 - Tests: `CardFormViewModelTest` (each case above), `StoreSearchTest` (ranking),
   `ShippedCatalogueTest.aTescoScan_offersTescoFirst`, `CardFormScreenTest`.

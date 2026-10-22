@@ -24,4 +24,5 @@ The start destination: a top bar titled "My Cards" and a 2-column grid of card t
 ## Known issues
 
 - Tile logos use Coil's default loader, not the app's — no SVG, no error logging:
-  [[list-screen-bypasses-image-loader]].
+  [[list-screen-bypasses-image-loader]]. No store has a logo today, so no tile loads one; it matters once tiles show
+  card photos (#7, #10).

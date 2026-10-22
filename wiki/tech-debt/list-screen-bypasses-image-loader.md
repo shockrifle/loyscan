@@ -1,6 +1,7 @@
 # List tiles don't use the app's ImageLoader
 
-**Status:** Open · **Issue:** [#15](https://github.com/shockrifle/loyscan/issues/15) · **Since:** 2025-12-12 (`45a33e1`) · **Where:** `CardItem` in
+**Status:** Open · **Issue:** [#7](https://github.com/shockrifle/loyscan/issues/7) (was
+[#15](https://github.com/shockrifle/loyscan/issues/15), folded into #7 on 2026-10-22) · **Since:** 2025-12-12 (`45a33e1`) · **Where:** `CardItem` in
 `app/src/main/java/com/bdaniel/loyscan/ListScreen.kt` (`AsyncImage(model = card.store.logo, …)` with no
 `imageLoader`)
 
@@ -12,10 +13,11 @@
 just missed.
 
 ## Risk / impact
-- SVG logos would render in the detail screen but **not** in the list (no `SvgDecoder` in the default loader).
-- List image failures are not logged.
-- Two separate memory caches for the same URLs.
+- No effect today: catalogue stores have no logo ([[2026-10-13-curated-store-catalogue]]) and custom stores have
+  none either, so the tile's `AsyncImage` never runs (checked 2026-10-22).
+- It matters again when a tile shows an image, e.g. the card's front photo (#7, #10): it would then load without
+  the app's decoders, logging and cache.
 
 ## How to pay it down
-Add `imageLoader = hiltImageLoader()` to the tile's `AsyncImage`. To prevent recurrences, consider making the Hilt
-loader Coil's default (see the Consequences in [[2025-12-12-singleton-image-loader]]).
+Load any tile image through `hiltImageLoader()`, which #7 lists as part of its tile work. To prevent recurrences,
+consider making the Hilt loader Coil's default (see the Consequences in [[2025-12-12-singleton-image-loader]]).
