@@ -338,6 +338,25 @@ class CardFormViewModelTest {
     }
 
     @Test
+    fun aScanWithoutTheGs1MarkThePickedGs1RuleReads_suggestsNothing() = runTest { // review of #6, #47
+        // A plain Code 128 read of a GS1-128 store's card: another store's Code 128 rule reading it isn't a better match.
+        viewModel(CardForm("gs1", scannedContent = "12345674", scannedFormat = BarcodeFormat.CODE_128)).state.test {
+            val state = awaitLoaded()
+            assertThat(state.check).isEqualTo(NumberCheck.Valid)
+            assertThat(state.suggestedStores).isEmpty()
+        }
+    }
+
+    @Test
+    fun aScanThePickedRuleReadsInAnotherSymbology_suggestsNothing() = runTest { // review of #6
+        viewModel(CardForm("qr", scannedContent = "12345674", scannedFormat = BarcodeFormat.CODE_128)).state.test {
+            val state = awaitLoaded()
+            assertThat(state.check).isEqualTo(NumberCheck.Valid)
+            assertThat(state.suggestedStores).isEmpty()
+        }
+    }
+
+    @Test
     fun aScanForAStoreWithoutARule_suggestsEveryStoreWhoseRuleReadsIt() = runTest {
         viewModel(CardForm("plain", scannedContent = "12345674", scannedFormat = BarcodeFormat.CODE_128)).state.test {
             val state = awaitLoaded()

@@ -51,8 +51,8 @@ data class CardFormState(
     val savedCardId: String? = null,
     /**
      * Other stores whose rule reads the scan better than this store's (#6): any that reads it when this store has no
-     * rule or its rule can't have produced it, and those naming the scan's exact format when this rule reads it only by
-     * symbology. Ranked as [com.bdaniel.loyscan.domain.matchingScan] does. [CardFormViewModel.switchStore] picks one.
+     * rule or its rule can't have produced it, and those naming the scan's GS1 format when this rule names the same
+     * symbology without the mark. Ranked as [com.bdaniel.loyscan.domain.matchingScan] does. [CardFormViewModel.switchStore] picks one.
      */
     val suggestedStores: kotlin.collections.List<Store> = emptyList(),
 ) {
@@ -205,8 +205,9 @@ class CardFormViewModel @Inject constructor(
 
     /**
      * For an untouched scan (#6, decision 2026-10-22-store-suggestion-trigger): every other store whose rule reads it
-     * when this store has no rule or its rule rejects it; the stores whose rule names its exact format when this rule
-     * reads it only by symbology (GS1 mark or not); otherwise none.
+     * when this store has no rule or its rule rejects it; the stores whose rule names its exact format when the scan has
+     * the GS1 mark and this rule names the same symbology without it; otherwise none. A scan without the mark against a
+     * GS1 rule offers nothing: a missing mark is weak evidence (a plain read of a Tesco card), a present one is strong.
      */
     private fun suggestedStores(
         store: Store,
@@ -215,10 +216,10 @@ class CardFormViewModel @Inject constructor(
         ruleReadsScan: Boolean,
     ): kotlin.collections.List<Store> {
         val format = draft.scannedFormat ?: return emptyList()
-        val ruleFormat = store.cardNumberRule?.format
-        if (ruleReadsScan && ruleFormat == format) return emptyList()
         val matching = stores.filter { it.id != store.id }.matchingScan(draft.number, format)
-        return if (ruleReadsScan) matching.filter { it.cardNumberRule?.format == format } else matching
+        if (!ruleReadsScan) return matching
+        val markOnlyOnTheScan = format != format.symbology && store.cardNumberRule?.format == format.symbology
+        return if (markOnlyOnTheScan) matching.filter { it.cardNumberRule?.format == format } else emptyList()
     }
 
     private data class Progress(
