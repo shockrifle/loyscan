@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-22 · review fix: closing the delete dialog forgets a failed delete; stale DetailScreen/DetailViewModel line references updated · card-detail, architecture, card-transition, shared-element-key-from-async-state · review of #8
 - 2026-10-22 · created edit-card; updated card-detail, add-card, architecture, 2026-10-12-data-model-v2, features/_index, index · editing a card's label and number in the card form (#8)
 - 2026-10-22 · updated · card-detail, architecture · deleting a card from its detail screen, with a confirmation (#8)
 - 2026-10-22 · updated · add-card, 2026-10-22-custom-stores · the format message says "isn't a valid <format> number", true for a short EAN too (#47 review, round 3)

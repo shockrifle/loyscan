@@ -199,7 +199,10 @@ fun SharedTransitionScope.DetailScreen(
                 failed = deletion == DetailViewModel.Deletion.FAILED,
                 deleting = deletion == DetailViewModel.Deletion.DELETING,
                 onConfirm = viewModel::delete,
-                onDismiss = { confirmingDelete = false },
+                onDismiss = {
+                    confirmingDelete = false
+                    viewModel.dismissDeletion()
+                },
             )
         }
     }

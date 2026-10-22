@@ -11,6 +11,7 @@ import com.bdaniel.loyscan.testing.SOME_INSTANT
 import com.bdaniel.loyscan.testing.aLoyaltyCard
 import com.bdaniel.loyscan.testing.cardId
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
@@ -95,6 +96,33 @@ class DetailViewModelTest {
 
         assertThat(viewModel.deletion.value).isEqualTo(DetailViewModel.Deletion.DELETED)
         assertThat(repository.cards.value.map { it.id }).containsExactly(cardId(1))
+    }
+
+    @Test
+    fun delete_whileDeleting_orOnceDeleted_isIgnored() = runTest { // review of #8: a double tap deletes once
+        val gate = CompletableDeferred<Unit>()
+        repository.deleteGate = gate
+        val viewModel = DetailViewModel(SavedStateHandle(route = Detail(cardId = cardId(1), color = "#336699")), repository)
+
+        viewModel.delete()
+        assertThat(viewModel.deletion.value).isEqualTo(DetailViewModel.Deletion.DELETING)
+        viewModel.delete()
+        gate.complete(Unit)
+        viewModel.delete()
+
+        assertThat(viewModel.deletion.value).isEqualTo(DetailViewModel.Deletion.DELETED)
+        assertThat(repository.deleteCalls).isEqualTo(1)
+    }
+
+    @Test
+    fun dismissingAFailedDelete_forgetsTheFailure() = runTest { // review of #8
+        repository.deleteFailure = IllegalStateException("disk I/O error")
+        val viewModel = DetailViewModel(SavedStateHandle(route = Detail(cardId = cardId(1), color = "#336699")), repository)
+        viewModel.delete()
+
+        viewModel.dismissDeletion()
+
+        assertThat(viewModel.deletion.value).isEqualTo(DetailViewModel.Deletion.NONE)
     }
 
     @Test

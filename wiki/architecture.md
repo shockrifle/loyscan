@@ -131,7 +131,7 @@ here exist; read them next to the code.
    store's rule), the back arrow calls `toBack`, and an empty or malformed route color doesn't crash.
    Then `DetailScreen` paints the top bar and header with the **route** color (available on frame 1), and fills
    text/logo from the **ViewModel** card (available once Room emits). The whole `Scaffold` is the matching shared
-   element `"card/${card.id}"` (`DetailScreen.kt:105-108`). Back → `directions.toBack()` → `navigateUp()`.
+   element `"card/${card.id}"` (`DetailScreen.kt:116-119`). Back → `directions.toBack()` → `navigateUp()`.
    See [[card-detail]], [[card-transition]].
 
 ### Checklist for a new screen/feature (derived from the example)

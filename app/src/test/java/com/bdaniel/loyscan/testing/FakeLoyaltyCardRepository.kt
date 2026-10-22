@@ -2,6 +2,7 @@ package com.bdaniel.loyscan.testing
 
 import com.bdaniel.loyscan.data.repository.LoyaltyCardRepository
 import com.bdaniel.loyscan.domain.LoyaltyCard
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
@@ -23,6 +24,13 @@ class FakeLoyaltyCardRepository(
 
     /** When set, [delete] throws it instead of deleting. */
     var deleteFailure: Exception? = null
+
+    /** When set, [delete] suspends until it completes, as a Room delete in progress does. */
+    var deleteGate: CompletableDeferred<Unit>? = null
+
+    /** How many times [delete] was called. */
+    var deleteCalls = 0
+        private set
 
     override fun getAllWithStore(): Flow<List<LoyaltyCard>> = cards
 
@@ -55,6 +63,8 @@ class FakeLoyaltyCardRepository(
     }
 
     override suspend fun delete(id: String) {
+        deleteCalls++
+        deleteGate?.await()
         deleteFailure?.let { throw it }
         cards.value = cards.value.filterNot { it.id == id }
     }

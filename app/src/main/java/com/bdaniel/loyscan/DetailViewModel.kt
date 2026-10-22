@@ -63,5 +63,10 @@ class DetailViewModel @Inject constructor(
         }
     }
 
+    /** The delete dialog was closed: a failure is forgotten, so the dialog opens afresh next time. */
+    fun dismissDeletion() {
+        if (_deletion.value == Deletion.FAILED) _deletion.value = Deletion.NONE
+    }
+
     enum class Deletion { NONE, DELETING, DELETED, FAILED }
 }

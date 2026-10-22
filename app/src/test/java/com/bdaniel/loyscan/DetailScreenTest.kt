@@ -9,6 +9,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.hasAnyAncestor
@@ -237,6 +238,27 @@ class DetailScreenTest {
         composeRule.onNodeWithContentDescription("Edit").performClick()
 
         assertThat(edited).containsExactly(card.id to card.store.id)
+    }
+
+    @Test
+    fun editAction_isDisabledUntilTheCardHasLoaded() { // review of #8: an empty id would open a blank form
+        setScreen(repository = FakeLoyaltyCardRepository(emptyList()))
+
+        composeRule.onNodeWithContentDescription("Edit").assertIsNotEnabled()
+    }
+
+    @Test
+    fun aDeleteThatFailed_isNotSaidAgain_whenTheDialogOpensNext() { // review of #8
+        val repository = FakeLoyaltyCardRepository(listOf(card)).apply { deleteFailure = IllegalStateException("disk I/O error") }
+        setScreen(repository = repository)
+        composeRule.onNodeWithContentDescription("Delete").performClick()
+        composeRule.onNodeWithText("Delete").performClick()
+        composeRule.onNodeWithText("Cancel").performClick()
+
+        composeRule.onNodeWithContentDescription("Delete").performClick()
+
+        composeRule.onNodeWithText("The card couldn't be deleted. Try again.").assertDoesNotExist()
+        composeRule.onNodeWithText("It is removed from this phone for good.").assertIsDisplayed()
     }
 
     @Test

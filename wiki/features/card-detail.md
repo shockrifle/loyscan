@@ -5,7 +5,7 @@ name), then a `Card` with the card's label, the store name, the barcode on white
 type. The screen runs at full brightness; a double-tap on the barcode opens a full-screen scan mode.
 
 **Entry points:** `DetailScreen` (`app/src/main/java/com/bdaniel/loyscan/DetailScreen.kt:67-75`);
-`DetailViewModel` (`app/src/main/java/com/bdaniel/loyscan/DetailViewModel.kt:17-38`); route
+`DetailViewModel` (`app/src/main/java/com/bdaniel/loyscan/DetailViewModel.kt`); route
 `Detail(cardId, color, countUse)` (`app/src/main/java/com/bdaniel/loyscan/Navigation.kt:29-30`), where `cardId` is the card's
 UUID string.
 
@@ -66,6 +66,7 @@ UUID string.
   (`Deletion.DELETED`) the screen goes back (`directions.toBack()`, to the list). Until then the card stays on screen:
   the card flow skips the `null` a deleted card emits. A failed delete (the repository throws) is logged with Timber,
   and the dialog says "The card couldn't be deleted. Try again."; "Delete" tries again (as a failed save does, #49).
+  Closing the dialog forgets the failure (`dismissDeletion`), and a delete already under way or done isn't repeated.
   Tests: `DetailViewModelTest.delete_…`, `DetailScreenTest.deleteAction_…`, `confirmingDelete_…`,
   `aDeleteThatFails_…`, `AppNavigationTest.deletingACard_afterConfirming_returnsToTheListWithoutIt`.
 - The whole `Scaffold` is the shared element `card/{id}` — [[card-transition]].
