@@ -45,7 +45,8 @@ class CardFormViewModelTest {
     private val nineStore = aStore(id = "nine", name = "Nine Store", cardNumberRule = rule.copy(coreStartsWith = listOf("9")))
     private val gs1Store = aStore(id = "gs1", name = "Gs1 Store", cardNumberRule = rule.copy(format = BarcodeFormat.GS1_128))
     private val qrStore = aStore(id = "qr", name = "A QR Store", cardNumberRule = rule.copy(format = BarcodeFormat.QR_CODE))
-    private val stores = FakeStoreRepository(listOf(store, plainStore, nineStore, gs1Store, qrStore))
+    private val eanStore = aStore(id = "ean", name = "Ean Store", defaultBarcodeFormat = BarcodeFormat.EAN_13)
+    private val stores = FakeStoreRepository(listOf(store, plainStore, nineStore, gs1Store, qrStore, eanStore))
     private val cards = FakeLoyaltyCardRepository()
 
     @Test
@@ -72,6 +73,32 @@ class CardFormViewModelTest {
             assertThat(state.canSave).isTrue()
             assertThat(state.shownAs).isEqualTo("1234 5674")
             assertThat(state.barcodeFormat).isEqualTo(BarcodeFormat.CODE_128)
+        }
+    }
+
+    @Test
+    fun aTypedNumberTheFormatOfAStoreWithoutARuleCantHold_saysSo_andCanStillBeSavedAnyway() = runTest { // #47 review
+        val viewModel = viewModel(CardForm("ean"))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.onNumberChange("5901234123458") // wrong EAN-13 check digit
+
+            val state = awaitItem()
+            assertThat(state.check).isEqualTo(NumberCheck.DoesNotFitFormat(BarcodeFormat.EAN_13))
+            assertThat(state.canSave).isTrue()
+        }
+    }
+
+    @Test
+    fun aTypedNumberTheFormatOfAStoreWithoutARuleHolds_isValid() = runTest {
+        val viewModel = viewModel(CardForm("ean"))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.onNumberChange("5901234123457")
+
+            assertThat(awaitItem().check).isEqualTo(NumberCheck.Valid)
         }
     }
 

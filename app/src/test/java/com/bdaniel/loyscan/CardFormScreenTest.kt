@@ -82,6 +82,16 @@ class CardFormScreenTest {
     }
 
     @Test
+    fun aNumberTheStoresBarcodeCantHold_saysSo_andOffersSaveAnyway() { // #47 review
+        setScreen(CardForm("ean"))
+
+        composeRule.onNodeWithTag(CARD_NUMBER_TAG).performTextInput("1234")
+
+        composeRule.onNodeWithText("This number can't be drawn as EAN-13.").assertIsDisplayed()
+        composeRule.onNodeWithText("Save anyway").assertIsEnabled()
+    }
+
+    @Test
     fun aScanAnotherStoresRuleReads_offersThatStore_andTappingItMakesTheFormThatStores() { // #6
         setScreen(CardForm("nine", scannedContent = "12345674", scannedFormat = BarcodeFormat.CODE_128))
         composeRule.onNodeWithText("This barcode doesn't look like a Nine Store card.").assertIsDisplayed()
@@ -174,7 +184,14 @@ class CardFormScreenTest {
     private fun setScreen(route: CardForm) {
         val viewModel = CardFormViewModel(
             SavedStateHandle(route = route),
-            FakeStoreRepository(listOf(store, aStore(id = "plain", name = "Plain Store"), nineStore)),
+            FakeStoreRepository(
+                listOf(
+                    store,
+                    aStore(id = "plain", name = "Plain Store"),
+                    nineStore,
+                    aStore(id = "ean", name = "Ean Store", defaultBarcodeFormat = BarcodeFormat.EAN_13),
+                )
+            ),
             cards,
             Clock.fixed(SOME_INSTANT, ZoneOffset.UTC),
         )

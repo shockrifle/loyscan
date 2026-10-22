@@ -13,6 +13,7 @@ import com.bdaniel.loyscan.domain.Store
 import com.bdaniel.loyscan.domain.cardnumber.CardNumberEngine
 import com.bdaniel.loyscan.domain.matchingScan
 import com.bdaniel.loyscan.domain.cardnumber.Validation
+import com.bdaniel.loyscan.ui.barcode.BarcodeEncoder
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -63,6 +64,12 @@ data class CardFormState(
         data object Empty : NumberCheck
         data object Valid : NumberCheck
         data class Invalid(val errors: Set<Validation.Error>) : NumberCheck
+
+        /**
+         * A typed number for a store without a rule that the store's barcode format can't hold (e.g. not an EAN-13 for
+         * an EAN-13 store): the card would be drawn in a fallback format instead (#47 review).
+         */
+        data class DoesNotFitFormat(val format: BarcodeFormat) : NumberCheck
 
         /** The store's rule can't have produced the scanned content (the barcode format isn't compared, #47). */
         data object ScanDoesNotMatchStore : NumberCheck
@@ -180,7 +187,13 @@ class CardFormViewModel @Inject constructor(
             if (rule == null || ruleReadsScan) NumberCheck.Valid else NumberCheck.ScanDoesNotMatchStore
         } else {
             when (val validation = CardNumberEngine.validate(typed.orEmpty(), rule)) {
-                is Validation.Valid -> NumberCheck.Valid
+                is Validation.Valid ->
+                    // Without a rule nothing else checks the number against the store's format.
+                    if (rule == null && BarcodeEncoder.encode(draft.barcodeContent, draft.barcodeFormat)?.format != draft.barcodeFormat) {
+                        NumberCheck.DoesNotFitFormat(draft.barcodeFormat)
+                    } else {
+                        NumberCheck.Valid
+                    }
                 is Validation.Invalid ->
                     if (Validation.Error.EMPTY in validation.errors) NumberCheck.Empty else NumberCheck.Invalid(validation.errors)
             }

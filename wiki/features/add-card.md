@@ -44,7 +44,9 @@ stores already in the database, and custom stores). Everything runs offline on t
   says "Barcode: <format>" (the rule's, else the store's default).
 - **Live check** against the store's card-number rule ([[2026-10-09-card-number-rule-engine]]), on every change:
   - typed: `CardNumberEngine.validate`; each error has a message (too short, too long, characters the store doesn't
-    use, wrong start, check digit). An empty field can't be saved.
+    use, wrong start, check digit). An empty field can't be saved. A store without a rule accepts any number its
+    barcode format can hold; one it can't hold (`BarcodeEncoder` would fall back) gets "This number can't be drawn as
+    <format>." (`NumberCheck.DoesNotFitFormat`; found in review of the custom-store slice).
   - untouched scan: `CardNumberEngine.match`; if the rule can't have produced the content, "This barcode doesn't
     look like a <store> card." `RuleMatch.formatMatches` is ignored, so a scan whose symbology differs from the
     rule's isn't flagged; a GS1 scan and a plain rule of the same symbology agree anyway (#47). A store without a rule

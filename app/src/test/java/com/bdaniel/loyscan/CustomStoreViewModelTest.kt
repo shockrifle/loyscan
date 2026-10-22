@@ -7,6 +7,7 @@ import com.bdaniel.loyscan.testing.FakeStoreRepository
 import com.bdaniel.loyscan.testing.MainDispatcherRule
 import com.bdaniel.loyscan.testing.aStore
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
@@ -94,6 +95,20 @@ class CustomStoreViewModelTest {
 
         viewModel.create()
         viewModel.create()
+
+        assertThat(stores.stores.value.filter { it.isCustom }).hasSize(1)
+    }
+
+    @Test
+    fun aSecondCreateWhileTheFirstIsSaving_savesNothing() = runTest { // #47 review: a double tap
+        val viewModel = viewModel()
+        viewModel.onNameChange("My Shop")
+        val gate = CompletableDeferred<Unit>()
+        stores.addGate = gate
+
+        viewModel.create()
+        viewModel.create()
+        gate.complete(Unit)
 
         assertThat(stores.stores.value.filter { it.isCustom }).hasSize(1)
     }

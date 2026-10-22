@@ -62,7 +62,7 @@ class BarcodeEncoderTest {
     }
 
     @Test
-    fun everyFormatACustomStoreCanPick_isDrawnAsItself() { // #47: a typed number never needs a fallback format
+    fun everyFormatACustomStoreCanPick_isDrawnAsItself() { // #47: each can draw a number that fits it as itself
         val examples = mapOf(
             BarcodeFormat.CODABAR to "123456",
             BarcodeFormat.CODE_39 to "LOY-42",

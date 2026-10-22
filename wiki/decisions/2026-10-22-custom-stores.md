@@ -42,7 +42,8 @@ number still has to fit it (EAN-13 needs 13 digits; one that doesn't fit falls b
 
 ## Consequences
 - A custom store abandoned before its first card stays in the picker. Nothing edits or deletes a custom store yet.
-- A store whose typed number fits no listed format is drawn in Code 128 or QR, like any store
-  ([[zxing-core]]); the form doesn't check the number against the picked format.
+- A typed number the picked format can't hold (e.g. a wrong EAN-13 check digit) would be drawn in Code 128 or QR
+  ([[zxing-core]]). The card form says "This number can't be drawn as <format>." and offers "Save anyway", for any
+  store without a rule (also `hu-libri`, EAN-13). Found in review; `CardFormViewModelTest.aTypedNumberTheFormatOf…`.
 - Tests: `CustomStoreViewModelTest`, `CustomStoreScreenTest`, `AddCardDirectionsTest`, `BarcodeFormatTest`,
   `BarcodeEncoderTest`, `RoomStoreRepositoryTest`, and `AppNavigationTest.addingACardForANewCustomStore_…`.
