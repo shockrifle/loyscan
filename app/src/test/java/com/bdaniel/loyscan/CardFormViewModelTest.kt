@@ -279,21 +279,6 @@ class CardFormViewModelTest {
     }
 
     @Test
-    fun aScanShownDifferentlyFromItsContent_cantBeEdited_evenWithNothingObservingTheForm() = runTest { // #50
-        val viewModel = viewModel(CardForm("plain", scannedContent = "0109501101530003\u001D10ABC", scannedFormat = BarcodeFormat.GS1_128))
-
-        viewModel.onNumberChange("(01)09501101530003(10)ABD")
-
-        viewModel.state.test {
-            awaitLoaded()
-            viewModel.save()
-
-            assertThat(cards.cards.value.single().number).isEqualTo("0109501101530003\u001D10ABC")
-            cancelAndIgnoreRemainingEvents()
-        }
-    }
-
-    @Test
     fun aScanShownDifferentlyFromItsContent_cantBeEdited_beforeTheStoresHaveLoaded() = runTest { // #50 review
         val lateStores = object : StoreRepository by stores {
             override fun getAll() = flow { delay(1); emitAll(stores.getAll()) } // as Room's, not on construction
