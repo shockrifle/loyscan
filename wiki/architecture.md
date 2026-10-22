@@ -21,8 +21,10 @@ All paths below are under `app/src/main/java/com/bdaniel/loyscan/` unless writte
 | **Navigation** | `Navigation.kt`, `MainActivity.kt` (`AppNavigation`) | `@Serializable` routes + `NavController.*Directions()` factories | See [[2025-12-09-type-safe-navigation-directions]]. |
 | **DI** | `di/DatabaseModule.kt`, `di/ImageLoaderModule.kt`, `di/RepositoryModule.kt` | `@Module @InstallIn(SingletonComponent)` providers; `@Binds` repository interface → Room impl | Implementations use `@Inject constructor`. |
 
-Note: `LoyaltyCardRepository`'s writes are `recordUse(id)` (opening a card counts a use, #4), `delete(id)` (#8) and
+Note: `LoyaltyCardRepository`'s writes are `recordUse(id)` (opening a card counts a use, #4), `delete(id)` and `update(card)` (#8), and
 `add(card)` (the add-card flow, #6), which maps the domain card to its row with `LoyaltyCard.toEntity()` (`data/mapper/LoyaltyCardMapper.kt`).
+`update` writes only the columns an edit changes, through Room's partial `@Update(entity = …)` with `LoyaltyCardEdit`
+(`LoyaltyCard.toEdit()`), so usage and creation time are never overwritten from a stale copy ([[edit-card]]).
 `StoreRepository` reads every store (`getAll`) and adds one (`add(store)`, a custom store, #6; mapped with
 `Store.toEntity()`), an interface with `RoomStoreRepository` behind it since #6; its
 unused entity-taking `insert` was dropped then, and `getById` once the card form needed every store (2026-10-22). `StoreDao.getById` stays: no production code

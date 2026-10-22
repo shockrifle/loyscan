@@ -9,6 +9,7 @@ import androidx.room.Transaction
 import androidx.room.Update
 import com.bdaniel.loyscan.data.local.db.entity.LoyaltyCardEntity
 import com.bdaniel.loyscan.data.local.db.entity.StoreEntity
+import com.bdaniel.loyscan.domain.BarcodeFormat
 import kotlinx.coroutines.flow.Flow
 import java.time.Instant
 
@@ -20,13 +21,23 @@ data class LoyaltyCardWithStore(
     val store: StoreEntity
 )
 
+/** The columns an edit of a card writes (#8); the rest of the row stays as stored. */
+data class LoyaltyCardEdit(
+    val id: String,
+    val storeId: String,
+    val label: String?,
+    val number: String,
+    val scannedFormat: BarcodeFormat?,
+    val updatedAt: Instant,
+)
+
 @Dao
 interface LoyaltyCardDao {
     @Insert
     suspend fun insert(loyaltyCard: LoyaltyCardEntity)
 
-    @Update
-    suspend fun update(loyaltyCard: LoyaltyCardEntity)
+    @Update(entity = LoyaltyCardEntity::class)
+    suspend fun update(edit: LoyaltyCardEdit)
 
     @Query("DELETE FROM loyalty_cards WHERE id = :id")
     suspend fun deleteById(id: String)

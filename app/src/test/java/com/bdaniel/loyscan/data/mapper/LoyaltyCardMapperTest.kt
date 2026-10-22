@@ -1,5 +1,6 @@
 package com.bdaniel.loyscan.data.mapper
 
+import com.bdaniel.loyscan.data.local.db.dao.LoyaltyCardEdit
 import com.bdaniel.loyscan.data.local.db.dao.LoyaltyCardWithStore
 import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.domain.LoyaltyCard
@@ -86,6 +87,22 @@ class LoyaltyCardMapperTest {
     @Test
     fun toEntity_copiesEveryFieldAndKeepsOnlyTheStoreId() {
         assertThat(withStore.toDomainModel().toEntity()).isEqualTo(withStore.loyaltyCard)
+    }
+
+    @Test
+    fun toEdit_copiesTheFieldsAnEditChanges() { // #8
+        val card = withStore.toDomainModel()
+
+        assertThat(card.toEdit()).isEqualTo(
+            LoyaltyCardEdit(
+                id = card.id,
+                storeId = card.store.id,
+                label = card.label,
+                number = card.number,
+                scannedFormat = card.scannedFormat,
+                updatedAt = card.updatedAt,
+            )
+        )
     }
 
     @Test

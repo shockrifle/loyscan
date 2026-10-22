@@ -31,11 +31,13 @@ data class Detail(val cardId: String, val color: String, val countUse: Boolean =
 
 @Immutable
 data class DetailDirections(
-    val toBack: () -> Unit
+    val toBack: () -> Unit,
+    val toEdit: (cardId: String, storeId: String) -> Unit,
 )
 
 fun NavController.detailDirections() = DetailDirections(
-    toBack = { navigateUp() }
+    toBack = { navigateUp() },
+    toEdit = { cardId, storeId -> navigate(CardForm(storeId, cardId = cardId)) },
 )
 
 
@@ -107,10 +109,15 @@ fun NavController.scannerDirections(storeId: String) = ScannerDirections(
 
 /**
  * Last step of adding a card for the store [storeId]: label and number. [scannedContent] and [scannedFormat] are set
- * when the number comes from a scan.
+ * when the number comes from a scan. With [cardId], the form edits that card of [storeId] instead (#8).
  */
 @Serializable
-data class CardForm(val storeId: String, val scannedContent: String? = null, val scannedFormat: BarcodeFormat? = null)
+data class CardForm(
+    val storeId: String,
+    val scannedContent: String? = null,
+    val scannedFormat: BarcodeFormat? = null,
+    val cardId: String? = null,
+)
 
 @Immutable
 data class CardFormDirections(
@@ -118,7 +125,10 @@ data class CardFormDirections(
     val toBack: () -> Unit
 )
 
-/** The saved card opens in place of the whole add-card flow, so back from it returns to the list. */
+/**
+ * The saved card opens in place of the whole add-card flow, so back from it returns to the list. An edited card opens
+ * in place of the card and its form, in its store's current colour (#8).
+ */
 fun NavController.cardFormDirections() = CardFormDirections(
     toCard = { id, color ->
         navigate(Detail(id, color, countUse = false)) {

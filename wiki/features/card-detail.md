@@ -58,8 +58,8 @@ UUID string.
   its room). It keeps the screen on (`KeepScreenOn()`, `FLAG_KEEP_SCREEN_ON`, same
   resumed-only rule as the brightness). A tap anywhere or back closes it. Its open state survives rotation
   (`rememberSaveable`). 1D barcodes are not rotated to the long side.
-- Back arrow → `directions.toBack()` → `navigateUp()`. The Edit icon is a no-op (`DetailScreen.kt`,
-  `/* TODO */`).
+- Back arrow → `directions.toBack()` → `navigateUp()`. The Edit icon opens the card form for this card
+  (`directions.toEdit(cardId, storeId)`, [[edit-card]]); it is disabled until the card has loaded.
 - **Delete** (#8): the top bar's Delete icon asks "Delete this card?" ("It is removed from this phone for good.").
   "Cancel" or a tap outside closes the dialog. "Delete" calls `DetailViewModel.delete()` →
   `LoyaltyCardRepository.delete(id)` (`LoyaltyCardDao.deleteById`, one `DELETE`), and once it is gone
@@ -72,7 +72,7 @@ UUID string.
 
 ## Not implemented (as of 2026-10-22)
 
-- Editing cards (#8). Adding is [[add-card]]. Deleting several cards at once waits for the list's multi-select (#7),
+- Picking another store for a card (#8, [[edit-card]]). Deleting several cards at once waits for the list's multi-select (#7),
   and deleting a card's photo files for photos (#10); nothing stores photos yet.
 
 ## Known issues

@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -56,6 +57,8 @@ data class CardFormState(
      * symbology without the mark. Ranked as [com.bdaniel.loyscan.domain.matchingScan] does. [CardFormViewModel.switchStore] picks one.
      */
     val suggestedStores: kotlin.collections.List<Store> = emptyList(),
+    /** The form edits an existing card (#8) rather than adding one. */
+    val editing: Boolean = false,
 ) {
     /** Anything but an empty number can be saved, an invalid one "anyway". */
     val canSave: Boolean get() = store != null && check != NumberCheck.Empty && !saving && savedCardId == null
@@ -79,7 +82,8 @@ data class CardFormState(
 
 /**
  * Last step of adding a card: the label and number for the routed store, from a scan or typed. The store can be switched
- * to one whose rule reads the scan; the scan and label stay.
+ * to one whose rule reads the scan; the scan and label stay. With [CardForm.cardId] it edits that card (#8): the form
+ * starts as the card, a scanned card as its untouched scan.
  */
 @HiltViewModel
 class CardFormViewModel @Inject constructor(
@@ -90,21 +94,28 @@ class CardFormViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val route = savedStateHandle.toRoute<CardForm>()
-    private val scan = route.scannedContent?.let { content -> route.scannedFormat?.let { content to it } }
+    private val routedScan = route.scannedContent?.let { content -> route.scannedFormat?.let { content to it } }
+
+    /** The card being edited, `null` until it has loaded and while adding one. */
+    private val original: StateFlow<LoyaltyCard?> =
+        (route.cardId?.let { cardRepository.getByIdWithStore(it) } ?: flowOf(null))
+            .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     /** The routed store, until [switchStore] picks another. */
     private val storeId = savedStateHandle.getStateFlow(STORE_ID, route.storeId)
 
-    private val label = savedStateHandle.getStateFlow(LABEL, "")
+    /** `null` until the label is changed: the edited card's label, or none. */
+    private val label = savedStateHandle.getStateFlow<String?>(LABEL, null)
 
-    /** `null` while the number is the untouched scan. */
-    private val typedNumber = savedStateHandle.getStateFlow<String?>(TYPED_NUMBER, if (scan == null) "" else null)
+    /** `null` until the number is changed: the untouched scan, the edited card's typed number, or nothing typed. */
+    private val typedNumber = savedStateHandle.getStateFlow<String?>(TYPED_NUMBER, null)
 
     private val progress = MutableStateFlow(Progress())
 
     val state: StateFlow<CardFormState> =
-        combine(storeId, storeRepository.getAll(), label, typedNumber, progress) { id, stores, label, typed, progress ->
-            formState(id, stores, label, typed, progress)
+        combine(storeId, storeRepository.getAll(), original, combine(label, typedNumber, ::Pair), progress) {
+                id, stores, original, (label, typed), progress ->
+            formState(id, stores, original, label, typed, progress)
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
@@ -139,17 +150,18 @@ class CardFormViewModel @Inject constructor(
         val current = state.value
         val store = current.store
         if (!current.canSave || store == null) return
+        val original = original.value
+        if (route.cardId != null && original == null) return
         progress.value = Progress(saving = true)
         val now = clock.instant()
-        val card = draft(store, typedNumber.value).copy(
-            id = UUID.randomUUID().toString(),
+        val draft = draft(store, original, typedNumber.value).copy(
             label = current.label.trim().ifEmpty { null },
-            createdAt = now,
             updatedAt = now,
         )
+        val card = original?.let { draft } ?: draft.copy(id = UUID.randomUUID().toString(), createdAt = now)
         viewModelScope.launch {
             progress.value = try {
-                cardRepository.add(card)
+                if (original == null) cardRepository.add(card) else cardRepository.update(card)
                 Progress(savedCardId = card.id)
             } catch (e: CancellationException) {
                 throw e
@@ -160,12 +172,24 @@ class CardFormViewModel @Inject constructor(
         }
     }
 
-    /** The card as it would be saved: the untouched scan verbatim with its format, else the typed number (trimmed). */
-    private fun draft(store: Store, typed: String?): LoyaltyCard {
-        val untouchedScan = scan?.takeIf { typed == null }
-        return LoyaltyCard.EMPTY.copy(
+    /** The scan the form starts from: the routed one, or the edited card's when it was scanned. */
+    private fun scan(original: LoyaltyCard?): Pair<String, BarcodeFormat>? =
+        routedScan ?: original?.scannedFormat?.let { original.number to it }
+
+    /** The number typed so far, or `null` while it is the untouched scan; [typed] is `null` until the number changes. */
+    private fun typedOrNull(original: LoyaltyCard?, typed: String?): String? =
+        typed ?: if (scan(original) != null) null else original?.number.orEmpty()
+
+    /**
+     * The card as it would be saved: the untouched scan verbatim with its format, else the typed number (trimmed). An
+     * edit starts from the [original] card, so its id, creation, uses and note stay.
+     */
+    private fun draft(store: Store, original: LoyaltyCard?, typed: String?): LoyaltyCard {
+        val typedNumber = typedOrNull(original, typed)
+        val untouchedScan = scan(original)?.takeIf { typedNumber == null }
+        return (original ?: LoyaltyCard.EMPTY).copy(
             store = store,
-            number = untouchedScan?.first ?: typed.orEmpty().trim(),
+            number = untouchedScan?.first ?: typedNumber.orEmpty().trim(),
             scannedFormat = untouchedScan?.second,
         )
     }
@@ -173,13 +197,20 @@ class CardFormViewModel @Inject constructor(
     private fun formState(
         storeId: String,
         stores: kotlin.collections.List<Store>,
-        label: String,
-        typed: String?,
+        original: LoyaltyCard?,
+        changedLabel: String?,
+        changedNumber: String?,
         progress: Progress,
     ): CardFormState {
+        val editing = route.cardId != null
+        val label = changedLabel ?: original?.label.orEmpty()
+        val typed = typedOrNull(original, changedNumber)
         val store = stores.firstOrNull { it.id == storeId }
-        if (store == null) return CardFormState(label = label, number = typed.orEmpty())
-        val draft = draft(store, typed)
+        // Nothing to show until the store has loaded, and the edited card (which may be gone).
+        if (store == null || editing && original == null) {
+            return CardFormState(label = label, number = typed.orEmpty(), editing = editing)
+        }
+        val draft = draft(store, original, changedNumber)
         val scannedFormat = draft.scannedFormat
         val rule = store.cardNumberRule
         val ruleReadsScan = scannedFormat != null && rule != null &&
@@ -214,6 +245,7 @@ class CardFormViewModel @Inject constructor(
             saveFailed = progress.saveFailed,
             savedCardId = progress.savedCardId,
             suggestedStores = suggestedStores(store, stores, draft, ruleReadsScan),
+            editing = editing,
         )
     }
 

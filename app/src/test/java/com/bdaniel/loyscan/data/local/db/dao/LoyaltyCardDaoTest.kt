@@ -128,6 +128,50 @@ class LoyaltyCardDaoTest {
     }
 
     @Test
+    fun updateEdit_writesTheEditedColumns_andLeavesTheRestAsStored() = runTest { // #8
+        db.storeDao().insert(aStoreEntity(id = "first"))
+        db.storeDao().insert(aStoreEntity(id = "second"))
+        val stored = aLoyaltyCardEntity(
+            id = cardId(1),
+            storeId = "first",
+            label = "Old label",
+            number = "0042",
+            scannedFormat = BarcodeFormat.EAN_13,
+            createdAt = Instant.parse("2026-01-01T00:00:00Z"),
+            lastUsedAt = Instant.parse("2026-02-02T00:00:00Z"),
+            useCount = 7,
+            note = "Expires in May",
+            frontPhotoPath = "photos/front.jpg",
+            backPhotoPath = "photos/back.jpg",
+            updatedAt = Instant.parse("2026-03-03T00:00:00Z"),
+        )
+        dao.insert(stored)
+        dao.insert(aLoyaltyCardEntity(id = cardId(2), storeId = "first", label = "Other"))
+
+        dao.update(
+            LoyaltyCardEdit(
+                id = cardId(1),
+                storeId = "second",
+                label = null,
+                number = "777",
+                scannedFormat = null,
+                updatedAt = Instant.parse("2026-04-04T00:00:00Z"),
+            )
+        )
+
+        assertThat(dao.getByIdWithStore(cardId(1)).first()!!.loyaltyCard).isEqualTo(
+            stored.copy(
+                storeId = "second",
+                label = null,
+                number = "777",
+                scannedFormat = null,
+                updatedAt = Instant.parse("2026-04-04T00:00:00Z"),
+            )
+        )
+        assertThat(dao.getByIdWithStore(cardId(2)).first()!!.loyaltyCard.label).isEqualTo("Other")
+    }
+
+    @Test
     fun deleteById_deletesThatCardOnly() = runTest {
         db.storeDao().insert(aStoreEntity())
         dao.insert(aLoyaltyCardEntity(id = cardId(1)))

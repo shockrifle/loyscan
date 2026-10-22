@@ -101,7 +101,7 @@ fun SharedTransitionScope.DetailScreen(
                         }
                     },
                     actions = {
-                        IconButton(onClick = { /* TODO: Handle edit */ }) {
+                        IconButton(onClick = { directions.toEdit(card.id, card.store.id) }, enabled = card.id.isNotEmpty()) {
                             Icon(Icons.Default.Edit, contentDescription = "Edit")
                         }
                         IconButton(onClick = { confirmingDelete = true }) {

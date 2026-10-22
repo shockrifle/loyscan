@@ -14,7 +14,10 @@ import com.bdaniel.loyscan.domain.cardnumber.Validation
 import com.bdaniel.loyscan.testing.FakeLoyaltyCardRepository
 import com.bdaniel.loyscan.testing.FakeStoreRepository
 import com.bdaniel.loyscan.testing.MainDispatcherRule
+import com.bdaniel.loyscan.testing.SOME_INSTANT
+import com.bdaniel.loyscan.testing.aLoyaltyCard
 import com.bdaniel.loyscan.testing.aStore
+import com.bdaniel.loyscan.testing.cardId
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
@@ -467,6 +470,158 @@ class CardFormViewModelTest {
 
             assertThat(cards.cards.value).isEmpty()
             cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun editingATypedCard_startsWithItsStoreLabelAndNumber() = runTest { // #8
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, label = "Gold card", number = "12345674"))
+
+        viewModel(CardForm("ruled", cardId = cardId(1))).state.test {
+            val state = awaitLoaded()
+            assertThat(state.editing).isTrue()
+            assertThat(state.store).isEqualTo(store)
+            assertThat(state.label).isEqualTo("Gold card")
+            assertThat(state.number).isEqualTo("12345674")
+            assertThat(state.scannedFormat).isNull()
+            assertThat(state.check).isEqualTo(NumberCheck.Valid)
+            assertThat(state.canSave).isTrue()
+        }
+    }
+
+    @Test
+    fun editingAScannedCard_startsAsItsUntouchedScan() = runTest { // #8
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, number = "12345674", scannedFormat = BarcodeFormat.QR_CODE))
+
+        viewModel(CardForm("ruled", cardId = cardId(1))).state.test {
+            val state = awaitLoaded()
+            assertThat(state.number).isEqualTo("1234 5674")
+            assertThat(state.scannedFormat).isEqualTo(BarcodeFormat.QR_CODE)
+            assertThat(state.label).isEmpty()
+        }
+    }
+
+    @Test
+    fun savingAnEdit_updatesTheCard_keepingItsIdCreationUseAndNote() = runTest { // #8
+        val original = aLoyaltyCard(
+            id = cardId(1),
+            store = store,
+            label = "Gold card",
+            number = "12345674",
+            createdAt = SOME_INSTANT,
+            lastUsedAt = SOME_INSTANT,
+            useCount = 3,
+            note = "Expires in May",
+            updatedAt = SOME_INSTANT,
+        )
+        cards.cards.value = listOf(original)
+        val viewModel = viewModel(CardForm("ruled", cardId = cardId(1)))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.onLabelChange("  ")
+            viewModel.onNumberChange("1234 5682")
+            viewModel.save()
+
+            assertThat(cards.cards.value).containsExactly(original.copy(label = null, number = "1234 5682", updatedAt = NOW))
+            assertThat(expectMostRecentItem().savedCardId).isEqualTo(cardId(1))
+        }
+    }
+
+    @Test
+    fun editingAScannedCardsNumberByHand_savesItAsTyped_withoutItsScannedFormat() = runTest { // #8, data-model-v2
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, number = "12345674", scannedFormat = BarcodeFormat.QR_CODE))
+        val viewModel = viewModel(CardForm("ruled", cardId = cardId(1)))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.onNumberChange("1234 5682")
+            viewModel.save()
+
+            val saved = cards.cards.value.single()
+            assertThat(saved.number).isEqualTo("1234 5682")
+            assertThat(saved.scannedFormat).isNull()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun savingAScannedCardWithOnlyItsLabelEdited_keepsItAsScanned() = runTest { // #8
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, number = "12345674", scannedFormat = BarcodeFormat.QR_CODE))
+        val viewModel = viewModel(CardForm("ruled", cardId = cardId(1)))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.onLabelChange("Gold card")
+            viewModel.save()
+
+            val saved = cards.cards.value.single()
+            assertThat(saved.label).isEqualTo("Gold card")
+            assertThat(saved.number).isEqualTo("12345674")
+            assertThat(saved.scannedFormat).isEqualTo(BarcodeFormat.QR_CODE)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun anEdit_isRestoredAfterProcessDeath() = runTest { // #8
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, label = "Gold card", number = "12345674"))
+        val handle = SavedStateHandle(route = CardForm("ruled", cardId = cardId(1)))
+        viewModel(handle).run {
+            state.test {
+                awaitLoaded()
+                onLabelChange("")
+                onNumberChange("1234")
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+        val restored = SavedStateHandle(handle.keys().associateWith { handle.get<Any?>(it) })
+
+        viewModel(restored).state.test {
+            val state = awaitLoaded()
+            assertThat(state.label).isEmpty()
+            assertThat(state.number).isEqualTo("1234")
+        }
+    }
+
+    @Test
+    fun editingACardThatIsGone_cantBeSaved() = runTest { // #8: deleted, or a stale route
+        val viewModel = viewModel(CardForm("ruled", cardId = cardId(99)))
+
+        viewModel.state.test {
+            val state = awaitItem()
+            assertThat(state.store).isNull()
+            assertThat(state.canSave).isFalse()
+            viewModel.save()
+
+            assertThat(cards.cards.value).isEmpty()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun aFailedEdit_keepsTheFormOpen_andSaysSo() = runTest { // #8, as a failed add (#49)
+        val original = aLoyaltyCard(id = cardId(1), store = store, number = "12345674")
+        cards.cards.value = listOf(original)
+        cards.updateFailure = IllegalStateException("update failed")
+        val viewModel = viewModel(CardForm("ruled", cardId = cardId(1)))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.onLabelChange("Gold card")
+            viewModel.save()
+
+            val failed = expectMostRecentItem()
+            assertThat(failed.saveFailed).isTrue()
+            assertThat(failed.savedCardId).isNull()
+            assertThat(cards.cards.value).containsExactly(original)
+        }
+    }
+
+    @Test
+    fun addingACard_isNotEditing() = runTest {
+        viewModel(CardForm("ruled")).state.test {
+            assertThat(awaitLoaded().editing).isFalse()
         }
     }
 

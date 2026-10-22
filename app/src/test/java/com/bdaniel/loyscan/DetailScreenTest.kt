@@ -54,6 +54,7 @@ class DetailScreenTest {
         card: LoyaltyCard = this.card,
         repository: FakeLoyaltyCardRepository = FakeLoyaltyCardRepository(listOf(card)),
         onBack: () -> Unit = {},
+        onEdit: (cardId: String, storeId: String) -> Unit = { _, _ -> },
     ) {
         val viewModel = DetailViewModel(SavedStateHandle(route = Detail(cardId = card.id, color = color)), repository)
         composeRule.setContent {
@@ -62,7 +63,7 @@ class DetailScreenTest {
                     DetailScreen(
                         color = color,
                         animatedVisibilityScope = this,
-                        directions = DetailDirections(toBack = onBack),
+                        directions = DetailDirections(toBack = onBack, toEdit = onEdit),
                         viewModel = viewModel,
                     )
                 }
@@ -226,6 +227,16 @@ class DetailScreenTest {
         composeRule.onNodeWithContentDescription("Back").performClick()
 
         assertThat(wentBack).isTrue()
+    }
+
+    @Test
+    fun editAction_opensTheCardsForm() { // #8
+        val edited = mutableListOf<Pair<String, String>>()
+        setScreen(onEdit = { cardId, storeId -> edited += cardId to storeId })
+
+        composeRule.onNodeWithContentDescription("Edit").performClick()
+
+        assertThat(edited).containsExactly(card.id to card.store.id)
     }
 
     @Test

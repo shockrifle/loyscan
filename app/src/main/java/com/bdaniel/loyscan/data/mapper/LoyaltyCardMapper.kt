@@ -1,5 +1,6 @@
 package com.bdaniel.loyscan.data.mapper
 
+import com.bdaniel.loyscan.data.local.db.dao.LoyaltyCardEdit
 import com.bdaniel.loyscan.data.local.db.dao.LoyaltyCardWithStore
 import com.bdaniel.loyscan.data.local.db.entity.LoyaltyCardEntity
 import com.bdaniel.loyscan.data.local.db.entity.StoreEntity
@@ -41,6 +42,18 @@ fun LoyaltyCard.toEntity(): LoyaltyCardEntity {
         note = note,
         frontPhotoPath = frontPhotoPath,
         backPhotoPath = backPhotoPath,
+        updatedAt = updatedAt
+    )
+}
+
+/** The columns an edit writes. */
+fun LoyaltyCard.toEdit(): LoyaltyCardEdit {
+    return LoyaltyCardEdit(
+        id = id,
+        storeId = store.id,
+        label = label,
+        number = number,
+        scannedFormat = scannedFormat,
         updatedAt = updatedAt
     )
 }

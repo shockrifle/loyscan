@@ -79,6 +79,7 @@ stores already in the database, and custom stores). Everything runs offline on t
   removed while the form is open leaves the form empty (the store is gone), not this message; nothing removes a
   store yet.
 - Label, typed number and a switched store are kept in the `SavedStateHandle`, so they survive process death.
+- The same form edits a card (`CardForm.cardId`, title "Edit card"): [[edit-card]].
 
 ## Tests
 

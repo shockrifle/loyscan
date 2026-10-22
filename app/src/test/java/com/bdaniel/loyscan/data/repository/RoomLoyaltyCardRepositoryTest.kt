@@ -71,6 +71,29 @@ class RoomLoyaltyCardRepositoryTest {
     }
 
     @Test
+    fun update_savesTheEdit_butKeepsTheStoredUseCreationNoteAndPhotos() = runTest { // #8
+        repository.recordUse(cardId(3))
+        val edited = card.copy(
+            label = null,
+            number = "777",
+            scannedFormat = BarcodeFormat.QR_CODE,
+            updatedAt = NOW,
+            // An edit doesn't change these, whatever the card passed in says.
+            createdAt = NOW,
+            useCount = 0,
+            lastUsedAt = null,
+            note = "not stored",
+            frontPhotoPath = "not/stored.jpg",
+        )
+
+        repository.update(edited)
+
+        assertThat(repository.getByIdWithStore(cardId(3)).first()).isEqualTo(
+            card.copy(label = null, number = "777", scannedFormat = BarcodeFormat.QR_CODE, updatedAt = NOW, useCount = 1, lastUsedAt = NOW)
+        )
+    }
+
+    @Test
     fun delete_removesTheCard() = runTest {
         repository.delete(cardId(3))
 

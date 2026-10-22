@@ -13,6 +13,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.testing.invoke
@@ -23,7 +24,9 @@ import com.bdaniel.loyscan.domain.cardnumber.CheckDigitAlgorithm
 import com.bdaniel.loyscan.testing.FakeLoyaltyCardRepository
 import com.bdaniel.loyscan.testing.FakeStoreRepository
 import com.bdaniel.loyscan.testing.SOME_INSTANT
+import com.bdaniel.loyscan.testing.aLoyaltyCard
 import com.bdaniel.loyscan.testing.aStore
+import com.bdaniel.loyscan.testing.cardId
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -179,6 +182,29 @@ class CardFormScreenTest {
         composeRule.onNodeWithText("The card couldn't be saved. Try again.").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("Save").assertIsEnabled()
         assertThat(opened).isEmpty()
+    }
+
+    @Test
+    fun editingACard_saysSo_andSavingOpensTheCard() { // #8
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, label = "Gold card", number = "12345674"))
+        setScreen(CardForm("ruled", cardId = cardId(1)))
+
+        composeRule.onNodeWithText("Edit card").assertIsDisplayed()
+        composeRule.onNodeWithTag(CARD_LABEL_TAG).assertTextContains("Gold card")
+        composeRule.onNodeWithTag(CARD_NUMBER_TAG).performTextClearance()
+        composeRule.onNodeWithTag(CARD_NUMBER_TAG).performTextInput("12345682")
+        composeRule.onNodeWithText("Save").performScrollTo().performClick()
+
+        composeRule.waitForIdle()
+        assertThat(cards.cards.value.single().number).isEqualTo("12345682")
+        assertThat(opened).containsExactly(cardId(1) to "#112233")
+    }
+
+    @Test
+    fun addingACard_saysAddCard() {
+        setScreen(CardForm("ruled"))
+
+        composeRule.onNodeWithText("Add card").assertIsDisplayed()
     }
 
     @Test

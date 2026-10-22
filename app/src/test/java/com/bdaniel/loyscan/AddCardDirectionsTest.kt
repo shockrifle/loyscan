@@ -143,6 +143,31 @@ class AddCardDirectionsTest {
     }
 
     @Test
+    fun editOnACard_opensItsFormOverIt() { // #8
+        composeRule.runOnIdle { navController.storePickerDirections().toBack() }
+        composeRule.runOnIdle { navController.listDirections().toCard("a-card", "#112233") }
+        composeRule.runOnIdle { navController.detailDirections().toEdit("a-card", "some-store") }
+
+        composeRule.runOnIdle {
+            assertThat(navController.currentBackStackEntry!!.toRoute<CardForm>()).isEqualTo(CardForm("some-store", cardId = "a-card"))
+            assertThat(navController.previousBackStackEntry?.destination?.hasRoute(Detail::class)).isTrue()
+        }
+    }
+
+    @Test
+    fun savingAnEdit_replacesTheCardAndItsForm_withTheCardInItsCurrentColour() { // #8: the store may have changed
+        composeRule.runOnIdle { navController.storePickerDirections().toBack() }
+        composeRule.runOnIdle { navController.listDirections().toCard("a-card", "#112233") }
+        composeRule.runOnIdle { navController.detailDirections().toEdit("a-card", "some-store") }
+        composeRule.runOnIdle { navController.cardFormDirections().toCard("a-card", "#445566") }
+
+        composeRule.runOnIdle {
+            assertThat(navController.currentBackStackEntry!!.toRoute<Detail>()).isEqualTo(Detail("a-card", "#445566", countUse = false))
+            assertThat(navController.previousBackStackEntry?.destination?.hasRoute(List::class)).isTrue()
+        }
+    }
+
+    @Test
     fun backFromThePicker_returnsToTheList() {
         composeRule.runOnIdle { navController.storePickerDirections().toBack() }
 

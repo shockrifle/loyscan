@@ -18,6 +18,9 @@ class FakeLoyaltyCardRepository(
     /** When set, [add] throws it instead of saving, as Room does on a failed insert. */
     var addFailure: Exception? = null
 
+    /** When set, [update] throws it instead of saving. */
+    var updateFailure: Exception? = null
+
     /** When set, [delete] throws it instead of deleting. */
     var deleteFailure: Exception? = null
 
@@ -34,6 +37,21 @@ class FakeLoyaltyCardRepository(
     override suspend fun add(card: LoyaltyCard) {
         addFailure?.let { throw it }
         cards.value += card
+    }
+
+    /** Like the Room repository: only the store, label, number, scanned format and `updatedAt` change. */
+    override suspend fun update(card: LoyaltyCard) {
+        updateFailure?.let { throw it }
+        cards.value = cards.value.map {
+            if (it.id != card.id) it
+            else it.copy(
+                store = card.store,
+                label = card.label,
+                number = card.number,
+                scannedFormat = card.scannedFormat,
+                updatedAt = card.updatedAt,
+            )
+        }
     }
 
     override suspend fun delete(id: String) {

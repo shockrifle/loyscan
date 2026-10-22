@@ -63,6 +63,7 @@ separately discussed with the user).
 - Renaming or removing a `BarcodeFormat` constant breaks stored rows, which hold the enum name.
 - A scanned card is drawn exactly as scanned, in its scanned format, whatever its store's rule says. Editing a
   scanned card's number by hand (#8) must clear `scannedFormat`, or the typed number would be drawn verbatim.
+  (2026-10-22: it does, [[edit-card]].)
 - Stored rules are decoded strictly, so a rule row that no longer parses (a new `require` in `CardNumberRule`, a
   renamed enum constant, a removed field) throws on every read of its store's cards, and the list screen crashes
   on open. Hence: the catalogue loader (#3) must rewrite stored catalogue rules before they are read, and a change

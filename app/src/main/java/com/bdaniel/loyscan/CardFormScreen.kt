@@ -44,9 +44,9 @@ const val CARD_NUMBER_TAG = "cardNumber"
 const val CARD_LABEL_TAG = "cardLabel"
 
 /**
- * Last step of adding a card: the number (scanned or typed), checked live against the store's rule, and an optional
- * label. A number that fails the check can still be saved ("Save anyway"); a scan another store's rule reads offers
- * that store. Saving opens the new card.
+ * Last step of adding a card, or editing one (#8): the number (scanned or typed), checked live against the store's rule,
+ * and an optional label. A number that fails the check can still be saved ("Save anyway"); a scan another store's rule
+ * reads offers that store. Saving opens the card.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,7 +65,7 @@ fun CardFormScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Add card") },
+                title = { Text(if (state.editing) "Edit card" else "Add card") },
                 navigationIcon = {
                     IconButton(onClick = directions.toBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")

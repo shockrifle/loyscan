@@ -10,6 +10,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.bdaniel.loyscan.data.local.db.AppDatabase
@@ -135,6 +136,25 @@ class AppNavigationTest {
         composeRule.onNodeWithContentDescription("Back").performClick()
         composeRule.waitUntil { composeRule.onAllNodes(hasText("My Cards")).fetchSemanticsNodes().isNotEmpty() }
         composeRule.onNodeWithText("My Shop").assertIsDisplayed()
+    }
+
+    @Test
+    fun editingACardsLabel_savesIt_showsTheCard_andBackReturnsToTheList() { // #8
+        composeRule.waitUntil { composeRule.onAllNodes(hasText("Test Store")).fetchSemanticsNodes().isNotEmpty() }
+        composeRule.onNodeWithText("Test Store").performClick()
+        composeRule.waitUntil { composeRule.onAllNodes(hasText("Gold card")).fetchSemanticsNodes().isNotEmpty() }
+
+        composeRule.onNodeWithContentDescription("Edit").performClick()
+        composeRule.waitUntil { composeRule.onAllNodes(hasText("Edit card")).fetchSemanticsNodes().isNotEmpty() }
+        composeRule.onNodeWithTag(CARD_LABEL_TAG).performTextClearance()
+        composeRule.onNodeWithTag(CARD_LABEL_TAG).performTextInput("Silver card")
+        composeRule.onNodeWithText("Save").performClick()
+
+        composeRule.waitUntil { composeRule.onAllNodes(hasText("Silver card")).fetchSemanticsNodes().isNotEmpty() }
+        composeRule.onNodeWithText("0042").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Back").performClick()
+        composeRule.waitUntil { composeRule.onAllNodes(hasText("My Cards")).fetchSemanticsNodes().isNotEmpty() }
+        assertThat(runBlocking { db.loyaltyCardDao().getAllWithStore().first() }.single().loyaltyCard.label).isEqualTo("Silver card")
     }
 
     @Test
