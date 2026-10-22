@@ -41,10 +41,11 @@ class CardFormViewModelTest {
     )
     private val store = aStore(id = "ruled", name = "Ruled Store", color = "#112233", cardNumberRule = rule)
     private val plainStore = aStore(id = "plain", name = "Plain Store", defaultBarcodeFormat = BarcodeFormat.QR_CODE)
-    // The same rule, but the number must start with 9; and the same rule for QR codes.
+    // The same rule, but the number must start with 9; for GS1-128; and for QR codes.
     private val nineStore = aStore(id = "nine", name = "Nine Store", cardNumberRule = rule.copy(coreStartsWith = listOf("9")))
+    private val gs1Store = aStore(id = "gs1", name = "Gs1 Store", cardNumberRule = rule.copy(format = BarcodeFormat.GS1_128))
     private val qrStore = aStore(id = "qr", name = "A QR Store", cardNumberRule = rule.copy(format = BarcodeFormat.QR_CODE))
-    private val stores = FakeStoreRepository(listOf(store, plainStore, nineStore, qrStore))
+    private val stores = FakeStoreRepository(listOf(store, plainStore, nineStore, gs1Store, qrStore))
     private val cards = FakeLoyaltyCardRepository()
 
     @Test
@@ -311,21 +312,37 @@ class CardFormViewModelTest {
     }
 
     @Test
-    fun aScanThePickedStoresRuleRejects_suggestsEveryStoreWhoseRuleReadsIt_sameSymbologyFirst() = runTest { // #6
+    fun aScanThePickedStoresRuleRejects_suggestsEveryStoreWhoseRuleReadsIt_exactFormatFirst() = runTest { // #6
         viewModel(CardForm("nine", scannedContent = "12345674", scannedFormat = BarcodeFormat.CODE_128)).state.test {
             val state = awaitLoaded()
             assertThat(state.check).isEqualTo(NumberCheck.ScanDoesNotMatchStore)
-            assertThat(state.suggestedStores).containsExactly(store, qrStore).inOrder()
+            assertThat(state.suggestedStores).containsExactly(store, gs1Store, qrStore).inOrder()
         }
     }
 
     @Test
-    fun aScanThePickedStoreReads_orAStoreWithoutARule_suggestsNothing() = runTest {
+    fun aScanThePickedStoreReadsInItsExactFormat_suggestsNothing() = runTest {
         viewModel(CardForm("ruled", scannedContent = "12345674", scannedFormat = BarcodeFormat.CODE_128)).state.test {
             assertThat(awaitLoaded().suggestedStores).isEmpty()
         }
+    }
+
+    @Test
+    fun aScanThePickedStoreReadsOnlyByItsSymbology_suggestsTheStoresWhoseRuleNamesTheExactFormat() = runTest {
+        // A GS1-128 scan: the picked Code 128 rule reads it, but the GS1-128 store's rule names its exact format.
+        viewModel(CardForm("ruled", scannedContent = "12345674", scannedFormat = BarcodeFormat.GS1_128)).state.test {
+            val state = awaitLoaded()
+            assertThat(state.check).isEqualTo(NumberCheck.Valid)
+            assertThat(state.suggestedStores).containsExactly(gs1Store)
+        }
+    }
+
+    @Test
+    fun aScanForAStoreWithoutARule_suggestsEveryStoreWhoseRuleReadsIt() = runTest {
         viewModel(CardForm("plain", scannedContent = "12345674", scannedFormat = BarcodeFormat.CODE_128)).state.test {
-            assertThat(awaitLoaded().suggestedStores).isEmpty()
+            val state = awaitLoaded()
+            assertThat(state.check).isEqualTo(NumberCheck.Valid)
+            assertThat(state.suggestedStores).containsExactly(store, gs1Store, qrStore).inOrder()
         }
     }
 

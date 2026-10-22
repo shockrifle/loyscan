@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-22 · review fix: the card form also offers stores when the picked store has no rule, and exact-format stores when its rule reads a scan only by symbology; decision page added; `StoreDao.getById` kept as a test-only query · decisions/2026-10-22-store-suggestion-trigger, decisions/_index, index, features/add-card, architecture · review of #6
 - 2026-10-22 · review fix: stores offered for a scan rank the exact format above the same symbology, so a Tesco GS1-128 scan offers Tesco before SuperShop · features/add-card, decisions/2026-10-21-gs1-mark-as-barcode-format · review of #6
 - 2026-10-22 · card form: when the picked store's rule rejects a scan, every other store whose rule reads it is offered (same symbology first, then by name), and tapping one switches the form's store; `StoreRepository.getById` dropped · features/add-card, architecture · #6, #47
 - 2026-10-22 · `CardNumberEngine.match` compares symbologies (`BarcodeFormat.symbology`), so a GS1 scan and a plain rule of the same symbology agree, and the reverse · decisions/2026-10-09-card-number-rule-engine, decisions/2026-10-21-gs1-mark-as-barcode-format, tech-debt/gs1-128-drawn-as-code-128 · #47

@@ -96,6 +96,15 @@ class CardFormScreenTest {
     }
 
     @Test
+    fun aScanForAStoreWithoutARule_offersTheStoresWhoseRuleReadsIt_withoutAProblem() {
+        setScreen(CardForm("plain", scannedContent = "12345674", scannedFormat = BarcodeFormat.CODE_128))
+
+        composeRule.onNodeWithText("It looks like a card from:").assertIsDisplayed()
+        composeRule.onNodeWithText("Ruled Store").assertIsDisplayed()
+        composeRule.onNodeWithText("Save").assertIsEnabled()
+    }
+
+    @Test
     fun aScanTheStoreDoesNotUse_saysSo_andOffersSaveAnyway() {
         setScreen(CardForm("ruled", scannedContent = "ABC", scannedFormat = BarcodeFormat.QR_CODE))
 

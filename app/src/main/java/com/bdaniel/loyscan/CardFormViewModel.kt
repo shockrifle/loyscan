@@ -50,8 +50,9 @@ data class CardFormState(
     /** The id of the saved card, once it is saved. */
     val savedCardId: String? = null,
     /**
-     * Other stores whose rule reads the scan, when this store's rule can't have produced it (#6), ranked as
-     * [com.bdaniel.loyscan.domain.matchingScan] does. [CardFormViewModel.switchStore] picks one.
+     * Other stores whose rule reads the scan better than this store's (#6): any that reads it when this store has no
+     * rule or its rule can't have produced it, and those naming the scan's exact format when this rule reads it only by
+     * symbology. Ranked as [com.bdaniel.loyscan.domain.matchingScan] does. [CardFormViewModel.switchStore] picks one.
      */
     val suggestedStores: kotlin.collections.List<Store> = emptyList(),
 ) {
@@ -198,12 +199,26 @@ class CardFormViewModel @Inject constructor(
             saving = progress.saving,
             saveFailed = progress.saveFailed,
             savedCardId = progress.savedCardId,
-            suggestedStores = if (check == NumberCheck.ScanDoesNotMatchStore && scannedFormat != null) {
-                stores.filter { it.id != store.id }.matchingScan(draft.number, scannedFormat)
-            } else {
-                emptyList()
-            },
+            suggestedStores = suggestedStores(store, stores, draft, ruleReadsScan),
         )
+    }
+
+    /**
+     * For an untouched scan (#6, decision 2026-10-22-store-suggestion-trigger): every other store whose rule reads it
+     * when this store has no rule or its rule rejects it; the stores whose rule names its exact format when this rule
+     * reads it only by symbology (GS1 mark or not); otherwise none.
+     */
+    private fun suggestedStores(
+        store: Store,
+        stores: kotlin.collections.List<Store>,
+        draft: LoyaltyCard,
+        ruleReadsScan: Boolean,
+    ): kotlin.collections.List<Store> {
+        val format = draft.scannedFormat ?: return emptyList()
+        val ruleFormat = store.cardNumberRule?.format
+        if (ruleReadsScan && ruleFormat == format) return emptyList()
+        val matching = stores.filter { it.id != store.id }.matchingScan(draft.number, format)
+        return if (ruleReadsScan) matching.filter { it.cardNumberRule?.format == format } else matching
     }
 
     private data class Progress(
