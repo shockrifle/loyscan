@@ -1,5 +1,8 @@
 package com.bdaniel.loyscan
 
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -93,6 +96,20 @@ class CardFormScreenTest {
     }
 
     @Test
+    fun aScanShownAsPrinted_isReadOnly_andCanBeTypedInstead() {
+        setScreen(CardForm("plain", scannedContent = "0109501101530003" + "\u001D" + "10ABC", scannedFormat = BarcodeFormat.GS1_128))
+
+        composeRule.onNodeWithTag(CARD_NUMBER_TAG)
+            .assertTextContains("(01)09501101530003(10)ABC")
+            .assert(SemanticsMatcher.keyNotDefined(SemanticsActions.SetText))
+
+        composeRule.onNodeWithText("Type the number instead").performClick()
+        composeRule.onNodeWithTag(CARD_NUMBER_TAG).performTextInput("777")
+        composeRule.onNodeWithTag(CARD_NUMBER_TAG).assertTextContains("777")
+        composeRule.onNodeWithText("Type the number instead").assertDoesNotExist()
+    }
+
+    @Test
     fun saving_storesTheCard_andOpensIt() {
         setScreen(CardForm("ruled"))
 
@@ -118,7 +135,7 @@ class CardFormScreenTest {
     private fun setScreen(route: CardForm) {
         val viewModel = CardFormViewModel(
             SavedStateHandle(route = route),
-            FakeStoreRepository(listOf(store)),
+            FakeStoreRepository(listOf(store, aStore(id = "plain", name = "Plain Store"))),
             cards,
             Clock.fixed(SOME_INSTANT, ZoneOffset.UTC),
         )

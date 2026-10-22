@@ -32,6 +32,11 @@ data class CardFormState(
     val number: String = "",
     /** Set while the number is the untouched scan; editing the number makes it a typed number. */
     val scannedFormat: BarcodeFormat? = null,
+    /**
+     * False for a scan shown differently from its content (GS1 data as printed, control characters as spaces) that the
+     * rule can't read back: an edit would make that rendering the number. [CardFormViewModel.typeNumberInstead] clears it.
+     */
+    val numberEditable: Boolean = true,
     val check: NumberCheck = NumberCheck.Empty,
     /** The number as the card will show it, when that differs from the field's text. */
     val shownAs: String? = null,
@@ -86,7 +91,14 @@ class CardFormViewModel @Inject constructor(
     }
 
     fun onNumberChange(number: String) {
+        // A scan shown as something other than its content can't be edited, or the rendering would become the number.
+        if (!state.value.numberEditable) return
         savedStateHandle[TYPED_NUMBER] = number
+    }
+
+    /** Drops the scan, for a number typed from the card instead. */
+    fun typeNumberInstead() {
+        savedStateHandle[TYPED_NUMBER] = ""
     }
 
     /** Saves the card once; [CardFormState.savedCardId] then names it. */
@@ -95,14 +107,10 @@ class CardFormViewModel @Inject constructor(
         val store = current.store
         if (!current.canSave || store == null) return
         progress.value = Progress(saving = true)
-        val untouchedScan = scan?.takeIf { typedNumber.value == null }
         val now = clock.instant()
-        val card = LoyaltyCard.EMPTY.copy(
+        val card = draft(store, typedNumber.value).copy(
             id = UUID.randomUUID().toString(),
-            store = store,
             label = current.label.trim().ifEmpty { null },
-            number = untouchedScan?.first ?: typedNumber.value.orEmpty().trim(),
-            scannedFormat = untouchedScan?.second,
             createdAt = now,
             updatedAt = now,
         )
@@ -112,18 +120,25 @@ class CardFormViewModel @Inject constructor(
         }
     }
 
-    private fun formState(store: Store?, label: String, typed: String?, progress: Progress): CardFormState {
-        if (store == null) return CardFormState(label = label, number = typed.orEmpty())
+    /** The card as it would be saved: the untouched scan verbatim with its format, else the typed number (trimmed). */
+    private fun draft(store: Store, typed: String?): LoyaltyCard {
         val untouchedScan = scan?.takeIf { typed == null }
-        val draft = LoyaltyCard.EMPTY.copy(
+        return LoyaltyCard.EMPTY.copy(
             store = store,
-            number = untouchedScan?.first ?: typed.orEmpty(),
+            number = untouchedScan?.first ?: typed.orEmpty().trim(),
             scannedFormat = untouchedScan?.second,
         )
+    }
+
+    private fun formState(store: Store?, label: String, typed: String?, progress: Progress): CardFormState {
+        if (store == null) return CardFormState(label = label, number = typed.orEmpty())
+        val draft = draft(store, typed)
+        val scannedFormat = draft.scannedFormat
         val rule = store.cardNumberRule
-        val check = if (untouchedScan != null) {
-            val matches = rule == null || CardNumberEngine.match(untouchedScan.first, untouchedScan.second, rule) != null
-            if (matches) NumberCheck.Valid else NumberCheck.ScanDoesNotMatchStore
+        val ruleReadsScan = scannedFormat != null && rule != null &&
+            CardNumberEngine.match(draft.number, scannedFormat, rule) != null
+        val check = if (scannedFormat != null) {
+            if (rule == null || ruleReadsScan) NumberCheck.Valid else NumberCheck.ScanDoesNotMatchStore
         } else {
             when (val validation = CardNumberEngine.validate(typed.orEmpty(), rule)) {
                 is Validation.Valid -> NumberCheck.Valid
@@ -131,12 +146,14 @@ class CardFormViewModel @Inject constructor(
                     if (Validation.Error.EMPTY in validation.errors) NumberCheck.Empty else NumberCheck.Invalid(validation.errors)
             }
         }
-        val number = if (untouchedScan != null) draft.displayNumber else typed.orEmpty()
+        val number = if (scannedFormat != null) draft.displayNumber else typed.orEmpty()
         return CardFormState(
             store = store,
             label = label,
             number = number,
-            scannedFormat = untouchedScan?.second,
+            scannedFormat = scannedFormat,
+            // Editable when the field holds the scan's core (read back by the rule) or its content as it is.
+            numberEditable = scannedFormat == null || ruleReadsScan || number == draft.number,
             check = check,
             shownAs = draft.displayNumber.takeIf { check != NumberCheck.Empty && it != number.trim() },
             barcodeFormat = draft.barcodeFormat,

@@ -26,7 +26,10 @@ stores already in the database). Everything runs offline on the local database.
   the core the store's rule recovers, formatted; otherwise the scanned content as text), and the form says
   "Scanned · <format>". While the field is untouched the card is saved as the scan: `number` = the scanned content
   verbatim, `scannedFormat` = its format ([[2026-10-12-data-model-v2]]: a scan is drawn exactly as scanned). Any edit
-  makes it a typed number: `scannedFormat` is dropped and the barcode is built from the typed number by the store's
+  makes it a typed number. That is only safe when the field holds something the user can edit into a number: the
+  core the rule reads back, or the content as it is. A scan shown otherwise (GS1 data as printed, `(01)…(10)…`, or
+  control characters as spaces) is **read-only**, with "Type the number instead", which empties the field; editing
+  that rendering would have saved it, brackets and all, as the barcode (found in review). A typed number: `scannedFormat` is dropped and the barcode is built from the typed number by the store's
   rule, the same rule #8 asks of editing. A typed number is stored as typed (trimmed). For a typed number the form
   says "Barcode: <format>" (the rule's, else the store's default).
 - **Live check** against the store's card-number rule ([[2026-10-09-card-number-rule-engine]]), on every change:
@@ -50,8 +53,9 @@ stores already in the database). Everything runs offline on the local database.
 
 - `domain/StoreSearchTest`: matching (name, alias, case, accents) and order.
 - `StorePickerViewModelTest`, `StorePickerScreenTest`.
-- `CardFormViewModelTest`: checks for typed numbers and scans (incl. the GS1 case), editing a scan, what is saved, one
-  save only, an unknown store. `CardFormScreenTest`: messages, "Save anyway", the scan line, save → opens the card.
+- `CardFormViewModelTest`: checks for typed numbers and scans (incl. the GS1 case), editing a scan, which scans are
+  read-only, what is saved (typed, untouched scan, edited scan), one save only, an unknown store, restore after process
+  death. The card saved is built from the same draft the state shows, so the two can't disagree. `CardFormScreenTest`: messages, "Save anyway", the scan line, save → opens the card.
 - `AddCardDirectionsTest`: where each step's directions lead, incl. GS1 separators surviving the route.
 - `DetailViewModelTest.opening_aCardJustAdded_countsNoUse`.
 - `AppNavigationTest`: picker → scanner → back, and adding a card by hand end to end.

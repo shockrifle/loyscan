@@ -1,6 +1,6 @@
 # The scanner only shows its result, until the add-card flow exists
 
-**Status:** Removed (2026-10-22, #39) · **Issue:** [#39](https://github.com/shockrifle/loyscan/issues/39) · **Since:** 2026-10-16 (#5) ·
+**Status:** Removed (`67d98fa`, 2026-10-22, #39) · **Issue:** [#39](https://github.com/shockrifle/loyscan/issues/39) · **Since:** 2026-10-16 (#5) ·
 **Where:** `scannerDirections()` in `app/src/main/java/com/bdaniel/loyscan/Navigation.kt`, `ScanResultDialog.kt`
 
 ## What

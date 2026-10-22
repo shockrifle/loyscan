@@ -194,6 +194,83 @@ class CardFormViewModelTest {
     }
 
     @Test
+    fun savingAnEditedScan_storesTheTypedNumber_withoutTheScannedFormat() = runTest {
+        val viewModel = viewModel(CardForm("ruled", scannedContent = "12345674", scannedFormat = BarcodeFormat.QR_CODE))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.onNumberChange("1234 5682")
+            viewModel.save()
+
+            val saved = cards.cards.value.single()
+            assertThat(saved.number).isEqualTo("1234 5682")
+            assertThat(saved.scannedFormat).isNull()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun aScanShownDifferentlyFromItsContent_cantBeEdited_soItsRenderingNeverBecomesTheNumber() = runTest {
+        // A GS1 scan for a store without a rule is shown as printed, (01)…(10)…; that text isn't the barcode content.
+        val viewModel = viewModel(CardForm("plain", scannedContent = "0109501101530003\u001D10ABC", scannedFormat = BarcodeFormat.GS1_128))
+
+        viewModel.state.test {
+            val state = awaitLoaded()
+            assertThat(state.number).isEqualTo("(01)09501101530003(10)ABC")
+            assertThat(state.numberEditable).isFalse()
+
+            viewModel.onNumberChange("(01)09501101530003(10)ABD")
+            viewModel.save()
+
+            assertThat(cards.cards.value.single().number).isEqualTo("0109501101530003\u001D10ABC")
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun typingInsteadOfAScan_clearsTheNumber_andMakesItTyped() = runTest {
+        val viewModel = viewModel(CardForm("plain", scannedContent = "0109501101530003\u001D10ABC", scannedFormat = BarcodeFormat.GS1_128))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.typeNumberInstead()
+
+            val state = expectMostRecentItem()
+            assertThat(state.number).isEmpty()
+            assertThat(state.numberEditable).isTrue()
+            assertThat(state.scannedFormat).isNull()
+            assertThat(state.check).isEqualTo(NumberCheck.Empty)
+        }
+    }
+
+    @Test
+    fun aScanTheRuleReadsBack_orShownAsScanned_canBeEdited() = runTest {
+        viewModel(CardForm("ruled", scannedContent = "12345674", scannedFormat = BarcodeFormat.CODE_128)).state.test {
+            assertThat(awaitLoaded().numberEditable).isTrue()
+        }
+        viewModel(CardForm("plain", scannedContent = "ABC-123", scannedFormat = BarcodeFormat.QR_CODE)).state.test {
+            assertThat(awaitLoaded().numberEditable).isTrue()
+        }
+    }
+
+    @Test
+    fun theLabelAndAnEditedScan_areRestoredAfterProcessDeath() = runTest {
+        val handle = SavedStateHandle(route = CardForm("ruled", scannedContent = "12345674", scannedFormat = BarcodeFormat.QR_CODE))
+        viewModel(handle).run {
+            onLabelChange("Gold card")
+            onNumberChange("1234")
+        }
+        val restored = SavedStateHandle(handle.keys().associateWith { handle.get<Any?>(it) })
+
+        viewModel(restored).state.test {
+            val state = awaitLoaded()
+            assertThat(state.label).isEqualTo("Gold card")
+            assertThat(state.number).isEqualTo("1234")
+            assertThat(state.scannedFormat).isNull()
+        }
+    }
+
+    @Test
     fun savingTwice_storesOneCard() = runTest {
         val viewModel = viewModel(CardForm("plain", scannedContent = "123", scannedFormat = BarcodeFormat.QR_CODE))
 
@@ -220,8 +297,10 @@ class CardFormViewModelTest {
         }
     }
 
-    private fun viewModel(route: CardForm) =
-        CardFormViewModel(SavedStateHandle(route = route), stores, cards, Clock.fixed(NOW, ZoneOffset.UTC))
+    private fun viewModel(route: CardForm) = viewModel(SavedStateHandle(route = route))
+
+    private fun viewModel(handle: SavedStateHandle) =
+        CardFormViewModel(handle, stores, cards, Clock.fixed(NOW, ZoneOffset.UTC))
 
     /** The first state with the store loaded. */
     private suspend fun ReceiveTurbine<CardFormState>.awaitLoaded(): CardFormState {

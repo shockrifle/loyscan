@@ -20,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -93,6 +94,7 @@ fun CardFormScreen(
                 onValueChange = viewModel::onNumberChange,
                 modifier = Modifier.fillMaxWidth().testTag(CARD_NUMBER_TAG),
                 label = { Text("Card number") },
+                readOnly = !state.numberEditable,
                 isError = problem != null,
                 supportingText = (problem ?: state.shownAs?.let { "Shown as $it" })?.let { { Text(it) } },
                 singleLine = true,
@@ -104,6 +106,9 @@ fun CardFormScreen(
                     }
                 ),
             )
+            if (!state.numberEditable) {
+                TextButton(onClick = viewModel::typeNumberInstead) { Text("Type the number instead") }
+            }
             state.barcodeFormat?.let { format ->
                 Text(
                     if (state.scannedFormat != null) "Scanned · ${format.displayName}" else "Barcode: ${format.displayName}",
