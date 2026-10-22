@@ -127,7 +127,7 @@ class CardFormViewModel @Inject constructor(
                 Progress(savedCardId = card.id)
             } catch (e: CancellationException) {
                 throw e
-            } catch (e: Exception) { // e.g. the store was removed while the form was open (#49)
+            } catch (e: Exception) { // a failed insert mustn't crash the form (#49)
                 Timber.e(e, "Couldn't save the card")
                 Progress(saveFailed = true)
             }

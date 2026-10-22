@@ -47,9 +47,12 @@ stores already in the database). Everything runs offline on the local database.
   injected `Clock`, no use yet. Then the card's detail opens in place of the flow (`popUpTo<List>()`), so back from it
   returns to the list. That opening isn't counted as a use (`Detail.countUse = false`): it is the end of adding the
   card, not showing it at a till.
-- **A failed save** (`LoyaltyCardRepository.add` throws, e.g. a foreign-key error if the store was removed while the
-  form was open) is logged and leaves the form open with "The card couldn't be saved. Try again." above the button,
-  which saves again. Cancellation isn't caught. Before #49 the failure crashed the app.
+- **A failed save** (`LoyaltyCardRepository.add` throws, e.g. the database is full or can't be written) leaves the
+  form open with "The card couldn't be saved. Try again." above the button, which saves again. Cancellation isn't
+  caught. Before #49 the failure crashed the app. Every exception is caught, so a bug that makes every save fail
+  shows the message instead of crashing; it is logged with Timber, which logs nothing in release builds. A store
+  removed while the form is open leaves the form empty (the store is gone), not this message; nothing removes a
+  store yet.
 - Label and typed number are kept in the `SavedStateHandle`, so they survive process death.
 
 ## Tests
