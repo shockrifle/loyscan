@@ -100,6 +100,10 @@ internal fun cameraAvailability(state: CameraState): Boolean? = when {
     else -> null
 }
 
+/** A camera's states as [OpenCamera.available]: only the changes, so a pause and resume don't repeat `true`. */
+internal fun LiveData<CameraState>.availability(): Flow<Boolean> =
+    observeAsFlow().mapNotNull(::cameraAvailability).distinctUntilChanged()
+
 /** Reads a barcode from one frame; `null` when there is none. Called on the analysis thread. */
 fun interface FrameReader {
     fun read(image: ImageProxy): ScannedBarcode?
@@ -213,8 +217,7 @@ private class ProcessCameraOpener(private val context: Context) : CameraOpener {
         val camera = provider.bindToLifecycle(lifecycleOwner, CameraSelector.DEFAULT_BACK_CAMERA, preview, analysis)
         return object : OpenCamera {
             override val hasTorch = camera.cameraInfo.hasFlashUnit()
-            override val available: Flow<Boolean> =
-                camera.cameraInfo.cameraState.observeAsFlow().mapNotNull(::cameraAvailability).distinctUntilChanged()
+            override val available = camera.cameraInfo.cameraState.availability()
             override fun enableTorch(on: Boolean) {
                 camera.cameraControl.enableTorch(on)
             }

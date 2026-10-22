@@ -34,8 +34,10 @@ directly and a scan is only shown in a dialog: [[scanner-result-dialog-until-add
   it off. Other states without an error (closing on pause,
   opening on resume) change nothing (`cameraAvailability` in `ui/scanner/CameraScanner.kt`). A critical error that
   never clears leaves the message up. The LiveData is read through a small bridge, `observeAsFlow`, not
-  lifecycle-livedata's `asFlow`, which the app has only as a transitive dependency of CameraX. Not yet checked on a
-  device.
+  lifecycle-livedata's `asFlow`, which the app has only as a transitive dependency of CameraX. Checked on a device
+  (2026-10-22): with Chrome in split screen taking the camera (a webcam test page), the message showed; closing it
+  brought the preview and the torch back. The system Camera app can't be used for this: it doesn't run in split
+  screen.
 - **Scan.** Each analysis frame (about 1280×720) is read on a background thread; the first barcode found is handed
   to `directions.onScanned` on the main thread. Later frames keep being read, but `ScannerViewModel.onScanned`
   drops them, so one scan navigates once.
@@ -54,7 +56,8 @@ directly and a scan is only shown in a dialog: [[scanner-result-dialog-until-add
 - `CameraXScannerTest`: the camera lifecycle with a fake `CameraOpener` (open, a frame's barcode reaching
   `onScanned`, an error after opening and its recovery, torch also after a pause, close on leave, failures) and the
   analysis settings (`scannerUseCases`).
-- `CameraAvailabilityTest`: which `CameraState`s mean unavailable / available again; `LiveDataFlowTest`: the bridge.
+- `CameraAvailabilityTest`: which `CameraState`s mean unavailable / available again; `LiveDataFlowTest`: the bridge,
+  and the state pipeline (`availability()`, only changes reach the screen).
 - `ScanAnalyzerTest`: frames closed, barcodes delivered on the callback executor, unreadable frames skipped.
 - `CameraPermissionTest`: the real permission state, with the system dialog replaced by an `ActivityResultRegistry`
   that answers at once (or leaves the request open, for the rotation test) and Robolectric's permission and rationale shadows.
