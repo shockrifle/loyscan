@@ -1,7 +1,7 @@
 # The `List` route shadows `kotlin.collections.List`
 
 **Status:** Active · **Issue:** [#17](https://github.com/shockrifle/loyscan/issues/17) · **Since:** 2025-12-09 (`a33481a`) · **Where:**
-`app/src/main/java/com/bdaniel/loyscan/Navigation.kt:7-8`
+`app/src/main/java/com/bdaniel/loyscan/Navigation.kt:9-10`
 
 ## What
 The start-destination route is `@Serializable object List` in package `com.bdaniel.loyscan`. Inside that package,

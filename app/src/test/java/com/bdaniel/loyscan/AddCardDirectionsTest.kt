@@ -6,7 +6,6 @@ import androidx.navigation.compose.ComposeNavigator
 import androidx.navigation.compose.DialogNavigator
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.dialog
 import androidx.navigation.testing.TestNavHostController
 import androidx.navigation.toRoute
 import androidx.test.core.app.ApplicationProvider
@@ -39,7 +38,8 @@ class AddCardDirectionsTest {
                 composable<List> {}
                 composable<StorePicker> {}
                 composable<Scanner> {}
-                dialog<ScanResult> {}
+                composable<CardForm> {}
+                composable<Detail> {}
             }
         }
         composeRule.runOnIdle { navController.listDirections().toAddCard() }
@@ -61,28 +61,54 @@ class AddCardDirectionsTest {
     }
 
     @Test
-    fun aScan_showsItsResultOverTheList() {
+    fun aScan_replacesTheScannerWithTheFormForTheStore_withTheScannedContentAndFormat() {
         composeRule.runOnIdle { navController.storePickerDirections().toStore("some-store") }
         composeRule.runOnIdle {
-            navController.scannerDirections().onScanned(ScannedBarcode("5901234123457", BarcodeFormat.EAN_13))
+            navController.scannerDirections("some-store").onScanned(ScannedBarcode("5901234123457", BarcodeFormat.EAN_13))
         }
 
         composeRule.runOnIdle {
-            val entry = navController.currentBackStackEntry!!
-            assertThat(entry.toRoute<ScanResult>()).isEqualTo(ScanResult("5901234123457", BarcodeFormat.EAN_13))
+            assertThat(navController.currentBackStackEntry!!.toRoute<CardForm>())
+                .isEqualTo(CardForm("some-store", scannedContent = "5901234123457", scannedFormat = BarcodeFormat.EAN_13))
+            assertThat(navController.previousBackStackEntry?.destination?.hasRoute(StorePicker::class)).isTrue()
         }
     }
 
     @Test
-    fun aGs1Scan_keepsItsGs1MarkInTheResult() { // #41
+    fun aGs1Scan_reachesTheFormWithItsGs1FormatAndItsSeparatorsIntact() { // #41
         composeRule.runOnIdle { navController.storePickerDirections().toStore("some-store") }
         composeRule.runOnIdle {
-            navController.scannerDirections().onScanned(ScannedBarcode("9799123456789012", BarcodeFormat.GS1_128, gs1 = true))
+            navController.scannerDirections("some-store")
+                .onScanned(ScannedBarcode("10ABC\u001D9799123456", BarcodeFormat.GS1_128, gs1 = true))
         }
 
         composeRule.runOnIdle {
-            assertThat(navController.currentBackStackEntry!!.toRoute<ScanResult>())
-                .isEqualTo(ScanResult("9799123456789012", BarcodeFormat.GS1_128, gs1 = true))
+            assertThat(navController.currentBackStackEntry!!.toRoute<CardForm>())
+                .isEqualTo(CardForm("some-store", scannedContent = "10ABC\u001D9799123456", scannedFormat = BarcodeFormat.GS1_128))
+        }
+    }
+
+    @Test
+    fun enterManually_replacesTheScannerWithAnEmptyFormForTheStore() {
+        composeRule.runOnIdle { navController.storePickerDirections().toStore("some-store") }
+        composeRule.runOnIdle { navController.scannerDirections("some-store").toManualEntry() }
+
+        composeRule.runOnIdle {
+            assertThat(navController.currentBackStackEntry!!.toRoute<CardForm>()).isEqualTo(CardForm("some-store"))
+            assertThat(navController.previousBackStackEntry?.destination?.hasRoute(StorePicker::class)).isTrue()
+        }
+    }
+
+    @Test
+    fun savingTheForm_opensTheNewCardOverTheList_withoutCountingAUse() {
+        composeRule.runOnIdle { navController.storePickerDirections().toStore("some-store") }
+        composeRule.runOnIdle { navController.scannerDirections("some-store").toManualEntry() }
+        composeRule.runOnIdle { navController.cardFormDirections().toCard("new-card", "#112233") }
+
+        composeRule.runOnIdle {
+            assertThat(navController.currentBackStackEntry!!.toRoute<Detail>())
+                .isEqualTo(Detail("new-card", "#112233", countUse = false))
+            assertThat(navController.previousBackStackEntry?.destination?.hasRoute(List::class)).isTrue()
         }
     }
 

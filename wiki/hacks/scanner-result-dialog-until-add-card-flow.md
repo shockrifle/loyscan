@@ -1,9 +1,12 @@
 # The scanner only shows its result, until the add-card flow exists
 
-**Status:** Active · **Issue:** [#39](https://github.com/shockrifle/loyscan/issues/39) · **Since:** 2026-10-16 (#5) ·
+**Status:** Removed (2026-10-22, #39) · **Issue:** [#39](https://github.com/shockrifle/loyscan/issues/39) · **Since:** 2026-10-16 (#5) ·
 **Where:** `scannerDirections()` in `app/src/main/java/com/bdaniel/loyscan/Navigation.kt`, `ScanResultDialog.kt`
 
 ## What
+*Removed:* a scan now opens the card form of [[add-card]], and "Enter manually" opens it with an empty number;
+`ScanResult`, `ScanResultDialog` and `ScanResultDialogTest` are gone. What it was:
+
 "Add card" opens the store picker of [[add-card]] and then the [[barcode-scanner]] (since 2026-10-22; before that it
 opened the scanner directly). A scan replaces the scanner with a `ScanResult` dialog over the picker that shows the format ("GS1-128" for a GS1 Code 128, "· GS1" after other GS1 data) and the content, and saves nothing. "Enter manually" goes back to the
 picker.

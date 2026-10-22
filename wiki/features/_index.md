@@ -6,7 +6,7 @@ One page per non-trivial user-visible feature or flow. Lead with what the user e
 - [[card-list]] — "My Cards" grid, the start destination
 - [[card-detail]] — single card view
 - [[card-transition]] — list ↔ detail shared-element animation
-- [[add-card]] — adding a card: store picker, then the scanner (#6, in progress)
+- [[add-card]] — adding a card: store picker, scanner, form with live check, save (#6, in progress)
 - [[barcode-scanner]] — camera scanner (CameraX + zxing-cpp), permission flow, torch, hint
 - [[store-catalogue]] — the shipped store list, synced into the database on every open
 - [[seed-data]] — demo cards, debug builds only

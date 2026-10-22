@@ -6,7 +6,7 @@ type. The screen runs at full brightness; a double-tap on the barcode opens a fu
 
 **Entry points:** `DetailScreen` (`app/src/main/java/com/bdaniel/loyscan/DetailScreen.kt:67-75`);
 `DetailViewModel` (`app/src/main/java/com/bdaniel/loyscan/DetailViewModel.kt:17-38`); route
-`Detail(cardId, color)` (`app/src/main/java/com/bdaniel/loyscan/Navigation.kt:24-25`), where `cardId` is the card's
+`Detail(cardId, color, countUse)` (`app/src/main/java/com/bdaniel/loyscan/Navigation.kt:29-30`), where `cardId` is the card's
 UUID string.
 
 ## Behavior
@@ -25,7 +25,7 @@ UUID string.
   ([[2026-10-12-data-model-v2]]). A GS1 scan (`BarcodeFormat.isGs1`: the `GS1_` formats, DataBar) with no matching rule is shown as printed under
   GS1 barcodes, `(01)09501101020917(10)12AB`; any other scanned content shows each run of control characters as a
   space ([[2026-10-21-gs1-scans-shown-as-hri]], #42).
-- **Opening a card counts a use:** `DetailViewModel`'s `init` calls `LoyaltyCardRepository.recordUse(cardId)`, which
+- **Opening a card counts a use** (except right after adding it, `Detail.countUse = false`, [[add-card]]): `DetailViewModel`'s `init` calls `LoyaltyCardRepository.recordUse(cardId)`, which
   adds 1 to `useCount` and sets `lastUsedAt` to now in one `UPDATE` (`LoyaltyCardDao.recordUse`). Once per
   ViewModel, so a rotation doesn't count again (a restore after process death does). `updatedAt` is left alone: a
   use isn't an edit of the card. These fields feed the list's "most / recently used" sort (#7).
@@ -64,7 +64,7 @@ UUID string.
 
 ## Not implemented (as of 2026-10-15)
 
-- Editing, deleting and adding cards (`LoyaltyCardDao` has insert/update/delete; the repository's only write is `recordUse`).
+- Editing and deleting cards (#8). Adding is [[add-card]].
 
 ## Known issues
 

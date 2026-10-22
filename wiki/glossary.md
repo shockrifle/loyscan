@@ -6,7 +6,7 @@ Alphabetical.
 **AnimatedVisibilityScope** — Compose scope passed from each `composable<Route> { }` block (`this`) into a screen;
 required by `Modifier.sharedElement`. See [[card-transition]].
 
-**AppNavigation** — The `NavHost` composable, defined in `MainActivity.kt:45-69`, that maps routes to screens.
+**AppNavigation** — The `NavHost` composable, defined in `MainActivity.kt:47-78`, that maps routes to screens.
 
 **Barcode content** — The exact string a card's barcode encodes. Derived from the core number by the store's
 card-number rule (`CardNumberEngine.barcodeContent`); equals the raw number when there is no rule.
@@ -51,7 +51,7 @@ separators removed, letter case applied). Rules turn it into barcode content. Se
 
 **DAO** — Room data-access interface in `data/local/db/dao/`. Reads return `Flow`.
 
-**Detail** — Navigation route `data class Detail(val cardId: String, val color: String)` (`Navigation.kt:24-25`).
+**Detail** — Navigation route `data class Detail(val cardId: String, val color: String, val countUse: Boolean = true)` (`Navigation.kt:29-30`).
 
 **Display number** — `LoyaltyCard.displayNumber`: the number formatted by the store rule's display pattern
 (`CardNumberEngine.displayNumber`); the trimmed number when there is no rule. Shown on the detail screen.
@@ -82,7 +82,7 @@ via `ImageLoaderEntryPoint`. See [[2025-12-12-singleton-image-loader]].
 **KSP** — Kotlin Symbol Processing; runs the Hilt and Room compilers. Replaced kapt in `ae2118e` —
 [[2025-12-08-ksp-instead-of-kapt]].
 
-**List** — Navigation route `object List` (`Navigation.kt:7-8`), the start destination. **Shadows
+**List** — Navigation route `object List` (`Navigation.kt:9-10`), the start destination. **Shadows
 `kotlin.collections.List`** in the root package — [[list-route-shadows-kotlin-list]].
 
 **Label** — `LoyaltyCard.label`: the user's own optional name for a card (e.g. "Coffee Bean Club"). Was `name`

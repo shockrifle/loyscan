@@ -20,11 +20,12 @@ class DetailViewModel @Inject constructor(
     loyaltyCardRepository: LoyaltyCardRepository
 ) : ViewModel() {
 
-    private val cardId = savedStateHandle.toRoute<Detail>().cardId
+    private val route = savedStateHandle.toRoute<Detail>()
+    private val cardId = route.cardId
 
     init {
         // Once per opened card: the ViewModel outlives rotation, so turning the phone doesn't count again.
-        viewModelScope.launch { loyaltyCardRepository.recordUse(cardId) }
+        if (route.countUse) viewModelScope.launch { loyaltyCardRepository.recordUse(cardId) }
     }
 
     val card: StateFlow<LoyaltyCard> =

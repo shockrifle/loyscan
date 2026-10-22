@@ -19,7 +19,7 @@ the way they are, what's fragile, and how to work on it.
 - [[card-list]] — "My Cards" grid (start destination)
 - [[card-detail]] — one card: store header, label, display number
 - [[card-transition]] — shared-element animation between list and detail
-- [[add-card]] — adding a card: pick the store, then scan
+- [[add-card]] — adding a card: pick the store, scan or type the number, save
 - [[barcode-scanner]] — reads a card's barcode with the camera (offline, no Play Services)
 - [[store-catalogue]] — curated store list, synced into the database on every open
 - [[seed-data]] — demo cards, debug builds only

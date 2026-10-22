@@ -3,7 +3,7 @@
 Questions that took real effort to answer once. Newest at the bottom; keep answers short and sourced.
 
 ### Why can't I write `List<Foo>` in the `com.bdaniel.loyscan` package?
-Because the navigation route `object List` (`app/src/main/java/com/bdaniel/loyscan/Navigation.kt:7-8`)
+Because the navigation route `object List` (`app/src/main/java/com/bdaniel/loyscan/Navigation.kt:9-10`)
 shadows `kotlin.collections.List` in that package. Use type inference, `kotlin.collections.List<Foo>`, or
 move code into a sub-package. See [[list-route-shadows-kotlin-list]].
 

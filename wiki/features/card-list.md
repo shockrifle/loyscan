@@ -5,7 +5,7 @@ The start destination: a top bar titled "My Cards" and a 2-column grid of card t
 
 **Entry points:** `ListScreen` and `CardItem` in `app/src/main/java/com/bdaniel/loyscan/ListScreen.kt`;
 `ListViewModel` (`app/src/main/java/com/bdaniel/loyscan/ListViewModel.kt:11-21`); route `List`
-(`app/src/main/java/com/bdaniel/loyscan/Navigation.kt:7-8`).
+(`app/src/main/java/com/bdaniel/loyscan/Navigation.kt:9-10`).
 
 ## Behavior
 

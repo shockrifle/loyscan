@@ -54,6 +54,15 @@ class DetailViewModelTest {
     }
 
     @Test
+    fun opening_aCardJustAdded_countsNoUse() {
+        repository.cards.value += aLoyaltyCard(id = cardId(2))
+
+        DetailViewModel(SavedStateHandle(route = Detail(cardId = cardId(2), color = "#336699", countUse = false)), repository)
+
+        assertThat(repository.cards.value.last().useCount).isEqualTo(0)
+    }
+
+    @Test
     fun card_staysEmpty_whileNoCardHasTheId() = runTest {
         val viewModel = DetailViewModel(SavedStateHandle(route = Detail(cardId = cardId(99), color = "#336699")), repository)
 

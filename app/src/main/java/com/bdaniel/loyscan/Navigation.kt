@@ -25,8 +25,9 @@ fun NavController.listDirections() = ListDirections(
 )
 
 
+/** One card. [countUse] is false when it opens right after being added, which isn't a use at a till. */
 @Serializable
-data class Detail(val cardId: String, val color: String)
+data class Detail(val cardId: String, val color: String, val countUse: Boolean = true)
 
 @Immutable
 data class DetailDirections(
@@ -65,19 +66,41 @@ data class ScannerDirections(
     val toBack: () -> Unit
 )
 
-// Interim until the add-card flow (#6): a scan is only shown, and "enter manually" goes back. See
-// wiki/hacks/scanner-result-dialog-until-add-card-flow.md.
-fun NavController.scannerDirections() = ScannerDirections(
+/** A scan, or "enter manually", replaces the scanner with the card form, so back from the form returns to the picker. */
+fun NavController.scannerDirections(storeId: String) = ScannerDirections(
     onScanned = { barcode ->
-        navigate(ScanResult(barcode.content, barcode.format, barcode.gs1)) {
+        navigate(CardForm(storeId, scannedContent = barcode.content, scannedFormat = barcode.format)) {
             popUpTo<Scanner> { inclusive = true }
         }
     },
-    toManualEntry = { navigateUp() },
+    toManualEntry = {
+        navigate(CardForm(storeId)) {
+            popUpTo<Scanner> { inclusive = true }
+        }
+    },
     toBack = { navigateUp() }
 )
 
 
-/** Interim result of a scan, shown as a dialog over the list (see [scannerDirections]). */
+/**
+ * Last step of adding a card for the store [storeId]: label and number. [scannedContent] and [scannedFormat] are set
+ * when the number comes from a scan.
+ */
 @Serializable
-data class ScanResult(val content: String, val format: BarcodeFormat, val gs1: Boolean = false)
+data class CardForm(val storeId: String, val scannedContent: String? = null, val scannedFormat: BarcodeFormat? = null)
+
+@Immutable
+data class CardFormDirections(
+    val toCard: (id: String, color: String) -> Unit,
+    val toBack: () -> Unit
+)
+
+/** The saved card opens in place of the whole add-card flow, so back from it returns to the list. */
+fun NavController.cardFormDirections() = CardFormDirections(
+    toCard = { id, color ->
+        navigate(Detail(id, color, countUse = false)) {
+            popUpTo<List>()
+        }
+    },
+    toBack = { navigateUp() }
+)

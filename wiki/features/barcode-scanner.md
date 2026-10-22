@@ -3,13 +3,12 @@
 A full-screen camera view that reads a card's barcode and hands on the first scan: its content exactly as decoded,
 its format, and whether it holds GS1 data (a Code 128, Data Matrix or QR marked GS1 is handed on as `GS1_128`, `GS1_DATA_MATRIX` or
 `GS1_QR_CODE`: [[zxing-cpp]] → Contract). Offline, without Play Services ([[2026-10-16-zxing-cpp-for-scanning]], [[zxing-cpp]]). It is the step
-after the store picker of [[add-card]]; until the card form exists, a scan is only shown in a dialog:
-[[scanner-result-dialog-until-add-card-flow]].
+after the store picker of [[add-card]]; a scan or "Enter manually" replaces it with the card form.
 
 **Entry points** (under `app/src/main/java/com/bdaniel/loyscan/`):
 - `ScannerScreen.kt:46`, `ScannerScreen`; state in `ScannerViewModel.kt`.
-- Route `Scanner(storeId)`, `ScannerDirections` and `scannerDirections()` in `Navigation.kt:41-63`; registered in
-  `MainActivity.kt:69-74`.
+- Route `Scanner(storeId)`, `ScannerDirections` and `scannerDirections()` in `Navigation.kt:59-82`; registered in
+  `MainActivity.kt:71-73`.
 - `ui/scanner/`: `CameraPermission.kt` (permission state), `CameraScanner.kt` (CameraX, `ScanAnalyzer`),
   `ZxingCppFrameReader.kt` and `ZxingCppFormats.kt` (decoding).
 
@@ -72,5 +71,4 @@ device check found DataBar never scanned: [[2026-10-19-zxing-cpp-3-0-databar]].
 
 ## Not implemented
 
-- Saving a scan as a card, and "Enter manually" leading to a form: [#6](https://github.com/shockrifle/loyscan/issues/6).
 - Tap to focus and zoom. CameraX's continuous autofocus is used.

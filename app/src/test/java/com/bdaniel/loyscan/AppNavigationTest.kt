@@ -6,8 +6,10 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.bdaniel.loyscan.data.local.db.AppDatabase
 import com.bdaniel.loyscan.testing.aLoyaltyCardEntity
@@ -89,6 +91,26 @@ class AppNavigationTest {
         composeRule.onNodeWithContentDescription("Back").performClick()
         composeRule.waitUntil { composeRule.onAllNodes(hasText("Choose store")).fetchSemanticsNodes().isNotEmpty() }
         composeRule.onNodeWithText("Scan card").assertDoesNotExist()
+    }
+
+    @Test
+    fun addingACardByHand_savesIt_opensIt_andBackReturnsToTheListWithIt() {
+        composeRule.onNodeWithContentDescription("Add card").performClick()
+        composeRule.waitUntil { composeRule.onAllNodes(hasText("Choose store")).fetchSemanticsNodes().isNotEmpty() }
+        composeRule.onNodeWithText("Test Store").performClick()
+        composeRule.waitUntil { composeRule.onAllNodes(hasText("Enter manually")).fetchSemanticsNodes().isNotEmpty() }
+        composeRule.onNodeWithText("Enter manually").performClick()
+        composeRule.waitUntil { composeRule.onAllNodes(hasText("Card number")).fetchSemanticsNodes().isNotEmpty() }
+
+        composeRule.onNodeWithTag(CARD_LABEL_TAG).performTextInput("Silver card")
+        composeRule.onNodeWithTag(CARD_NUMBER_TAG).performTextInput("777")
+        composeRule.onNodeWithText("Save").performClick()
+
+        composeRule.waitUntil { composeRule.onAllNodes(hasText("Silver card")).fetchSemanticsNodes().isNotEmpty() }
+        composeRule.onNodeWithText("777").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Back").performClick()
+        composeRule.waitUntil { composeRule.onAllNodes(hasText("My Cards")).fetchSemanticsNodes().isNotEmpty() }
+        assertThat(composeRule.onAllNodes(hasText("Test Store")).fetchSemanticsNodes()).hasSize(2)
     }
 
     private val brightness get() = composeRule.activity.window.attributes.screenBrightness

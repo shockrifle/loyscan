@@ -14,7 +14,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.dialog
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.bdaniel.loyscan.ui.theme.LoyScanTheme
@@ -70,10 +69,10 @@ fun SharedTransitionScope.AppNavigation(modifier: Modifier = Modifier) {
             StorePickerScreen(directions = navController.storePickerDirections())
         }
         composable<Scanner> {
-            ScannerScreen(directions = navController.scannerDirections())
+            ScannerScreen(directions = navController.scannerDirections(it.toRoute<Scanner>().storeId))
         }
-        dialog<ScanResult> {
-            ScanResultDialog(it.savedStateHandle.toRoute<ScanResult>(), onDismiss = { navController.navigateUp() })
+        composable<CardForm> {
+            CardFormScreen(directions = navController.cardFormDirections())
         }
     }
 }

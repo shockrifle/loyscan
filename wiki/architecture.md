@@ -114,7 +114,7 @@ here exist; read them next to the code.
    `directions.toCard(card.id, card.store.color)` ([[card-list]]).
 7. **Navigation.** *Test first:* `AppNavigationTest`, the one end-to-end test for this flow: real Hilt and
    navigation over `InMemoryDatabaseModule`, list → detail → back.
-   Then `NavController.listDirections().toCard` → `navigate(Detail(id, color))` (`Navigation.kt:16-21, 24-25`).
+   Then `NavController.listDirections().toCard` → `navigate(Detail(id, color))` (`Navigation.kt:19-25, 29-30`).
    `AppNavigation` maps `composable<Detail>` to `DetailScreen`, pulling `color` out of the route and passing it
    as a plain parameter (`MainActivity.kt:60-67`).
 8. **Detail ViewModel.** *Test first:* `DetailViewModelTest` with `SavedStateHandle(route = Detail(…))`. It
