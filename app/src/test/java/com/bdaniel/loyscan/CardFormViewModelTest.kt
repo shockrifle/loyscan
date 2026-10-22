@@ -6,6 +6,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.cash.turbine.ReceiveTurbine
 import app.cash.turbine.test
 import com.bdaniel.loyscan.CardFormState.NumberCheck
+import com.bdaniel.loyscan.data.repository.StoreRepository
 import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.domain.LoyaltyCard
 import com.bdaniel.loyscan.domain.cardnumber.CardNumberRule
@@ -19,6 +20,10 @@ import com.bdaniel.loyscan.testing.aLoyaltyCard
 import com.bdaniel.loyscan.testing.aStore
 import com.bdaniel.loyscan.testing.cardId
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
@@ -286,6 +291,39 @@ class CardFormViewModelTest {
             assertThat(cards.cards.value.single().number).isEqualTo("0109501101530003\u001D10ABC")
             cancelAndIgnoreRemainingEvents()
         }
+    }
+
+    @Test
+    fun aScanShownDifferentlyFromItsContent_cantBeEdited_beforeTheStoresHaveLoaded() = runTest { // #50 review
+        val lateStores = object : StoreRepository by stores {
+            override fun getAll() = flow { delay(1); emitAll(stores.getAll()) } // as Room's, not on construction
+        }
+        val viewModel = CardFormViewModel(
+            SavedStateHandle(route = CardForm("plain", scannedContent = "0109501101530003\u001D10ABC", scannedFormat = BarcodeFormat.GS1_128)),
+            lateStores, cards, Clock.fixed(NOW, ZoneOffset.UTC),
+        )
+
+        viewModel.onNumberChange("(01)09501101530003(10)ABD")
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.save()
+
+            assertThat(cards.cards.value.single().number).isEqualTo("0109501101530003\u001D10ABC")
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun aNumberTypedInsteadOfAScan_canBeEdited_afterTheScreenStoppedObservingTheForm() = runTest { // #50 review
+        val viewModel = viewModel(CardForm("plain", scannedContent = "0109501101530003\u001D10ABC", scannedFormat = BarcodeFormat.GS1_128))
+        viewModel.state.test { awaitLoaded(); cancelAndIgnoreRemainingEvents() }
+        advanceTimeBy(10_000)
+
+        viewModel.typeNumberInstead()
+        viewModel.onNumberChange("12345")
+
+        assertThat(viewModel.state.value.number).isEqualTo("12345")
     }
 
     @Test

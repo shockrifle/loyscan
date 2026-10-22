@@ -115,8 +115,9 @@ class CardFormViewModel @Inject constructor(
     private val progress = MutableStateFlow(Progress())
 
     /**
-     * Started eagerly, not while subscribed: [onNumberChange] and [save] guard on `state.value`, which must be current
-     * with nothing observing it, or an edit of a read-only scan gets through (#50).
+     * Started eagerly, not while subscribed: [onNumberChange] and [save] guard on `state.value`, which must stay current
+     * with nothing observing it (#50). Eagerly still starts at the initial value, so the guards also refuse until the
+     * store has loaded.
      */
     val state: StateFlow<CardFormState> =
         combine(storeId, storeRepository.getAll(), original, combine(label, typedNumber, ::Pair), progress) {
@@ -134,7 +135,9 @@ class CardFormViewModel @Inject constructor(
 
     fun onNumberChange(number: String) {
         // A scan shown as something other than its content can't be edited, or the rendering would become the number.
-        if (!state.value.numberEditable) return
+        // Before the form has loaded, editability isn't known yet: the field isn't shown, so nothing is lost (#50).
+        val current = state.value
+        if (current.store == null || !current.numberEditable) return
         savedStateHandle[TYPED_NUMBER] = number
     }
 

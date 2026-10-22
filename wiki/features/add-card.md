@@ -83,8 +83,9 @@ stores already in the database, and custom stores). Everything runs offline on t
   `CardFormScreenTest.aStoreRemovedWhileTheFormIsOpen_…`. The store picker sits below the form on the back stack, so
   today only a stale route reaches this.
 - Label, typed number and a switched store are kept in the `SavedStateHandle`, so they survive process death.
-- `CardFormViewModel.state` is started `Eagerly`: `onNumberChange` (the read-only guard) and `save` read
-  `state.value`, which under `WhileSubscribed` stays at its initial, editable value until something subscribes (#50).
+- `onNumberChange` (the read-only guard) and `save` read `state.value`, so both refuse until the store has loaded:
+  the initial state is editable, and the stores come from Room after construction. `state` is started `Eagerly` so it
+  stays current when nothing observes it (#50; the pre-load gap was found in review).
 - The same form edits a card (`CardForm.cardId`, title "Edit card"): [[edit-card]].
 
 ## Tests

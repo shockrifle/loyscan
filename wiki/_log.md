@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-22 · review fix: the card form's read-only guard also refuses before the store loads; architecture rule corrected · features/add-card, architecture · review of #50
 - 2026-10-22 · card form state started eagerly so the read-only guard holds with no subscriber · features/add-card, architecture · #50
 - 2026-10-22 · end-to-end waits use one 10 s timeout · workflows/tdd · #56, CI flake on master (run 39774769162)
 - 2026-10-22 · review fix: card-list names the `CardList` route; hack page gets its SHA, stale faq pointer dropped · features/card-list, hacks/list-route-shadows-kotlin-list · review of #17
