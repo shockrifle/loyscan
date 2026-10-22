@@ -39,7 +39,8 @@ that store's and keeps the scan and the label ([[add-card]]).
 The exact format is the strongest evidence a scan gives: the GS1 mark is printed on purpose, while a missing one
 may only mean the scanner read it as plain Code 128, and the catalogue's
 only GS1 store (Tesco) has a prefix and a check digit that SuperShop's rule lacks. A store without a rule says nothing
-about a scan, so any store that does read it is a better match. Option 4 was left out: it needs a notion of how
+about a scan, so a store that does read it is likelier to be right, though catch-all rules give false hints (see
+Consequences). Option 4 was left out: it needs a notion of how
 specific a rule is, and the case it catches (Auchan) goes away once Auchan's prefix is confirmed (#31, #32). Offering
 every match instead of the best one avoids guessing between stores whose rules read the same number.
 
