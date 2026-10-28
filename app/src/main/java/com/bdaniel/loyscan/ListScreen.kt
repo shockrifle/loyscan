@@ -43,6 +43,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -190,39 +191,41 @@ fun SharedTransitionScope.CardItem(
             .fillMaxWidth()
             .clickable(onClick = onClick),
     ) {
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(cardColor)
                 .aspectRatio(ID1_CARD_ASPECT_RATIO)
                 .testTag(CARD_TILE_TAG)
+                // TalkBack reads a merged node's description in place of its text: the store, then the label.
+                .semantics { contentDescription = listOfNotNull(card.store.name, card.label).joinToString(", ") }
                 .sharedElement(
                     sharedContentState = rememberSharedContentState(key = cardTransitionKey(card.id)),
                     animatedVisibilityScope = animatedVisibilityScope
                 ),
-            contentAlignment = Alignment.Center
         ) {
-            if (!card.store.logo.isNullOrBlank()) {
-                AsyncImage(
-                    model = card.store.logo,
-                    contentDescription = card.store.name,
-                    modifier = Modifier
-                        .fillMaxSize(0.6f)
-                )
-            } else {
-                Text(
-                    text = card.store.initials,
-                    // Read out as the store's name, not letter by letter.
-                    modifier = Modifier.semantics { contentDescription = card.store.name },
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = textColor,
-                )
+            // The initials take the room the label leaves, shrinking to fit it at large font scales.
+            Box(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 8.dp), contentAlignment = Alignment.Center) {
+                if (!card.store.logo.isNullOrBlank()) {
+                    AsyncImage(
+                        model = card.store.logo,
+                        contentDescription = null, // The tile is described as a whole.
+                        modifier = Modifier
+                            .fillMaxSize(0.6f)
+                    )
+                } else {
+                    Text(
+                        text = card.store.initials,
+                        style = MaterialTheme.typography.headlineLarge,
+                        color = textColor,
+                        maxLines = 1,
+                        autoSize = TextAutoSize.StepBased(maxFontSize = MaterialTheme.typography.headlineLarge.fontSize),
+                    )
+                }
             }
             Text(
                 text = card.label ?: card.store.name,
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(8.dp),
+                modifier = Modifier.padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
                 style = MaterialTheme.typography.bodyMedium,
                 color = textColor,
                 maxLines = 1,

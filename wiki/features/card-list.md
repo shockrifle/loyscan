@@ -35,14 +35,18 @@ tiles, one per row in `loyalty_cards`, live-updating from Room. Sort and search:
 - Tile (`CardItem`): a `Card` containing a box in bank-card (ID-1, 85.60 × 53.98 mm) proportions filled with the brand
   color (or `surfaceVariant` if the color string is empty or malformed, via `toBrandColorOrNull()`). Inside: the store's
   initials, large (`Store.initials`: the first letter or digit of the name's first two words, upper case;
-  `StoreTest`), read out by TalkBack as the store name; or the store logo via Coil at 60% size when the store has one
-  (none does today). At the bottom left, one line: the card's label, or the store name when there is no label, so two
-  cards of one store can be told apart. Text is black or white, whichever has the higher WCAG contrast ratio with the
+  `StoreTest`), or the store logo via Coil at 60% size when the store has one (none does today). Below them, one line
+  at the bottom left: the card's label, or the store name when there is no label, so two cards of one store can be told
+  apart. The box is a `Column`: the initials take the height the label leaves and shrink to fit it (`autoSize`), so
+  they don't run into the label at large font scales (`ListScreenTest.aTilesInitials_andLabel_doNotOverlap_…`;
+  Robolectric measures text widths as near zero, so only the vertical layout is tested). TalkBack reads the tile as
+  "store, label" (or the store alone): the box carries that content description, because TalkBack reads a merged
+  node's description in place of its text (`ListScreenTest.aTile_isReadOutAsTheStoreName_andTheLabel`). Text is black or white, whichever has the higher WCAG contrast ratio with the
   box (`contrastingTextColor()`, `ui/BrandColor.kt`; `BrandColorTest`). Tests: `ListScreenTest.aTile_…`,
   `aTileWithoutALabel_showsTheStoreName`.
 - The colored box is the shared element `card/{id}` — [[card-transition]].
 - Tap → `directions.toCard(card.id, card.store.color)` → [[card-detail]].
-- The Settings icon in the top bar is a no-op (`ListScreen.kt:71`, `/* TODO */`).
+- The Settings icon in the top bar is a no-op (`ListScreen.kt:75`, `/* TODO */`).
 - The "Add card" floating button → `directions.toAddCard()` → the store picker of [[add-card]]. The grid has 88dp of bottom content
   padding so the button never covers the last row (`ListScreenTest.theLastTile_isNotCoveredByTheAddButtonWhenScrolledToTheEnd`).
 

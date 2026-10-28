@@ -4,7 +4,12 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.lifecycle.SavedStateHandle
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isNotSelected
 import androidx.compose.ui.test.isSelected
@@ -75,8 +80,28 @@ class ListScreenTest {
         composeRule.onNodeWithText("SC").assertIsDisplayed()
         composeRule.onNodeWithText("Work car").assertIsDisplayed()
         composeRule.onNodeWithText("Shell ClubSmart").assertDoesNotExist()
-        // The initials are read out as the store's name.
-        composeRule.onNodeWithContentDescription("Shell ClubSmart", useUnmergedTree = true).assertIsDisplayed()
+    }
+
+    @Test
+    fun aTile_isReadOutAsTheStoreName_andTheLabel() { // review of #7
+        setScreen(aLoyaltyCard(id = cardId(1), store = aStore(name = "Shell ClubSmart"), label = "Work car"), aLoyaltyCard(id = cardId(2), store = aStore(name = "Penny"), label = null))
+
+        // TalkBack reads a merged node's content description in place of its text.
+        composeRule.onNodeWithText("Work car").assertContentDescriptionEquals("Shell ClubSmart, Work car")
+        composeRule.onNodeWithText("Penny").assertContentDescriptionEquals("Penny")
+    }
+
+    @Test
+    fun aTilesInitials_andLabel_doNotOverlap_atALargeFontScale() { // review of #7
+        setScreen(aLoyaltyCard(store = aStore(name = "Shell ClubSmart"), label = "Work car"), fontScale = 2f)
+
+        val initials = composeRule.onNodeWithText("SC", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        val label = composeRule.onNodeWithText("Work car", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        val tile = composeRule.onNodeWithTag(CARD_TILE_TAG, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+
+        // Robolectric's text widths are near zero, so only the vertical layout can be checked.
+        assertThat(initials.bottom).isAtMost(label.top)
+        assertThat(tile.contains(label.bottomRight - Offset(1f, 1f))).isTrue()
     }
 
     @Test
@@ -234,11 +259,14 @@ class ListScreenTest {
         directions: ListDirections = ListDirections(toCard = { _, _ -> }, toAddCard = {}, toBack = {}),
         preferences: FakeUserPreferencesRepository = FakeUserPreferencesRepository(),
         viewModel: ListViewModel = ListViewModel(FakeLoyaltyCardRepository(cards.toList()), preferences, SavedStateHandle()),
+        fontScale: Float = 1f,
     ) {
         composeRule.setContent {
-            SharedTransitionLayout {
-                AnimatedVisibility(visible = true) {
-                    ListScreen(animatedVisibilityScope = this, directions = directions, viewModel = viewModel)
+            CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density, fontScale)) {
+                SharedTransitionLayout {
+                    AnimatedVisibility(visible = true) {
+                        ListScreen(animatedVisibilityScope = this, directions = directions, viewModel = viewModel)
+                    }
                 }
             }
         }

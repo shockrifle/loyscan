@@ -118,8 +118,8 @@ class AppNavigationTest {
         composeRule.onNodeWithText("777").assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Back").performClick()
         waitForText("My Cards")
-        // Both tiles: their initials are read out as the store's name.
-        assertThat(composeRule.onAllNodesWithContentDescription("Test Store").fetchSemanticsNodes()).hasSize(2)
+        // Both tiles: each is described as its store and label.
+        assertThat(composeRule.onAllNodesWithContentDescription("Test Store, ", substring = true).fetchSemanticsNodes()).hasSize(2)
     }
 
     @Test
