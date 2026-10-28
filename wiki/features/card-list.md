@@ -26,6 +26,11 @@ tiles, one per row in `loyalty_cards`, live-updating from Room. Sort and search:
   order. The number isn't searched. A query that matches nothing says "No card matches “…”". The query is kept
   in the saved state: it survives process death, not a restart. Notes can't be edited yet (#9), but a stored
   note is searched.
+- **Empty state** (`EmptyCardList`): once the cards have loaded, with none stored and no search, the screen shows "No
+  cards yet" and an "Add your first card" button (→ `directions.toAddCard()`, like the floating button) in place of the
+  search field and grid. It waits for the load (`cards` is `null` until then), and a search that matches nothing keeps
+  the field and says "No card matches" instead. Tests: `ListScreenTest.noCards_…`, `theEmptyState_waitsForTheCardsToLoad`,
+  `aSearchThatMatchesNothing_isNotTheEmptyState`.
 - Grid items are keyed by card id, so a re-sort moves tiles rather than rebinding them.
 - Tile (`CardItem`): a `Card` containing a box in bank-card (ID-1, 85.60 × 53.98 mm) proportions filled with the brand
   color (or `surfaceVariant` if the color string is empty or malformed, via `toBrandColorOrNull()`). Inside: the store's

@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -42,6 +43,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -82,6 +84,11 @@ fun SharedTransitionScope.ListScreen(
         },
         containerColor = Color.Transparent
     ) { innerPadding ->
+        // Loaded, no cards, and no search to blame: there is nothing to search yet.
+        if (cards?.isEmpty() == true && query.isBlank()) {
+            EmptyCardList(onAddCard = directions.toAddCard, modifier = Modifier.padding(innerPadding))
+            return@Scaffold
+        }
         Column(Modifier.padding(innerPadding)) {
             OutlinedTextField(
                 value = query,
@@ -90,7 +97,7 @@ fun SharedTransitionScope.ListScreen(
                 placeholder = { Text("Search cards") },
                 singleLine = true,
             )
-            if (cards?.isEmpty() == true && query.isNotBlank()) {
+            if (cards?.isEmpty() == true) {
                 Text("No card matches “${query.trim()}”", modifier = Modifier.padding(16.dp))
             }
             LazyVerticalGrid(
@@ -108,6 +115,26 @@ fun SharedTransitionScope.ListScreen(
                     )
                 }
             }
+        }
+    }
+}
+
+/** What the list shows before the first card is added. */
+@Composable
+private fun EmptyCardList(onAddCard: () -> Unit, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier.fillMaxSize().padding(32.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text("No cards yet", style = MaterialTheme.typography.headlineSmall)
+        Text(
+            "Add a loyalty card by scanning its barcode or typing its number.",
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center,
+        )
+        Button(onClick = onAddCard) {
+            Text("Add your first card")
         }
     }
 }

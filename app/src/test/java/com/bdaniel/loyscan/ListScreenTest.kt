@@ -116,6 +116,40 @@ class ListScreenTest {
     }
 
     @Test
+    fun noCards_offersToAddTheFirstOne_withoutASearchField() {
+        var addCardOpened = 0
+        setScreen(directions = ListDirections(toCard = { _, _ -> }, toAddCard = { addCardOpened++ }, toBack = {}))
+
+        composeRule.onNodeWithText("No cards yet").assertIsDisplayed()
+        composeRule.onNodeWithTag(CARD_SEARCH_TAG).assertDoesNotExist()
+        composeRule.onNodeWithText("Add your first card").performClick()
+
+        assertThat(addCardOpened).isEqualTo(1)
+    }
+
+    @Test
+    fun theEmptyState_waitsForTheCardsToLoad() {
+        val repository = FakeLoyaltyCardRepository(emptyList())
+        repository.loadGate = CompletableDeferred()
+        setScreen(viewModel = ListViewModel(repository, FakeUserPreferencesRepository(), SavedStateHandle()))
+
+        composeRule.onNodeWithText("No cards yet").assertDoesNotExist()
+        repository.loadGate!!.complete(Unit)
+        composeRule.onNodeWithText("No cards yet").assertIsDisplayed()
+    }
+
+    @Test
+    fun aSearchThatMatchesNothing_isNotTheEmptyState() {
+        setScreen(aLoyaltyCard(store = aStore(name = "Apple")))
+
+        composeRule.onNodeWithTag(CARD_SEARCH_TAG).performTextInput("xyz")
+
+        composeRule.onNodeWithText("No card matches “xyz”").assertIsDisplayed()
+        composeRule.onNodeWithText("No cards yet").assertDoesNotExist()
+        composeRule.onNodeWithTag(CARD_SEARCH_TAG).assertIsDisplayed()
+    }
+
+    @Test
     fun theLastTile_isNotCoveredByTheAddButtonWhenScrolledToTheEnd() {
         // Zero-padded, so name order is this order.
         val cards = (1..12).map { aLoyaltyCard(id = cardId(it), store = aStore(name = "Store %02d".format(it))) }
@@ -199,8 +233,8 @@ class ListScreenTest {
         vararg cards: LoyaltyCard,
         directions: ListDirections = ListDirections(toCard = { _, _ -> }, toAddCard = {}, toBack = {}),
         preferences: FakeUserPreferencesRepository = FakeUserPreferencesRepository(),
+        viewModel: ListViewModel = ListViewModel(FakeLoyaltyCardRepository(cards.toList()), preferences, SavedStateHandle()),
     ) {
-        val viewModel = ListViewModel(FakeLoyaltyCardRepository(cards.toList()), preferences, SavedStateHandle())
         composeRule.setContent {
             SharedTransitionLayout {
                 AnimatedVisibility(visible = true) {

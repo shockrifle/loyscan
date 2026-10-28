@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-28 · card list empty state ("No cards yet", "Add your first card"), shown once loaded with no cards and no search · features/card-list · #7
 - 2026-10-28 · card tiles: bank-card proportions, store initials, label (or store name) at the bottom, text black or white by contrast ratio (also the detail header) · features/card-list, features/card-detail, glossary · #7
 - 2026-10-28 · review round 2: decision names its fix commit and records that a read error leaves the sort on the defaults until re-subscribed · decisions/2026-10-28-datastore-for-user-preferences · review of #7
 - 2026-10-28 · review fix: preferences read errors fall back to the defaults, a failed sort save is logged, not a crash; DI row names the DataStore impl · decisions/2026-10-28-datastore-for-user-preferences, features/card-list, architecture · review of #7
