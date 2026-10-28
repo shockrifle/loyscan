@@ -1,5 +1,7 @@
 package com.bdaniel.loyscan.ui
 
+import android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+import android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
 import android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_FULL
 import android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
 import android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
@@ -14,6 +16,7 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.annotation.Config
 
 @RunWith(AndroidJUnit4::class)
 class ScreenEffectsTest {
@@ -109,5 +112,33 @@ class ScreenEffectsTest {
 
         composeRule.activityRule.scenario.moveToState(Lifecycle.State.RESUMED)
         assertThat(keepsScreenOn).isTrue()
+    }
+
+    private val requestedOrientation get() = composeRule.activity.requestedOrientation
+
+    @Test
+    fun screenOrientation_onAPhone_holdsPortrait() { // #63
+        composeRule.setContent { ScreenOrientation(rotates = false) }
+
+        assertThat(requestedOrientation).isEqualTo(SCREEN_ORIENTATION_PORTRAIT)
+    }
+
+    @Test
+    fun screenOrientation_onAPhone_aScreenThatRotates_followsTheDevice() { // #63
+        var rotates by mutableStateOf(false)
+        composeRule.setContent { ScreenOrientation(rotates = rotates) }
+
+        rotates = true
+        composeRule.waitForIdle()
+
+        assertThat(requestedOrientation).isEqualTo(SCREEN_ORIENTATION_UNSPECIFIED)
+    }
+
+    @Test
+    @Config(qualifiers = "sw600dp-w600dp-h960dp")
+    fun screenOrientation_onALargeScreen_followsTheDevice() { // #63
+        composeRule.setContent { ScreenOrientation(rotates = false) }
+
+        assertThat(requestedOrientation).isEqualTo(SCREEN_ORIENTATION_UNSPECIFIED)
     }
 }

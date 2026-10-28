@@ -1,11 +1,15 @@
 package com.bdaniel.loyscan.ui
 
+import android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+import android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
 import android.view.Window
 import android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_FULL
 import android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
 import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -25,6 +29,22 @@ fun KeepScreenOn() = WhileResumed {
     addFlags(FLAG_KEEP_SCREEN_ON)
     return@WhileResumed { clearFlags(FLAG_KEEP_SCREEN_ON) }
 }
+
+/**
+ * Holds a phone in portrait unless the screen [rotates] (#63): in landscape a phone is too short for the card list's
+ * tiles, and only the card screen gains from the width. A screen 600dp or wider follows the device, as Android 16
+ * makes it do anyway.
+ */
+@Composable
+fun ScreenOrientation(rotates: Boolean) {
+    val activity = LocalActivity.current ?: return
+    val phone = LocalConfiguration.current.smallestScreenWidthDp < LARGE_SCREEN_MIN_WIDTH_DP
+    val orientation = if (phone && !rotates) SCREEN_ORIENTATION_PORTRAIT else SCREEN_ORIENTATION_UNSPECIFIED
+    SideEffect { activity.requestedOrientation = orientation }
+}
+
+/** The smallest width from which Android 16 ignores an app's orientation request. */
+private const val LARGE_SCREEN_MIN_WIDTH_DP = 600
 
 /**
  * Applies [effect] to the activity's window while the caller is in composition and its lifecycle (the navigation

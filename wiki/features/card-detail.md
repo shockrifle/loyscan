@@ -49,6 +49,8 @@ UUID string.
   shown, rule spacing included (product choice, 2026-10-15). Android 13+ confirms the copy itself; on 10–12 a toast
   says "Number copied".
 - The card's content scrolls vertically when it doesn't fit.
+- **Rotation:** the only screen that turns with a phone; every other screen is held in portrait on a phone
+  ([[2026-10-28-portrait-on-phones]], `AppNavigationTest.onAPhone_onlyTheCardRotates`).
 - **Full brightness:** `FullBrightness()` (`app/src/main/java/com/bdaniel/loyscan/ui/ScreenEffects.kt`) sets the
   window's `screenBrightness` to `BRIGHTNESS_OVERRIDE_FULL` while the detail destination is resumed and puts the
   window's previous value back on pause (home, app switch) and when the screen leaves composition (back). It follows

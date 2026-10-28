@@ -1,5 +1,7 @@
 package com.bdaniel.loyscan
 
+import android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+import android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
 import android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_FULL
 import android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
 import androidx.compose.ui.test.assertIsDisplayed
@@ -86,6 +88,21 @@ class AppNavigationTest {
         composeRule.waitForIdle()
 
         assertThat(brightness).isEqualTo(BRIGHTNESS_OVERRIDE_NONE)
+    }
+
+    @Test
+    fun onAPhone_onlyTheCardRotates() { // #63
+        waitForText("Gold card")
+        assertThat(requestedOrientation).isEqualTo(SCREEN_ORIENTATION_PORTRAIT)
+
+        composeRule.onNodeWithText("Gold card").performClick()
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) { requestedOrientation == SCREEN_ORIENTATION_UNSPECIFIED }
+
+        composeRule.onNodeWithContentDescription("Back").performClick()
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) { requestedOrientation == SCREEN_ORIENTATION_PORTRAIT }
+        composeRule.onNodeWithContentDescription("Add card").performClick()
+        waitForText("Choose store")
+        assertThat(requestedOrientation).isEqualTo(SCREEN_ORIENTATION_PORTRAIT)
     }
 
     @Test
@@ -254,6 +271,8 @@ class AppNavigationTest {
 
     private fun waitForText(text: String) =
         composeRule.waitUntil(WAIT_TIMEOUT_MS) { composeRule.onAllNodes(hasText(text)).fetchSemanticsNodes().isNotEmpty() }
+
+    private val requestedOrientation get() = composeRule.activity.requestedOrientation
 
     private val brightness get() = composeRule.activity.window.attributes.screenBrightness
 }

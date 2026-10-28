@@ -59,8 +59,9 @@ state, so it survives process death too) and, on every new order until the list'
 (`app/src/main/java/com/bdaniel/loyscan/ListScreen.kt:73-94`). The tile comes back where it was tapped, or as near as
 the list allows (at the top when it moved there), and the card shrinks into it. After that, reorders scroll as usual.
 The offset is in pixels, so it is kept only on the screen it was measured on (window size, density, font scale): after
-a rotation or a display size change the tile's top is put at the top of the grid instead, so the tile is in view (in
-phone landscape a tile can be taller than the grid, so its bottom may still be cut off).
+a rotation or a display size change the tile's top is put at the top of the grid instead, so the tile is in view. On a
+phone this happens when Back from a card held in landscape turns the list to portrait
+([[2026-10-28-portrait-on-phones]]); there a tile always fits the grid.
 Tests: `ListScreenTest.returningFromACard_…` (moved up, new order during the return, moved to the top, after process
 death, on a screen that changed size) and `onceBackOnTheList_aLaterReorder_doesNotHoldTheOpenedTileInPlace`; the list there sits in an
 `AnimatedContent` with a `SaveableStateHolder`, as in the `NavHost`.

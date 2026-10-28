@@ -11,7 +11,8 @@ versionName `1.0` (versionCode 1). minSdk 29, target/compileSdk 36, Java/JVM 21 
   `LoyScanTheme { Surface(background) { SharedTransitionLayout { AppNavigation() } } }` — the `Surface` is the
   only opaque app background; screens are transparent ([[card-transition]])
   (`app/src/main/java/com/bdaniel/loyscan/MainActivity.kt:22-43`).
-- `AppNavigation` — start destination [[card-list]]; [[card-detail]], [[barcode-scanner]] and the interim scan-result
+- `AppNavigation` — holds a phone in portrait on every screen but the card (`ScreenOrientation`,
+  [[2026-10-28-portrait-on-phones]]); start destination [[card-list]]; [[card-detail]], [[barcode-scanner]] and the interim scan-result
   dialog ([[scanner-result-dialog-until-add-card-flow]]).
 
 ## Manifest facts

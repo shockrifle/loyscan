@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-28 · phones keep every screen but the card in portrait; screens 600dp or wider rotate · decisions/2026-10-28-portrait-on-phones, decisions/_index, features/card-list, features/card-detail, features/card-transition, apps/android-app · #63
 - 2026-10-28 · end-to-end tests wait for the card form to close after Save; its fields hold the text they waited for · workflows/tdd · CI red after #61 (editingACardsLabel_… timed out)
 - 2026-10-28 · review fix: opened tile's offset kept only on the screen it was measured on; screen-across-navigation test harness; line link · features/card-transition, workflows/tdd · review of #61
 - 2026-10-28 · back from a card the use re-sorted: its tile is put back where it was tapped, so the card shrinks into it · features/card-transition, features/card-list · #61

@@ -34,6 +34,8 @@ tiles, one per row in `loyalty_cards`, live-updating from Room. Sort and search:
   next card added (`ListViewModelTest.deletingTheLastCard_clearsTheQuery`,
   `ListScreenTest.deletingTheLastCard_duringASearch_showsTheEmptyState`). Tests: `ListScreenTest.noCards_…`, `theEmptyState_waitsForTheCardsToLoad`,
   `aSearchThatMatchesNothing_isNotTheEmptyState`.
+- On a phone the list is held in portrait, where a tile always fits the grid; screens 600dp or wider rotate
+  ([[2026-10-28-portrait-on-phones]], #63).
 - Grid items are keyed by card id, so a re-sort moves tiles rather than rebinding them. A use counted on opening a
   card can re-sort the list; on the way back, the opened card's tile is put back where it was tapped
   ([[card-transition]] → Returning to a list the use re-sorted, #61).
