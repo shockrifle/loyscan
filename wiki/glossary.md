@@ -6,7 +6,7 @@ Alphabetical.
 **AnimatedVisibilityScope** — Compose scope passed from each `composable<Route> { }` block (`this`) into a screen;
 required by `Modifier.sharedElement`. See [[card-transition]].
 
-**AppNavigation** — The `NavHost` composable, defined in `MainActivity.kt:47-82`, that maps routes to screens.
+**AppNavigation** — The `NavHost` composable, defined in `MainActivity.kt:51-89`, that maps routes to screens.
 
 **Barcode content** — The exact string a card's barcode encodes. Derived from the core number by the store's
 card-number rule (`CardNumberEngine.barcodeContent`); equals the raw number when there is no rule.
@@ -113,7 +113,7 @@ classes and bound in `di/RepositoryModule.kt`; the ViewModels' only data depende
 
 **Shared element** — Compose `Modifier.sharedElement(rememberSharedContentState(key), animatedVisibilityScope)`
 — the same key on two destinations animates bounds between them. Requires the `SharedTransitionLayout` set up in
-`MainActivity.kt:36`. See [[card-transition]].
+`MainActivity.kt:40`. See [[card-transition]].
 
 **SharedTransitionScope** — Receiver of `AppNavigation`, `ListScreen`, `DetailScreen`, `CardItem`, so they can call
 `sharedElement`. Experimental API (`@OptIn(ExperimentalSharedTransitionApi::class)`).

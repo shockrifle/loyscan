@@ -1,5 +1,6 @@
 package com.bdaniel.loyscan.ui
 
+import android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
 import android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 import android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
 import android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_FULL
@@ -140,5 +141,15 @@ class ScreenEffectsTest {
         composeRule.setContent { ScreenOrientation(rotates = false) }
 
         assertThat(requestedOrientation).isEqualTo(SCREEN_ORIENTATION_UNSPECIFIED)
+    }
+
+    @Test
+    fun screenOrientation_beforeTheScreenIsKnown_leavesTheOrientationAlone() { // #63
+        // After a recreation, the back stack is restored a frame after the first composition.
+        composeRule.runOnUiThread { composeRule.activity.requestedOrientation = SCREEN_ORIENTATION_LANDSCAPE }
+
+        composeRule.setContent { ScreenOrientation(rotates = null) }
+
+        assertThat(requestedOrientation).isEqualTo(SCREEN_ORIENTATION_LANDSCAPE)
     }
 }

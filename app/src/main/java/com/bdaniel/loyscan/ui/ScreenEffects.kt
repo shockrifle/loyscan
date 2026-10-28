@@ -33,11 +33,13 @@ fun KeepScreenOn() = WhileResumed {
 /**
  * Holds a phone in portrait unless the screen [rotates] (#63): in landscape a phone is too short for the card list's
  * tiles, and only the card screen gains from the width. A screen 600dp or wider follows the device, as Android 16
- * makes it do anyway.
+ * makes it do anyway. With [rotates] null (the screen isn't known yet), nothing is requested: after a recreation the
+ * back stack is restored a frame late, and asking for portrait then would turn a card held in landscape back.
  */
 @Composable
-fun ScreenOrientation(rotates: Boolean) {
+fun ScreenOrientation(rotates: Boolean?) {
     val activity = LocalActivity.current ?: return
+    if (rotates == null) return
     val phone = LocalConfiguration.current.smallestScreenWidthDp < LARGE_SCREEN_MIN_WIDTH_DP
     val orientation = if (phone && !rotates) SCREEN_ORIENTATION_PORTRAIT else SCREEN_ORIENTATION_UNSPECIFIED
     SideEffect { activity.requestedOrientation = orientation }

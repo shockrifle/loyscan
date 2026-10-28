@@ -52,7 +52,7 @@ fun SharedTransitionScope.AppNavigation(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
     val entry by navController.currentBackStackEntryAsState()
     // Only the card screen turns with a phone, to show the card (and its barcode) wide.
-    ScreenOrientation(rotates = entry?.destination?.hasRoute<Detail>() == true)
+    ScreenOrientation(rotates = entry?.destination?.hasRoute<Detail>())
     NavHost(
         navController = navController,
         startDestination = CardList,
