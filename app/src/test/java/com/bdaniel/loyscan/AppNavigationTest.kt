@@ -114,6 +114,7 @@ class AppNavigationTest {
         composeRule.onNodeWithTag(CARD_NUMBER_TAG).performTextInput("777")
         composeRule.onNodeWithText("Save").performClick()
 
+        waitForTheCardFormToClose()
         waitForText("Silver card")
         composeRule.onNodeWithText("777").assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Back").performClick()
@@ -138,6 +139,7 @@ class AppNavigationTest {
         composeRule.onNodeWithTag(CARD_NUMBER_TAG).performTextInput("4242")
         composeRule.onNodeWithText("Save").performClick()
 
+        waitForTheCardFormToClose()
         waitForText("4242")
         composeRule.onNodeWithContentDescription("Back").performClick()
         waitForText("My Cards")
@@ -156,6 +158,7 @@ class AppNavigationTest {
         composeRule.onNodeWithTag(CARD_LABEL_TAG).performTextInput("Silver card")
         composeRule.onNodeWithText("Save").performClick()
 
+        waitForTheCardFormToClose()
         waitForText("Silver card")
         composeRule.onNodeWithText("0042").assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Back").performClick()
@@ -241,6 +244,13 @@ class AppNavigationTest {
         assertThat(runBlocking { db.loyaltyCardDao().getAllWithStore().first() }.map { it.loyaltyCard.storeId })
             .containsExactly(STORE_ID)
     }
+
+    /**
+     * The form's own fields hold the label and number the card screen then shows, so waiting for those can pass on the
+     * form. Back pressed there while the save runs leaves the form, and the save then opens the card over the list.
+     */
+    private fun waitForTheCardFormToClose() =
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) { composeRule.onAllNodes(hasText("Card number")).fetchSemanticsNodes().isEmpty() }
 
     private fun waitForText(text: String) =
         composeRule.waitUntil(WAIT_TIMEOUT_MS) { composeRule.onAllNodes(hasText(text)).fetchSemanticsNodes().isNotEmpty() }
