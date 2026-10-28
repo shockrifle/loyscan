@@ -9,7 +9,11 @@ class FakeUserPreferencesRepository(cardSort: CardSort = CardSort.NAME) : UserPr
 
     override val cardSort = MutableStateFlow(cardSort)
 
+    /** When set, [setCardSort] throws it instead of saving, as DataStore does on a failed write. */
+    var setFailure: Exception? = null
+
     override suspend fun setCardSort(sort: CardSort) {
+        setFailure?.let { throw it }
         cardSort.value = sort
     }
 }

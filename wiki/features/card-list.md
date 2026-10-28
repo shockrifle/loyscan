@@ -18,8 +18,8 @@ tiles, one per row in `loyalty_cards`, live-updating from Room. Sort and search:
 - **Sort** (the Sort icon's menu, current choice marked): *Name* (store name, then label, an unlabelled card
   first), *Most used* (`useCount`), *Recently used* (`lastUsedAt`, never-used cards last). Ties go by name, then
   id, so tiles don't swap on updates. Default *Name*. The choice is a user preference kept in DataStore and
-  survives restarts ([[2026-10-28-datastore-for-user-preferences]]); a stored value this version doesn't know reads
-  as *Name*. Tests: `CardSearchTest`, `ListViewModelTest`, `ListScreenTest.choosingASort_…`,
+  survives restarts ([[2026-10-28-datastore-for-user-preferences]]); a stored value this version doesn't know, or a file that can't be
+  read, reads as *Name*. A sort that can't be saved isn't applied (logged). Tests: `CardSearchTest`, `ListViewModelTest`, `ListScreenTest.choosingASort_…`,
   `DataStoreUserPreferencesRepositoryTest.aChosenSort_survivesARestart`.
 - **Search** (`CARD_SEARCH_TAG` field, "Search cards"): keeps the cards whose store name, store alias, label or
   note contains the query, ignoring case and accents (`searchKey()`, shared with the store picker), in the sort

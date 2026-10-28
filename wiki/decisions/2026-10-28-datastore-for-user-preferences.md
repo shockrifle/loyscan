@@ -1,6 +1,6 @@
 # DataStore for user preferences
 
-**Status:** Active · **Date:** 2026-10-28 · **Issue:** [#7](https://github.com/shockrifle/loyscan/issues/7) (sort)
+**Status:** Active · **Date:** 2026-10-28 · **Issue:** [#7](https://github.com/shockrifle/loyscan/issues/7) (sort) · **Commits:** a5cc709, and the review fix after it
 
 ## Context
 
@@ -23,7 +23,11 @@ is the interface ViewModels use; `DataStoreUserPreferencesRepository` implements
 
 - Values are stored by enum name. A value this version doesn't know (a later version's, after a downgrade, or a
   renamed entry) reads as the default.
-- A corrupt file is replaced with empty preferences (`ReplaceFileCorruptionHandler`) rather than failing reads.
+- A corrupt file is replaced with empty preferences (`ReplaceFileCorruptionHandler`), and a read `IOException`
+  reads as the defaults (`catch` on `data`), so the start screen never fails on its preferences. Other exceptions are
+  bugs and propagate (`DataStoreUserPreferencesRepositoryTest.anErrorThatIsNotAReadError_isNotHidden`).
+- A failed write throws from `setCardSort`; the caller decides. `ListViewModel.onSortChange` logs it and the list
+  keeps the stored sort (`ListViewModelTest.aSortThatFailsToSave_leavesTheSortAsItWas`).
 
 ## Why
 

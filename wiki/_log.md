@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-28 · review fix: preferences read errors fall back to the defaults, a failed sort save is logged, not a crash; DI row names the DataStore impl · decisions/2026-10-28-datastore-for-user-preferences, features/card-list, architecture · review of #7
 - 2026-10-28 · review fix: card list is `null` until loaded, so a restored search doesn't flash "No card matches"; fake load gate recorded · features/card-list, architecture, workflows/tdd · review of #7
 - 2026-10-28 · card list sorted (name / most used / recently used, kept in DataStore) and searched (store name, aliases, label, note) · features/card-list, architecture · #7
 - 2026-10-28 · DataStore for user preferences (the card list's sort); test seams and the Windows single-write limit recorded · decisions/2026-10-28-datastore-for-user-preferences, decisions/_index, architecture, workflows/tdd, workflows/build-and-run · #7

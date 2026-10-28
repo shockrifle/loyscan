@@ -15,6 +15,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import timber.log.Timber
+import java.io.IOException
 import javax.inject.Inject
 
 /**
@@ -50,8 +52,15 @@ class ListViewModel @Inject constructor(
         savedStateHandle[QUERY] = query
     }
 
+    /** A sort that can't be saved is not applied: the list keeps the stored one. */
     fun onSortChange(sort: CardSort) {
-        viewModelScope.launch { userPreferencesRepository.setCardSort(sort) }
+        viewModelScope.launch {
+            try {
+                userPreferencesRepository.setCardSort(sort)
+            } catch (exception: IOException) {
+                Timber.e(exception, "Couldn't save the card sort")
+            }
+        }
     }
 
     private companion object {

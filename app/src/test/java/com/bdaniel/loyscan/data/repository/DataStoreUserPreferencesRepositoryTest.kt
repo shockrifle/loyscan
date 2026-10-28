@@ -1,5 +1,7 @@
 package com.bdaniel.loyscan.data.repository
 
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.bdaniel.loyscan.domain.CardSort
@@ -8,15 +10,19 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.job
 import kotlinx.coroutines.runBlocking
 import org.junit.After
+import org.junit.Assert.assertThrows
 import org.junit.Assume.assumeFalse
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
+import java.io.IOException
 
 /**
  * The real DataStore on a file, as the app has it. Plain JVM: DataStore's preferences store needs no Android.
@@ -78,5 +84,25 @@ class DataStoreUserPreferencesRepositoryTest {
         file.writeText("not a preferences file")
 
         assertThat(open().cardSort.first()).isEqualTo(CardSort.NAME)
+    }
+
+    @Test
+    fun aReadError_readsAsTheDefaults() = runBlocking {
+        val repository = DataStoreUserPreferencesRepository(FailingDataStore(IOException("disk read failed")))
+
+        assertThat(repository.cardSort.first()).isEqualTo(CardSort.NAME)
+    }
+
+    @Test
+    fun anErrorThatIsNotAReadError_isNotHidden() {
+        val repository = DataStoreUserPreferencesRepository(FailingDataStore(IllegalStateException("a bug")))
+
+        assertThrows(IllegalStateException::class.java) { runBlocking { repository.cardSort.first() } }
+    }
+
+    /** A store whose reads and writes fail with [error], as a disk error makes DataStore's. */
+    private class FailingDataStore(private val error: Throwable) : DataStore<Preferences> {
+        override val data: Flow<Preferences> = flow { throw error }
+        override suspend fun updateData(transform: suspend (Preferences) -> Preferences): Preferences = throw error
     }
 }

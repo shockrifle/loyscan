@@ -14,6 +14,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
+import java.io.IOException
 
 /** Example of a plain-JVM ViewModel test: fake repositories, Turbine on the exposed StateFlow. */
 class ListViewModelTest {
@@ -93,6 +94,16 @@ class ListViewModelTest {
             assertThat(awaitItem()).containsExactly(berry, cherry, apple).inOrder()
         }
         assertThat(preferences.cardSort.value).isEqualTo(CardSort.MOST_USED)
+    }
+
+    @Test
+    fun aSortThatFailsToSave_leavesTheSortAsItWas() = runTest {
+        preferences.setFailure = IOException("disk full")
+        val viewModel = viewModel()
+
+        viewModel.onSortChange(CardSort.MOST_USED)
+
+        assertThat(preferences.cardSort.value).isEqualTo(CardSort.NAME)
     }
 
     @Test
