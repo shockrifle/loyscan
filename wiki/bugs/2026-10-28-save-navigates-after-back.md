@@ -16,11 +16,14 @@ There were two causes:
   cleared. A Room write still waiting to run was then cancelled, so a later Back could lose the card.
 
 ## Fix
-- `cardFormDirections().toCard` navigates only while a `CardForm` is the current back-stack entry. The check is on the
+- `cardFormDirections(entry).toCard` navigates only while the form's own back-stack entry is current. Checking for any
+  `CardForm` wasn't enough: Edit again on the card while the first form animates out opens a second form, which the
+  first save would replace (found in review). The check is on the
   back stack, not on the entry's lifecycle (`dropUnlessResumed`): a save that ends while the app is in the background
   must still open the card.
 - `CardFormViewModel.save` writes in `withContext(NonCancellable)`.
-- Tests: `AddCardDirectionsTest.aSaveThatEndsAfterBackFromTheForm_…` and `anEditThatEndsAfterBackFromTheForm_…`;
+- Tests: `AddCardDirectionsTest.aSaveThatEndsAfterBackFromTheForm_…`, `anEditThatEndsAfterBackFromTheForm_…` and
+  `aSaveThatEndsAfterBack_leavesAFormOpenedSinceAsItIs`;
   `CardFormViewModelTest.aSaveStillRunningWhenTheFormCloses_isStillSaved` and `anEditStillSavingWhenTheFormCloses_…`
   (a write held by `FakeLoyaltyCardRepository.addGate` / `updateGate`, then the ViewModel cleared).
 

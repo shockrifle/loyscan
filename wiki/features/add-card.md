@@ -74,7 +74,9 @@ stores already in the database, and custom stores). Everything runs offline on t
   returns to the list. That opening isn't counted as a use (`Detail.countUse = false`): it is the end of adding the
   card, not showing it at a till.
 - **Back during the save** (#64): the user stays where Back took them, and the card is still saved.
-  `CardFormDirections.toCard` navigates only while the form is the current back-stack entry: the form's
+  `CardFormDirections.toCard` navigates only while the form's own back-stack entry (`cardFormDirections(entry)`) is
+  current, so not after Back, nor over a form opened since (Edit again while the first one animates out; found in
+  review). The form's
   `LaunchedEffect` on `savedCardId` is still composed while the popped form animates out, and before the fix it opened
   the card from the picker. The check is on the back stack, not on the entry's lifecycle, so a save that ends while the
   app is in the background still opens the card. `save` writes in `withContext(NonCancellable)`: once the popped

@@ -44,7 +44,7 @@ See [[2026-10-09-card-number-rule-engine]].
 **Card number** — `LoyaltyCard.number`: the raw input, as typed or exactly as scanned (`scannedFormat` set).
 Barcode content and display number are derived from it on read ([[2026-10-12-data-model-v2]]).
 
-**CardList** — Navigation route `object CardList` (`Navigation.kt:9-10`), the start destination: "My Cards".
+**CardList** — Navigation route `object CardList` (`Navigation.kt:10-11`), the start destination: "My Cards".
 Was `object List` until #17, which shadowed `kotlin.collections.List` — [[list-route-shadows-kotlin-list]].
 
 **`card/{id}`** — The shared-content key that links a list tile to the detail screen in the shared-element transition.
@@ -55,7 +55,7 @@ separators removed, letter case applied). Rules turn it into barcode content. Se
 
 **DAO** — Room data-access interface in `data/local/db/dao/`. Reads return `Flow`.
 
-**Detail** — Navigation route `data class Detail(val cardId: String, val color: String, val countUse: Boolean = true)` (`Navigation.kt:29-30`).
+**Detail** — Navigation route `data class Detail(val cardId: String, val color: String, val countUse: Boolean = true)` (`Navigation.kt:30-31`).
 
 **Display number** — `LoyaltyCard.displayNumber`: the number formatted by the store rule's display pattern
 (`CardNumberEngine.displayNumber`); the trimmed number when there is no rule. Shown on the detail screen.

@@ -1,8 +1,8 @@
 package com.bdaniel.loyscan
 
 import androidx.compose.runtime.Immutable
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
-import androidx.navigation.NavDestination.Companion.hasRoute
 import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.domain.ScannedBarcode
 import kotlinx.serialization.Serializable
@@ -131,12 +131,12 @@ data class CardFormDirections(
 
 /**
  * The saved card opens in place of the whole add-card flow, so back from it returns to the list. An edited card opens
- * in place of the card and its form, in its store's current colour (#8). Only from the form: after Back during the
- * save, the user stays where Back took them (#64).
+ * in place of the card and its form, in its store's current colour (#8). Only while [form], the form's own entry, is
+ * current: after Back during the save, the user stays where Back took them, even on a form opened since (#64).
  */
-fun NavController.cardFormDirections() = CardFormDirections(
+fun NavController.cardFormDirections(form: NavBackStackEntry) = CardFormDirections(
     toCard = { id, color ->
-        if (currentBackStackEntry?.destination?.hasRoute<CardForm>() == true) {
+        if (currentBackStackEntry == form) {
             navigate(Detail(id, color, countUse = false)) {
                 popUpTo<CardList>()
             }

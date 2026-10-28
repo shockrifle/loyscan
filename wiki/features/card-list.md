@@ -6,7 +6,7 @@ tiles, one per row in `loyalty_cards`, live-updating from Room. Sort and search:
 **Entry points:** `ListScreen` and `CardItem` in `app/src/main/java/com/bdaniel/loyscan/ListScreen.kt`;
 `ListViewModel` (`app/src/main/java/com/bdaniel/loyscan/ListViewModel.kt`); sort and search in
 `app/src/main/java/com/bdaniel/loyscan/domain/CardSearch.kt`; route `CardList`
-(`app/src/main/java/com/bdaniel/loyscan/Navigation.kt:9-10`).
+(`app/src/main/java/com/bdaniel/loyscan/Navigation.kt:10-11`).
 
 ## Behavior
 

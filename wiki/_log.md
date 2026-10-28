@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-28 · review fix: the card form opens the saved card only while its own entry is current; Navigation.kt line links shifted (and the scanner's, already stale) · bugs/2026-10-28-save-navigates-after-back, features/add-card, architecture, decisions/2025-12-12-brand-color-in-route, features/card-detail, features/card-list, features/barcode-scanner, glossary, hacks/list-route-shadows-kotlin-list · review of #64
 - 2026-10-28 · a card save that ends after Back no longer opens the card, and is still written; postmortem, held-write fake gates, clearing a ViewModel in a test · bugs/2026-10-28-save-navigates-after-back, bugs/_index, features/add-card, features/edit-card, workflows/tdd, architecture, index · #64
 - 2026-10-28 · review fix: no orientation request before the back stack is restored; manifest and window-width trade-offs recorded; MainActivity line links shifted · decisions/2026-10-28-portrait-on-phones, apps/android-app, architecture, decisions/2025-12-12-brand-color-in-route, features/barcode-scanner, features/card-transition, glossary, tech-debt/shared-element-key-from-async-state · review of #63
 - 2026-10-28 · phones keep every screen but the card in portrait; screens 600dp or wider rotate · decisions/2026-10-28-portrait-on-phones, decisions/_index, features/card-list, features/card-detail, features/card-transition, apps/android-app · #63

@@ -83,7 +83,7 @@ fun SharedTransitionScope.AppNavigation(modifier: Modifier = Modifier) {
             ScannerScreen(directions = navController.scannerDirections(it.toRoute<Scanner>().storeId))
         }
         composable<CardForm> {
-            CardFormScreen(directions = navController.cardFormDirections())
+            CardFormScreen(directions = navController.cardFormDirections(it))
         }
     }
 }
