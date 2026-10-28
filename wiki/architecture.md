@@ -53,7 +53,8 @@ terms, with domain→entity mappers. Time comes from an injected `java.time.Cloc
 Tests run on the JVM (`./gradlew testDebugUnitTest`, see [[build-and-run]]); shared helpers live in
 `app/src/test/java/com/bdaniel/loyscan/testing/`.
 
-- **ViewModels** are constructed directly with `FakeLoyaltyCardRepository` / `FakeStoreRepository` (each a
+- **ViewModels** are constructed directly with `FakeLoyaltyCardRepository` / `FakeStoreRepository` /
+  `FakeUserPreferencesRepository` (each a
   `MutableStateFlow` of domain models)
   and `MainDispatcherRule` in place of `Dispatchers.Main`. A route-reading ViewModel gets
   `SavedStateHandle(route = Detail(…))` from navigation-testing.
@@ -110,13 +111,13 @@ here exist; read them next to the code.
    Then `RoomLoyaltyCardRepository.getAllWithStore()` = `dao.getAllWithStore().map { it.toDomainModel() }`
    (`data/repository/RoomLoyaltyCardRepository.kt:14`), behind the `LoyaltyCardRepository` interface. Change
    `FakeLoyaltyCardRepository` in the same step, so it keeps the interface's contract.
-5. **List ViewModel.** *Test first:* `ListViewModelTest`: built with the fake repository, Turbine on `cards`. It
-   checks the initial empty list, then each update.
-   Then `ListViewModel.cards` = repository flow `.stateIn(viewModelScope, WhileSubscribed(5_000), emptyList())`
-   (`ListViewModel.kt:16-20`).
+5. **List ViewModel.** *Test first:* `ListViewModelTest`: built with the fake repositories and a `SavedStateHandle`,
+   Turbine on `cards`. It checks the initial empty list, then each update, the stored sort and the search.
+   Then `ListViewModel.cards` = the repository flow combined with the sort preference and the query, sorted then
+   searched, `.stateIn(viewModelScope, WhileSubscribed(5_000), emptyList())` (`ListViewModel.kt:39-46`, [[card-list]]).
 6. **List UI.** *Test first:* `ListScreenTest`: a fake-backed ViewModel and a recording `ListDirections`. It
    checks one tile per card, and that a click calls `toCard(id, color)`.
-   Then `ListScreen` collects `cards` and renders a 2-column `LazyVerticalGrid` of `CardItem`s. Each `CardItem`'s
+   Then `ListScreen` collects `cards` and renders a 2-column `LazyVerticalGrid` of `CardItem`s, keyed by card id. Each `CardItem`'s
    colored box is a shared element keyed `cardTransitionKey(card.id)` (`"card/<id>"`). A click calls
    `directions.toCard(card.id, card.store.color)` ([[card-list]]).
 7. **Navigation.** *Test first:* `AppNavigationTest`, the one end-to-end test for this flow: real Hilt and

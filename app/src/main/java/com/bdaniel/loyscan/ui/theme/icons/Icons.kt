@@ -233,6 +233,44 @@ object Icons {
         @Suppress("ObjectPropertyName")
         private var _Add: ImageVector? = null
 
+        /** Material Symbols "sort": three bars, longest on top. */
+        val Sort: ImageVector
+            get() {
+                if (_Sort != null) {
+                    return _Sort!!
+                }
+                _Sort = ImageVector.Builder(
+                        name = "Sort",
+                        defaultWidth = 24.dp,
+                        defaultHeight = 24.dp,
+                        viewportWidth = 960f,
+                        viewportHeight = 960f
+                ).apply {
+                    path(fill = SolidColor(Color.Black)) {
+                        moveTo(120f, 720f)
+                        verticalLineToRelative(-80f)
+                        horizontalLineToRelative(240f)
+                        verticalLineToRelative(80f)
+                        close()
+                        moveTo(120f, 520f)
+                        verticalLineToRelative(-80f)
+                        horizontalLineToRelative(480f)
+                        verticalLineToRelative(80f)
+                        close()
+                        moveTo(120f, 320f)
+                        verticalLineToRelative(-80f)
+                        horizontalLineToRelative(720f)
+                        verticalLineToRelative(80f)
+                        close()
+                    }
+                }.build()
+
+                return _Sort!!
+            }
+
+        @Suppress("ObjectPropertyName")
+        private var _Sort: ImageVector? = null
+
         val Delete: ImageVector
             get() {
                 if (_Delete != null) {

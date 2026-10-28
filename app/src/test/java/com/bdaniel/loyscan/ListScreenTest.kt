@@ -3,7 +3,13 @@ package com.bdaniel.loyscan
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
+import androidx.lifecycle.SavedStateHandle
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isNotSelected
+import androidx.compose.ui.test.isSelected
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -11,8 +17,10 @@ import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.bdaniel.loyscan.domain.CardSort
 import com.bdaniel.loyscan.domain.LoyaltyCard
 import com.bdaniel.loyscan.testing.FakeLoyaltyCardRepository
+import com.bdaniel.loyscan.testing.FakeUserPreferencesRepository
 import com.bdaniel.loyscan.testing.aLoyaltyCard
 import com.bdaniel.loyscan.testing.aStore
 import com.bdaniel.loyscan.testing.cardId
@@ -35,7 +43,7 @@ class ListScreenTest {
     @Test
     fun clickingACard_navigatesToItWithItsStoreColor() {
         val card = aLoyaltyCard(id = cardId(5), store = aStore(name = "Test Store", color = "#AA0000"))
-        val viewModel = ListViewModel(FakeLoyaltyCardRepository(listOf(card)))
+        val viewModel = ListViewModel(FakeLoyaltyCardRepository(listOf(card)), FakeUserPreferencesRepository(), SavedStateHandle())
         var navigatedTo: Pair<String, String>? = null
         val directions = ListDirections(toCard = { id, color -> navigatedTo = id to color }, toAddCard = {}, toBack = {})
 
@@ -79,7 +87,8 @@ class ListScreenTest {
 
     @Test
     fun theLastTile_isNotCoveredByTheAddButtonWhenScrolledToTheEnd() {
-        val cards = (1..12).map { aLoyaltyCard(id = cardId(it), store = aStore(name = "Store $it")) }
+        // Zero-padded, so name order is this order.
+        val cards = (1..12).map { aLoyaltyCard(id = cardId(it), store = aStore(name = "Store %02d".format(it))) }
         setScreen(*cards.toTypedArray())
 
         composeRule.onNode(hasScrollAction()).performScrollToIndex(cards.lastIndex)
@@ -89,11 +98,60 @@ class ListScreenTest {
         assertThat(lastTile.overlaps(addButton)).isFalse()
     }
 
+    @Test
+    fun searching_showsOnlyTheMatchingCards() {
+        setScreen(aLoyaltyCard(id = cardId(1), store = aStore(name = "Apple")), aLoyaltyCard(id = cardId(2), store = aStore(name = "Berry")))
+
+        composeRule.onNodeWithTag(CARD_SEARCH_TAG).performTextInput("berr")
+
+        composeRule.onNodeWithText("Berry").assertIsDisplayed()
+        composeRule.onNodeWithText("Apple").assertDoesNotExist()
+    }
+
+    @Test
+    fun aSearchThatMatchesNothing_saysSo() {
+        setScreen(aLoyaltyCard(store = aStore(name = "Apple")))
+
+        composeRule.onNodeWithTag(CARD_SEARCH_TAG).performTextInput(" xyz ")
+
+        composeRule.onNodeWithText("No card matches “xyz”").assertIsDisplayed()
+    }
+
+    @Test
+    fun theSortMenu_marksTheStoredSort() {
+        setScreen(aLoyaltyCard(), preferences = FakeUserPreferencesRepository(CardSort.RECENTLY_USED))
+
+        composeRule.onNodeWithContentDescription("Sort").performClick()
+
+        composeRule.onNode(hasText("Recently used") and isSelected()).assertIsDisplayed()
+        composeRule.onNode(hasText("Name") and isNotSelected()).assertIsDisplayed()
+        composeRule.onNode(hasText("Most used") and isNotSelected()).assertIsDisplayed()
+    }
+
+    @Test
+    fun choosingASort_storesIt_andReordersTheTiles() {
+        val preferences = FakeUserPreferencesRepository()
+        setScreen(
+            aLoyaltyCard(id = cardId(1), store = aStore(name = "Apple"), useCount = 1),
+            aLoyaltyCard(id = cardId(2), store = aStore(name = "Berry"), useCount = 9),
+            preferences = preferences,
+        )
+        assertThat(left("Apple")).isLessThan(left("Berry"))
+
+        composeRule.onNodeWithContentDescription("Sort").performClick()
+        composeRule.onNodeWithText("Most used").performClick()
+
+        assertThat(preferences.cardSort.value).isEqualTo(CardSort.MOST_USED)
+        composeRule.onNodeWithText("Most used").assertDoesNotExist() // the menu closed
+        assertThat(left("Berry")).isLessThan(left("Apple"))
+    }
+
     private fun setScreen(
         vararg cards: LoyaltyCard,
         directions: ListDirections = ListDirections(toCard = { _, _ -> }, toAddCard = {}, toBack = {}),
+        preferences: FakeUserPreferencesRepository = FakeUserPreferencesRepository(),
     ) {
-        val viewModel = ListViewModel(FakeLoyaltyCardRepository(cards.toList()))
+        val viewModel = ListViewModel(FakeLoyaltyCardRepository(cards.toList()), preferences, SavedStateHandle())
         composeRule.setContent {
             SharedTransitionLayout {
                 AnimatedVisibility(visible = true) {
@@ -102,4 +160,7 @@ class ListScreenTest {
             }
         }
     }
+
+    /** Two tiles share a row of the grid, so the first one is the one on the left. */
+    private fun left(text: String) = composeRule.onNodeWithText(text).fetchSemanticsNode().boundsInRoot.left
 }

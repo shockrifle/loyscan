@@ -1,26 +1,38 @@
 package com.bdaniel.loyscan
 
+import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
+import com.bdaniel.loyscan.domain.CardSort
 import com.bdaniel.loyscan.testing.FakeLoyaltyCardRepository
+import com.bdaniel.loyscan.testing.FakeUserPreferencesRepository
 import com.bdaniel.loyscan.testing.MainDispatcherRule
 import com.bdaniel.loyscan.testing.aLoyaltyCard
+import com.bdaniel.loyscan.testing.aStore
 import com.bdaniel.loyscan.testing.cardId
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
 
-/** Example of a plain-JVM ViewModel test: fake repository, Turbine on the exposed StateFlow. */
+/** Example of a plain-JVM ViewModel test: fake repositories, Turbine on the exposed StateFlow. */
 class ListViewModelTest {
 
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
     private val repository = FakeLoyaltyCardRepository()
+    private val preferences = FakeUserPreferencesRepository()
+
+    private val apple = aLoyaltyCard(id = cardId(1), store = aStore(id = "apple", name = "Apple"), useCount = 1)
+    private val berry = aLoyaltyCard(id = cardId(2), store = aStore(id = "berry", name = "Berry"), useCount = 5)
+    private val cherry = aLoyaltyCard(id = cardId(3), store = aStore(id = "cherry", name = "Cherry"), label = "Apple pie", useCount = 3)
+
+    private fun viewModel(savedStateHandle: SavedStateHandle = SavedStateHandle()) =
+        ListViewModel(repository, preferences, savedStateHandle)
 
     @Test
     fun cards_followTheRepository() = runTest {
-        val viewModel = ListViewModel(repository)
+        val viewModel = viewModel()
 
         viewModel.cards.test {
             assertThat(awaitItem()).isEmpty()
@@ -33,17 +45,88 @@ class ListViewModelTest {
 
     @Test
     fun cards_reflectAdditionsAndRemovals() = runTest {
-        val first = aLoyaltyCard(id = cardId(1))
-        val second = aLoyaltyCard(id = cardId(2))
-        repository.cards.value = listOf(first)
-        val viewModel = ListViewModel(repository)
+        repository.cards.value = listOf(apple)
+        val viewModel = viewModel()
 
         viewModel.cards.test {
-            assertThat(awaitItem()).containsExactly(first)
-            repository.cards.value = listOf(first, second)
-            assertThat(awaitItem()).containsExactly(first, second).inOrder()
-            repository.cards.value = listOf(second)
-            assertThat(awaitItem()).containsExactly(second)
+            assertThat(awaitItem()).containsExactly(apple)
+            repository.cards.value = listOf(apple, berry)
+            assertThat(awaitItem()).containsExactly(apple, berry).inOrder()
+            repository.cards.value = listOf(berry)
+            assertThat(awaitItem()).containsExactly(berry)
+        }
+    }
+
+    @Test
+    fun cards_areInTheStoredSortOrder() = runTest {
+        repository.cards.value = listOf(berry, cherry, apple)
+        preferences.cardSort.value = CardSort.MOST_USED
+
+        viewModel().cards.test {
+            assertThat(awaitItem()).containsExactly(berry, cherry, apple).inOrder()
+        }
+    }
+
+    @Test
+    fun withNoSortChosen_cardsAreByName() = runTest {
+        repository.cards.value = listOf(cherry, berry, apple)
+
+        viewModel().cards.test {
+            assertThat(awaitItem()).containsExactly(apple, berry, cherry).inOrder()
+        }
+    }
+
+    @Test
+    fun choosingASort_storesIt_andReordersTheCards() = runTest {
+        repository.cards.value = listOf(apple, berry, cherry)
+        val viewModel = viewModel()
+
+        viewModel.cards.test {
+            assertThat(awaitItem()).containsExactly(apple, berry, cherry).inOrder()
+
+            viewModel.onSortChange(CardSort.MOST_USED)
+
+            assertThat(awaitItem()).containsExactly(berry, cherry, apple).inOrder()
+        }
+        assertThat(preferences.cardSort.value).isEqualTo(CardSort.MOST_USED)
+    }
+
+    @Test
+    fun sort_isTheStoredOne() = runTest {
+        preferences.cardSort.value = CardSort.RECENTLY_USED
+
+        viewModel().sort.test {
+            assertThat(expectMostRecentItem()).isEqualTo(CardSort.RECENTLY_USED)
+        }
+    }
+
+    @Test
+    fun aQuery_narrowsTheCards_keepingTheSortOrder() = runTest {
+        repository.cards.value = listOf(apple, berry, cherry)
+        preferences.cardSort.value = CardSort.MOST_USED
+        val viewModel = viewModel()
+
+        viewModel.cards.test {
+            assertThat(awaitItem()).containsExactly(berry, cherry, apple).inOrder()
+
+            viewModel.onQueryChange("apple")
+
+            assertThat(awaitItem()).containsExactly(cherry, apple).inOrder()
+        }
+        assertThat(viewModel.query.value).isEqualTo("apple")
+    }
+
+    @Test
+    fun theQuery_isRestoredAfterProcessDeath() = runTest {
+        repository.cards.value = listOf(apple, berry, cherry)
+        val first = SavedStateHandle()
+        viewModel(first).onQueryChange("berry")
+
+        val restored = viewModel(SavedStateHandle(first.keys().associateWith { first.get<Any>(it) }))
+
+        assertThat(restored.query.value).isEqualTo("berry")
+        restored.cards.test {
+            assertThat(awaitItem()).containsExactly(berry)
         }
     }
 }
