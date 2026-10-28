@@ -40,7 +40,7 @@ for raising it: [[2026-10-09-coverage-gate-kover]].
 - Whole-app tests: `@HiltAndroidTest` + `@Config(application = HiltTestApplication::class)` with
   `createAndroidComposeRule<MainActivity>()` (`AppNavigationTest`). The Hilt rule must run first
   (`@get:Rule(order = 0)`). `InMemoryDatabaseModule` gives them an empty in-memory database to fill.
-- Shared helpers (fixture builders, fakes, `MainDispatcherRule`, `InMemoryDatabaseModule`) are in `app/src/test/java/com/bdaniel/loyscan/testing/`.
+- Shared helpers (fixture builders, fakes, `MainDispatcherRule`, `InMemoryDatabaseModule`, `TemporaryPreferencesModule`) are in `app/src/test/java/com/bdaniel/loyscan/testing/`.
   How the code is made testable: [[architecture]] → Testing seams.
 
 ## Dependencies
@@ -57,6 +57,9 @@ All versions live in `gradle/libs.versions.toml`. Constraints that have bitten b
   type-safe navigation routes.
 - `coroutinesTest` must match the `kotlinx-coroutines-core` version the app actually resolves (check with
   `./gradlew :app:dependencies --configuration debugRuntimeClasspath`); a newer one silently upgrades core.
+- DataStore (`datastore`, [[2026-10-28-datastore-for-user-preferences]]) pulls `kotlinx-coroutines-core` 1.8.1, which
+  resolves to the app's 1.9.0; recheck after a bump. On a Windows host it can't replace an existing file, so JVM
+  tests write each preferences file at most once.
 - Robolectric on SDK 36 needs `--add-exports=java.base/jdk.internal.access=ALL-UNNAMED` on the test JVM
   (`app/build.gradle.kts`, `testOptions`). Without it every Robolectric test fails with *"Failed to interact with
   raw FileDescriptor internals"*. Seen with Robolectric 4.17 on JDK 21, 2026-10-09.

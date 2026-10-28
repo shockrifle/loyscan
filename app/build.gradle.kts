@@ -80,6 +80,9 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
 
+    // User preferences (the card list's sort)
+    implementation(libs.androidx.datastore.preferences)
+
     // JSON (card-number rules)
     implementation(libs.kotlinx.serialization.json)
 

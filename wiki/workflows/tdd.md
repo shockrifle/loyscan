@@ -35,6 +35,7 @@ Paths are under `app/src/test/java/com/bdaniel/loyscan/`, in the same package as
 | DB callbacks (catalogue) | The real callback on a real database; an on-disk one, closed and reopened, when the behaviour is about reopening | Robolectric | `data/local/db/CatalogueDatabaseCallbackTest` |
 | The database as the app builds it | `DatabaseModule.provideAppDatabase(context)` on Robolectric's file system; close it and delete `loyscan.db` after | Robolectric | `di/DatabaseModuleTest` |
 | Repository | The real repository over an in-memory database | Robolectric | `data/repository/RoomLoyaltyCardRepositoryTest` |
+| Preferences repository | The real DataStore on a `TemporaryFolder` file; a restart is a second store on the same file after the first one's scope is cancelled. Write each file at most once ([[2026-10-28-datastore-for-user-preferences]]) | default | `data/repository/DataStoreUserPreferencesRepositoryTest` |
 | ViewModel (no route) | Constructed with a fake repository; Turbine on the `StateFlow`; `MainDispatcherRule` | default | `ListViewModelTest` |
 | ViewModel reading a route | Same, with `SavedStateHandle(route = Detail(…))` | Robolectric | `DetailViewModelTest` |
 | Drawing geometry, barcode encoding (`ui/barcode/`) | Plain JUnit. Robolectric doesn't run Compose draw code, so what a `drawWithCache` block draws is computed by a pure function (`barcodeRects`) and tested there. Encoded barcodes are read back with ZXing's reader | default | `ui/barcode/BarcodeLayoutTest`, `BarcodeEncoderTest` |
@@ -68,6 +69,8 @@ Shared helpers are in `testing/`:
 - **`MainDispatcherRule`** for anything that uses `viewModelScope`. A timer in a ViewModel takes its duration as a
   constructor parameter (`ScannerViewModel(hintDelay)`): `advanceTimeBy` tests it in virtual time, and a screen test
   passes `Duration.ZERO`.
+- **`TemporaryPreferencesModule`** replaces `PreferencesModule` in every `@HiltAndroidTest`: a new preferences file per
+  test, since DataStore throws when two stores open one file.
 - **`InMemoryDatabaseModule`** replaces `DatabaseModule` in every `@HiltAndroidTest`: an empty database that the
   test injects and fills.
 

@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-28 · DataStore for user preferences (the card list's sort); test seams and the Windows single-write limit recorded · decisions/2026-10-28-datastore-for-user-preferences, decisions/_index, architecture, workflows/tdd, workflows/build-and-run · #7
 - 2026-10-28 · review fixes: resolved tech-debt page put in the past tense; stale route paragraph corrected (Int id, brand, line numbers); AppNavigation range fixed · tech-debt/shared-element-key-from-async-state, decisions/2025-12-12-brand-color-in-route, glossary · review of #16
 - 2026-10-28 · detail shared key taken from the route; tech-debt resolved, transition test technique recorded · tech-debt/shared-element-key-from-async-state, tech-debt/_index, features/card-transition, features/card-detail, architecture, glossary, bugs/2025-12-12-detail-color-flash-on-transition, decisions/2025-12-12-brand-color-in-route · #16
 - 2026-10-22 · review fix: the card form's read-only guard also refuses before the store loads; architecture rule corrected · features/add-card, architecture · review of #50

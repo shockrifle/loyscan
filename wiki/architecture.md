@@ -14,12 +14,12 @@ All paths below are under `app/src/main/java/com/bdaniel/loyscan/` unless writte
 |---|---|---|---|
 | **Persistence** | `data/local/db/` — `AppDatabase`, `entity/*Entity`, `dao/*Dao` | Room tables, queries returning `Flow` | Entities never leave `data/`. A card's store is loaded with `@Relation` (see `LoyaltyCardWithStore`). `Converters` maps lists, rules and `Instant`s to columns. |
 | **Mapping** | `data/mapper/LoyaltyCardMapper.kt` | `LoyaltyCardWithStore.toDomainModel()`, `StoreEntity.toDomainModel()`; `LoyaltyCard.toEntity()` | Extension functions: DB → domain for reads, domain → entity for writes. |
-| **Repository** | `data/repository/` — `LoyaltyCardRepository` and `StoreRepository` (interfaces) + `RoomLoyaltyCardRepository` / `RoomStoreRepository` (`@Singleton` impls) | Exposes `Flow<domain>` | ViewModels depend on the **interface**, so tests pass a fake (see Testing seams). Reads return domain models. |
+| **Repository** | `data/repository/` — `LoyaltyCardRepository`, `StoreRepository` and `UserPreferencesRepository` (interfaces) + `RoomLoyaltyCardRepository` / `RoomStoreRepository` / `DataStoreUserPreferencesRepository` (`@Singleton` impls; preferences: [[2026-10-28-datastore-for-user-preferences]]) | Exposes `Flow<domain>` | ViewModels depend on the **interface**, so tests pass a fake (see Testing seams). Reads return domain models. |
 | **Domain** | `domain/` — `LoyaltyCard`, `Store`, `BarcodeFormat`; `domain/cardnumber/` — card-number rule engine ([[2026-10-09-card-number-rule-engine]]) | Plain data classes with an `EMPTY` sentinel; pure-Kotlin logic. Barcode content, display number and barcode format are derived on read (`LoyaltyCard`), never stored ([[2026-10-12-data-model-v2]]) | No Android/Room imports — unit-tested on the JVM. |
 | **Presentation state** | root package — `ListViewModel`, `DetailViewModel`, `ScannerViewModel` (UI state only, no repository) | `@HiltViewModel`; turn repository Flows into `StateFlow` via `stateIn(viewModelScope, WhileSubscribed(5_000), initial)` | Route args read with `savedStateHandle.toRoute<Route>()`. |
 | **UI** | root package — `ListScreen`, `DetailScreen`; `ui/` — theme, icons, `hiltImageLoader()`; `ui/barcode/` — ZXing encoding and barcode drawing ([[zxing-core]]); `ui/scanner/` — camera, permission and zxing-cpp decoding for `ScannerScreen` ([[zxing-cpp]]) | Composables, extensions on `SharedTransitionScope` | Screens receive a `*Directions` object, never a `NavController`. |
 | **Navigation** | `Navigation.kt`, `MainActivity.kt` (`AppNavigation`) | `@Serializable` routes + `NavController.*Directions()` factories | See [[2025-12-09-type-safe-navigation-directions]]. |
-| **DI** | `di/DatabaseModule.kt`, `di/ImageLoaderModule.kt`, `di/RepositoryModule.kt` | `@Module @InstallIn(SingletonComponent)` providers; `@Binds` repository interface → Room impl | Implementations use `@Inject constructor`. |
+| **DI** | `di/DatabaseModule.kt`, `di/PreferencesModule.kt`, `di/ImageLoaderModule.kt`, `di/RepositoryModule.kt` | `@Module @InstallIn(SingletonComponent)` providers; `@Binds` repository interface → Room impl | Implementations use `@Inject constructor`. |
 
 Note: `LoyaltyCardRepository` also counts a store's cards (`countForStore`, a `Flow<Int>`, #53). Its writes are `recordUse(id)` (opening a card counts a use, #4), `delete(id)` and `update(card)` (#8), and
 `add(card)` (the add-card flow, #6), which maps the domain card to its row with `LoyaltyCard.toEntity()` (`data/mapper/LoyaltyCardMapper.kt`).
@@ -41,6 +41,8 @@ terms, with domain→entity mappers. Time comes from an injected `java.time.Cloc
   [[store-catalogue]]) and unscoped DAO providers (`di/DatabaseModule.kt`). One `RoomDatabase.Callback`,
   `CatalogueDatabaseCallback`, writes rows through the raw database on every open. There are no debug-only demo
   cards any more ([[seed-data]], #55); `DatabaseModuleTest` checks a new database holds only the catalogue.
+- `PreferencesModule` provides the singleton preferences `DataStore` (file `datastore/user_preferences.preferences_pb`,
+  pinned by `PreferencesModuleTest`) behind `UserPreferencesRepository` ([[2026-10-28-datastore-for-user-preferences]]).
 - `ImageLoaderModule` provides a singleton Coil `ImageLoader`. Composables can't `@Inject`, so it is reached
   through a Hilt `@EntryPoint` wrapped in the `hiltImageLoader()` composable (`ui/ImageLoader.kt:10-19`).
   See [[2025-12-12-singleton-image-loader]] and [[coil-image-loading]].
@@ -67,6 +69,7 @@ Tests run on the JVM (`./gradlew testDebugUnitTest`, see [[build-and-run]]); sha
   `RoomLoyaltyCardRepositoryTest`, `RoomStoreRepositoryTest`). Database callbacks are tested on a real database too: an on-disk one that is
   closed and reopened for the catalogue loader (`CatalogueDatabaseCallbackTest`).
 - **The wired-up app** (`MainActivity`, Hilt, navigation) runs in `@HiltAndroidTest`s on Robolectric.
+  `testing/TemporaryPreferencesModule` swaps `PreferencesModule` for a new preferences file per test, and
   `testing/InMemoryDatabaseModule` (`@TestInstallIn`) swaps `DatabaseModule` for an empty in-memory database
   that the test injects and fills (`AppNavigationTest`).
 - Fixture builders (`aLoyaltyCard()`, `aStoreEntity()`, …) give every field a default; `cardId(n)` makes distinct UUID-shaped card ids.
