@@ -19,6 +19,8 @@ import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isNotSelected
 import androidx.compose.ui.test.isSelected
@@ -382,6 +384,27 @@ class ListScreenTest {
         assertThat(top("Store 15")).isEqualTo(tappedTop)
     }
 
+    @Test
+    fun returningFromACard_onAScreenThatChangedSize_showsItsWholeTile() { // review of #61: the offset is in pixels
+        val repository = FakeLoyaltyCardRepository(cardsByUse())
+        val density = mutableStateOf<Density?>(null)
+        val showList = setListInNavigation(repository, density = density)
+        composeRule.onNode(hasScrollAction()).performScrollToIndex(12)
+        composeRule.onNodeWithText("Store 17").performClick() // a tile in the third visible row
+        composeRule.waitForIdle()
+
+        // Larger text and controls, as after a display size change: the same offset in pixels is below the grid.
+        density.value = Density(composeRule.density.density * 1.5f)
+        showList.value = true
+        composeRule.waitForIdle()
+
+        val grid = composeRule.onNode(hasScrollAction()).fetchSemanticsNode().boundsInRoot
+        // Bounds in root are clipped to the grid, so the tile's own position and size tell whether it fits.
+        val tile = composeRule.onNode(hasTestTag(CARD_TILE_TAG) and hasContentDescription("Store 17"), useUnmergedTree = true).fetchSemanticsNode()
+        assertThat(tile.positionInRoot.y).isAtLeast(grid.top)
+        assertThat(tile.positionInRoot.y + tile.size.height).isAtMost(grid.bottom)
+    }
+
     /** "Store 01" to "Store 20", most used first. */
     private fun cardsByUse() =
         (1..20).map { aLoyaltyCard(id = cardId(it), store = aStore(name = "Store %02d".format(it)), useCount = 21 - it) }
@@ -397,6 +420,7 @@ class ListScreenTest {
     private fun setListInNavigation(
         repository: FakeLoyaltyCardRepository,
         restorationTester: StateRestorationTester? = null,
+        density: MutableState<Density?> = mutableStateOf(null),
     ): MutableState<Boolean> {
         val showList = mutableStateOf(true)
         val viewModel = ListViewModel(repository, FakeUserPreferencesRepository(CardSort.MOST_USED), SavedStateHandle())
@@ -408,7 +432,9 @@ class ListScreenTest {
                 AnimatedContent(targetState = showList.value, label = "list to card") { list ->
                     if (list) {
                         savedState.SaveableStateProvider("list") {
-                            ListScreen(animatedVisibilityScope = this, directions = directions, viewModel = viewModel)
+                            CompositionLocalProvider(LocalDensity provides (density.value ?: LocalDensity.current)) {
+                                ListScreen(animatedVisibilityScope = this, directions = directions, viewModel = viewModel)
+                            }
                         }
                     } else {
                         Box(Modifier.fillMaxSize())

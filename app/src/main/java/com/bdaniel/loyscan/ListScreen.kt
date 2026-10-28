@@ -44,6 +44,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
@@ -72,14 +74,19 @@ fun SharedTransitionScope.ListScreen(
     val sort by viewModel.sort.collectAsState()
     val gridState = rememberLazyGridState()
     var openedTile by rememberSaveable(stateSaver = OpenedTile.Saver) { mutableStateOf<OpenedTile?>(null) }
+    val density = LocalDensity.current
+    val windowSize = LocalWindowInfo.current.containerSize
+    val screen = "${windowSize.width}x${windowSize.height}@${density.density}x${density.fontScale}"
 
     // Opening a card counts a use, which can re-sort the list (#61), before or during the return. Until the list is
     // back, the opened card's tile is put where it was tapped (or as near as the list allows), so the card shrinks back
     // into it rather than into a tile that moved away.
     openedTile?.let { tile ->
         val index = cards?.indexOfFirst { it.id == tile.cardId } ?: -1
+        // After a rotation or a display size change, the old offset in pixels can be below the grid: at the top, it is in view.
+        val offset = if (tile.screen == screen) tile.offset else 0
         // Safe in composition, and applied at the next measure instead of keeping the first visible tile in place.
-        if (index >= 0) SideEffect { gridState.requestScrollToItem(index, scrollOffset = -tile.offset) }
+        if (index >= 0) SideEffect { gridState.requestScrollToItem(index, scrollOffset = -offset) }
     }
     val transition = animatedVisibilityScope.transition
     val settled = transition.currentState == EnterExitState.Visible && transition.targetState == EnterExitState.Visible
@@ -135,7 +142,7 @@ fun SharedTransitionScope.ListScreen(
                         card = card,
                         onClick = {
                             val offset = gridState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == card.id }?.offset?.y
-                            openedTile = OpenedTile(card.id, offset ?: 0)
+                            openedTile = OpenedTile(card.id, offset ?: 0, screen)
                             directions.toCard(card.id, card.store.color)
                         },
                     )
@@ -145,12 +152,15 @@ fun SharedTransitionScope.ListScreen(
     }
 }
 
-/** The tile of the card the list opened, [offset] pixels below the top of the grid when it was tapped. */
-private data class OpenedTile(val cardId: String, val offset: Int) {
+/**
+ * The tile of the card the list opened, [offset] pixels below the top of the grid when it was tapped on [screen] (its
+ * window size, density and font scale).
+ */
+private data class OpenedTile(val cardId: String, val offset: Int, val screen: String) {
     companion object {
         val Saver = listSaver<OpenedTile?, Any>(
-            save = { tile -> if (tile == null) emptyList() else listOf(tile.cardId, tile.offset) },
-            restore = { saved -> OpenedTile(saved[0] as String, saved[1] as Int) },
+            save = { tile -> if (tile == null) emptyList() else listOf(tile.cardId, tile.offset, tile.screen) },
+            restore = { saved -> OpenedTile(saved[0] as String, saved[1] as Int, saved[2] as String) },
         )
     }
 }
