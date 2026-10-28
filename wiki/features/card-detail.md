@@ -19,7 +19,9 @@ UUID string.
 - The logo uses `hiltImageLoader()` (SVG-capable, logs failures) — [[coil-image-loading]].
 - The brand colour is parsed with `toBrandColorOrNull()`. An empty or malformed colour falls back to `surfaceVariant`
   instead of crashing ([[empty-brand-color-crash]], resolved).
-- Header text color: white if the brand color's luminance is < 0.5, else black.
+- Header text color: black or white, whichever contrasts more with the brand color (`contrastingTextColor()`, the
+  tile's rule, [[card-list]]). Until 2026-10-28 it was white below a luminance of 0.5, which put white on mid tones
+  where black reads better.
 - The number shown is `LoyaltyCard.displayNumber`: the number formatted by the store's card-number rule (for a
   scanned card, the core the rule recovers from the scan), or the raw number when there is no rule or no match
   ([[2026-10-12-data-model-v2]]). A GS1 scan (`BarcodeFormat.isGs1`: the `GS1_` formats, DataBar) with no matching rule is shown as printed under

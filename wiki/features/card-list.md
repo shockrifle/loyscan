@@ -27,9 +27,14 @@ tiles, one per row in `loyalty_cards`, live-updating from Room. Sort and search:
   in the saved state: it survives process death, not a restart. Notes can't be edited yet (#9), but a stored
   note is searched.
 - Grid items are keyed by card id, so a re-sort moves tiles rather than rebinding them.
-- Tile (`CardItem`): a `Card` containing a 1.5:1 box filled with the brand color (or `surfaceVariant` if the
-  color string is empty or malformed, via `toBrandColorOrNull()`). Inside: the store logo via Coil at 60% size, or the store name in black/white
-  (chosen by luminance) when the logo is `null` or blank.
+- Tile (`CardItem`): a `Card` containing a box in bank-card (ID-1, 85.60 × 53.98 mm) proportions filled with the brand
+  color (or `surfaceVariant` if the color string is empty or malformed, via `toBrandColorOrNull()`). Inside: the store's
+  initials, large (`Store.initials`: the first letter or digit of the name's first two words, upper case;
+  `StoreTest`), read out by TalkBack as the store name; or the store logo via Coil at 60% size when the store has one
+  (none does today). At the bottom left, one line: the card's label, or the store name when there is no label, so two
+  cards of one store can be told apart. Text is black or white, whichever has the higher WCAG contrast ratio with the
+  box (`contrastingTextColor()`, `ui/BrandColor.kt`; `BrandColorTest`). Tests: `ListScreenTest.aTile_…`,
+  `aTileWithoutALabel_showsTheStoreName`.
 - The colored box is the shared element `card/{id}` — [[card-transition]].
 - Tap → `directions.toCard(card.id, card.store.color)` → [[card-detail]].
 - The Settings icon in the top bar is a no-op (`ListScreen.kt:71`, `/* TODO */`).

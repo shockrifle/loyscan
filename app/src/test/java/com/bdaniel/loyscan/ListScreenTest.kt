@@ -69,6 +69,35 @@ class ListScreenTest {
     }
 
     @Test
+    fun aTile_showsTheStoresInitials_andTheCardsLabel() {
+        setScreen(aLoyaltyCard(store = aStore(name = "Shell ClubSmart"), label = "Work car"))
+
+        composeRule.onNodeWithText("SC").assertIsDisplayed()
+        composeRule.onNodeWithText("Work car").assertIsDisplayed()
+        composeRule.onNodeWithText("Shell ClubSmart").assertDoesNotExist()
+        // The initials are read out as the store's name.
+        composeRule.onNodeWithContentDescription("Shell ClubSmart", useUnmergedTree = true).assertIsDisplayed()
+    }
+
+    @Test
+    fun aTileWithoutALabel_showsTheStoreName() {
+        setScreen(aLoyaltyCard(store = aStore(name = "Shell ClubSmart"), label = null))
+
+        composeRule.onNodeWithText("SC").assertIsDisplayed()
+        composeRule.onNodeWithText("Shell ClubSmart").assertIsDisplayed()
+    }
+
+    @Test
+    fun aTile_hasBankCardProportions() {
+        setScreen(aLoyaltyCard())
+
+        val tile = composeRule.onNodeWithTag(CARD_TILE_TAG, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+
+        // ID-1 cards are 85.60 × 53.98 mm; a pixel of rounding either way.
+        assertThat(tile.width / tile.height).isWithin(0.02f).of(85.60f / 53.98f)
+    }
+
+    @Test
     fun emptyOrMalformedStoreColor_doesNotCrash() { // #14
         setScreen(aLoyaltyCard(id = cardId(1), store = aStore(name = "No Colour", color = "")), aLoyaltyCard(id = cardId(2), store = aStore(name = "Bad Colour", color = "not a colour")))
 

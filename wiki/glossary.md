@@ -24,7 +24,8 @@ used for `Store.color`.
 
 **Brand color** — `Store.color`, a hex string like `#FF0000`, parsed at render time with `String.toBrandColorOrNull()` (`ui/BrandColor.kt`); empty or malformed →
 `null`, and the screens fall back to `surfaceVariant`.
-Drives card tile and detail header backgrounds; text on it is black/white by luminance (< 0.5 → white).
+Drives card tile and detail header backgrounds; text on it is black or white, whichever has the higher WCAG contrast
+ratio (`contrastingTextColor()`; black above a luminance of about 0.18).
 Also travels in the `Detail` route — see [[2025-12-12-brand-color-in-route]].
 
 **Brand logo** — `Store.logo`, a nullable image URL (no shipped store has one today). `null` or

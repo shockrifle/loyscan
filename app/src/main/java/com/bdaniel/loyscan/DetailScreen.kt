@@ -43,7 +43,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
@@ -52,7 +51,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import androidx.core.graphics.ColorUtils
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.bdaniel.loyscan.ui.FullBrightness
@@ -62,6 +60,7 @@ import com.bdaniel.loyscan.ui.barcode.BarcodeEncoder
 import com.bdaniel.loyscan.ui.barcode.EncodedBarcode
 import com.bdaniel.loyscan.ui.barcode.barcodeSize
 import com.bdaniel.loyscan.ui.hiltImageLoader
+import com.bdaniel.loyscan.ui.contrastingTextColor
 import com.bdaniel.loyscan.ui.toBrandColorOrNull
 import com.bdaniel.loyscan.ui.theme.icons.Icons
 import kotlinx.coroutines.launch
@@ -146,7 +145,7 @@ fun SharedTransitionScope.DetailScreen(
                         Text(
                             text = card.store.name,
                             style = MaterialTheme.typography.headlineLarge,
-                            color = if (ColorUtils.calculateLuminance(brandColor.toArgb()) < 0.5) Color.White else Color.Black,
+                            color = brandColor.contrastingTextColor(),
                         )
                     }
                 }

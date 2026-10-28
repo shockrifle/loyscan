@@ -7,6 +7,7 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -62,21 +63,22 @@ class AppNavigationTest {
 
     @Test
     fun tappingACard_opensItsDetail_andBackReturnsToTheList() {
-        waitForText("Test Store")
-        composeRule.onNodeWithText("Test Store").performClick()
-
+        // A tile shows the card's label; the number is only on the detail screen.
         waitForText("Gold card")
+        composeRule.onNodeWithText("Gold card").performClick()
+
+        waitForText("0042")
         composeRule.onNodeWithText("0042").assertIsDisplayed()
 
         composeRule.onNodeWithContentDescription("Back").performClick()
         composeRule.onNodeWithText("My Cards").assertIsDisplayed()
-        composeRule.onNodeWithText("Gold card").assertDoesNotExist()
+        composeRule.onNodeWithText("0042").assertDoesNotExist()
     }
 
     @Test
     fun detailsFullBrightness_isRestoredOnBack() {
-        waitForText("Test Store")
-        composeRule.onNodeWithText("Test Store").performClick()
+        waitForText("Gold card")
+        composeRule.onNodeWithText("Gold card").performClick()
         // The destination is resumed, and brightens, only once the enter transition has finished.
         composeRule.waitUntil(WAIT_TIMEOUT_MS) { brightness == BRIGHTNESS_OVERRIDE_FULL }
 
@@ -116,7 +118,8 @@ class AppNavigationTest {
         composeRule.onNodeWithText("777").assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Back").performClick()
         waitForText("My Cards")
-        assertThat(composeRule.onAllNodes(hasText("Test Store")).fetchSemanticsNodes()).hasSize(2)
+        // Both tiles: their initials are read out as the store's name.
+        assertThat(composeRule.onAllNodesWithContentDescription("Test Store").fetchSemanticsNodes()).hasSize(2)
     }
 
     @Test
@@ -143,9 +146,9 @@ class AppNavigationTest {
 
     @Test
     fun editingACardsLabel_savesIt_showsTheCard_andBackReturnsToTheList() { // #8
-        waitForText("Test Store")
-        composeRule.onNodeWithText("Test Store").performClick()
         waitForText("Gold card")
+        composeRule.onNodeWithText("Gold card").performClick()
+        waitForText("0042")
 
         composeRule.onNodeWithContentDescription("Edit").performClick()
         waitForText("Edit card")
@@ -162,15 +165,15 @@ class AppNavigationTest {
 
     @Test
     fun deletingACard_afterConfirming_returnsToTheListWithoutIt() { // #8
-        waitForText("Test Store")
-        composeRule.onNodeWithText("Test Store").performClick()
         waitForText("Gold card")
+        composeRule.onNodeWithText("Gold card").performClick()
+        waitForText("0042")
 
         composeRule.onNodeWithContentDescription("Delete").performClick()
         composeRule.onNodeWithText("Delete").performClick()
 
         waitForText("My Cards")
-        composeRule.waitUntil(WAIT_TIMEOUT_MS) { composeRule.onAllNodes(hasText("Test Store")).fetchSemanticsNodes().isEmpty() }
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) { composeRule.onAllNodes(hasText("Gold card")).fetchSemanticsNodes().isEmpty() }
         assertThat(runBlocking { db.loyaltyCardDao().getAllWithStore().first() }).isEmpty()
     }
 
@@ -212,9 +215,9 @@ class AppNavigationTest {
         waitForText("Choose store")
         composeRule.onNodeWithContentDescription("Back").performClick()
 
-        waitForText("My Shop")
-        composeRule.onNodeWithText("My Shop").performClick()
         waitForText("Gym card")
+        composeRule.onNodeWithText("Gym card").performClick()
+        waitForText("Shown as ${BarcodeFormat.CODE_128.displayName}")
         composeRule.onNodeWithText("Shown as ${BarcodeFormat.CODE_128.displayName}").assertIsDisplayed()
     }
 

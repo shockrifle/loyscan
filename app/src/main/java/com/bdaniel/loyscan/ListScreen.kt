@@ -38,17 +38,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.core.graphics.ColorUtils
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.bdaniel.loyscan.domain.CardSort
 import com.bdaniel.loyscan.domain.LoyaltyCard
 import com.bdaniel.loyscan.ui.theme.icons.Icons
+import com.bdaniel.loyscan.ui.contrastingTextColor
 import com.bdaniel.loyscan.ui.toBrandColorOrNull
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
@@ -142,6 +143,7 @@ private fun SortMenu(sort: CardSort, onSortChange: (CardSort) -> Unit) {
 }
 
 const val CARD_SEARCH_TAG = "cardSearch"
+const val CARD_TILE_TAG = "cardTile"
 
 /** The shared-element key that pairs a card's tile with its detail screen ([DetailScreen]). */
 fun cardTransitionKey(cardId: String) = "card/$cardId"
@@ -155,6 +157,7 @@ fun SharedTransitionScope.CardItem(
     modifier: Modifier = Modifier
 ) {
     val cardColor = card.store.color.toBrandColorOrNull() ?: MaterialTheme.colorScheme.surfaceVariant
+    val textColor = cardColor.contrastingTextColor()
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -164,7 +167,8 @@ fun SharedTransitionScope.CardItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(cardColor)
-                .aspectRatio(1.5f)
+                .aspectRatio(ID1_CARD_ASPECT_RATIO)
+                .testTag(CARD_TILE_TAG)
                 .sharedElement(
                     sharedContentState = rememberSharedContentState(key = cardTransitionKey(card.id)),
                     animatedVisibilityScope = animatedVisibilityScope
@@ -180,11 +184,26 @@ fun SharedTransitionScope.CardItem(
                 )
             } else {
                 Text(
-                    text = card.store.name,
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = if (ColorUtils.calculateLuminance(cardColor.toArgb()) < 0.5) Color.White else Color.Black
+                    text = card.store.initials,
+                    // Read out as the store's name, not letter by letter.
+                    modifier = Modifier.semantics { contentDescription = card.store.name },
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = textColor,
                 )
             }
+            Text(
+                text = card.label ?: card.store.name,
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(8.dp),
+                style = MaterialTheme.typography.bodyMedium,
+                color = textColor,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
     }
 }
+
+/** Width to height of an ID-1 (bank) card, 85.60 × 53.98 mm. */
+private const val ID1_CARD_ASPECT_RATIO = 85.60f / 53.98f

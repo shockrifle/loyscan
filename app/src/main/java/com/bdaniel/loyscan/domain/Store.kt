@@ -25,7 +25,16 @@ data class Store(
     val isCustom: Boolean,
     val updatedAt: Instant,
 ) {
+    /** What an initials tile shows: the first letter or digit of the name's first two words, in upper case. */
+    val initials: String
+        get() = name.split(WHITESPACE)
+            .mapNotNull { word -> word.firstOrNull(Char::isLetterOrDigit) }
+            .take(2)
+            .joinToString("") { it.uppercase() }
+
     companion object {
+        private val WHITESPACE = Regex("\\s+")
+
         val EMPTY = Store(
             id = "",
             name = "",
