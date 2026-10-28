@@ -38,5 +38,6 @@ private val BY_NAME = compareBy<Store>({ it.name.searchKey() }, { it.name })
 
 private val COMBINING_MARKS = Regex("\\p{Mn}+")
 
-private fun String.searchKey(): String =
+/** The text as searched and sorted: trimmed, lower case, without accents. Cards are searched the same way. */
+internal fun String.searchKey(): String =
     COMBINING_MARKS.replace(Normalizer.normalize(trim(), Normalizer.Form.NFD), "").lowercase(Locale.ROOT)
