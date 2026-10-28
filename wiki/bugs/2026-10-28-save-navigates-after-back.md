@@ -32,4 +32,4 @@ There were two causes:
   it calls must check that their screen is still the current one.
 - A write the user has asked for must not run only in `viewModelScope`.
 - Both patterns are still in `CustomStoreScreen` (create → scanner, save or delete → back) and `DetailScreen`
-  (delete → back).
+  (delete → back): [#65](https://github.com/shockrifle/loyscan/issues/65).
