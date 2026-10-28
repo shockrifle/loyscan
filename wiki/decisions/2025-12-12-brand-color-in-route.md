@@ -13,10 +13,11 @@ Room emits. During the list → detail shared-element transition, the first fram
 - Pass what the first frame needs as a navigation argument.
 
 ## Decision
-`Detail(val cardId: Int, val color: String)` (`app/src/main/java/com/bdaniel/loyscan/Navigation.kt:24-25`).
-`ListDirections.toCard(id, color)` passes `card.brand.color`; `AppNavigation` extracts it with `toRoute<Detail>()`
-and hands it to `DetailScreen(color, …)` (`MainActivity.kt:60-68`), which uses it for the top bar, header
-background and header text contrast.
+`Detail(val cardId: String, val color: String, …)` (`app/src/main/java/com/bdaniel/loyscan/Navigation.kt:29-30`).
+`ListDirections.toCard(id, color)` passes `card.store.color`; `AppNavigation` extracts it with `toRoute<Detail>()`
+and hands it to `DetailScreen(cardId, color, …)` (`MainActivity.kt:60-68`), which uses it for the top bar, header
+background and header text contrast. (Corrected 2026-10-28: this paragraph still named the 2025-12-12 `Int` id,
+`card.brand` and `Navigation.kt:24-25`.)
 
 ## Why
 Inferred from the diff: the transition's destination must look right on frame one, and the route is the only

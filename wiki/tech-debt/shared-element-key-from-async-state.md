@@ -10,9 +10,9 @@ the suspicion on Robolectric, not on a device: with the old key and a card not l
 pair with the tile and filled the screen on its first frame (411dp wide, not the tile's 80dp).
 
 ## What
-The detail `Scaffold`'s shared key is `"card/${card.id}"`, where `card` comes from `DetailViewModel.card`, which is
-`LoyaltyCard.EMPTY` (id `""` since #1, `0` before) until Room emits. On the first composed frame of the
-destination, the key is likely `card/`, which doesn't match the list tile's `card/<uuid>`. The correct id is already available synchronously in the
+Before #16, the detail `Scaffold`'s shared key was `"card/${card.id}"`, where `card` came from `DetailViewModel.card`, which is
+`LoyaltyCard.EMPTY` (id `""` since #1, `0` before) until Room emits. On the first composed frames of the
+destination, the key was `card/`, which doesn't match the list tile's `card/<uuid>`. The correct id was already available synchronously in the
 route (`Detail.cardId`).
 
 ## Why it exists
@@ -20,10 +20,10 @@ route (`Detail.cardId`).
 ([[2025-12-12-brand-color-in-route]]) but left the key on the ViewModel.
 
 ## Risk / impact
-The transition may start unmatched and only "snap" into a shared-bounds animation once data arrives, or
-mis-animate on fast taps. The size of the effect depends on how quickly Room emits. Observe on a slow device or
-emulator before treating this as a bug.
+Before #16, the transition could start unmatched and only "snap" into a shared-bounds animation once data
+arrived, or mis-animate on fast taps. The size of the effect depended on how quickly Room emits; it was never
+observed on a device.
 
 ## How to pay it down
-Pass `cardId` (from `toRoute<Detail>()`, as is already done for `color` in `MainActivity.kt:61`) into
+(Done in #16, see Resolved above.) Pass `cardId` (from `toRoute<Detail>()`, as is already done for `color` in `MainActivity.kt:61`) into
 `DetailScreen` and build the key from it. If it fixes a visible glitch, write a `bugs/` page.

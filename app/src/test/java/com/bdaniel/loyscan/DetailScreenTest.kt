@@ -7,8 +7,7 @@ import android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
 import androidx.activity.ComponentActivity
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -333,11 +332,7 @@ class DetailScreenTest {
                             viewModel = viewModel,
                         )
                     } else {
-                        Box(
-                            Modifier
-                                .size(TILE_SIZE)
-                                .sharedElement(rememberSharedContentState(cardTransitionKey(card.id)), this)
-                        )
+                        CardItem(animatedVisibilityScope = this, card = card, onClick = {}, modifier = Modifier.width(TILE_SIZE))
                     }
                 }
             }
@@ -347,7 +342,7 @@ class DetailScreenTest {
         composeRule.waitForIdle()
         composeRule.mainClock.advanceTimeBy(100)
 
-        // A matched shared element starts at the tile's bounds; an unmatched one would fill the screen at once.
+        // A matched shared element starts at the list tile's bounds; an unmatched one would fill the screen at once.
         assertThat(viewModel.card.value).isEqualTo(LoyaltyCard.EMPTY)
         assertThat(widths.first()).isEqualTo(with(composeRule.density) { TILE_SIZE.roundToPx() })
     }
