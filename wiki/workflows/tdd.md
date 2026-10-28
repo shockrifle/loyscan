@@ -64,7 +64,7 @@ Shared helpers are in `testing/`:
   never real stores.
 - **Fakes**, e.g. `FakeLoyaltyCardRepository` and `FakeStoreRepository` (each a `MutableStateFlow` you set): a fake implements the real
   interface *and its edge cases*. For example, `getByIdWithStore` emits `null` for a missing id, as Room does. A failure the code must
-  survive is a switch on the fake: `FakeLoyaltyCardRepository.addFailure` makes `add` throw.
+  survive is a switch on the fake: `FakeLoyaltyCardRepository.addFailure` makes `add` throw, and `loadGate` holds back `getAllWithStore` until it completes.
   When you change an interface's contract, change the fake in the same commit. No mocking library.
 - **`MainDispatcherRule`** for anything that uses `viewModelScope`. A timer in a ViewModel takes its duration as a
   constructor parameter (`ScannerViewModel(hintDelay)`): `advanceTimeBy` tests it in virtual time, and a screen test

@@ -36,13 +36,14 @@ class ListViewModel @Inject constructor(
         initialValue = CardSort.NAME
     )
 
-    val cards: StateFlow<List<LoyaltyCard>> =
+    /** `null` until the cards and the sort have loaded, so an empty result is told apart from not knowing yet. */
+    val cards: StateFlow<List<LoyaltyCard>?> =
         combine(loyaltyCardRepository.getAllWithStore(), userPreferencesRepository.cardSort, query) { cards, sort, query ->
             cards.sortedBy(sort).search(query)
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = emptyList()
+            initialValue = null
         )
 
     fun onQueryChange(query: String) {

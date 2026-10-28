@@ -10,6 +10,7 @@ import com.bdaniel.loyscan.testing.aLoyaltyCard
 import com.bdaniel.loyscan.testing.aStore
 import com.bdaniel.loyscan.testing.cardId
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
@@ -32,9 +33,12 @@ class ListViewModelTest {
 
     @Test
     fun cards_followTheRepository() = runTest {
+        repository.loadGate = CompletableDeferred()
         val viewModel = viewModel()
 
         viewModel.cards.test {
+            assertThat(awaitItem()).isNull() // not loaded yet
+            repository.loadGate!!.complete(Unit)
             assertThat(awaitItem()).isEmpty()
 
             val card = aLoyaltyCard()

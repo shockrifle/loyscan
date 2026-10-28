@@ -11,8 +11,9 @@ tiles, one per row in `loyalty_cards`, live-updating from Room. Sort and search:
 ## Behavior
 
 - Data: `ListViewModel.cards` ← `LoyaltyCardRepository.getAllWithStore()` (each card with its store), sorted by the
-  stored choice, then narrowed by the query (`ListViewModel.kt:39-46`). Initial value `emptyList()`: the grid is
-  briefly empty on cold start. The SQL has no `ORDER BY`; ordering is done in Kotlin (`CardSort`), so it ignores
+  stored choice, then narrowed by the query (`ListViewModel.kt:39-47`). Initial value `null` (not loaded): the grid is
+  briefly empty on cold start, and "No card matches" waits for the load, since a query restored after process death
+  is there at once (`ListScreenTest.aRestoredSearch_doesNotSayNothingMatches_beforeTheCardsHaveLoaded`). The SQL has no `ORDER BY`; ordering is done in Kotlin (`CardSort`), so it ignores
   case and accents the way search does.
 - **Sort** (the Sort icon's menu, current choice marked): *Name* (store name, then label, an unlabelled card
   first), *Most used* (`useCount`), *Recently used* (`lastUsedAt`, never-used cards last). Ties go by name, then

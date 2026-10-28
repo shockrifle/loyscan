@@ -25,6 +25,7 @@ import com.bdaniel.loyscan.testing.aLoyaltyCard
 import com.bdaniel.loyscan.testing.aStore
 import com.bdaniel.loyscan.testing.cardId
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.CompletableDeferred
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -115,6 +116,25 @@ class ListScreenTest {
         composeRule.onNodeWithTag(CARD_SEARCH_TAG).performTextInput(" xyz ")
 
         composeRule.onNodeWithText("No card matches “xyz”").assertIsDisplayed()
+    }
+
+    @Test
+    fun aRestoredSearch_doesNotSayNothingMatches_beforeTheCardsHaveLoaded() {
+        val repository = FakeLoyaltyCardRepository(listOf(aLoyaltyCard(store = aStore(name = "Berry"))))
+        repository.loadGate = CompletableDeferred()
+        // The query comes back with the saved state at once; the cards come from Room later.
+        val viewModel = ListViewModel(repository, FakeUserPreferencesRepository(), SavedStateHandle(mapOf("query" to "berry")))
+        composeRule.setContent {
+            SharedTransitionLayout {
+                AnimatedVisibility(visible = true) {
+                    ListScreen(animatedVisibilityScope = this, directions = ListDirections({ _, _ -> }, {}, {}), viewModel = viewModel)
+                }
+            }
+        }
+
+        composeRule.onNodeWithText("No card matches “berry”").assertDoesNotExist()
+        repository.loadGate!!.complete(Unit)
+        composeRule.onNodeWithText("Berry").assertIsDisplayed()
     }
 
     @Test

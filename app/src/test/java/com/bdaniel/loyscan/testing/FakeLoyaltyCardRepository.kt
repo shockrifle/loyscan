@@ -5,6 +5,8 @@ import com.bdaniel.loyscan.domain.LoyaltyCard
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import java.time.Instant
 
@@ -28,11 +30,17 @@ class FakeLoyaltyCardRepository(
     /** When set, [delete] suspends until it completes, as a Room delete in progress does. */
     var deleteGate: CompletableDeferred<Unit>? = null
 
+    /** When set, [getAllWithStore] emits nothing until it completes, as Room before its first query returns. */
+    var loadGate: CompletableDeferred<Unit>? = null
+
     /** How many times [delete] was called. */
     var deleteCalls = 0
         private set
 
-    override fun getAllWithStore(): Flow<List<LoyaltyCard>> = cards
+    override fun getAllWithStore(): Flow<List<LoyaltyCard>> = flow {
+        loadGate?.await()
+        emitAll(cards)
+    }
 
     override fun getByIdWithStore(id: String): Flow<LoyaltyCard?> =
         cards.map { all -> all.firstOrNull { it.id == id } }

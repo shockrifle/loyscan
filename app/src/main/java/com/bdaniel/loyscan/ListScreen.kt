@@ -89,7 +89,7 @@ fun SharedTransitionScope.ListScreen(
                 placeholder = { Text("Search cards") },
                 singleLine = true,
             )
-            if (cards.isEmpty() && query.isNotBlank()) {
+            if (cards?.isEmpty() == true && query.isNotBlank()) {
                 Text("No card matches “${query.trim()}”", modifier = Modifier.padding(16.dp))
             }
             LazyVerticalGrid(
@@ -99,7 +99,7 @@ fun SharedTransitionScope.ListScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(cards, key = { it.id }) { card ->
+                items(cards.orEmpty(), key = { it.id }) { card ->
                     CardItem(
                         animatedVisibilityScope = animatedVisibilityScope,
                         card = card,
