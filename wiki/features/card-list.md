@@ -34,7 +34,9 @@ tiles, one per row in `loyalty_cards`, live-updating from Room. Sort and search:
   next card added (`ListViewModelTest.deletingTheLastCard_clearsTheQuery`,
   `ListScreenTest.deletingTheLastCard_duringASearch_showsTheEmptyState`). Tests: `ListScreenTest.noCards_…`, `theEmptyState_waitsForTheCardsToLoad`,
   `aSearchThatMatchesNothing_isNotTheEmptyState`.
-- Grid items are keyed by card id, so a re-sort moves tiles rather than rebinding them.
+- Grid items are keyed by card id, so a re-sort moves tiles rather than rebinding them. A use counted on opening a
+  card can re-sort the list; on the way back, the opened card's tile is put back where it was tapped
+  ([[card-transition]] → Returning to a list the use re-sorted, #61).
 - Tile (`CardItem`): a `Card` containing a box in bank-card (ID-1, 85.60 × 53.98 mm) proportions filled with the brand
   color (or `surfaceVariant` if the color string is empty or malformed, via `toBrandColorOrNull()`). Inside: the store's
   initials, large (`Store.initials`: the first letter or digit of the name's first two words, upper case;

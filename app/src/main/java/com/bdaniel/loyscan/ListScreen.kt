@@ -1,6 +1,7 @@
 package com.bdaniel.loyscan
 
 import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.background
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
@@ -31,9 +33,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -65,6 +70,21 @@ fun SharedTransitionScope.ListScreen(
     val cards by viewModel.cards.collectAsState()
     val query by viewModel.query.collectAsState()
     val sort by viewModel.sort.collectAsState()
+    val gridState = rememberLazyGridState()
+    var openedTile by rememberSaveable(stateSaver = OpenedTile.Saver) { mutableStateOf<OpenedTile?>(null) }
+
+    // Opening a card counts a use, which can re-sort the list (#61), before or during the return. Until the list is
+    // back, the opened card's tile is put where it was tapped (or as near as the list allows), so the card shrinks back
+    // into it rather than into a tile that moved away.
+    openedTile?.let { tile ->
+        val index = cards?.indexOfFirst { it.id == tile.cardId } ?: -1
+        // Safe in composition, and applied at the next measure instead of keeping the first visible tile in place.
+        if (index >= 0) SideEffect { gridState.requestScrollToItem(index, scrollOffset = -tile.offset) }
+    }
+    val transition = animatedVisibilityScope.transition
+    val settled = transition.currentState == EnterExitState.Visible && transition.targetState == EnterExitState.Visible
+    // Set on a tap while settled, so this runs only once the list has left and come back.
+    LaunchedEffect(settled) { if (settled) openedTile = null }
 
     Scaffold(
         topBar = {
@@ -103,6 +123,7 @@ fun SharedTransitionScope.ListScreen(
             }
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
+                state = gridState,
                 // Room below the last row for the floating "Add card" button (56dp + its 16dp margin, and a gap).
                 contentPadding = PaddingValues(bottom = 88.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -112,11 +133,25 @@ fun SharedTransitionScope.ListScreen(
                     CardItem(
                         animatedVisibilityScope = animatedVisibilityScope,
                         card = card,
-                        onClick = { directions.toCard(card.id, card.store.color) },
+                        onClick = {
+                            val offset = gridState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == card.id }?.offset?.y
+                            openedTile = OpenedTile(card.id, offset ?: 0)
+                            directions.toCard(card.id, card.store.color)
+                        },
                     )
                 }
             }
         }
+    }
+}
+
+/** The tile of the card the list opened, [offset] pixels below the top of the grid when it was tapped. */
+private data class OpenedTile(val cardId: String, val offset: Int) {
+    companion object {
+        val Saver = listSaver<OpenedTile?, Any>(
+            save = { tile -> if (tile == null) emptyList() else listOf(tile.cardId, tile.offset) },
+            restore = { saved -> OpenedTile(saved[0] as String, saved[1] as Int) },
+        )
     }
 }
 

@@ -46,6 +46,25 @@ Both `ListScreen` and `DetailScreen` pass `containerColor = Color.Transparent` t
 - **Rule for new screens:** keep `Scaffold(containerColor = Color.Transparent)`. Don't add per-screen opaque
   backgrounds.
 
+## Returning to a list the use re-sorted (#61)
+
+Opening a card counts a use ([[card-detail]]), so under *Most used* or *Recently used* its tile can move while the
+card is open, often off screen: the grid keeps its first visible tile in place across a reorder, and the detail
+screen then shrank into nothing. The reorder can also arrive *during* the return: after 5 s on the card, `ListViewModel`'s
+`WhileSubscribed(5_000)` has stopped reading Room, so the list first shows the old order and re-sorts a few frames later.
+
+`ListScreen` therefore remembers the tapped tile (`OpenedTile`: card id and its offset from the top of the grid, saved
+state, so it survives process death too) and, on every new order until the list's return transition settles, calls
+`LazyGridState.requestScrollToItem(newIndex, -offset)` in a `SideEffect`, which applies before that frame's measure
+(`app/src/main/java/com/bdaniel/loyscan/ListScreen.kt:72-87`). The tile comes back where it was tapped, or as near as
+the list allows (at the top when it moved there), and the card shrinks into it. After that, reorders scroll as usual.
+Tests: `ListScreenTest.returningFromACard_…` (moved up, new order during the return, moved to the top, after process
+death) and `onceBackOnTheList_aLaterReorder_doesNotHoldTheOpenedTileInPlace`; the list there sits in an
+`AnimatedContent` with a `SaveableStateHolder`, as in the `NavHost`.
+
+Not chosen (2026-10-28): freezing the order until the user is back shows a stale order and then
+moves tiles under the user; skipping the shared element when the tile is off screen still loses the tile from view.
+
 ## Caveats
 
 None open. The detail side's key depended on async-loaded data until #16

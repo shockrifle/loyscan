@@ -1,20 +1,30 @@
 package com.bdaniel.loyscan
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.lifecycle.SavedStateHandle
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isNotSelected
 import androidx.compose.ui.test.isSelected
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -264,6 +274,152 @@ class ListScreenTest {
         composeRule.onNodeWithText("Most used").assertDoesNotExist() // the menu closed
         assertThat(left("Berry")).isLessThan(left("Apple"))
     }
+
+    @Test
+    fun returningFromACard_whoseUseMovedItUp_findsItsTileWhereItWasTapped() { // #61
+        val repository = FakeLoyaltyCardRepository(cardsByUse())
+        val showList = setListInNavigation(repository)
+        composeRule.onNode(hasScrollAction()).performScrollToIndex(12)
+        val tappedTop = top("Store 15")
+
+        composeRule.onNodeWithText("Store 15").performClick()
+        repository.setUseCount("Store 15", 12) // the use moves it from 15th to 10th, three rows up
+        composeRule.waitForIdle()
+        showList.value = true
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithText("Store 15").assertIsDisplayed()
+        assertThat(top("Store 15")).isEqualTo(tappedTop)
+    }
+
+    @Test
+    fun returningFromACard_whoseNewPlaceArrivesDuringTheReturn_findsItsTileWhereItWasTapped() { // #61
+        // After a few seconds on the card, the list's cards are re-read only when it is shown again.
+        val repository = FakeLoyaltyCardRepository(cardsByUse())
+        val showList = setListInNavigation(repository)
+        composeRule.onNode(hasScrollAction()).performScrollToIndex(12)
+        val tappedTop = top("Store 15")
+        composeRule.onNodeWithText("Store 15").performClick()
+        composeRule.waitForIdle()
+
+        composeRule.mainClock.autoAdvance = false
+        showList.value = true
+        composeRule.mainClock.advanceTimeByFrame()
+        composeRule.mainClock.advanceTimeByFrame()
+        repository.setUseCount("Store 15", 12)
+        composeRule.mainClock.autoAdvance = true
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithText("Store 15").assertIsDisplayed()
+        assertThat(top("Store 15")).isEqualTo(tappedTop)
+    }
+
+    @Test
+    fun returningFromACard_thatMovedToTheTop_showsItsTile() { // #61
+        val repository = FakeLoyaltyCardRepository(cardsByUse())
+        val showList = setListInNavigation(repository)
+        composeRule.onNode(hasScrollAction()).performScrollToIndex(12)
+
+        composeRule.onNodeWithText("Store 15").performClick()
+        repository.setUseCount("Store 15", 100)
+        composeRule.waitForIdle()
+        showList.value = true
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithText("Store 15").assertIsDisplayed()
+    }
+
+    @Test
+    fun onceBackOnTheList_aLaterReorder_doesNotHoldTheOpenedTileInPlace() { // #61
+        val repository = FakeLoyaltyCardRepository(cardsByUse())
+        val showList = setListInNavigation(repository)
+        composeRule.onNode(hasScrollAction()).performScrollToIndex(12)
+        composeRule.onNodeWithText("Store 15").performClick()
+        composeRule.waitForIdle()
+        showList.value = true
+        composeRule.waitForIdle()
+
+        repository.setUseCount("Store 15", 100)
+        composeRule.waitForIdle()
+
+        // The list keeps its scroll position, as for any reorder, so the tile that moved to the top is out of view.
+        composeRule.onNodeWithText("Store 15").assertIsNotDisplayed()
+    }
+
+    @Test
+    fun theList_survivesProcessDeath_withNoCardOpened() { // #61: the opened tile is saved state
+        val restorationTester = StateRestorationTester(composeRule)
+        val viewModel = ListViewModel(FakeLoyaltyCardRepository(cardsByUse()), FakeUserPreferencesRepository(), SavedStateHandle())
+        restorationTester.setContent {
+            SharedTransitionLayout {
+                AnimatedVisibility(visible = true) {
+                    ListScreen(animatedVisibilityScope = this, directions = ListDirections({ _, _ -> }, {}, {}), viewModel = viewModel)
+                }
+            }
+        }
+
+        restorationTester.emulateSavedInstanceStateRestore()
+
+        composeRule.onNodeWithText("Store 01").assertIsDisplayed()
+    }
+
+    @Test
+    fun returningFromACard_afterProcessDeath_findsItsTileWhereItWasTapped() { // #61
+        val restorationTester = StateRestorationTester(composeRule)
+        val repository = FakeLoyaltyCardRepository(cardsByUse())
+        val showList = setListInNavigation(repository, restorationTester)
+        composeRule.onNode(hasScrollAction()).performScrollToIndex(12)
+        val tappedTop = top("Store 15")
+        composeRule.onNodeWithText("Store 15").performClick()
+        composeRule.waitForIdle()
+
+        restorationTester.emulateSavedInstanceStateRestore()
+        repository.setUseCount("Store 15", 12)
+        showList.value = true
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithText("Store 15").assertIsDisplayed()
+        assertThat(top("Store 15")).isEqualTo(tappedTop)
+    }
+
+    /** "Store 01" to "Store 20", most used first. */
+    private fun cardsByUse() =
+        (1..20).map { aLoyaltyCard(id = cardId(it), store = aStore(name = "Store %02d".format(it)), useCount = 21 - it) }
+
+    private fun FakeLoyaltyCardRepository.setUseCount(storeName: String, useCount: Int) {
+        cards.value = cards.value.map { if (it.store.name == storeName) it.copy(useCount = useCount) else it }
+    }
+
+    /**
+     * The list sorted by Most used, as the app's navigation shows it: opening a card replaces the list, which keeps its
+     * saved state, until the returned flag is set again.
+     */
+    private fun setListInNavigation(
+        repository: FakeLoyaltyCardRepository,
+        restorationTester: StateRestorationTester? = null,
+    ): MutableState<Boolean> {
+        val showList = mutableStateOf(true)
+        val viewModel = ListViewModel(repository, FakeUserPreferencesRepository(CardSort.MOST_USED), SavedStateHandle())
+        val directions = ListDirections(toCard = { _, _ -> showList.value = false }, toAddCard = {}, toBack = {})
+        val setContent: (@Composable () -> Unit) -> Unit = restorationTester?.let { it::setContent } ?: composeRule::setContent
+        setContent {
+            val savedState = rememberSaveableStateHolder()
+            SharedTransitionLayout {
+                AnimatedContent(targetState = showList.value, label = "list to card") { list ->
+                    if (list) {
+                        savedState.SaveableStateProvider("list") {
+                            ListScreen(animatedVisibilityScope = this, directions = directions, viewModel = viewModel)
+                        }
+                    } else {
+                        Box(Modifier.fillMaxSize())
+                    }
+                }
+            }
+        }
+        return showList
+    }
+
+    private fun top(text: String) = composeRule.onNodeWithText(text).fetchSemanticsNode().boundsInRoot.top
 
     private fun setScreen(
         vararg cards: LoyaltyCard,
