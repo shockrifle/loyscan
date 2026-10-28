@@ -33,6 +33,7 @@ number of one card. Deleting a card is on [[card-detail]].
   (`popUpTo<CardList>()`, `Detail.countUse = false`), the same direction as after adding. The new `Detail` route carries
   the store's current colour, which matters when the store was switched. Back returns to the list.
 - A failed save keeps the form open with "The card couldn't be saved. Try again.", as when adding (#49).
+- Back during the save leaves the user on the card, and the edit is still saved, as when adding ([[add-card]], #64).
 - A card that no longer exists (deleted, or a stale route) leaves the form empty and it can't be saved.
 
 ## Tests
@@ -42,7 +43,9 @@ number of one card. Deleting a card is on [[card-detail]].
   `editingACardThatIsGone_cantBeSaved`, `aFailedEdit_…`. `CardFormScreenTest.editingACard_saysSo_andSavingOpensTheCard`.
 - `LoyaltyCardDaoTest.updateEdit_writesTheEditedColumns_andLeavesTheRestAsStored`,
   `RoomLoyaltyCardRepositoryTest.update_…`, `LoyaltyCardMapperTest.toEdit_…`.
-- `DetailScreenTest.editAction_opensTheCardsForm`; `AddCardDirectionsTest.editOnACard_…`, `savingAnEdit_…`.
+- `DetailScreenTest.editAction_opensTheCardsForm`; `AddCardDirectionsTest.editOnACard_…`, `savingAnEdit_…`,
+  `anEditThatEndsAfterBackFromTheForm_…`; `CardFormViewModelTest.anEditStillSavingWhenTheFormCloses_isStillSaved`
+  (#64).
 - `AppNavigationTest.editingACardsLabel_savesIt_showsTheCard_andBackReturnsToTheList`.
 
 ## Not implemented

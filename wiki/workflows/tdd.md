@@ -44,7 +44,7 @@ Paths are under `app/src/test/java/com/bdaniel/loyscan/`, in the same package as
 | Screen using the camera or a permission | As above, with the hardware passed in: `FakeCameraPermission` and a fake `ScannerCamera` lambda | Robolectric | `ScannerScreenTest` |
 | Camera / permission glue (`ui/scanner/`) | The real composable over a fake `CameraOpener` / `FrameReader`; frames are `FakeImageProxy`. A permission request is answered by a test `ActivityResultRegistry` (`LocalActivityResultRegistryOwner`), the grant and rationale by Robolectric's shadows | Robolectric (analyzer: default) | `CameraXScannerTest`, `CameraPermissionTest`, `ScanAnalyzerTest` |
 | Where directions navigate | `TestNavHostController` with `ComposeNavigator` and `DialogNavigator`, a `NavHost` of the app's routes with empty screens; call the `*Directions()` factory and check the back stack | Robolectric | `AddCardDirectionsTest` |
-| App wiring / navigation | `@HiltAndroidTest` with `createAndroidComposeRule<MainActivity>()` and `InMemoryDatabaseModule`. Every `waitUntil` passes `WAIT_TIMEOUT_MS` (10 s), text waits through `waitForText`: the 1 s default timed out on a slow CI runner (#56). After a form's Save, wait for the form to close (`waitForTheCardFormToClose`) before waiting for text it also holds in its fields: otherwise Back can land on the form while the save runs, and the save then opens the card over the list (CI run 40681591473) | Robolectric + `HiltTestApplication` | `AppNavigationTest` |
+| App wiring / navigation | `@HiltAndroidTest` with `createAndroidComposeRule<MainActivity>()` and `InMemoryDatabaseModule`. Every `waitUntil` passes `WAIT_TIMEOUT_MS` (10 s), text waits through `waitForText`: the 1 s default timed out on a slow CI runner (#56). After a form's Save, wait for the form to close (`waitForTheCardFormToClose`) before waiting for text it also holds in its fields: otherwise Back can land on the form while the save runs, and leave it instead of the screen the test meant to leave (CI run 40681591473; before #64 the save then also opened the card over the list) | Robolectric + `HiltTestApplication` | `AppNavigationTest` |
 
 Robolectric means `@RunWith(AndroidJUnit4::class)`. Keep end-to-end tests few, one per user flow; behaviour
 details belong in the per-layer tests.
@@ -65,7 +65,7 @@ Shared helpers are in `testing/`:
   never real stores.
 - **Fakes**, e.g. `FakeLoyaltyCardRepository` and `FakeStoreRepository` (each a `MutableStateFlow` you set): a fake implements the real
   interface *and its edge cases*. For example, `getByIdWithStore` emits `null` for a missing id, as Room does. A failure the code must
-  survive is a switch on the fake: `FakeLoyaltyCardRepository.addFailure` makes `add` throw, and `loadGate` holds back `getAllWithStore` until it completes.
+  survive is a switch on the fake: `FakeLoyaltyCardRepository.addFailure` makes `add` throw, and `loadGate` holds back `getAllWithStore` until it completes (`addGate`, `updateGate` and `deleteGate` hold a write the same way). To clear a ViewModel, as leaving its screen does, create it with `ViewModelProvider.create(store, viewModelFactory { … })` and call `store.clear()` (`CardFormViewModelTest`, #64).
   When you change an interface's contract, change the fake in the same commit. No mocking library.
 - **`MainDispatcherRule`** for anything that uses `viewModelScope`. A timer in a ViewModel takes its duration as a
   constructor parameter (`ScannerViewModel(hintDelay)`): `advanceTimeBy` tests it in virtual time, and a screen test

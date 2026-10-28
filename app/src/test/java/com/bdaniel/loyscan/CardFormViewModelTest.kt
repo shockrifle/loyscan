@@ -1,6 +1,10 @@
 package com.bdaniel.loyscan
 
 import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelStore
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation.testing.invoke
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.cash.turbine.ReceiveTurbine
@@ -20,6 +24,7 @@ import com.bdaniel.loyscan.testing.aLoyaltyCard
 import com.bdaniel.loyscan.testing.aStore
 import com.bdaniel.loyscan.testing.cardId
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
@@ -677,6 +682,45 @@ class CardFormViewModelTest {
     }
 
     @Test
+    fun aSaveStillRunningWhenTheFormCloses_isStillSaved() = runTest { // #64: Back pressed during the save
+        val gate = CompletableDeferred<Unit>()
+        cards.addGate = gate
+        val owner = ViewModelStore()
+        val viewModel = viewModel(owner, CardForm("ruled"))
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.onNumberChange("12345674")
+            viewModel.save()
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        owner.clear()
+        gate.complete(Unit)
+
+        assertThat(cards.cards.value.single().number).isEqualTo("12345674")
+    }
+
+    @Test
+    fun anEditStillSavingWhenTheFormCloses_isStillSaved() = runTest { // #64
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, number = "12345674"))
+        val gate = CompletableDeferred<Unit>()
+        cards.updateGate = gate
+        val owner = ViewModelStore()
+        val viewModel = viewModel(owner, CardForm("ruled", cardId = cardId(1)))
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.onLabelChange("Gold card")
+            viewModel.save()
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        owner.clear()
+        gate.complete(Unit)
+
+        assertThat(cards.cards.value.single().label).isEqualTo("Gold card")
+    }
+
+    @Test
     fun addingACard_isNotEditing() = runTest {
         viewModel(CardForm("ruled")).state.test {
             assertThat(awaitLoaded().editing).isFalse()
@@ -684,6 +728,10 @@ class CardFormViewModelTest {
     }
 
     private fun viewModel(route: CardForm) = viewModel(SavedStateHandle(route = route))
+
+    /** A ViewModel kept in [owner], so clearing [owner] clears it, as leaving its screen does. */
+    private fun viewModel(owner: ViewModelStore, route: CardForm): CardFormViewModel =
+        ViewModelProvider.create(owner, viewModelFactory { initializer { viewModel(route) } })[CardFormViewModel::class]
 
     private fun viewModel(handle: SavedStateHandle) =
         CardFormViewModel(handle, stores, cards, Clock.fixed(NOW, ZoneOffset.UTC))

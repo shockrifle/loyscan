@@ -16,6 +16,7 @@ import com.bdaniel.loyscan.domain.cardnumber.Validation
 import com.bdaniel.loyscan.ui.barcode.BarcodeEncoder
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -23,6 +24,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.time.Clock
 import java.util.UUID
@@ -153,7 +155,7 @@ class CardFormViewModel @Inject constructor(
 
     /**
      * Saves the card once; [CardFormState.savedCardId] then names it. If saving fails, [CardFormState.saveFailed] says
-     * so and the card can be saved again.
+     * so and the card can be saved again. A save still running when the form closes (Back) is finished (#64).
      */
     fun save() {
         val current = state.value
@@ -170,7 +172,9 @@ class CardFormViewModel @Inject constructor(
         val card = original?.let { draft } ?: draft.copy(id = UUID.randomUUID().toString(), createdAt = now)
         viewModelScope.launch {
             progress.value = try {
-                if (original == null) cardRepository.add(card) else cardRepository.update(card)
+                withContext(NonCancellable) {
+                    if (original == null) cardRepository.add(card) else cardRepository.update(card)
+                }
                 Progress(savedCardId = card.id)
             } catch (e: CancellationException) {
                 throw e

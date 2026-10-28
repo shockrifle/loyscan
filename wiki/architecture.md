@@ -157,7 +157,9 @@ Each step is red → green → refactor: the test is written and seen failing be
    Test: constructed with fakes, Turbine on the state, `MainDispatcherRule`.
 4. `@Serializable` route + `*Directions` data class + `NavController.*Directions()` factory in `Navigation.kt`;
    register `composable<Route>` in `AppNavigation`. Test: extend or add an `AppNavigationTest`-style flow, one per
-   user journey.
+   user journey. A direction called from a `LaunchedEffect` on ViewModel state (e.g. "saved → open it") can fire
+   after Back, while the popped screen animates out. It must navigate only while its screen is current, and the write
+   must not be cancelled with `viewModelScope` ([[2026-10-28-save-navigates-after-back]]).
 5. Screen composable as `SharedTransitionScope.XScreen(animatedVisibilityScope, directions, viewModel = hiltViewModel())`,
    with `Scaffold(containerColor = Color.Transparent)` (the app background comes from `MainActivity`,
    [[card-transition]]). Test: `createComposeRule()`, a fake-backed ViewModel, recording directions.

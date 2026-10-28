@@ -10,6 +10,8 @@ _(none — suspected issues live in [[tech-debt/_index|tech-debt]] until confirm
 
 ## Resolved
 
+- [[2026-10-28-save-navigates-after-back]] — a card save that ended after Back still opened the card, and leaving the
+  form could cancel the write (#64)
 - [[2026-10-19-zxing-cpp-3-0-databar]] — zxing-cpp 3.0.2 threw for every DataBar result; the scanner swallowed it
   per frame (#5)
 - [[2026-10-09-missing-card-throws-from-room]] — a non-null single-row Room query threw for a missing card

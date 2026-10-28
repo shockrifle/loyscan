@@ -27,6 +27,12 @@ class FakeLoyaltyCardRepository(
     /** When set, [delete] throws it instead of deleting. */
     var deleteFailure: Exception? = null
 
+    /** When set, [add] suspends until it completes, as a Room insert in progress does. */
+    var addGate: CompletableDeferred<Unit>? = null
+
+    /** When set, [update] suspends until it completes. */
+    var updateGate: CompletableDeferred<Unit>? = null
+
     /** When set, [delete] suspends until it completes, as a Room delete in progress does. */
     var deleteGate: CompletableDeferred<Unit>? = null
 
@@ -51,12 +57,14 @@ class FakeLoyaltyCardRepository(
     }
 
     override suspend fun add(card: LoyaltyCard) {
+        addGate?.await()
         addFailure?.let { throw it }
         cards.value += card
     }
 
     /** Like the Room repository: only the store, label, number, scanned format and `updatedAt` change. */
     override suspend fun update(card: LoyaltyCard) {
+        updateGate?.await()
         updateFailure?.let { throw it }
         cards.value = cards.value.map {
             if (it.id != card.id) it

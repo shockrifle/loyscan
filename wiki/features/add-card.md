@@ -73,6 +73,12 @@ stores already in the database, and custom stores). Everything runs offline on t
   injected `Clock`, no use yet. Then the card's detail opens in place of the flow (`popUpTo<CardList>()`), so back from it
   returns to the list. That opening isn't counted as a use (`Detail.countUse = false`): it is the end of adding the
   card, not showing it at a till.
+- **Back during the save** (#64): the user stays where Back took them, and the card is still saved.
+  `CardFormDirections.toCard` navigates only while the form is the current back-stack entry: the form's
+  `LaunchedEffect` on `savedCardId` is still composed while the popped form animates out, and before the fix it opened
+  the card from the picker. The check is on the back stack, not on the entry's lifecycle, so a save that ends while the
+  app is in the background still opens the card. `save` writes in `withContext(NonCancellable)`: once the popped
+  entry is destroyed its `viewModelScope` is cancelled, which would drop a write still waiting to run.
 - **A failed save** (`LoyaltyCardRepository.add` throws, e.g. the database is full or can't be written) leaves the
   form open with "The card couldn't be saved. Try again." above the button, which saves again. Cancellation isn't
   caught. Before #49 the failure crashed the app. Every exception is caught, so a bug that makes every save fail
@@ -99,7 +105,10 @@ stores already in the database, and custom stores). Everything runs offline on t
 - `CardFormViewModelTest`: checks for typed numbers and scans (incl. the GS1 case), editing a scan, which scans are
   read-only, what is saved (typed, untouched scan, edited scan), one save only, a failed save and saving again, an unknown
   store, restore after process death, the stores offered for a scan, and switching to one (kept after process death). The card saved is built from the same draft the state shows, so the two can't disagree. `CardFormScreenTest`: messages, "Save anyway", the scan line, another store offered and switched to, save → opens the card, a failed save says so.
-- `AddCardDirectionsTest`: where each step's directions lead, incl. GS1 separators surviving the route.
+- `AddCardDirectionsTest`: where each step's directions lead, incl. GS1 separators surviving the route, and a save
+  ending after Back from the form (`aSaveThatEndsAfterBackFromTheForm_…`, #64).
+- `CardFormViewModelTest.aSaveStillRunningWhenTheFormCloses_isStillSaved` (#64): a save held by
+  `FakeLoyaltyCardRepository.addGate` is finished after the ViewModel is cleared.
 - `DetailViewModelTest.opening_aCardJustAdded_countsNoUse`.
 - `AppNavigationTest`: picker → scanner → back, adding a card by hand end to end, and for a new custom store.
 
