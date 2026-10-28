@@ -5,7 +5,16 @@ import android.content.Context
 import android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_FULL
 import android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
 import androidx.activity.ComponentActivity
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.unit.dp
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.ui.test.assertIsDisplayed
@@ -62,6 +71,7 @@ class DetailScreenTest {
             SharedTransitionLayout {
                 AnimatedVisibility(visible = true) {
                     DetailScreen(
+                        cardId = card.id,
                         color = color,
                         animatedVisibilityScope = this,
                         directions = DetailDirections(toBack = onBack, toEdit = onEdit),
@@ -304,6 +314,45 @@ class DetailScreenTest {
     }
 
     @Test
+    fun aTileOpeningTheCard_growsIntoTheScreen_beforeTheCardHasLoaded() { // #16: the key came from the loaded card
+        val notLoadedYet = FakeLoyaltyCardRepository(emptyList())
+        val viewModel = DetailViewModel(SavedStateHandle(route = Detail(cardId = card.id, color = "#336699")), notLoadedYet)
+        var showDetail by mutableStateOf(false)
+        val widths = mutableListOf<Int>()
+        composeRule.mainClock.autoAdvance = false
+        composeRule.setContent {
+            SharedTransitionLayout {
+                AnimatedContent(targetState = showDetail, label = "tile to detail") { detail ->
+                    if (detail) {
+                        DetailScreen(
+                            cardId = card.id,
+                            color = "#336699",
+                            animatedVisibilityScope = this,
+                            modifier = Modifier.onSizeChanged { widths += it.width },
+                            directions = DetailDirections(toBack = {}, toEdit = { _, _ -> }),
+                            viewModel = viewModel,
+                        )
+                    } else {
+                        Box(
+                            Modifier
+                                .size(TILE_SIZE)
+                                .sharedElement(rememberSharedContentState(cardTransitionKey(card.id)), this)
+                        )
+                    }
+                }
+            }
+        }
+
+        composeRule.runOnIdle { showDetail = true }
+        composeRule.waitForIdle()
+        composeRule.mainClock.advanceTimeBy(100)
+
+        // A matched shared element starts at the tile's bounds; an unmatched one would fill the screen at once.
+        assertThat(viewModel.card.value).isEqualTo(LoyaltyCard.EMPTY)
+        assertThat(widths.first()).isEqualTo(with(composeRule.density) { TILE_SIZE.roundToPx() })
+    }
+
+    @Test
     fun emptyStoreColor_doesNotCrash() { // #14
         setScreen(color = "")
 
@@ -315,5 +364,9 @@ class DetailScreenTest {
         setScreen(color = "not a colour")
 
         composeRule.onNodeWithText("Gold card").assertIsDisplayed()
+    }
+
+    private companion object {
+        val TILE_SIZE = 80.dp
     }
 }

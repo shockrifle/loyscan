@@ -25,5 +25,5 @@ async gap is visible.
 ## Lessons
 - **Async ViewModel state + transitions = first-frame glitches.** Whatever a transition's first frame needs must
   be synchronous (route args, or shared state already in memory).
-- The same class of problem probably still affects the shared-element key —
-  [[shared-element-key-from-async-state]].
+- The same class of problem affected the shared-element key until #16 —
+  [[shared-element-key-from-async-state]] (resolved).

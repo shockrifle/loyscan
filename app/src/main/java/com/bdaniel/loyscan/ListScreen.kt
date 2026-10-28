@@ -85,6 +85,9 @@ fun SharedTransitionScope.ListScreen(
     }
 }
 
+/** The shared-element key that pairs a card's tile with its detail screen ([DetailScreen]). */
+fun cardTransitionKey(cardId: String) = "card/$cardId"
+
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun SharedTransitionScope.CardItem(
@@ -105,7 +108,7 @@ fun SharedTransitionScope.CardItem(
                 .background(cardColor)
                 .aspectRatio(1.5f)
                 .sharedElement(
-                    sharedContentState = rememberSharedContentState(key = "card/${card.id}"),
+                    sharedContentState = rememberSharedContentState(key = cardTransitionKey(card.id)),
                     animatedVisibilityScope = animatedVisibilityScope
                 ),
             contentAlignment = Alignment.Center

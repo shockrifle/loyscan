@@ -6,7 +6,7 @@ Alphabetical.
 **AnimatedVisibilityScope** — Compose scope passed from each `composable<Route> { }` block (`this`) into a screen;
 required by `Modifier.sharedElement`. See [[card-transition]].
 
-**AppNavigation** — The `NavHost` composable, defined in `MainActivity.kt:47-78`, that maps routes to screens.
+**AppNavigation** — The `NavHost` composable, defined in `MainActivity.kt:46-81`, that maps routes to screens.
 
 **Barcode content** — The exact string a card's barcode encodes. Derived from the core number by the store's
 card-number rule (`CardNumberEngine.barcodeContent`); equals the raw number when there is no rule.
@@ -66,7 +66,7 @@ separators removed, letter case applied). Rules turn it into barcode content. Se
 **Domain model** — Plain Kotlin data classes in `domain/` (`LoyaltyCard`, `Store`) that the UI consumes.
 
 **`EMPTY`** — Companion sentinel (`LoyaltyCard.EMPTY`, `Store.EMPTY`) with id `""` and empty or null fields; used as
-`stateIn` initial value so screens never deal with `null`. Its empty id matters for [[shared-element-key-from-async-state]].
+`stateIn` initial value so screens never deal with `null`. Its empty id is why the detail screen's shared key comes from the route ([[shared-element-key-from-async-state]]).
 
 **Entity** — Room table class in `data/local/db/entity/` (`StoreEntity`, `LoyaltyCardEntity`). Stays inside `data/`.
 

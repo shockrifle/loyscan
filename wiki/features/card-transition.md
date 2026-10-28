@@ -5,16 +5,22 @@ Compose's experimental shared-element API.
 
 **Entry points:** `SharedTransitionLayout` wrapping `AppNavigation`
 (`app/src/main/java/com/bdaniel/loyscan/MainActivity.kt:32-39`); the `CardItem` box's
-`.sharedElement(key = "card/${card.id}")` in `ListScreen.kt`; `Scaffold(modifier = Modifier.sharedElement(…))`
-in `app/src/main/java/com/bdaniel/loyscan/DetailScreen.kt:116-119`.
+`.sharedElement(key = cardTransitionKey(card.id))` in `ListScreen.kt`; `Scaffold(modifier = Modifier.sharedElement(…))`
+in `app/src/main/java/com/bdaniel/loyscan/DetailScreen.kt:117-120`.
 
 ## How it's wired
 
 - `AppNavigation`, `ListScreen`, `CardItem` and `DetailScreen` are all extensions on `SharedTransitionScope`;
   each `composable<Route> { }` block passes `this` as the `AnimatedVisibilityScope`.
-- Key format: `card/{id}` (was `item/{id}` until `45a33e1`).
-- The detail screen takes its color from the route, so the destination is correctly colored from the first
-  frame ([[2025-12-12-brand-color-in-route]], [[2025-12-12-detail-color-flash-on-transition]]).
+- Key format: `card/{id}`, built by `cardTransitionKey(id)` in `ListScreen.kt` for both sides (was `item/{id}`
+  until `45a33e1`).
+- The detail screen takes its color and its card id from the route, so the destination is correctly colored and
+  paired with the tile from the first frame, before Room emits ([[2025-12-12-brand-color-in-route]],
+  [[2025-12-12-detail-color-flash-on-transition]], [[shared-element-key-from-async-state]], #16).
+- Test: `DetailScreenTest.aTileOpeningTheCard_growsIntoTheScreen_beforeTheCardHasLoaded`. A matched shared element
+  is first measured at the other side's bounds, an unmatched one at its own size, so the test checks the detail
+  content's first measured width. Under a paused `mainClock`, the state change that starts the transition needs
+  `runOnIdle { … }` and `waitForIdle()`, or the content never recomposes.
 
 ## History
 
@@ -42,5 +48,5 @@ Both `ListScreen` and `DetailScreen` pass `containerColor = Color.Transparent` t
 
 ## Caveats
 
-- [[shared-element-key-from-async-state]] — the detail side's key depends on async-loaded data. Suspected, not
-  verified on a device.
+None open. The detail side's key depended on async-loaded data until #16
+([[shared-element-key-from-async-state]], resolved).

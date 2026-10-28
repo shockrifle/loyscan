@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-28 · detail shared key taken from the route; tech-debt resolved, transition test technique recorded · tech-debt/shared-element-key-from-async-state, tech-debt/_index, features/card-transition, features/card-detail, architecture, glossary, bugs/2025-12-12-detail-color-flash-on-transition, decisions/2025-12-12-brand-color-in-route · #16
 - 2026-10-22 · review fix: the card form's read-only guard also refuses before the store loads; architecture rule corrected · features/add-card, architecture · review of #50
 - 2026-10-22 · card form state started eagerly so the read-only guard holds with no subscriber · features/add-card, architecture · #50
 - 2026-10-22 · end-to-end waits use one 10 s timeout · workflows/tdd · #56, CI flake on master (run 39774769162)

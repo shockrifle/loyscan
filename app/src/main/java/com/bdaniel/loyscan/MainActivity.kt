@@ -60,6 +60,7 @@ fun SharedTransitionScope.AppNavigation(modifier: Modifier = Modifier) {
         composable<Detail> {
             val detail = it.savedStateHandle.toRoute<Detail>()
             DetailScreen(
+                detail.cardId,
                 detail.color,
                 animatedVisibilityScope = this,
                 directions = navController.detailDirections()

@@ -70,6 +70,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun SharedTransitionScope.DetailScreen(
+    cardId: String,
     color: String,
     animatedVisibilityScope: AnimatedVisibilityScope,
     modifier: Modifier = Modifier,
@@ -114,7 +115,8 @@ fun SharedTransitionScope.DetailScreen(
                 )
             },
             modifier = Modifier.sharedElement(
-                sharedContentState = rememberSharedContentState(key = "card/${card.id}"),
+                // From the route, like the colour: the loaded card's id is empty until Room emits (#16).
+                sharedContentState = rememberSharedContentState(key = cardTransitionKey(cardId)),
                 animatedVisibilityScope = animatedVisibilityScope
             ),
             containerColor = Color.Transparent

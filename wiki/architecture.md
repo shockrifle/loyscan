@@ -114,13 +114,13 @@ here exist; read them next to the code.
 6. **List UI.** *Test first:* `ListScreenTest`: a fake-backed ViewModel and a recording `ListDirections`. It
    checks one tile per card, and that a click calls `toCard(id, color)`.
    Then `ListScreen` collects `cards` and renders a 2-column `LazyVerticalGrid` of `CardItem`s. Each `CardItem`'s
-   colored box is a shared element keyed `"card/${card.id}"`. A click calls
+   colored box is a shared element keyed `cardTransitionKey(card.id)` (`"card/<id>"`). A click calls
    `directions.toCard(card.id, card.store.color)` ([[card-list]]).
 7. **Navigation.** *Test first:* `AppNavigationTest`, the one end-to-end test for this flow: real Hilt and
    navigation over `InMemoryDatabaseModule`, list → detail → back.
    Then `NavController.listDirections().toCard` → `navigate(Detail(id, color))` (`Navigation.kt:19-25, 29-30`).
-   `AppNavigation` maps `composable<Detail>` to `DetailScreen`, pulling `color` out of the route and passing it
-   as a plain parameter (`MainActivity.kt:60-67`).
+   `AppNavigation` maps `composable<Detail>` to `DetailScreen`, pulling `cardId` and `color` out of the route and
+   passing them as plain parameters (`MainActivity.kt:60-68`).
 8. **Detail ViewModel.** *Test first:* `DetailViewModelTest` with `SavedStateHandle(route = Detail(…))`. It
    checks `EMPTY` first, then the routed card. A missing card stays `EMPTY`, and a deleted card keeps the last
    value.
@@ -128,10 +128,11 @@ here exist; read them next to the code.
    `repository.getByIdWithStore(cardId).filterNotNull().stateIn(…, initialValue = LoyaltyCard.EMPTY)`
    (`DetailViewModel.kt:30-42`).
 9. **Detail UI.** *Test first:* `DetailScreenTest`: it shows the label and the display number (formatted by the
-   store's rule), the back arrow calls `toBack`, and an empty or malformed route color doesn't crash.
+   store's rule), the back arrow calls `toBack`, an empty or malformed route color doesn't crash, and a tile
+   grows into the screen before the card has loaded.
    Then `DetailScreen` paints the top bar and header with the **route** color (available on frame 1), and fills
    text/logo from the **ViewModel** card (available once Room emits). The whole `Scaffold` is the matching shared
-   element `"card/${card.id}"` (`DetailScreen.kt:116-119`). Back → `directions.toBack()` → `navigateUp()`.
+   element, keyed from the **route** `cardId` (`DetailScreen.kt:117-120`, #16). Back → `directions.toBack()` → `navigateUp()`.
    See [[card-detail]], [[card-transition]].
 
 ### Checklist for a new screen/feature (derived from the example)
