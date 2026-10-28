@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-28 · review fix: card list query cleared when the last card is deleted, so the empty state shows · features/card-list, architecture · review of #7
 - 2026-10-28 · review fix: tile read out as "store, label", initials shrink to fit above the label; stale DetailScreen/ListScreen line links · features/card-list, features/card-detail, features/card-transition, architecture · review of #7
 - 2026-10-28 · card list empty state ("No cards yet", "Add your first card"), shown once loaded with no cards and no search · features/card-list · #7
 - 2026-10-28 · card tiles: bank-card proportions, store initials, label (or store name) at the bottom, text black or white by contrast ratio (also the detail header) · features/card-list, features/card-detail, glossary · #7

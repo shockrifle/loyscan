@@ -144,4 +144,21 @@ class ListViewModelTest {
             assertThat(awaitItem()).containsExactly(berry)
         }
     }
+
+    @Test
+    fun deletingTheLastCard_clearsTheQuery() = runTest { // review of #7
+        repository.cards.value = listOf(berry)
+        val viewModel = viewModel()
+        viewModel.onQueryChange("berry")
+
+        viewModel.cards.test {
+            assertThat(awaitItem()).containsExactly(berry)
+
+            repository.cards.value = emptyList()
+
+            // An old search would hide the empty state, and the next card added.
+            assertThat(expectMostRecentItem()).isEmpty()
+        }
+        assertThat(viewModel.query.value).isEmpty()
+    }
 }

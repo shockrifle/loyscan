@@ -11,7 +11,7 @@ tiles, one per row in `loyalty_cards`, live-updating from Room. Sort and search:
 ## Behavior
 
 - Data: `ListViewModel.cards` ← `LoyaltyCardRepository.getAllWithStore()` (each card with its store), sorted by the
-  stored choice, then narrowed by the query (`ListViewModel.kt:39-47`). Initial value `null` (not loaded): the grid is
+  stored choice, then narrowed by the query (`ListViewModel.kt:42-55`). Initial value `null` (not loaded): the grid is
   briefly empty on cold start, and "No card matches" waits for the load, since a query restored after process death
   is there at once (`ListScreenTest.aRestoredSearch_doesNotSayNothingMatches_beforeTheCardsHaveLoaded`). The SQL has no `ORDER BY`; ordering is done in Kotlin (`CardSort`), so it ignores
   case and accents the way search does.
@@ -24,12 +24,15 @@ tiles, one per row in `loyalty_cards`, live-updating from Room. Sort and search:
 - **Search** (`CARD_SEARCH_TAG` field, "Search cards"): keeps the cards whose store name, store alias, label or
   note contains the query, ignoring case and accents (`searchKey()`, shared with the store picker), in the sort
   order. The number isn't searched. A query that matches nothing says "No card matches “…”". The query is kept
-  in the saved state: it survives process death, not a restart. Notes can't be edited yet (#9), but a stored
+  in the saved state: it survives process death, not a restart, and is cleared when no card is left. Notes can't be edited yet (#9), but a stored
   note is searched.
 - **Empty state** (`EmptyCardList`): once the cards have loaded, with none stored and no search, the screen shows "No
   cards yet" and an "Add your first card" button (→ `directions.toAddCard()`, like the floating button) in place of the
   search field and grid. It waits for the load (`cards` is `null` until then), and a search that matches nothing keeps
-  the field and says "No card matches" instead. Tests: `ListScreenTest.noCards_…`, `theEmptyState_waitsForTheCardsToLoad`,
+  the field and says "No card matches" instead. When the last card is deleted, the ViewModel clears the query
+  (`ListViewModel.cards`), so a search left from before shows neither "No card matches" over nothing nor hides the
+  next card added (`ListViewModelTest.deletingTheLastCard_clearsTheQuery`,
+  `ListScreenTest.deletingTheLastCard_duringASearch_showsTheEmptyState`). Tests: `ListScreenTest.noCards_…`, `theEmptyState_waitsForTheCardsToLoad`,
   `aSearchThatMatchesNothing_isNotTheEmptyState`.
 - Grid items are keyed by card id, so a re-sort moves tiles rather than rebinding them.
 - Tile (`CardItem`): a `Card` containing a box in bank-card (ID-1, 85.60 × 53.98 mm) proportions filled with the brand

@@ -153,6 +153,17 @@ class ListScreenTest {
     }
 
     @Test
+    fun deletingTheLastCard_duringASearch_showsTheEmptyState() { // review of #7
+        val repository = FakeLoyaltyCardRepository(listOf(aLoyaltyCard(store = aStore(name = "Berry"))))
+        setScreen(viewModel = ListViewModel(repository, FakeUserPreferencesRepository(), SavedStateHandle()))
+        composeRule.onNodeWithTag(CARD_SEARCH_TAG).performTextInput("berry")
+
+        repository.cards.value = emptyList()
+
+        composeRule.onNodeWithText("No cards yet").assertIsDisplayed()
+    }
+
+    @Test
     fun theEmptyState_waitsForTheCardsToLoad() {
         val repository = FakeLoyaltyCardRepository(emptyList())
         repository.loadGate = CompletableDeferred()

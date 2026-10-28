@@ -114,7 +114,7 @@ here exist; read them next to the code.
 5. **List ViewModel.** *Test first:* `ListViewModelTest`: built with the fake repositories and a `SavedStateHandle`,
    Turbine on `cards`. It checks the initial empty list, then each update, the stored sort and the search.
    Then `ListViewModel.cards` = the repository flow combined with the sort preference and the query, sorted then
-   searched, `.stateIn(viewModelScope, WhileSubscribed(5_000), null)` (`null`: not loaded yet; `ListViewModel.kt:39-47`, [[card-list]]).
+   searched, `.stateIn(viewModelScope, WhileSubscribed(5_000), null)` (`null`: not loaded yet; `ListViewModel.kt:42-55`, [[card-list]]).
 6. **List UI.** *Test first:* `ListScreenTest`: a fake-backed ViewModel and a recording `ListDirections`. It
    checks one tile per card, and that a click calls `toCard(id, color)`.
    Then `ListScreen` collects `cards` and renders a 2-column `LazyVerticalGrid` of `CardItem`s, keyed by card id. Each `CardItem`'s

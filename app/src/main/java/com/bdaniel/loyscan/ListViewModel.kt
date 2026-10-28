@@ -13,6 +13,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -40,7 +41,12 @@ class ListViewModel @Inject constructor(
 
     /** `null` until the cards and the sort have loaded, so an empty result is told apart from not knowing yet. */
     val cards: StateFlow<List<LoyaltyCard>?> =
-        combine(loyaltyCardRepository.getAllWithStore(), userPreferencesRepository.cardSort, query) { cards, sort, query ->
+        combine(
+            // With no card left (the last one deleted), an old search would hide the empty state and the next card.
+            loyaltyCardRepository.getAllWithStore().onEach { if (it.isEmpty()) savedStateHandle[QUERY] = "" },
+            userPreferencesRepository.cardSort,
+            query,
+        ) { cards, sort, query ->
             cards.sortedBy(sort).search(query)
         }.stateIn(
             scope = viewModelScope,
