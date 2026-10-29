@@ -55,8 +55,8 @@ screen then shrank into nothing. The reorder can also arrive *during* the return
 
 `ListScreen` therefore remembers the tapped tile (`OpenedTile`: card id and its offset from the top of the grid, saved
 state, so it survives process death too), only when the tap opened the card: `ListDirections.toCard` says whether it
-did, and a second tile tapped while the list leaves opens nothing (#69) and, on every new order until the list's return transition settles, calls
-`LazyGridState.requestScrollToItem(newIndex, -offset)` in a `SideEffect`, which applies before that frame's measure
+did, and a second tile tapped while the list leaves opens nothing (#69). Until the list's return transition settles, it
+calls `LazyGridState.requestScrollToItem(newIndex, -offset)` on every new order, in a `SideEffect`, which applies before that frame's measure
 (`app/src/main/java/com/bdaniel/loyscan/ListScreen.kt:73-94`). The tile comes back where it was tapped, or as near as
 the list allows (at the top when it moved there), and the card shrinks into it. After that, reorders scroll as usual.
 The offset is in pixels, so it is kept only on the screen it was measured on (window size, density, font scale): after

@@ -55,7 +55,7 @@ separators removed, letter case applied). Rules turn it into barcode content. Se
 
 **DAO** — Room data-access interface in `data/local/db/dao/`. Reads return `Flow`.
 
-**Detail** — Navigation route `data class Detail(val cardId: String, val color: String, val countUse: Boolean = true)` (`Navigation.kt:29-30`).
+**Detail** — Navigation route `data class Detail(val cardId: String, val color: String, val countUse: Boolean = true)` (`Navigation.kt:30-31`).
 
 **Display number** — `LoyaltyCard.displayNumber`: the number formatted by the store rule's display pattern
 (`CardNumberEngine.displayNumber`); the trimmed number when there is no rule. Shown on the detail screen.

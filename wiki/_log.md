@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-29 · review fix: Navigation.kt line links shifted by the toCard KDoc; card-transition sentence split · architecture, glossary, features/card-detail, features/barcode-scanner, features/card-transition, decisions/2025-12-12-brand-color-in-route · review of #69
 - 2026-10-29 · review fix: ListDirections.toCard says whether it opened the card, so a second tile tapped while the list leaves isn't held on return; factories written with their entry · features/card-transition, architecture, decisions/2025-12-09-type-safe-navigation-directions · review of #69
 - 2026-10-29 · every direction navigates only while its screen is current: a scan decoded after Back from the scanner, or a second tap on a store, card, Add or Edit, no longer navigates; Navigation.kt line links shifted · architecture, glossary, bugs/2026-10-28-save-navigates-after-back, features/barcode-scanner, features/card-detail, decisions/2025-12-12-brand-color-in-route · #68, #69
 - 2026-10-29 · review fix: the Directions entry says which directions are guarded, not every one of a factory that takes its entry · glossary · review of #66
