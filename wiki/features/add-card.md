@@ -27,7 +27,8 @@ stores already in the database, and custom stores). Everything runs offline on t
   `BarcodeFormat.forCustomStores`, no GS1 or DataBar, #47). A scan keeps its own format. "Create" saves the store once
   (`StoreRepository.add`: UUID id, `isCustom = true`, no rule); a failed save says "The store couldn't be saved. Try
   again." and leaves the form open, as a failed card save does. The scanner for the new store then replaces the form,
-  so back returns to the picker, which now lists the store. The rest of the flow is the same as for any store; with no
+  so back returns to the picker, which now lists the store. Back during "Create" leaves the user on the picker, and
+  the store is still created ([[edit-store]], #65). The rest of the flow is the same as for any store; with no
   rule, any number is valid and a scan another store's rule reads gets that store as a hint. The fields survive
   process death.
 - **Scanner → form.** A scan, or "Enter manually", *replaces* the scanner with the form (`popUpTo<Scanner>

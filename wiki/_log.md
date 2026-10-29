@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-29 · review fix: Back during "Create" noted on the add-card flow; DetailViewModel line link shifted · features/add-card, architecture · review of #65
 - 2026-10-29 · custom store form and card screen: a save or delete that ends after Back no longer navigates, and is still written; shared whileCurrent guard and ViewModelStore.keep test helper; scanner line link shifted · features/edit-store, features/card-detail, bugs/2026-10-28-save-navigates-after-back, architecture, workflows/tdd, features/barcode-scanner · #65
 - 2026-10-28 · linked the follow-up for the same bug on the custom store and card screens · bugs/2026-10-28-save-navigates-after-back · #65
 - 2026-10-28 · review fix: the card form opens the saved card only while its own entry is current; Navigation.kt line links shifted (and the scanner's, already stale) · bugs/2026-10-28-save-navigates-after-back, features/add-card, architecture, decisions/2025-12-12-brand-color-in-route, features/card-detail, features/card-list, features/barcode-scanner, glossary, hacks/list-route-shadows-kotlin-list · review of #64
