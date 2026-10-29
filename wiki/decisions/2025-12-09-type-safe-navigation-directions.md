@@ -29,5 +29,8 @@ for Compose skipping.
 - A new screen = route type + Directions class + factory + `composable<Route>` entry — see the checklist in
   [[architecture]].
 - `ListDirections.toBack` was never used (the list is the start destination); removed in #66 (corrected 2026-10-29).
+- Since #68 and #69 every factory takes its screen's back-stack entry (`listDirections(entry)`), and every direction
+  navigates only while that entry is current ([[2026-10-28-save-navigates-after-back]]). `ListDirections.toCard` returns
+  whether it navigated, so the list records the opened tile only then ([[card-transition]]).
 - Naming the route `List` shadowed `kotlin.collections.List` — [[list-route-shadows-kotlin-list]]. Renamed to
   `CardList` in #17.

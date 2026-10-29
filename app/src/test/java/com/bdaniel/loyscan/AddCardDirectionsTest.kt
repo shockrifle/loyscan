@@ -366,11 +366,13 @@ class AddCardDirectionsTest {
     fun aSecondTapOnACard_opensOneCardScreen() { // #69
         composeRule.runOnIdle { navController.storePickerDirections(navController.currentBackStackEntry!!).toBack() }
         val list = composeRule.runOnIdle { navController.listDirections(navController.currentBackStackEntry!!) }
-        composeRule.runOnIdle { list.toCard("a-card", "#112233") }
+        val first = composeRule.runOnIdle { list.toCard("a-card", "#112233") }
 
-        composeRule.runOnIdle { list.toCard("a-card", "#112233") }
+        val second = composeRule.runOnIdle { list.toCard("a-card", "#112233") }
 
         composeRule.runOnIdle { assertThat(navController.previousBackStackEntry?.destination?.hasRoute(CardList::class)).isTrue() }
+        assertThat(first).isTrue() // the list records the opened tile only when the card opened
+        assertThat(second).isFalse()
     }
 
     @Test

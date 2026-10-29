@@ -90,7 +90,7 @@ fun SharedTransitionScope.ListScreen(
     }
     val transition = animatedVisibilityScope.transition
     val settled = transition.currentState == EnterExitState.Visible && transition.targetState == EnterExitState.Visible
-    // Set on a tap while settled, so this runs only once the list has left and come back.
+    // Set by a tap that opened a card, so this runs only once the list has left and come back.
     LaunchedEffect(settled) { if (settled) openedTile = null }
 
     Scaffold(
@@ -142,8 +142,8 @@ fun SharedTransitionScope.ListScreen(
                         card = card,
                         onClick = {
                             val offset = gridState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == card.id }?.offset?.y
-                            openedTile = OpenedTile(card.id, offset ?: 0, screen)
-                            directions.toCard(card.id, card.store.color)
+                            // A second tile tapped while the list leaves opens nothing, so it isn't the opened one (#69).
+                            if (directions.toCard(card.id, card.store.color)) openedTile = OpenedTile(card.id, offset ?: 0, screen)
                         },
                     )
                 }

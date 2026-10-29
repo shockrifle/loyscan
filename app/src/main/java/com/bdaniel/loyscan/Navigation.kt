@@ -12,7 +12,8 @@ object CardList
 
 @Immutable
 data class ListDirections(
-    val toCard: (id: String, color: String) -> Unit,
+    /** Opens the card, and says whether it did: not from a list that is no longer current (#69). */
+    val toCard: (id: String, color: String) -> Boolean,
     val toAddCard: () -> Unit,
 )
 
@@ -165,6 +166,8 @@ fun NavController.cardFormDirections(form: NavBackStackEntry) = CardFormDirectio
  * decoded late or a second tap would otherwise navigate from wherever the first navigation went (#64, #65, #66, #68,
  * #69).
  */
-private inline fun NavController.whileCurrent(entry: NavBackStackEntry, navigation: () -> Unit) {
-    if (currentBackStackEntry == entry) navigation()
+private inline fun NavController.whileCurrent(entry: NavBackStackEntry, navigation: () -> Unit): Boolean {
+    val current = currentBackStackEntry == entry
+    if (current) navigation()
+    return current
 }

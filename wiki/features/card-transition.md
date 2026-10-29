@@ -54,7 +54,8 @@ screen then shrank into nothing. The reorder can also arrive *during* the return
 `WhileSubscribed(5_000)` has stopped reading Room, so the list first shows the old order and re-sorts a few frames later.
 
 `ListScreen` therefore remembers the tapped tile (`OpenedTile`: card id and its offset from the top of the grid, saved
-state, so it survives process death too) and, on every new order until the list's return transition settles, calls
+state, so it survives process death too), only when the tap opened the card: `ListDirections.toCard` says whether it
+did, and a second tile tapped while the list leaves opens nothing (#69) and, on every new order until the list's return transition settles, calls
 `LazyGridState.requestScrollToItem(newIndex, -offset)` in a `SideEffect`, which applies before that frame's measure
 (`app/src/main/java/com/bdaniel/loyscan/ListScreen.kt:73-94`). The tile comes back where it was tapped, or as near as
 the list allows (at the top when it moved there), and the card shrinks into it. After that, reorders scroll as usual.
@@ -63,7 +64,8 @@ a rotation or a display size change the tile's top is put at the top of the grid
 phone this happens when Back from a card held in landscape turns the list to portrait
 ([[2026-10-28-portrait-on-phones]]); there a tile always fits the grid.
 Tests: `ListScreenTest.returningFromACard_…` (moved up, new order during the return, moved to the top, after process
-death, on a screen that changed size) and `onceBackOnTheList_aLaterReorder_doesNotHoldTheOpenedTileInPlace`; the list there sits in an
+death, on a screen that changed size), `aSecondTileTappedWhileTheListLeaves_isNotTheOneHeldOnReturn` and
+`onceBackOnTheList_aLaterReorder_doesNotHoldTheOpenedTileInPlace`; the list there sits in an
 `AnimatedContent` with a `SaveableStateHolder`, as in the `NavHost`.
 
 Not chosen (2026-10-28): freezing the order until the user is back shows a stale order and then

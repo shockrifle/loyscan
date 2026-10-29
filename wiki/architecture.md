@@ -18,7 +18,7 @@ All paths below are under `app/src/main/java/com/bdaniel/loyscan/` unless writte
 | **Domain** | `domain/` — `LoyaltyCard`, `Store`, `BarcodeFormat`; `domain/cardnumber/` — card-number rule engine ([[2026-10-09-card-number-rule-engine]]) | Plain data classes with an `EMPTY` sentinel; pure-Kotlin logic. Barcode content, display number and barcode format are derived on read (`LoyaltyCard`), never stored ([[2026-10-12-data-model-v2]]) | No Android/Room imports — unit-tested on the JVM. |
 | **Presentation state** | root package — `ListViewModel`, `DetailViewModel`, `ScannerViewModel` (UI state only, no repository) | `@HiltViewModel`; turn repository Flows into `StateFlow` via `stateIn(viewModelScope, WhileSubscribed(5_000), initial)` | Route args read with `savedStateHandle.toRoute<Route>()`. |
 | **UI** | root package — `ListScreen`, `DetailScreen`; `ui/` — theme, icons, `hiltImageLoader()`; `ui/barcode/` — ZXing encoding and barcode drawing ([[zxing-core]]); `ui/scanner/` — camera, permission and zxing-cpp decoding for `ScannerScreen` ([[zxing-cpp]]) | Composables, extensions on `SharedTransitionScope` | Screens receive a `*Directions` object, never a `NavController`. |
-| **Navigation** | `Navigation.kt`, `MainActivity.kt` (`AppNavigation`) | `@Serializable` routes + `NavController.*Directions()` factories | See [[2025-12-09-type-safe-navigation-directions]]. |
+| **Navigation** | `Navigation.kt`, `MainActivity.kt` (`AppNavigation`) | `@Serializable` routes + `NavController.*Directions(entry)` factories | See [[2025-12-09-type-safe-navigation-directions]]. |
 | **DI** | `di/DatabaseModule.kt`, `di/PreferencesModule.kt`, `di/ImageLoaderModule.kt`, `di/RepositoryModule.kt` | `@Module @InstallIn(SingletonComponent)` providers; `@Binds` repository interface → Room / DataStore impl | Implementations use `@Inject constructor`. |
 
 Note: `LoyaltyCardRepository` also counts a store's cards (`countForStore`, a `Flow<Int>`, #53). Its writes are `recordUse(id)` (opening a card counts a use, #4), `delete(id)` and `update(card)` (#8), and
@@ -155,7 +155,7 @@ Each step is red → green → refactor: the test is written and seen failing be
    later. Start such a state `Eagerly` too, or it goes stale once the screen stops observing it
    (`CardFormViewModel.onNumberChange`, #50).
    Test: constructed with fakes, Turbine on the state, `MainDispatcherRule`.
-4. `@Serializable` route + `*Directions` data class + `NavController.*Directions()` factory in `Navigation.kt`;
+4. `@Serializable` route + `*Directions` data class + `NavController.*Directions(entry)` factory in `Navigation.kt`;
    register `composable<Route>` in `AppNavigation`. Test: extend or add an `AppNavigationTest`-style flow, one per
    user journey. A popped screen still runs its effects and takes taps while it animates out, so a direction called
    from a `LaunchedEffect` on ViewModel state (e.g. "saved → open it"), or a second tap on a Back arrow, can fire

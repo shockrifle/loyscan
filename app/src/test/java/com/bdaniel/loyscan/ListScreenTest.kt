@@ -63,7 +63,7 @@ class ListScreenTest {
         val card = aLoyaltyCard(id = cardId(5), store = aStore(name = "Test Store", color = "#AA0000"))
         val viewModel = ListViewModel(FakeLoyaltyCardRepository(listOf(card)), FakeUserPreferencesRepository(), SavedStateHandle())
         var navigatedTo: Pair<String, String>? = null
-        val directions = ListDirections(toCard = { id, color -> navigatedTo = id to color }, toAddCard = {})
+        val directions = ListDirections(toCard = { id, color -> navigatedTo = id to color; true }, toAddCard = {})
 
         composeRule.setContent {
             SharedTransitionLayout {
@@ -145,7 +145,7 @@ class ListScreenTest {
     @Test
     fun addCard_startsAddingACard() {
         var addCardOpened = 0
-        setScreen(directions = ListDirections(toCard = { _, _ -> }, toAddCard = { addCardOpened++ }))
+        setScreen(directions = ListDirections(toCard = { _, _ -> true }, toAddCard = { addCardOpened++ }))
 
         composeRule.onNodeWithContentDescription("Add card").performClick()
 
@@ -155,7 +155,7 @@ class ListScreenTest {
     @Test
     fun noCards_offersToAddTheFirstOne_withoutASearchField() {
         var addCardOpened = 0
-        setScreen(directions = ListDirections(toCard = { _, _ -> }, toAddCard = { addCardOpened++ }))
+        setScreen(directions = ListDirections(toCard = { _, _ -> true }, toAddCard = { addCardOpened++ }))
 
         composeRule.onNodeWithText("No cards yet").assertIsDisplayed()
         composeRule.onNodeWithTag(CARD_SEARCH_TAG).assertDoesNotExist()
@@ -238,7 +238,7 @@ class ListScreenTest {
         composeRule.setContent {
             SharedTransitionLayout {
                 AnimatedVisibility(visible = true) {
-                    ListScreen(animatedVisibilityScope = this, directions = ListDirections({ _, _ -> }, {}), viewModel = viewModel)
+                    ListScreen(animatedVisibilityScope = this, directions = ListDirections({ _, _ -> true }, {}), viewModel = viewModel)
                 }
             }
         }
@@ -317,6 +317,26 @@ class ListScreenTest {
     }
 
     @Test
+    fun aSecondTileTappedWhileTheListLeaves_isNotTheOneHeldOnReturn() { // review of #69: only the first tap opens a card
+        val repository = FakeLoyaltyCardRepository(cardsByUse())
+        val showList = setListInNavigation(repository)
+        composeRule.onNode(hasScrollAction()).performScrollToIndex(12)
+        val tappedTop = top("Store 15")
+
+        composeRule.mainClock.autoAdvance = false
+        composeRule.onNodeWithText("Store 15").performClick()
+        composeRule.onNodeWithText("Store 14").performClick()
+        composeRule.mainClock.autoAdvance = true
+        repository.setUseCount("Store 15", 12)
+        composeRule.waitForIdle()
+        showList.value = true
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithText("Store 15").assertIsDisplayed()
+        assertThat(top("Store 15")).isEqualTo(tappedTop)
+    }
+
+    @Test
     fun returningFromACard_thatMovedToTheTop_showsItsTile() { // #61
         val repository = FakeLoyaltyCardRepository(cardsByUse())
         val showList = setListInNavigation(repository)
@@ -355,7 +375,7 @@ class ListScreenTest {
         restorationTester.setContent {
             SharedTransitionLayout {
                 AnimatedVisibility(visible = true) {
-                    ListScreen(animatedVisibilityScope = this, directions = ListDirections({ _, _ -> }, {}), viewModel = viewModel)
+                    ListScreen(animatedVisibilityScope = this, directions = ListDirections({ _, _ -> true }, {}), viewModel = viewModel)
                 }
             }
         }
@@ -424,7 +444,8 @@ class ListScreenTest {
     ): MutableState<Boolean> {
         val showList = mutableStateOf(true)
         val viewModel = ListViewModel(repository, FakeUserPreferencesRepository(CardSort.MOST_USED), SavedStateHandle())
-        val directions = ListDirections(toCard = { _, _ -> showList.value = false }, toAddCard = {})
+        // Opens a card only from the shown list, as the app's directions do (#69).
+        val directions = ListDirections(toCard = { _, _ -> showList.value.also { showList.value = false } }, toAddCard = {})
         val setContent: (@Composable () -> Unit) -> Unit = restorationTester?.let { it::setContent } ?: composeRule::setContent
         setContent {
             val savedState = rememberSaveableStateHolder()
@@ -449,7 +470,7 @@ class ListScreenTest {
 
     private fun setScreen(
         vararg cards: LoyaltyCard,
-        directions: ListDirections = ListDirections(toCard = { _, _ -> }, toAddCard = {}),
+        directions: ListDirections = ListDirections(toCard = { _, _ -> true }, toAddCard = {}),
         preferences: FakeUserPreferencesRepository = FakeUserPreferencesRepository(),
         viewModel: ListViewModel = ListViewModel(FakeLoyaltyCardRepository(cards.toList()), preferences, SavedStateHandle()),
         fontScale: Float = 1f,
