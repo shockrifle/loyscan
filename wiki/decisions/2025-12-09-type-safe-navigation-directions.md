@@ -28,6 +28,6 @@ for Compose skipping.
 ## Consequences
 - A new screen = route type + Directions class + factory + `composable<Route>` entry — see the checklist in
   [[architecture]].
-- `ListDirections.toBack` exists but is unused (the list is the start destination).
+- `ListDirections.toBack` was never used (the list is the start destination); removed in #66 (corrected 2026-10-29).
 - Naming the route `List` shadowed `kotlin.collections.List` — [[list-route-shadows-kotlin-list]]. Renamed to
   `CardList` in #17.

@@ -35,3 +35,6 @@ There were two causes:
   (delete → back). Fixed the same way in [#65](https://github.com/shockrifle/loyscan/issues/65): every direction
   called when a write ends goes through `whileCurrent(entry)` in `Navigation.kt`, and the writes run
   `NonCancellable` ([[edit-store]], [[card-detail]]).
+- A popped screen also takes taps while it animates out, so a second tap on its Back arrow popped the screen below
+  too. Since [#66](https://github.com/shockrifle/loyscan/issues/66) every `toBack` goes through `whileCurrent(entry)`
+  (`AddCardDirectionsTest.aSecondBackFrom…`). The list had a `toBack` that nothing called; it was removed.

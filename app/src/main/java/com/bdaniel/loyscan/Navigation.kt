@@ -14,7 +14,6 @@ object CardList
 data class ListDirections(
     val toCard: (id: String, color: String) -> Unit,
     val toAddCard: () -> Unit,
-    val toBack: () -> Unit
 )
 
 fun NavController.listDirections() = ListDirections(
@@ -22,7 +21,6 @@ fun NavController.listDirections() = ListDirections(
         navigate(Detail(id, color))
     },
     toAddCard = { navigate(StorePicker) },
-    toBack = { navigateUp() }
 )
 
 
@@ -56,11 +54,11 @@ data class StorePickerDirections(
     val toBack: () -> Unit
 )
 
-fun NavController.storePickerDirections() = StorePickerDirections(
+fun NavController.storePickerDirections(picker: NavBackStackEntry) = StorePickerDirections(
     toStore = { storeId -> navigate(Scanner(storeId)) },
     toCustomStore = { navigate(CustomStore()) },
     toEditStore = { storeId -> navigate(CustomStore(storeId)) },
-    toBack = { navigateUp() }
+    toBack = { whileCurrent(picker) { navigateUp() } }
 )
 
 
@@ -102,7 +100,7 @@ data class ScannerDirections(
 )
 
 /** A scan, or "enter manually", replaces the scanner with the card form, so back from the form returns to the picker. */
-fun NavController.scannerDirections(storeId: String) = ScannerDirections(
+fun NavController.scannerDirections(storeId: String, scanner: NavBackStackEntry) = ScannerDirections(
     onScanned = { barcode ->
         navigate(CardForm(storeId, scannedContent = barcode.content, scannedFormat = barcode.format)) {
             popUpTo<Scanner> { inclusive = true }
@@ -113,7 +111,7 @@ fun NavController.scannerDirections(storeId: String) = ScannerDirections(
             popUpTo<Scanner> { inclusive = true }
         }
     },
-    toBack = { navigateUp() }
+    toBack = { whileCurrent(scanner) { navigateUp() } }
 )
 
 
@@ -148,13 +146,14 @@ fun NavController.cardFormDirections(form: NavBackStackEntry) = CardFormDirectio
             }
         }
     },
-    toBack = { navigateUp() }
+    toBack = { whileCurrent(form) { navigateUp() } }
 )
 
 
 /**
- * Navigates only while [entry] is the current screen. A screen still runs its effects while it animates out after Back,
- * so one that navigates when a write ends would otherwise do it from wherever Back went (#64, #65).
+ * Navigates only while [entry] is the current screen. A screen still runs its effects and takes taps while it animates
+ * out after Back, so one that navigates when a write ends, or a second tap on its Back arrow, would otherwise do it from
+ * wherever Back went (#64, #65, #66).
  */
 private inline fun NavController.whileCurrent(entry: NavBackStackEntry, navigation: () -> Unit) {
     if (currentBackStackEntry == entry) navigation()

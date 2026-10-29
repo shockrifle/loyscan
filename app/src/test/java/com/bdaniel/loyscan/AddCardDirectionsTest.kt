@@ -53,7 +53,7 @@ class AddCardDirectionsTest {
 
     @Test
     fun pickingAStore_opensTheScannerForIt() {
-        composeRule.runOnIdle { navController.storePickerDirections().toStore("some-store") }
+        composeRule.runOnIdle { navController.storePickerDirections(navController.currentBackStackEntry!!).toStore("some-store") }
 
         composeRule.runOnIdle {
             assertThat(navController.currentBackStackEntry!!.toRoute<Scanner>()).isEqualTo(Scanner("some-store"))
@@ -63,7 +63,7 @@ class AddCardDirectionsTest {
 
     @Test
     fun otherCard_opensTheCustomStoreForm() {
-        composeRule.runOnIdle { navController.storePickerDirections().toCustomStore() }
+        composeRule.runOnIdle { navController.storePickerDirections(navController.currentBackStackEntry!!).toCustomStore() }
 
         composeRule.runOnIdle {
             assertThat(currentIs<CustomStore>()).isTrue()
@@ -73,7 +73,7 @@ class AddCardDirectionsTest {
 
     @Test
     fun creatingACustomStore_replacesItsFormWithTheScannerForIt() {
-        composeRule.runOnIdle { navController.storePickerDirections().toCustomStore() }
+        composeRule.runOnIdle { navController.storePickerDirections(navController.currentBackStackEntry!!).toCustomStore() }
         composeRule.runOnIdle { navController.customStoreDirections(navController.currentBackStackEntry!!).toScanner("new-store") }
 
         composeRule.runOnIdle {
@@ -84,7 +84,7 @@ class AddCardDirectionsTest {
 
     @Test
     fun editingACustomStore_opensItsFormOverThePicker() { // #53
-        composeRule.runOnIdle { navController.storePickerDirections().toEditStore("custom-store") }
+        composeRule.runOnIdle { navController.storePickerDirections(navController.currentBackStackEntry!!).toEditStore("custom-store") }
 
         composeRule.runOnIdle {
             assertThat(navController.currentBackStackEntry!!.toRoute<CustomStore>()).isEqualTo(CustomStore("custom-store"))
@@ -94,7 +94,7 @@ class AddCardDirectionsTest {
 
     @Test
     fun backFromTheCustomStoreForm_returnsToThePicker() {
-        composeRule.runOnIdle { navController.storePickerDirections().toCustomStore() }
+        composeRule.runOnIdle { navController.storePickerDirections(navController.currentBackStackEntry!!).toCustomStore() }
         composeRule.runOnIdle { navController.customStoreDirections(navController.currentBackStackEntry!!).toBack() }
 
         composeRule.runOnIdle { assertThat(currentIs<StorePicker>()).isTrue() }
@@ -102,9 +102,9 @@ class AddCardDirectionsTest {
 
     @Test
     fun aScan_replacesTheScannerWithTheFormForTheStore_withTheScannedContentAndFormat() {
-        composeRule.runOnIdle { navController.storePickerDirections().toStore("some-store") }
+        composeRule.runOnIdle { navController.storePickerDirections(navController.currentBackStackEntry!!).toStore("some-store") }
         composeRule.runOnIdle {
-            navController.scannerDirections("some-store").onScanned(ScannedBarcode("5901234123457", BarcodeFormat.EAN_13))
+            navController.scannerDirections("some-store", navController.currentBackStackEntry!!).onScanned(ScannedBarcode("5901234123457", BarcodeFormat.EAN_13))
         }
 
         composeRule.runOnIdle {
@@ -116,9 +116,9 @@ class AddCardDirectionsTest {
 
     @Test
     fun aGs1Scan_reachesTheFormWithItsGs1FormatAndItsSeparatorsIntact() { // #41
-        composeRule.runOnIdle { navController.storePickerDirections().toStore("some-store") }
+        composeRule.runOnIdle { navController.storePickerDirections(navController.currentBackStackEntry!!).toStore("some-store") }
         composeRule.runOnIdle {
-            navController.scannerDirections("some-store")
+            navController.scannerDirections("some-store", navController.currentBackStackEntry!!)
                 .onScanned(ScannedBarcode("10ABC\u001D9799123456", BarcodeFormat.GS1_128, gs1 = true))
         }
 
@@ -130,8 +130,8 @@ class AddCardDirectionsTest {
 
     @Test
     fun enterManually_replacesTheScannerWithAnEmptyFormForTheStore() {
-        composeRule.runOnIdle { navController.storePickerDirections().toStore("some-store") }
-        composeRule.runOnIdle { navController.scannerDirections("some-store").toManualEntry() }
+        composeRule.runOnIdle { navController.storePickerDirections(navController.currentBackStackEntry!!).toStore("some-store") }
+        composeRule.runOnIdle { navController.scannerDirections("some-store", navController.currentBackStackEntry!!).toManualEntry() }
 
         composeRule.runOnIdle {
             assertThat(navController.currentBackStackEntry!!.toRoute<CardForm>()).isEqualTo(CardForm("some-store"))
@@ -141,8 +141,8 @@ class AddCardDirectionsTest {
 
     @Test
     fun savingTheForm_opensTheNewCardOverTheList_withoutCountingAUse() {
-        composeRule.runOnIdle { navController.storePickerDirections().toStore("some-store") }
-        composeRule.runOnIdle { navController.scannerDirections("some-store").toManualEntry() }
+        composeRule.runOnIdle { navController.storePickerDirections(navController.currentBackStackEntry!!).toStore("some-store") }
+        composeRule.runOnIdle { navController.scannerDirections("some-store", navController.currentBackStackEntry!!).toManualEntry() }
         composeRule.runOnIdle { navController.cardFormDirections(navController.currentBackStackEntry!!).toCard("new-card", "#112233") }
 
         composeRule.runOnIdle {
@@ -154,7 +154,7 @@ class AddCardDirectionsTest {
 
     @Test
     fun editOnACard_opensItsFormOverIt() { // #8
-        composeRule.runOnIdle { navController.storePickerDirections().toBack() }
+        composeRule.runOnIdle { navController.storePickerDirections(navController.currentBackStackEntry!!).toBack() }
         composeRule.runOnIdle { navController.listDirections().toCard("a-card", "#112233") }
         composeRule.runOnIdle { navController.detailDirections(navController.currentBackStackEntry!!).toEdit("a-card", "some-store") }
 
@@ -166,7 +166,7 @@ class AddCardDirectionsTest {
 
     @Test
     fun savingAnEdit_replacesTheCardAndItsForm_withTheCardInItsCurrentColour() { // #8: the store may have changed
-        composeRule.runOnIdle { navController.storePickerDirections().toBack() }
+        composeRule.runOnIdle { navController.storePickerDirections(navController.currentBackStackEntry!!).toBack() }
         composeRule.runOnIdle { navController.listDirections().toCard("a-card", "#112233") }
         composeRule.runOnIdle { navController.detailDirections(navController.currentBackStackEntry!!).toEdit("a-card", "some-store") }
         composeRule.runOnIdle { navController.cardFormDirections(navController.currentBackStackEntry!!).toCard("a-card", "#445566") }
@@ -179,8 +179,8 @@ class AddCardDirectionsTest {
 
     @Test
     fun aSaveThatEndsAfterBackFromTheForm_leavesTheUserOnThePicker() { // #64
-        composeRule.runOnIdle { navController.storePickerDirections().toStore("some-store") }
-        composeRule.runOnIdle { navController.scannerDirections("some-store").toManualEntry() }
+        composeRule.runOnIdle { navController.storePickerDirections(navController.currentBackStackEntry!!).toStore("some-store") }
+        composeRule.runOnIdle { navController.scannerDirections("some-store", navController.currentBackStackEntry!!).toManualEntry() }
         val directions = composeRule.runOnIdle { navController.cardFormDirections(navController.currentBackStackEntry!!) }
         composeRule.runOnIdle { directions.toBack() }
 
@@ -194,7 +194,7 @@ class AddCardDirectionsTest {
 
     @Test
     fun anEditThatEndsAfterBackFromTheForm_leavesTheUserOnTheCard() { // #64
-        composeRule.runOnIdle { navController.storePickerDirections().toBack() }
+        composeRule.runOnIdle { navController.storePickerDirections(navController.currentBackStackEntry!!).toBack() }
         composeRule.runOnIdle { navController.listDirections().toCard("a-card", "#112233") }
         composeRule.runOnIdle { navController.detailDirections(navController.currentBackStackEntry!!).toEdit("a-card", "some-store") }
         val directions = composeRule.runOnIdle { navController.cardFormDirections(navController.currentBackStackEntry!!) }
@@ -210,7 +210,7 @@ class AddCardDirectionsTest {
 
     @Test
     fun aSaveThatEndsAfterBack_leavesAFormOpenedSinceAsItIs() { // review of #64: Edit again while the first form leaves
-        composeRule.runOnIdle { navController.storePickerDirections().toBack() }
+        composeRule.runOnIdle { navController.storePickerDirections(navController.currentBackStackEntry!!).toBack() }
         composeRule.runOnIdle { navController.listDirections().toCard("a-card", "#112233") }
         composeRule.runOnIdle { navController.detailDirections(navController.currentBackStackEntry!!).toEdit("a-card", "some-store") }
         val first = composeRule.runOnIdle { navController.cardFormDirections(navController.currentBackStackEntry!!) }
@@ -227,7 +227,7 @@ class AddCardDirectionsTest {
 
     @Test
     fun aNewStoreSavedAfterBackFromItsForm_leavesTheUserOnThePicker() { // #65
-        composeRule.runOnIdle { navController.storePickerDirections().toCustomStore() }
+        composeRule.runOnIdle { navController.storePickerDirections(navController.currentBackStackEntry!!).toCustomStore() }
         val form = composeRule.runOnIdle { navController.customStoreDirections(navController.currentBackStackEntry!!) }
         composeRule.runOnIdle { form.toBack() }
 
@@ -241,7 +241,7 @@ class AddCardDirectionsTest {
 
     @Test
     fun aStoreSavedOrDeletedAfterBackFromItsForm_leavesTheUserOnThePicker() { // #65: both end in toBack
-        composeRule.runOnIdle { navController.storePickerDirections().toEditStore("custom-store") }
+        composeRule.runOnIdle { navController.storePickerDirections(navController.currentBackStackEntry!!).toEditStore("custom-store") }
         val form = composeRule.runOnIdle { navController.customStoreDirections(navController.currentBackStackEntry!!) }
         composeRule.runOnIdle { form.toBack() }
 
@@ -255,7 +255,7 @@ class AddCardDirectionsTest {
 
     @Test
     fun aCardDeletedAfterBack_leavesACardOpenedSinceAsItIs() { // #65
-        composeRule.runOnIdle { navController.storePickerDirections().toBack() }
+        composeRule.runOnIdle { navController.storePickerDirections(navController.currentBackStackEntry!!).toBack() }
         composeRule.runOnIdle { navController.listDirections().toCard("a-card", "#112233") }
         val deleted = composeRule.runOnIdle { navController.detailDirections(navController.currentBackStackEntry!!) }
         composeRule.runOnIdle { deleted.toBack() }
@@ -269,8 +269,44 @@ class AddCardDirectionsTest {
     }
 
     @Test
+    fun aSecondBackFromThePicker_staysOnTheList() { // #66: a double tap on the Back arrow
+        composeRule.runOnIdle { navController.listDirections().toCard("a-card", "#112233") }
+        composeRule.runOnIdle { navController.navigate(StorePicker) }
+        val picker = composeRule.runOnIdle { navController.storePickerDirections(navController.currentBackStackEntry!!) }
+        composeRule.runOnIdle { picker.toBack() }
+
+        composeRule.runOnIdle { picker.toBack() }
+
+        composeRule.runOnIdle { assertThat(navController.currentBackStackEntry!!.toRoute<Detail>()).isEqualTo(Detail("a-card", "#112233")) }
+    }
+
+    @Test
+    fun aSecondBackFromTheScanner_staysOnThePicker() { // #66
+        composeRule.runOnIdle { navController.storePickerDirections(navController.currentBackStackEntry!!).toStore("some-store") }
+        val scanner = composeRule.runOnIdle { navController.scannerDirections("some-store", navController.currentBackStackEntry!!) }
+        composeRule.runOnIdle { scanner.toBack() }
+
+        composeRule.runOnIdle { scanner.toBack() }
+
+        composeRule.runOnIdle { assertThat(currentIs<StorePicker>()).isTrue() }
+    }
+
+    @Test
+    fun aSecondBackFromTheCardForm_staysOnTheCard() { // #66: the form is over the card when editing
+        composeRule.runOnIdle { navController.storePickerDirections(navController.currentBackStackEntry!!).toBack() }
+        composeRule.runOnIdle { navController.listDirections().toCard("a-card", "#112233") }
+        composeRule.runOnIdle { navController.detailDirections(navController.currentBackStackEntry!!).toEdit("a-card", "some-store") }
+        val form = composeRule.runOnIdle { navController.cardFormDirections(navController.currentBackStackEntry!!) }
+        composeRule.runOnIdle { form.toBack() }
+
+        composeRule.runOnIdle { form.toBack() }
+
+        composeRule.runOnIdle { assertThat(navController.currentBackStackEntry!!.toRoute<Detail>()).isEqualTo(Detail("a-card", "#112233")) }
+    }
+
+    @Test
     fun backFromThePicker_returnsToTheList() {
-        composeRule.runOnIdle { navController.storePickerDirections().toBack() }
+        composeRule.runOnIdle { navController.storePickerDirections(navController.currentBackStackEntry!!).toBack() }
 
         composeRule.runOnIdle { assertThat(currentIs<CardList>()).isTrue() }
     }
