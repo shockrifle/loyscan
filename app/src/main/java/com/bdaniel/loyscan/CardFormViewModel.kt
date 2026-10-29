@@ -12,6 +12,7 @@ import com.bdaniel.loyscan.domain.LoyaltyCard
 import com.bdaniel.loyscan.domain.Store
 import com.bdaniel.loyscan.domain.cardnumber.CardNumberEngine
 import com.bdaniel.loyscan.domain.matchingScan
+import com.bdaniel.loyscan.domain.search
 import com.bdaniel.loyscan.domain.cardnumber.Validation
 import com.bdaniel.loyscan.ui.barcode.BarcodeEncoder
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -63,6 +64,8 @@ data class CardFormState(
     val editing: Boolean = false,
     /** The stores have loaded and none has the form's id: it was deleted while the form was open (#51). */
     val storeGone: Boolean = false,
+    /** While editing, every store but this one, by name: the card can be moved to any of them (#8). */
+    val otherStores: List<Store> = emptyList(),
 ) {
     /** Anything but an empty number can be saved, an invalid one "anyway". */
     val canSave: Boolean get() = store != null && check != NumberCheck.Empty && !saving && savedCardId == null
@@ -87,7 +90,7 @@ data class CardFormState(
 /**
  * Last step of adding a card: the label and number for the routed store, from a scan or typed. The store can be switched
  * to one whose rule reads the scan; the scan and label stay. With [CardForm.cardId] it edits that card (#8): the form
- * starts as the card, a scanned card as its untouched scan.
+ * starts as the card, a scanned card as its untouched scan, and the card can be moved to any other store.
  */
 @HiltViewModel
 class CardFormViewModel @Inject constructor(
@@ -143,7 +146,10 @@ class CardFormViewModel @Inject constructor(
         savedStateHandle[TYPED_NUMBER] = number
     }
 
-    /** Makes the form [storeId]'s, keeping the scan and the label; for a store from [CardFormState.suggestedStores]. */
+    /**
+     * Makes the form [storeId]'s, keeping the scan or typed number and the label; for a store from
+     * [CardFormState.suggestedStores] or, while editing, [CardFormState.otherStores].
+     */
     fun switchStore(storeId: String) {
         savedStateHandle[STORE_ID] = storeId
     }
@@ -260,6 +266,8 @@ class CardFormViewModel @Inject constructor(
             savedCardId = progress.savedCardId,
             suggestedStores = suggestedStores(store, stores, draft, ruleReadsScan),
             editing = editing,
+            // Adding a card offers none: back returns to the picker.
+            otherStores = if (editing) stores.filter { it.id != store.id }.search("") else emptyList(),
         )
     }
 

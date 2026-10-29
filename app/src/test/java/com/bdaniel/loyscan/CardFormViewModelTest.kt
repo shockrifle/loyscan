@@ -625,6 +625,45 @@ class CardFormViewModelTest {
     }
 
     @Test
+    fun editingACard_offersEveryOtherStore_byName() = runTest { // #8
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, number = "12345674"))
+
+        viewModel(CardForm("ruled", cardId = cardId(1))).state.test {
+            assertThat(awaitLoaded().otherStores.map { it.id }).containsExactly("qr", "ean", "gs1", "nine", "plain").inOrder()
+        }
+    }
+
+    @Test
+    fun addingACard_offersNoOtherStore() = runTest { // #8: back returns to the picker
+        viewModel(CardForm("ruled")).state.test {
+            assertThat(awaitLoaded().otherStores).isEmpty()
+        }
+    }
+
+    @Test
+    fun movingATypedCardToAnotherStore_checksItsNumberAgainstThatStoresRule_andSavesItThere() = runTest { // #8
+        val original = aLoyaltyCard(id = cardId(1), store = store, label = "Gold card", number = "12345674", useCount = 3)
+        cards.cards.value = listOf(original)
+        val viewModel = viewModel(CardForm("ruled", cardId = cardId(1)))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.switchStore("nine")
+
+            val state = expectMostRecentItem()
+            assertThat(state.store).isEqualTo(nineStore)
+            assertThat(state.label).isEqualTo("Gold card")
+            assertThat(state.number).isEqualTo("12345674")
+            assertThat(state.check).isEqualTo(NumberCheck.Invalid(setOf(Validation.Error.WRONG_START)))
+            assertThat(state.otherStores.map { it.id }).containsExactly("qr", "ean", "gs1", "plain", "ruled").inOrder()
+
+            viewModel.save()
+            assertThat(expectMostRecentItem().savedCardId).isEqualTo(cardId(1))
+            assertThat(cards.cards.value).containsExactly(original.copy(store = nineStore, updatedAt = NOW))
+        }
+    }
+
+    @Test
     fun anEdit_isRestoredAfterProcessDeath() = runTest { // #8
         cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, label = "Gold card", number = "12345674"))
         val handle = SavedStateHandle(route = CardForm("ruled", cardId = cardId(1)))

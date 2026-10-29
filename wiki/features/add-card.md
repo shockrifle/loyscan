@@ -6,7 +6,8 @@ check the number and give the card a label, then save it. The new card opens. Is
 stores already in the database, and custom stores). Everything runs offline on the local database.
 
 **Entry points** (under `app/src/main/java/com/bdaniel/loyscan/`):
-- `StorePickerScreen.kt`, `StorePickerViewModel.kt`; search in `domain/StoreSearch.kt`.
+- `StorePickerScreen.kt`, `StorePickerViewModel.kt`; the search field and list in `StoreList.kt` (`StoreSearchList`,
+  shared with the edit form's "Change store", [[edit-card]]); search in `domain/StoreSearch.kt`.
 - `CustomStoreScreen.kt`, `CustomStoreViewModel.kt` ("Other card"); formats in `BarcodeFormat.forCustomStores`.
 - [[barcode-scanner]] (`ScannerScreen.kt`), unchanged except for where its directions lead.
 - `CardFormScreen.kt`, `CardFormViewModel.kt` (`CardFormState`).

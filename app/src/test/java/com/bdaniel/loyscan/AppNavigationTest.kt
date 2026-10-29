@@ -184,6 +184,26 @@ class AppNavigationTest {
     }
 
     @Test
+    fun movingACardToAnotherStore_savesIt_andTheCardShowsThatStore() { // #8
+        runBlocking { db.storeDao().insert(aStoreEntity(id = "other", name = "Other Store")) }
+        waitForText("Gold card")
+        composeRule.onNodeWithText("Gold card").performClick()
+        waitForText("0042")
+
+        composeRule.onNodeWithContentDescription("Edit").performClick()
+        waitForText("Change store")
+        composeRule.onNodeWithText("Change store").performClick()
+        waitForText("Other Store")
+        composeRule.onNodeWithText("Other Store").performClick()
+        composeRule.onNodeWithText("Save").performClick()
+
+        waitForTheCardFormToClose()
+        waitForText("Other Store")
+        composeRule.onNodeWithText("Test Store").assertDoesNotExist()
+        assertThat(runBlocking { db.loyaltyCardDao().getAllWithStore().first() }.single().loyaltyCard.storeId).isEqualTo("other")
+    }
+
+    @Test
     fun deletingACard_afterConfirming_returnsToTheListWithoutIt() { // #8
         waitForText("Gold card")
         composeRule.onNodeWithText("Gold card").performClick()

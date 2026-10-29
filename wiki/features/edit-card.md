@@ -1,9 +1,9 @@
 # Edit card
 
 The detail screen's Edit icon opens the card form ([[add-card]]) for that card: its label and number, checked live
-against the store's rule as when adding it. Saving writes the edit and opens the card again. Issue
-[#8](https://github.com/shockrifle/loyscan/issues/8); this page covers the slice that exists: editing the label and
-number of one card. Deleting a card is on [[card-detail]].
+against the store's rule as when adding it, and its store, which "Change store" replaces with any other. Saving writes
+the edit and opens the card again. Issue [#8](https://github.com/shockrifle/loyscan/issues/8); this page covers the
+slice that exists: editing the label, number and store of one card. Deleting a card is on [[card-detail]].
 
 **Entry points** (under `app/src/main/java/com/bdaniel/loyscan/`):
 - `DetailScreen.kt`: the Edit icon → `DetailDirections.toEdit(cardId, storeId)` → `CardForm(storeId, cardId = cardId)`
@@ -12,6 +12,8 @@ number of one card. Deleting a card is on [[card-detail]].
   "Edit card").
 - `LoyaltyCardRepository.update(card)` → `LoyaltyCardDao.update(LoyaltyCardEdit)`, mapped with `LoyaltyCard.toEdit()`
   (`data/mapper/LoyaltyCardMapper.kt`).
+- `StoreList.kt`: `StoreChooser`, the full-screen dialog "Change store" opens, over `StoreSearchList`, the search field
+  and list it shares with the store picker.
 
 ## Behaviour
 
@@ -25,6 +27,13 @@ number of one card. Deleting a card is on [[card-detail]].
   label keeps the scan as it is.
 - The live check, "Save anyway", "Shown as …" and the "It looks like a card from:" hints work as when adding
   ([[add-card]]). Switching to a suggested store moves the card to that store.
+- **Change store** (next to the store's name, only while editing): a full-screen dialog, "Choose store", lists every
+  other store (`CardFormState.otherStores`, by name) with the picker's search over names and aliases. Tapping one
+  makes the form that store's through `CardFormViewModel.switchStore`, as a suggested store does: the label and the
+  number, typed or an untouched scan, stay and are checked against the new store's rule, so a number it rejects needs
+  "Save anyway". Close (or system Back) keeps the store. The chosen store is kept in the `SavedStateHandle`, so it
+  survives process death. Adding a card doesn't offer it: Back returns to the picker there. Catalogue and custom stores
+  are both listed; "Other card" isn't, so a card can't be moved to a store that doesn't exist yet.
 - **Saving writes only what the form edits:** the store, label, number, scanned format and `updatedAt` (now). Room's
   partial `@Update(entity = LoyaltyCardEntity::class)` with `LoyaltyCardEdit` writes those columns and no others, so
   `createdAt`, the use count, `lastUsedAt`, the note and the photo paths stay as stored even if they changed after the
@@ -46,10 +55,15 @@ number of one card. Deleting a card is on [[card-detail]].
 - `DetailScreenTest.editAction_opensTheCardsForm`; `AddCardDirectionsTest.editOnACard_…`, `savingAnEdit_…`,
   `anEditThatEndsAfterBackFromTheForm_…`; `CardFormViewModelTest.anEditStillSavingWhenTheFormCloses_isStillSaved`
   (#64).
-- `AppNavigationTest.editingACardsLabel_savesIt_showsTheCard_andBackReturnsToTheList`.
+- Change store: `CardFormViewModelTest.editingACard_offersEveryOtherStore_byName`, `addingACard_offersNoOtherStore`,
+  `movingATypedCardToAnotherStore_checksItsNumberAgainstThatStoresRule_andSavesItThere`;
+  `CardFormScreenTest.editingACard_canMoveItToAnotherStore_foundBySearch`,
+  `theStoreChooser_canBeClosedWithoutChangingTheStore`, `addingACard_saysAddCard_andDoesNotOfferToChangeTheStore`.
+- `AppNavigationTest.editingACardsLabel_savesIt_showsTheCard_andBackReturnsToTheList`,
+  `movingACardToAnotherStore_savesIt_andTheCardShowsThatStore`.
 
 ## Not implemented
 
-From #8: picking another store for a card (only a suggested store for a scan can be switched to), deleting several
-cards at once (needs the list's multi-select, #7), and deleting photo files (needs photos, #10). A custom store's
+From #8: deleting several cards at once (needs the list's multi-select, #7), and deleting photo files (needs photos,
+#10). A custom store's
 barcode format belongs to the store, so changing it is editing the store (#53).

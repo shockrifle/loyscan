@@ -233,6 +233,42 @@ object Icons {
         @Suppress("ObjectPropertyName")
         private var _Add: ImageVector? = null
 
+        /** Material Symbols "close": an X. */
+        val Close: ImageVector
+            get() {
+                if (_Close != null) {
+                    return _Close!!
+                }
+                _Close = ImageVector.Builder(
+                        name = "Close",
+                        defaultWidth = 24.dp,
+                        defaultHeight = 24.dp,
+                        viewportWidth = 960f,
+                        viewportHeight = 960f
+                ).apply {
+                    path(fill = SolidColor(Color.Black)) {
+                        moveTo(256f, 760f)
+                        lineToRelative(-56f, -56f)
+                        lineTo(424f, 480f)
+                        lineTo(200f, 256f)
+                        lineToRelative(56f, -56f)
+                        lineTo(480f, 424f)
+                        lineTo(704f, 200f)
+                        lineToRelative(56f, 56f)
+                        lineTo(536f, 480f)
+                        lineTo(760f, 704f)
+                        lineToRelative(-56f, 56f)
+                        lineTo(480f, 536f)
+                        close()
+                    }
+                }.build()
+
+                return _Close!!
+            }
+
+        @Suppress("ObjectPropertyName")
+        private var _Close: ImageVector? = null
+
         /** Material Symbols "sort": three bars, longest on top. */
         val Sort: ImageVector
             get() {

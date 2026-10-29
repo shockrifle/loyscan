@@ -20,7 +20,7 @@ the way they are, what's fragile, and how to work on it.
 - [[card-detail]] — one card: store header, label, display number
 - [[card-transition]] — shared-element animation between list and detail
 - [[add-card]] — adding a card: pick the store, scan or type the number, save
-- [[edit-card]] — editing a card's label and number; deleting is on [[card-detail]]
+- [[edit-card]] — editing a card's label, number and store; deleting is on [[card-detail]]
 - [[edit-store]] — editing or deleting a custom store from the store picker
 - [[barcode-scanner]] — reads a card's barcode with the camera (offline, no Play Services)
 - [[store-catalogue]] — curated store list, synced into the database on every open

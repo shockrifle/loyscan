@@ -1,15 +1,11 @@
 package com.bdaniel.loyscan
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -26,9 +22,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.KeyboardType
@@ -38,7 +36,6 @@ import com.bdaniel.loyscan.CardFormState.NumberCheck
 import com.bdaniel.loyscan.domain.cardnumber.CardNumberRule
 import com.bdaniel.loyscan.domain.cardnumber.Validation
 import com.bdaniel.loyscan.ui.theme.icons.Icons
-import com.bdaniel.loyscan.ui.toBrandColorOrNull
 
 const val CARD_NUMBER_TAG = "cardNumber"
 const val CARD_LABEL_TAG = "cardLabel"
@@ -46,7 +43,7 @@ const val CARD_LABEL_TAG = "cardLabel"
 /**
  * Last step of adding a card, or editing one (#8): the number (scanned or typed), checked live against the store's rule,
  * and an optional label. A number that fails the check can still be saved ("Save anyway"); a scan another store's rule
- * reads offers that store. Saving opens the card.
+ * reads offers that store, and an edited card can be moved to any other store. Saving opens the card.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,6 +53,7 @@ fun CardFormScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val store = state.store
+    var choosingStore by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(state.savedCardId) {
         val id = state.savedCardId
@@ -86,13 +84,11 @@ fun CardFormScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Box(
-                    Modifier
-                        .size(32.dp)
-                        .clip(CircleShape)
-                        .background(store.color.toBrandColorOrNull() ?: MaterialTheme.colorScheme.surfaceVariant)
-                )
-                Text(store.name, style = MaterialTheme.typography.titleLarge)
+                StoreDot(store, 32.dp)
+                Text(store.name, style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
+                if (state.otherStores.isNotEmpty()) {
+                    TextButton(onClick = { choosingStore = true }) { Text("Change store") }
+                }
             }
             val problem = problemText(state.check, store.name)
             OutlinedTextField(
@@ -146,6 +142,16 @@ fun CardFormScreen(
             Button(onClick = viewModel::save, enabled = state.canSave, modifier = Modifier.fillMaxWidth()) {
                 Text(if (problem != null) "Save anyway" else "Save")
             }
+        }
+        if (choosingStore) {
+            StoreChooser(
+                stores = state.otherStores,
+                onChoose = { chosen ->
+                    viewModel.switchStore(chosen.id)
+                    choosingStore = false
+                },
+                onDismiss = { choosingStore = false },
+            )
         }
     }
 }

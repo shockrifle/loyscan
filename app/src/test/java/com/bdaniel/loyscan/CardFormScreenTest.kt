@@ -209,10 +209,45 @@ class CardFormScreenTest {
     }
 
     @Test
-    fun addingACard_saysAddCard() {
+    fun editingACard_canMoveItToAnotherStore_foundBySearch() { // #8
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, label = "Gold card", number = "12345674"))
+        setScreen(CardForm("ruled", cardId = cardId(1)))
+
+        composeRule.onNodeWithText("Change store").performClick()
+        composeRule.onNodeWithTag(STORE_SEARCH_TAG).performTextInput("nine")
+        composeRule.onNodeWithText("Plain Store").assertDoesNotExist()
+        composeRule.onNodeWithText("Nine Store").performClick()
+
+        composeRule.onNodeWithTag(STORE_SEARCH_TAG).assertDoesNotExist()
+        composeRule.onNodeWithText("Ruled Store").assertDoesNotExist()
+        composeRule.onNodeWithText("Nine Store card numbers don't start like this.").assertIsDisplayed()
+        composeRule.onNodeWithTag(CARD_LABEL_TAG).assertTextContains("Gold card")
+        composeRule.onNodeWithText("Save anyway").performScrollTo().performClick()
+
+        composeRule.waitForIdle()
+        assertThat(cards.cards.value.single().store.id).isEqualTo("nine")
+        assertThat(opened).containsExactly(cardId(1) to nineStore.color)
+    }
+
+    @Test
+    fun theStoreChooser_canBeClosedWithoutChangingTheStore() { // #8
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, number = "12345674"))
+        setScreen(CardForm("ruled", cardId = cardId(1)))
+
+        composeRule.onNodeWithText("Change store").performClick()
+        composeRule.onNodeWithText("Plain Store").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Close").performClick()
+
+        composeRule.onNodeWithText("Plain Store").assertDoesNotExist()
+        composeRule.onNodeWithText("Ruled Store").assertIsDisplayed()
+    }
+
+    @Test
+    fun addingACard_saysAddCard_andDoesNotOfferToChangeTheStore() { // #8: back returns to the picker
         setScreen(CardForm("ruled"))
 
         composeRule.onNodeWithText("Add card").assertIsDisplayed()
+        composeRule.onNodeWithText("Change store").assertDoesNotExist()
     }
 
     @Test
