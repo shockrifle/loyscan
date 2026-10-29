@@ -59,7 +59,8 @@ tiles, one per row in `loyalty_cards`, live-updating from Room. Sort, search and
   or system Back (`BackHandler`) ends the selection. A selected tile has a primary-colour border and a tick, and is
   `selected` in semantics. Tests: `ListScreenTest.longPressingATile_…`, `whileSelecting_…`, `close_…`, `back_…`.
   - The selected ids live in `ListViewModel`'s `SavedStateHandle`, so they survive process death
-    (`ListViewModelTest.theSelection_isRestoredAfterProcessDeath`). `selection` keeps only ids of cards the list
+    (`ListViewModelTest.theSelection_isRestoredAfterProcessDeath`). `selection` starts from the saved ids, so a delete
+    dialog open at process death is still open after it (`ListScreenTest.theDeleteDialog_survivesProcessDeath`). `selection` keeps only ids of cards the list
     shows, so a card deleted elsewhere drops out. A new search ends the selection, so a card the search hides is never
     selected, and never deleted with the others (`changingTheQuery_clearsTheSelection`).
   - **Edit** → `directions.toEditCard(id, storeId)` → the card form over the list ([[edit-card]]), and the selection
@@ -68,11 +69,13 @@ tiles, one per row in `loyalty_cards`, live-updating from Room. Sort, search and
   - **Delete** asks first ("Delete this card?" / "Delete N cards?"), then deletes the selected cards in one write,
     `LoyaltyCardRepository.deleteAll(ids)` → `DELETE … WHERE id IN (:ids)`, and the selection ends. The write
     finishes even if the list is cleared meanwhile, as on the card screen (#65); a second tap on Delete while it
-    runs is ignored. A failed delete keeps the cards and the selection, the dialog says so, and Delete tries again
+    runs is ignored, and the dialog can't be cancelled until the write ends (cancelling wouldn't stop it). A failed
+    delete keeps the cards and the selection, the dialog says so, and Delete tries again; a failure is forgotten once
+    the selection ends
     (`ListViewModelTest.deletingTheSelection_…`, `aFailedDelete_…`, `ListScreenTest.deletingTheSelection_…`,
     `AppNavigationTest.selectingCardsOnTheList_andDeletingThem_keepsTheOthers`). Photo files aren't deleted with the
     cards yet: there are none until #10.
-- The Settings icon in the top bar is a no-op (`ListScreen.kt:128`, `/* TODO */`).
+- The Settings icon in the top bar is a no-op (`ListScreen.kt:134`, `/* TODO */`).
 - The "Add card" floating button → `directions.toAddCard()` → the store picker of [[add-card]]. The grid has 88dp of bottom content
   padding so the button never covers the last row (`ListScreenTest.theLastTile_isNotCoveredByTheAddButtonWhenScrolledToTheEnd`).
 

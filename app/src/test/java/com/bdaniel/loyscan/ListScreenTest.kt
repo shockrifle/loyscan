@@ -35,6 +35,7 @@ import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.isDialog
@@ -418,6 +419,65 @@ class ListScreenTest {
 
         composeRule.onNodeWithText("1 selected").assertIsDisplayed()
         composeRule.onNode(isDialog()).assertDoesNotExist()
+    }
+
+    @Test
+    fun theDeleteDialog_survivesProcessDeath() { // review of #7: the selection started empty, which closed the dialog
+        val restorationTester = StateRestorationTester(composeRule)
+        val repository = FakeLoyaltyCardRepository(listOf(aLoyaltyCard(id = cardId(1), store = aStore(name = "Apple")), aLoyaltyCard(id = cardId(2), store = aStore(name = "Berry"))))
+        val handle = SavedStateHandle()
+        var viewModel = ListViewModel(repository, FakeUserPreferencesRepository(), handle)
+        restorationTester.setContent {
+            SharedTransitionLayout {
+                AnimatedVisibility(visible = true) {
+                    ListScreen(animatedVisibilityScope = this, directions = ListDirections({ _, _ -> true }, {}, { _, _ -> }), viewModel = viewModel)
+                }
+            }
+        }
+        composeRule.onNodeWithText("Apple").performTouchInput { longClick() }
+        composeRule.onNodeWithText("Berry").performClick()
+        composeRule.onNodeWithContentDescription("Delete").performClick()
+
+        // A new process: a new ViewModel on the saved state, whose cards load only later.
+        repository.loadGate = CompletableDeferred()
+        viewModel = ListViewModel(repository, FakeUserPreferencesRepository(), SavedStateHandle(handle.keys().associateWith { handle.get<Any>(it) }))
+        restorationTester.emulateSavedInstanceStateRestore()
+        composeRule.onNodeWithText("2 selected").assertIsDisplayed()
+        repository.loadGate!!.complete(Unit)
+
+        composeRule.onNodeWithText("Delete 2 cards?").assertIsDisplayed()
+    }
+
+    @Test
+    fun whileTheCardsAreDeleting_theDialogCantBeCancelled() { // review of #7: Cancel didn't stop the write
+        val repository = FakeLoyaltyCardRepository(listOf(aLoyaltyCard(store = aStore(name = "Apple"))))
+        repository.deleteGate = CompletableDeferred()
+        setScreen(viewModel = ListViewModel(repository, FakeUserPreferencesRepository(), SavedStateHandle()))
+        composeRule.onNodeWithText("Apple").performTouchInput { longClick() }
+        composeRule.onNodeWithContentDescription("Delete").performClick()
+
+        composeRule.onNode(hasText("Delete") and hasAnyAncestor(isDialog())).performClick()
+
+        composeRule.onNodeWithText("Cancel").assertIsNotEnabled()
+    }
+
+    @Test
+    fun aFailureLeftWhenTheSelectionEnded_isNotShownByTheNextDelete() { // review of #7
+        val repository = FakeLoyaltyCardRepository(listOf(aLoyaltyCard(id = cardId(1), store = aStore(name = "Apple")), aLoyaltyCard(id = cardId(2), store = aStore(name = "Berry"))))
+        repository.deleteFailure = IllegalStateException("disk I/O error")
+        setScreen(viewModel = ListViewModel(repository, FakeUserPreferencesRepository(), SavedStateHandle()))
+        composeRule.onNodeWithText("Apple").performTouchInput { longClick() }
+        composeRule.onNodeWithContentDescription("Delete").performClick()
+        composeRule.onNode(hasText("Delete") and hasAnyAncestor(isDialog())).performClick()
+        composeRule.onNodeWithText("The card couldn't be deleted. Try again.").assertIsDisplayed()
+
+        // The selected card goes another way (e.g. deleted elsewhere), which ends the selection and closes the dialog.
+        repository.cards.value = repository.cards.value.filterNot { it.id == cardId(1) }
+        composeRule.onNodeWithText("My Cards").assertIsDisplayed()
+        composeRule.onNodeWithText("Berry").performTouchInput { longClick() }
+        composeRule.onNodeWithContentDescription("Delete").performClick()
+
+        composeRule.onNodeWithText("It is removed from this phone for good.").assertIsDisplayed()
     }
 
     @Test

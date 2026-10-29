@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-29 · review fix: the delete dialog survives process death, can't be cancelled while deleting, and forgets a failure once the selection ends; stale ListScreen.kt links fixed · features/card-list, features/card-transition, tech-debt/shared-element-key-from-async-state · review of #7
 - 2026-10-29 · card list multi-select: long press selects, a selection bar edits one card or deletes the selected ones in one write; shifted Navigation.kt, ListScreen.kt and ListViewModel.kt line links fixed (some were already stale) · features/card-list, features/edit-card, architecture, glossary, features/card-detail, features/barcode-scanner, features/card-transition, decisions/2025-12-12-brand-color-in-route · #7
 - 2026-10-29 · review fix: the store can't be switched once a save has started; #8 done, its "Not implemented" items named as #7's, #10's and #53's · features/edit-card, features/_index, features/add-card · review of #8
 - 2026-10-29 · editing a card can move it to any other store ("Change store", a search dialog sharing the picker's list) · features/edit-card, features/add-card, features/_index, index · #8

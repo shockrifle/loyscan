@@ -89,7 +89,8 @@ class ListViewModel @Inject constructor(
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = emptySet()
+            // The saved ids from the first frame, or a selection restored after process death would start empty.
+            initialValue = storedSelection.value.toSet()
         )
 
     private val _deletion = MutableStateFlow(Deletion.NONE)

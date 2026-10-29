@@ -81,8 +81,14 @@ fun SharedTransitionScope.ListScreen(
     val deletion by viewModel.deletion.collectAsState()
     val selecting = selection.isNotEmpty()
     var confirmingDelete by rememberSaveable { mutableStateOf(false) }
-    // The dialog belongs to this selection: once it ends (deleted, or cleared), the next one doesn't open it.
-    LaunchedEffect(selecting) { if (!selecting) confirmingDelete = false }
+    // The dialog belongs to this selection: once it ends (deleted, or cleared), the next one doesn't open it, nor show
+    // a failure left from it.
+    LaunchedEffect(selecting) {
+        if (!selecting) {
+            confirmingDelete = false
+            viewModel.dismissDeletion()
+        }
+    }
     // Back ends the selection before it leaves the list.
     BackHandler(enabled = selecting, onBack = viewModel::clearSelection)
     val gridState = rememberLazyGridState()
@@ -220,12 +226,15 @@ private fun SelectionBar(count: Int, onClose: () -> Unit, onEdit: (() -> Unit)?,
     )
 }
 
-/** Asks before deleting the [count] selected cards. A failed delete is said here, and "Delete" tries again. */
+/**
+ * Asks before deleting the [count] selected cards. A failed delete is said here, and "Delete" tries again. While
+ * [deleting], the dialog stays: closing it wouldn't stop the write.
+ */
 @Composable
 private fun ConfirmDelete(count: Int, failed: Boolean, deleting: Boolean, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     val one = count == 1
     AlertDialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = { if (!deleting) onDismiss() },
         title = { Text(if (one) "Delete this card?" else "Delete $count cards?") },
         text = {
             Text(
@@ -239,7 +248,7 @@ private fun ConfirmDelete(count: Int, failed: Boolean, deleting: Boolean, onConf
             )
         },
         confirmButton = { TextButton(onClick = onConfirm, enabled = !deleting) { Text("Delete") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        dismissButton = { TextButton(onClick = onDismiss, enabled = !deleting) { Text("Cancel") } },
     )
 }
 
