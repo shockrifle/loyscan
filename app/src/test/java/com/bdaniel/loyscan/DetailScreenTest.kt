@@ -300,6 +300,32 @@ class DetailScreenTest {
     }
 
     @Test
+    fun theOffer_doesNotComeBack_afterEdit() { // review of #6: Back from the form returned to the card, offering again
+        val restorationTester = StateRestorationTester(composeRule)
+        setScreen(added = true, restorationTester = restorationTester)
+        composeRule.onNodeWithText("Card added").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Edit").performClick()
+
+        restorationTester.emulateSavedInstanceStateRestore()
+
+        composeRule.onNodeWithText("Card added").assertDoesNotExist()
+    }
+
+    @Test
+    fun theOffer_waitsWhileScanModeIsOpen() { // review of #6: scan mode hid it while it timed out
+        setScreen(added = true)
+        composeRule.onNodeWithText("Card added").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Barcode").performTouchInput { doubleClick() }
+        composeRule.onNodeWithTag("scanMode").assertExists()
+
+        composeRule.mainClock.advanceTimeBy(SNACKBAR_LONG_MS + 1_000)
+        composeRule.onNodeWithText("Add another").assertDoesNotExist()
+        composeRule.onNodeWithTag("scanMode").performClick()
+
+        composeRule.onNodeWithText("Card added").assertIsDisplayed()
+    }
+
+    @Test
     fun theOffer_isMadeAgain_whenTheScreenIsRecreatedWhileItShows() { // #6: the card screen turns with the phone
         val restorationTester = StateRestorationTester(composeRule)
         setScreen(added = true, restorationTester = restorationTester)

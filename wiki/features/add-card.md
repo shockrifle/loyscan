@@ -81,9 +81,10 @@ stores already in the database, and custom stores). Everything runs offline on t
   lengthens it when accessibility services are on). The action opens the store picker over the card
   (`DetailDirections.toAddCard`, `whileCurrent`), so back from the picker returns to the new card, and saving the next
   card replaces the whole stack above the list as usual. The offer is made once: a `rememberSaveable` flag keeps it
-  while it shows, so a rotation shows it again, and drops it when the snackbar ends (timed out or used), so it isn't
-  made again on return from the picker. Back from an Edit opened while it shows makes it again (the effect was
-  cancelled before it ended).
+  while it shows, so a rotation shows it again, and drops it when the snackbar ends (timed out or used) or Edit is
+  tapped, so it isn't made again on return from the picker or the form (Edit: found in review; leaving composition
+  cancels the snackbar before it ends). Scan mode covers the snackbar, so the offer waits while scan mode is open and
+  is made afresh when it closes (found in review: it timed out unseen).
 - **Back during the save** (#64): the user stays where Back took them, and the card is still saved.
   `CardFormDirections.toCard` navigates only while the form's own back-stack entry (`cardFormDirections(entry)`) is
   current, so not after Back, nor over a form opened since (Edit again while the first one animates out; found in
@@ -127,7 +128,7 @@ stores already in the database, and custom stores). Everything runs offline on t
   "Add another" → picker → back to the new card (`addingACard_offersAnother_…`).
 - "Add another": `AddCardDirectionsTest` (`savingTheForm_…_offeringToAddAnother`, `addAnotherOnTheNewCard_…`,
   `aSecondTapOnAddAnother_…`; the edit tests check an edit's card has `added = false`), `DetailScreenTest`
-  (`aCardJustAdded_…`, `aCardOpenedOtherwise_…`, `theOffer_…`).
+  (`aCardJustAdded_…`, `aCardOpenedOtherwise_…`, `theOffer_…`, incl. after Edit and during scan mode).
 
 ## Not implemented
 

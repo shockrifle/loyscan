@@ -163,6 +163,7 @@ class AppNavigationTest {
 
         composeRule.waitUntil(WAIT_TIMEOUT_MS) { composeRule.onAllNodes(hasText("Choose store")).fetchSemanticsNodes().isEmpty() }
         composeRule.onNodeWithText("777").assertIsDisplayed()
+        composeRule.onNodeWithText("Card added").assertDoesNotExist() // offered once
     }
 
     @Test

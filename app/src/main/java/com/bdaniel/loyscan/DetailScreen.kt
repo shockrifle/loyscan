@@ -96,10 +96,11 @@ fun SharedTransitionScope.DetailScreen(
     var scanMode by rememberSaveable { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     // A card just added offers another once (#6). Kept until the snackbar ends, so turning the phone shows it again,
-    // and gone after that, so it isn't made again on return from the picker.
+    // and gone after that or after Edit, so it isn't made again on return from the picker or the form. Scan mode
+    // would hide it while it times out, so it waits until scan mode closes.
     var offeringAnother by rememberSaveable { mutableStateOf(added) }
-    LaunchedEffect(offeringAnother) {
-        if (!offeringAnother) return@LaunchedEffect
+    LaunchedEffect(offeringAnother, scanMode) {
+        if (!offeringAnother || scanMode) return@LaunchedEffect
         val result = snackbarHostState.showSnackbar("Card added", actionLabel = "Add another", duration = SnackbarDuration.Long)
         offeringAnother = false
         if (result == SnackbarResult.ActionPerformed) directions.toAddCard()
@@ -116,7 +117,13 @@ fun SharedTransitionScope.DetailScreen(
                         }
                     },
                     actions = {
-                        IconButton(onClick = { directions.toEdit(card.id, card.store.id) }, enabled = card.id.isNotEmpty()) {
+                        IconButton(
+                            onClick = {
+                                offeringAnother = false
+                                directions.toEdit(card.id, card.store.id)
+                            },
+                            enabled = card.id.isNotEmpty(),
+                        ) {
                             Icon(Icons.Default.Edit, contentDescription = "Edit")
                         }
                         IconButton(onClick = { confirmingDelete = true }) {

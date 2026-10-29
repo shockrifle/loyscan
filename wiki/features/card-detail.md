@@ -27,7 +27,7 @@ UUID string.
   ([[2026-10-12-data-model-v2]]). A GS1 scan (`BarcodeFormat.isGs1`: the `GS1_` formats, DataBar) with no matching rule is shown as printed under
   GS1 barcodes, `(01)09501101020917(10)12AB`; any other scanned content shows each run of control characters as a
   space ([[2026-10-21-gs1-scans-shown-as-hri]], #42).
-- **Opening a card counts a use** (except right after adding it, `Detail.countUse = false`, [[add-card]]): `DetailViewModel`'s `init` calls `LoyaltyCardRepository.recordUse(cardId)`, which
+- **Opening a card counts a use** (except right after adding or editing it, `Detail.countUse = false`, [[add-card]], [[edit-card]]): `DetailViewModel`'s `init` calls `LoyaltyCardRepository.recordUse(cardId)`, which
   adds 1 to `useCount` and sets `lastUsedAt` to now in one `UPDATE` (`LoyaltyCardDao.recordUse`). Once per
   ViewModel, so a rotation doesn't count again (a restore after process death does). `updatedAt` is left alone: a
   use isn't an edit of the card. These fields feed the list's "most / recently used" sort (#7).
