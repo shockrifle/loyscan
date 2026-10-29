@@ -42,6 +42,10 @@ interface LoyaltyCardDao {
     @Query("DELETE FROM loyalty_cards WHERE id = :id")
     suspend fun deleteById(id: String)
 
+    // One bound variable per id: SQLite on API 29 allows 999, far more cards than a phone holds.
+    @Query("DELETE FROM loyalty_cards WHERE id IN (:ids)")
+    suspend fun deleteByIds(ids: Set<String>)
+
     @Query("SELECT COUNT(*) FROM loyalty_cards WHERE storeId = :storeId")
     fun countForStore(storeId: String): Flow<Int>
 

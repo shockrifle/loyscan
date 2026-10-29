@@ -13,7 +13,7 @@ Room emits. During the list → detail shared-element transition, the first fram
 - Pass what the first frame needs as a navigation argument.
 
 ## Decision
-`Detail(val cardId: String, val color: String, …)` (`app/src/main/java/com/bdaniel/loyscan/Navigation.kt:30-31`).
+`Detail(val cardId: String, val color: String, …)` (`app/src/main/java/com/bdaniel/loyscan/Navigation.kt:36-37`).
 `ListDirections.toCard(id, color)` passes `card.store.color`; `AppNavigation` extracts it with `toRoute<Detail>()`
 and hands it to `DetailScreen(cardId, color, …)` (`MainActivity.kt:67-75`), which uses it for the top bar, header
 background and header text contrast. (Corrected 2026-10-28: this paragraph still named the 2025-12-12 `Int` id,

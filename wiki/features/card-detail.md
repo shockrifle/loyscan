@@ -6,7 +6,7 @@ type. The screen runs at full brightness; a double-tap on the barcode opens a fu
 
 **Entry points:** `DetailScreen` (`app/src/main/java/com/bdaniel/loyscan/DetailScreen.kt:69-78`);
 `DetailViewModel` (`app/src/main/java/com/bdaniel/loyscan/DetailViewModel.kt`); route
-`Detail(cardId, color, countUse)` (`app/src/main/java/com/bdaniel/loyscan/Navigation.kt:30-31`), where `cardId` is the card's
+`Detail(cardId, color, countUse)` (`app/src/main/java/com/bdaniel/loyscan/Navigation.kt:36-37`), where `cardId` is the card's
 UUID string.
 
 ## Behavior

@@ -26,6 +26,9 @@ interface LoyaltyCardRepository {
     /** Deletes the card. Does nothing for an unknown id. */
     suspend fun delete(id: String)
 
+    /** Deletes these cards in one write (#7: multi-select). Unknown ids are skipped. */
+    suspend fun deleteAll(ids: Set<String>)
+
     /** How many cards the store [storeId] has, updated as cards change (#53). */
     fun countForStore(storeId: String): Flow<Int>
 }

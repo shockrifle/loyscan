@@ -1,6 +1,7 @@
 package com.bdaniel.loyscan
 
 import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModelStore
 import app.cash.turbine.test
 import com.bdaniel.loyscan.domain.CardSort
 import com.bdaniel.loyscan.testing.FakeLoyaltyCardRepository
@@ -9,6 +10,7 @@ import com.bdaniel.loyscan.testing.MainDispatcherRule
 import com.bdaniel.loyscan.testing.aLoyaltyCard
 import com.bdaniel.loyscan.testing.aStore
 import com.bdaniel.loyscan.testing.cardId
+import com.bdaniel.loyscan.testing.keep
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.test.runTest
@@ -160,5 +162,163 @@ class ListViewModelTest {
             assertThat(expectMostRecentItem()).isEmpty()
         }
         assertThat(viewModel.query.value).isEmpty()
+    }
+
+    @Test
+    fun selecting_aCard_selectsIt_andSelectingItAgainDeselectsIt() = runTest { // #7: multi-select
+        repository.cards.value = listOf(apple, berry, cherry)
+        val viewModel = viewModel()
+
+        viewModel.selection.test {
+            assertThat(awaitItem()).isEmpty()
+
+            viewModel.toggleSelection(apple.id)
+            assertThat(awaitItem()).containsExactly(apple.id)
+            viewModel.toggleSelection(cherry.id)
+            assertThat(awaitItem()).containsExactly(apple.id, cherry.id)
+            viewModel.toggleSelection(apple.id)
+            assertThat(awaitItem()).containsExactly(cherry.id)
+        }
+    }
+
+    @Test
+    fun clearingTheSelection_selectsNothing() = runTest {
+        repository.cards.value = listOf(apple, berry)
+        val viewModel = viewModel()
+        viewModel.toggleSelection(apple.id)
+        viewModel.toggleSelection(berry.id)
+
+        viewModel.clearSelection()
+
+        viewModel.selection.test {
+            assertThat(awaitItem()).isEmpty()
+        }
+    }
+
+    @Test
+    fun aSelectedCardDeletedElsewhere_leavesTheSelection() = runTest {
+        repository.cards.value = listOf(apple, berry)
+        val viewModel = viewModel()
+        viewModel.toggleSelection(apple.id)
+        viewModel.toggleSelection(berry.id)
+
+        viewModel.selection.test {
+            assertThat(awaitItem()).containsExactly(apple.id, berry.id)
+
+            repository.cards.value = listOf(berry)
+
+            assertThat(awaitItem()).containsExactly(berry.id)
+        }
+    }
+
+    @Test
+    fun changingTheQuery_clearsTheSelection() = runTest { // a card the search hides mustn't stay selected, nor be deleted
+        repository.cards.value = listOf(apple, berry, cherry)
+        val viewModel = viewModel()
+        viewModel.toggleSelection(berry.id)
+
+        viewModel.onQueryChange("apple")
+
+        viewModel.selection.test {
+            assertThat(awaitItem()).isEmpty()
+        }
+    }
+
+    @Test
+    fun theSelection_isRestoredAfterProcessDeath() = runTest {
+        repository.cards.value = listOf(apple, berry, cherry)
+        val first = SavedStateHandle()
+        viewModel(first).toggleSelection(berry.id)
+
+        val restored = viewModel(SavedStateHandle(first.keys().associateWith { first.get<Any>(it) }))
+
+        restored.selection.test {
+            assertThat(expectMostRecentItem()).containsExactly(berry.id)
+        }
+    }
+
+    @Test
+    fun deletingTheSelection_deletesThoseCardsInOneWrite_andEndsTheSelection() = runTest {
+        repository.cards.value = listOf(apple, berry, cherry)
+        val viewModel = viewModel()
+        viewModel.toggleSelection(apple.id)
+        viewModel.toggleSelection(cherry.id)
+
+        viewModel.deleteSelection()
+
+        assertThat(repository.cards.value).containsExactly(berry)
+        assertThat(repository.deleteCalls).isEqualTo(1)
+        assertThat(viewModel.deletion.value).isEqualTo(Deletion.NONE)
+        viewModel.selection.test {
+            assertThat(awaitItem()).isEmpty()
+        }
+    }
+
+    @Test
+    fun aSecondDeleteWhileTheFirstRuns_deletesOnce() = runTest { // a double tap on the dialog's Delete
+        val gate = CompletableDeferred<Unit>()
+        repository.deleteGate = gate
+        repository.cards.value = listOf(apple, berry)
+        val viewModel = viewModel()
+        viewModel.toggleSelection(apple.id)
+
+        viewModel.deleteSelection()
+        assertThat(viewModel.deletion.value).isEqualTo(Deletion.DELETING)
+        viewModel.deleteSelection()
+        gate.complete(Unit)
+
+        assertThat(repository.deleteCalls).isEqualTo(1)
+        assertThat(repository.cards.value).containsExactly(berry)
+    }
+
+    @Test
+    fun aDeleteStillRunningWhenTheListIsCleared_isStillDone() = runTest { // as on the card screen (#65)
+        val gate = CompletableDeferred<Unit>()
+        repository.deleteGate = gate
+        repository.cards.value = listOf(apple, berry)
+        val owner = ViewModelStore()
+        val viewModel = owner.keep { viewModel() }
+        viewModel.toggleSelection(apple.id)
+        viewModel.deleteSelection()
+
+        owner.clear()
+        gate.complete(Unit)
+
+        assertThat(repository.cards.value).containsExactly(berry)
+    }
+
+    @Test
+    fun aFailedDelete_saysSo_keepsTheSelection_andCanBeTriedAgain() = runTest { // a failed write mustn't crash (#49)
+        repository.deleteFailure = IllegalStateException("disk I/O error")
+        repository.cards.value = listOf(apple, berry)
+        val viewModel = viewModel()
+        viewModel.toggleSelection(apple.id)
+
+        viewModel.deleteSelection()
+
+        assertThat(viewModel.deletion.value).isEqualTo(Deletion.FAILED)
+        assertThat(repository.cards.value).containsExactly(apple, berry)
+        viewModel.selection.test {
+            assertThat(awaitItem()).containsExactly(apple.id)
+        }
+
+        repository.deleteFailure = null
+        viewModel.deleteSelection()
+
+        assertThat(repository.cards.value).containsExactly(berry)
+        assertThat(viewModel.deletion.value).isEqualTo(Deletion.NONE)
+    }
+
+    @Test
+    fun dismissingAFailedDelete_forgetsTheFailure() = runTest {
+        repository.deleteFailure = IllegalStateException("disk I/O error")
+        repository.cards.value = listOf(apple)
+        val viewModel = viewModel()
+        viewModel.toggleSelection(apple.id)
+        viewModel.deleteSelection()
+
+        viewModel.dismissDeletion()
+
+        assertThat(viewModel.deletion.value).isEqualTo(Deletion.NONE)
     }
 }

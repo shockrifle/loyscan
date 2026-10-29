@@ -193,6 +193,18 @@ class LoyaltyCardDaoTest {
     }
 
     @Test
+    fun deleteByIds_deletesThoseCardsOnly() = runTest { // #7: multi-select
+        db.storeDao().insert(aStoreEntity())
+        dao.insert(aLoyaltyCardEntity(id = cardId(1)))
+        dao.insert(aLoyaltyCardEntity(id = cardId(2)))
+        dao.insert(aLoyaltyCardEntity(id = cardId(3)))
+
+        dao.deleteByIds(setOf(cardId(1), cardId(3), cardId(99)))
+
+        assertThat(dao.getAllWithStore().first().map { it.loyaltyCard.id }).containsExactly(cardId(2))
+    }
+
+    @Test
     fun deletingAStore_deletesItsCards() = runTest {
         val store = aStoreEntity(id = "doomed")
         db.storeDao().insert(store)

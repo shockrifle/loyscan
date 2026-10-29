@@ -269,6 +269,55 @@ object Icons {
         @Suppress("ObjectPropertyName")
         private var _Close: ImageVector? = null
 
+        /** Material Symbols "check_circle", filled: a tick cut out of a disc. */
+        val CheckCircle: ImageVector
+            get() {
+                if (_CheckCircle != null) {
+                    return _CheckCircle!!
+                }
+                _CheckCircle = ImageVector.Builder(
+                        name = "CheckCircle",
+                        defaultWidth = 24.dp,
+                        defaultHeight = 24.dp,
+                        viewportWidth = 960f,
+                        viewportHeight = 960f
+                ).apply {
+                    path(fill = SolidColor(Color.Black)) {
+                        moveTo(424f, 664f)
+                        lineToRelative(282f, -282f)
+                        lineToRelative(-56f, -56f)
+                        lineToRelative(-226f, 226f)
+                        lineToRelative(-114f, -114f)
+                        lineToRelative(-56f, 56f)
+                        lineToRelative(170f, 170f)
+                        close()
+                        moveTo(480f, 880f)
+                        quadToRelative(-83f, 0f, -156f, -31.5f)
+                        reflectiveQuadTo(197f, 763f)
+                        quadToRelative(-54f, -54f, -85.5f, -127f)
+                        reflectiveQuadTo(80f, 480f)
+                        quadToRelative(0f, -83f, 31.5f, -156f)
+                        reflectiveQuadTo(197f, 197f)
+                        quadToRelative(54f, -54f, 127f, -85.5f)
+                        reflectiveQuadTo(480f, 80f)
+                        quadToRelative(83f, 0f, 156f, 31.5f)
+                        reflectiveQuadTo(763f, 197f)
+                        quadToRelative(54f, 54f, 85.5f, 127f)
+                        reflectiveQuadTo(880f, 480f)
+                        quadToRelative(0f, 83f, -31.5f, 156f)
+                        reflectiveQuadTo(763f, 763f)
+                        quadToRelative(-54f, 54f, -127f, 85.5f)
+                        reflectiveQuadTo(480f, 880f)
+                        close()
+                    }
+                }.build()
+
+                return _CheckCircle!!
+            }
+
+        @Suppress("ObjectPropertyName")
+        private var _CheckCircle: ImageVector? = null
+
         /** Material Symbols "sort": three bars, longest on top. */
         val Sort: ImageVector
             get() {

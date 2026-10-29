@@ -101,6 +101,16 @@ class RoomLoyaltyCardRepositoryTest {
     }
 
     @Test
+    fun deleteAll_removesThoseCards() = runTest { // #7: multi-select
+        db.loyaltyCardDao().insert(aLoyaltyCardEntity(id = cardId(4), storeId = "other"))
+        db.loyaltyCardDao().insert(aLoyaltyCardEntity(id = cardId(5), storeId = "other"))
+
+        repository.deleteAll(setOf(cardId(3), cardId(4)))
+
+        assertThat(repository.getAllWithStore().first().map { it.id }).containsExactly(cardId(5))
+    }
+
+    @Test
     fun getByIdWithStore_unknownId_emitsNull() = runTest {
         assertThat(repository.getByIdWithStore(cardId(99)).first()).isNull()
     }

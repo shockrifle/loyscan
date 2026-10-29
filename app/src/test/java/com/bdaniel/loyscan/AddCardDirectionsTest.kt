@@ -178,6 +178,34 @@ class AddCardDirectionsTest {
     }
 
     @Test
+    fun editOnTheList_opensTheCardsFormOverIt_andSavingOpensTheCardOverTheList() { // #7: one card selected
+        composeRule.runOnIdle { navController.storePickerDirections(navController.currentBackStackEntry!!).toBack() }
+        composeRule.runOnIdle { navController.listDirections(navController.currentBackStackEntry!!).toEditCard("a-card", "some-store") }
+
+        composeRule.runOnIdle {
+            assertThat(navController.currentBackStackEntry!!.toRoute<CardForm>()).isEqualTo(CardForm("some-store", cardId = "a-card"))
+            assertThat(navController.previousBackStackEntry?.destination?.hasRoute(CardList::class)).isTrue()
+        }
+        composeRule.runOnIdle { navController.cardFormDirections(navController.currentBackStackEntry!!).toCard("a-card", "#445566") }
+
+        composeRule.runOnIdle {
+            assertThat(navController.currentBackStackEntry!!.toRoute<Detail>()).isEqualTo(Detail("a-card", "#445566", countUse = false))
+            assertThat(navController.previousBackStackEntry?.destination?.hasRoute(CardList::class)).isTrue()
+        }
+    }
+
+    @Test
+    fun aSecondTapOnEditOnTheList_opensOneForm() { // as #69
+        composeRule.runOnIdle { navController.storePickerDirections(navController.currentBackStackEntry!!).toBack() }
+        val list = composeRule.runOnIdle { navController.listDirections(navController.currentBackStackEntry!!) }
+
+        composeRule.runOnIdle { list.toEditCard("a-card", "some-store") }
+        composeRule.runOnIdle { list.toEditCard("a-card", "some-store") }
+
+        composeRule.runOnIdle { assertThat(navController.previousBackStackEntry?.destination?.hasRoute(CardList::class)).isTrue() }
+    }
+
+    @Test
     fun aSaveThatEndsAfterBackFromTheForm_leavesTheUserOnThePicker() { // #64
         composeRule.runOnIdle { navController.storePickerDirections(navController.currentBackStackEntry!!).toStore("some-store") }
         composeRule.runOnIdle { navController.scannerDirections("some-store", navController.currentBackStackEntry!!).toManualEntry() }

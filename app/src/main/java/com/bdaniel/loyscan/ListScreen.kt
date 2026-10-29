@@ -1,11 +1,14 @@
 package com.bdaniel.loyscan
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,6 +21,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
@@ -31,6 +35,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -72,6 +77,14 @@ fun SharedTransitionScope.ListScreen(
     val cards by viewModel.cards.collectAsState()
     val query by viewModel.query.collectAsState()
     val sort by viewModel.sort.collectAsState()
+    val selection by viewModel.selection.collectAsState()
+    val deletion by viewModel.deletion.collectAsState()
+    val selecting = selection.isNotEmpty()
+    var confirmingDelete by rememberSaveable { mutableStateOf(false) }
+    // The dialog belongs to this selection: once it ends (deleted, or cleared), the next one doesn't open it.
+    LaunchedEffect(selecting) { if (!selecting) confirmingDelete = false }
+    // Back ends the selection before it leaves the list.
+    BackHandler(enabled = selecting, onBack = viewModel::clearSelection)
     val gridState = rememberLazyGridState()
     var openedTile by rememberSaveable(stateSaver = OpenedTile.Saver) { mutableStateOf<OpenedTile?>(null) }
     val density = LocalDensity.current
@@ -95,7 +108,20 @@ fun SharedTransitionScope.ListScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
+            if (selecting) {
+                SelectionBar(
+                    count = selection.size,
+                    onClose = viewModel::clearSelection,
+                    // Only one card can be edited at a time.
+                    onEdit = cards?.singleOrNull { it.id in selection }?.takeIf { selection.size == 1 }?.let { card ->
+                        {
+                            directions.toEditCard(card.id, card.store.id)
+                            viewModel.clearSelection()
+                        }
+                    },
+                    onDelete = { confirmingDelete = true },
+                )
+            } else TopAppBar(
                 title = { Text("My Cards") },
                 actions = {
                     SortMenu(sort = sort, onSortChange = viewModel::onSortChange)
@@ -106,8 +132,10 @@ fun SharedTransitionScope.ListScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = directions.toAddCard) {
-                Icon(Icons.Default.Add, contentDescription = "Add card")
+            if (!selecting) {
+                FloatingActionButton(onClick = directions.toAddCard) {
+                    Icon(Icons.Default.Add, contentDescription = "Add card")
+                }
             }
         },
         containerColor = Color.Transparent
@@ -140,7 +168,11 @@ fun SharedTransitionScope.ListScreen(
                     CardItem(
                         animatedVisibilityScope = animatedVisibilityScope,
                         card = card,
-                        onClick = {
+                        selected = card.id in selection,
+                        onLongClick = { viewModel.toggleSelection(card.id) },
+                        onClick = onClick@{
+                            // While cards are selected, a tap selects or deselects one instead of opening it.
+                            if (selecting) return@onClick viewModel.toggleSelection(card.id)
                             val offset = gridState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == card.id }?.offset?.y
                             // A second tile tapped while the list leaves opens nothing, so it isn't the opened one (#69).
                             if (directions.toCard(card.id, card.store.color)) openedTile = OpenedTile(card.id, offset ?: 0, screen)
@@ -149,7 +181,66 @@ fun SharedTransitionScope.ListScreen(
                 }
             }
         }
+        if (confirmingDelete && selecting) {
+            ConfirmDelete(
+                count = selection.size,
+                failed = deletion == Deletion.FAILED,
+                deleting = deletion == Deletion.DELETING,
+                onConfirm = viewModel::deleteSelection,
+                onDismiss = {
+                    confirmingDelete = false
+                    viewModel.dismissDeletion()
+                },
+            )
+        }
     }
+}
+
+/** The top bar while cards are selected: how many, and what can be done with them. [onEdit] is null for several. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SelectionBar(count: Int, onClose: () -> Unit, onEdit: (() -> Unit)?, onDelete: () -> Unit) {
+    TopAppBar(
+        title = { Text("$count selected") },
+        navigationIcon = {
+            IconButton(onClick = onClose) {
+                Icon(Icons.Default.Close, contentDescription = "Close")
+            }
+        },
+        actions = {
+            if (onEdit != null) {
+                IconButton(onClick = onEdit) {
+                    Icon(Icons.Default.Edit, contentDescription = "Edit")
+                }
+            }
+            IconButton(onClick = onDelete) {
+                Icon(Icons.Default.Delete, contentDescription = "Delete")
+            }
+        },
+    )
+}
+
+/** Asks before deleting the [count] selected cards. A failed delete is said here, and "Delete" tries again. */
+@Composable
+private fun ConfirmDelete(count: Int, failed: Boolean, deleting: Boolean, onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    val one = count == 1
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(if (one) "Delete this card?" else "Delete $count cards?") },
+        text = {
+            Text(
+                when {
+                    failed && one -> "The card couldn't be deleted. Try again."
+                    failed -> "The cards couldn't be deleted. Try again."
+                    one -> "It is removed from this phone for good."
+                    else -> "They are removed from this phone for good."
+                },
+                color = if (failed) MaterialTheme.colorScheme.error else Color.Unspecified,
+            )
+        },
+        confirmButton = { TextButton(onClick = onConfirm, enabled = !deleting) { Text("Delete") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+    )
 }
 
 /**
@@ -227,55 +318,72 @@ fun SharedTransitionScope.CardItem(
     animatedVisibilityScope: AnimatedVisibilityScope,
     card: LoyaltyCard,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    selected: Boolean = false,
+    onLongClick: () -> Unit = {},
 ) {
     val cardColor = card.store.color.toBrandColorOrNull() ?: MaterialTheme.colorScheme.surfaceVariant
     val textColor = cardColor.contrastingTextColor()
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
+            .semantics { this.selected = selected }
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick, onLongClickLabel = "Select"),
+        border = if (selected) BorderStroke(3.dp, MaterialTheme.colorScheme.primary) else null,
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(cardColor)
-                .aspectRatio(ID1_CARD_ASPECT_RATIO)
-                .testTag(CARD_TILE_TAG)
-                // TalkBack reads a merged node's description in place of its text: the store, then the label.
-                .semantics { contentDescription = listOfNotNull(card.store.name, card.label).joinToString(", ") }
-                .sharedElement(
-                    sharedContentState = rememberSharedContentState(key = cardTransitionKey(card.id)),
-                    animatedVisibilityScope = animatedVisibilityScope
-                ),
-        ) {
-            // The initials take the room the label leaves, shrinking to fit it at large font scales.
-            Box(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 8.dp), contentAlignment = Alignment.Center) {
-                if (!card.store.logo.isNullOrBlank()) {
-                    AsyncImage(
-                        model = card.store.logo,
-                        contentDescription = null, // The tile is described as a whole.
-                        modifier = Modifier
-                            .fillMaxSize(0.6f)
-                    )
-                } else {
-                    Text(
-                        text = card.store.initials,
-                        style = MaterialTheme.typography.headlineLarge,
-                        color = textColor,
-                        maxLines = 1,
-                        autoSize = TextAutoSize.StepBased(maxFontSize = MaterialTheme.typography.headlineLarge.fontSize),
-                    )
+        Box {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(cardColor)
+                    .aspectRatio(ID1_CARD_ASPECT_RATIO)
+                    .testTag(CARD_TILE_TAG)
+                    // TalkBack reads a merged node's description in place of its text: the store, then the label.
+                    .semantics { contentDescription = listOfNotNull(card.store.name, card.label).joinToString(", ") }
+                    .sharedElement(
+                        sharedContentState = rememberSharedContentState(key = cardTransitionKey(card.id)),
+                        animatedVisibilityScope = animatedVisibilityScope
+                    ),
+            ) {
+                // The initials take the room the label leaves, shrinking to fit it at large font scales.
+                Box(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 8.dp), contentAlignment = Alignment.Center) {
+                    if (!card.store.logo.isNullOrBlank()) {
+                        AsyncImage(
+                            model = card.store.logo,
+                            contentDescription = null, // The tile is described as a whole.
+                            modifier = Modifier
+                                .fillMaxSize(0.6f)
+                        )
+                    } else {
+                        Text(
+                            text = card.store.initials,
+                            style = MaterialTheme.typography.headlineLarge,
+                            color = textColor,
+                            maxLines = 1,
+                            autoSize = TextAutoSize.StepBased(maxFontSize = MaterialTheme.typography.headlineLarge.fontSize),
+                        )
+                    }
                 }
+                Text(
+                    text = card.label ?: card.store.name,
+                    modifier = Modifier.padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = textColor,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
             }
-            Text(
-                text = card.label ?: card.store.name,
-                modifier = Modifier.padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
-                style = MaterialTheme.typography.bodyMedium,
-                color = textColor,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+            if (selected) {
+                Icon(
+                    Icons.Default.CheckCircle,
+                    contentDescription = null, // said by the tile's selected state
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(6.dp)
+                        .background(MaterialTheme.colorScheme.surface, CircleShape),
+                )
+            }
         }
     }
 }

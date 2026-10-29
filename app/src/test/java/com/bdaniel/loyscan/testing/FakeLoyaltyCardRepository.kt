@@ -24,7 +24,7 @@ class FakeLoyaltyCardRepository(
     /** When set, [update] throws it instead of saving. */
     var updateFailure: Exception? = null
 
-    /** When set, [delete] throws it instead of deleting. */
+    /** When set, [delete] and [deleteAll] throw it instead of deleting. */
     var deleteFailure: Exception? = null
 
     /** When set, [add] suspends until it completes, as a Room insert in progress does. */
@@ -33,13 +33,13 @@ class FakeLoyaltyCardRepository(
     /** When set, [update] suspends until it completes. */
     var updateGate: CompletableDeferred<Unit>? = null
 
-    /** When set, [delete] suspends until it completes, as a Room delete in progress does. */
+    /** When set, [delete] and [deleteAll] suspend until it completes, as a Room delete in progress does. */
     var deleteGate: CompletableDeferred<Unit>? = null
 
     /** When set, [getAllWithStore] emits nothing until it completes, as Room before its first query returns. */
     var loadGate: CompletableDeferred<Unit>? = null
 
-    /** How many times [delete] was called. */
+    /** How many times [delete] or [deleteAll] was called. */
     var deleteCalls = 0
         private set
 
@@ -85,5 +85,12 @@ class FakeLoyaltyCardRepository(
         deleteGate?.await()
         deleteFailure?.let { throw it }
         cards.value = cards.value.filterNot { it.id == id }
+    }
+
+    override suspend fun deleteAll(ids: Set<String>) {
+        deleteCalls++
+        deleteGate?.await()
+        deleteFailure?.let { throw it }
+        cards.value = cards.value.filterNot { it.id in ids }
     }
 }

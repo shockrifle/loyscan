@@ -12,6 +12,10 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.longClick
+import androidx.compose.ui.test.isDialog
+import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
@@ -215,6 +219,44 @@ class AppNavigationTest {
         waitForText("My Cards")
         composeRule.waitUntil(WAIT_TIMEOUT_MS) { composeRule.onAllNodes(hasText("Gold card")).fetchSemanticsNodes().isEmpty() }
         assertThat(runBlocking { db.loyaltyCardDao().getAllWithStore().first() }).isEmpty()
+    }
+
+    @Test
+    fun selectingCardsOnTheList_andDeletingThem_keepsTheOthers() { // #7: multi-select
+        runBlocking {
+            db.loyaltyCardDao().insert(aLoyaltyCardEntity(id = cardId(2), label = "Silver card"))
+            db.loyaltyCardDao().insert(aLoyaltyCardEntity(id = cardId(3), label = "Bronze card"))
+        }
+        waitForText("Bronze card")
+
+        composeRule.onNodeWithText("Gold card").performTouchInput { longClick() }
+        composeRule.onNodeWithText("Bronze card").performClick()
+        waitForText("2 selected")
+        composeRule.onNodeWithContentDescription("Delete").performClick()
+        composeRule.onNode(hasText("Delete") and hasAnyAncestor(isDialog())).performClick()
+
+        waitForText("My Cards")
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) { composeRule.onAllNodes(hasText("Gold card")).fetchSemanticsNodes().isEmpty() }
+        assertThat(runBlocking { db.loyaltyCardDao().getAllWithStore().first() }.map { it.loyaltyCard.label }).containsExactly("Silver card")
+    }
+
+    @Test
+    fun editingTheOneSelectedCard_fromTheList_savesIt_andShowsTheCard() { // #7
+        waitForText("Gold card")
+
+        composeRule.onNodeWithText("Gold card").performTouchInput { longClick() }
+        composeRule.onNodeWithContentDescription("Edit").performClick()
+        waitForText("Edit card")
+        composeRule.onNodeWithTag(CARD_LABEL_TAG).performTextClearance()
+        composeRule.onNodeWithTag(CARD_LABEL_TAG).performTextInput("Silver card")
+        composeRule.onNodeWithText("Save").performClick()
+
+        waitForTheCardFormToClose()
+        waitForText("0042")
+        composeRule.onNodeWithContentDescription("Back").performClick()
+        waitForText("My Cards")
+        composeRule.onNodeWithText("Silver card").assertIsDisplayed()
+        composeRule.onNodeWithText("1 selected").assertDoesNotExist()
     }
 
     @Test

@@ -1,6 +1,6 @@
 # Edit card
 
-The detail screen's Edit icon opens the card form ([[add-card]]) for that card: its label and number, checked live
+The detail screen's Edit icon, or Edit on the list with one card selected ([[card-list]] → Multi-select), opens the card form ([[add-card]]) for that card: its label and number, checked live
 against the store's rule as when adding it, and its store, which "Change store" replaces with any other. Saving writes
 the edit and opens the card again. Issue [#8](https://github.com/shockrifle/loyscan/issues/8): editing the label,
 number and store of one card. Deleting a card is on [[card-detail]].
@@ -8,6 +8,7 @@ number and store of one card. Deleting a card is on [[card-detail]].
 **Entry points** (under `app/src/main/java/com/bdaniel/loyscan/`):
 - `DetailScreen.kt`: the Edit icon → `DetailDirections.toEdit(cardId, storeId)` → `CardForm(storeId, cardId = cardId)`
   (`Navigation.kt`). The icon is disabled until the card has loaded.
+- `ListScreen.kt`: Edit in the `SelectionBar` → `ListDirections.toEditCard(id, storeId)` → the same route, over the list.
 - `CardFormViewModel.kt`, `CardFormScreen.kt`: the same form as adding, in edit mode (`CardFormState.editing`, title
   "Edit card").
 - `LoyaltyCardRepository.update(card)` → `LoyaltyCardDao.update(LoyaltyCardEdit)`, mapped with `LoyaltyCard.toEdit()`

@@ -15,14 +15,20 @@ data class ListDirections(
     /** Opens the card, and says whether it did: not from a list that is no longer current (#69). */
     val toCard: (id: String, color: String) -> Boolean,
     val toAddCard: () -> Unit,
+    /** Edits the card [id] of the store [storeId] (#7: one card selected). */
+    val toEditCard: (id: String, storeId: String) -> Unit,
 )
 
-/** Only while [list], its own entry, is current: a second tap before the next screen covers it opens nothing (#69). */
+/**
+ * Only while [list], its own entry, is current: a second tap before the next screen covers it opens nothing (#69). An
+ * edit opens the card's form over the list; saving it opens the card, as an edit from the card does.
+ */
 fun NavController.listDirections(list: NavBackStackEntry) = ListDirections(
     toCard = { id, color ->
         whileCurrent(list) { navigate(Detail(id, color)) }
     },
     toAddCard = { whileCurrent(list) { navigate(StorePicker) } },
+    toEditCard = { id, storeId -> whileCurrent(list) { navigate(CardForm(storeId, cardId = id)) } },
 )
 
 

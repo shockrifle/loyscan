@@ -1,5 +1,6 @@
 package com.bdaniel.loyscan
 
+import androidx.activity.ComponentActivity
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -27,12 +28,20 @@ import androidx.compose.ui.test.isSelected
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.junit4.StateRestorationTester
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.isDialog
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.longClick
+import androidx.compose.ui.test.performTouchInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.bdaniel.loyscan.domain.CardSort
 import com.bdaniel.loyscan.domain.LoyaltyCard
@@ -56,14 +65,14 @@ import org.junit.runner.RunWith
 class ListScreenTest {
 
     @get:Rule
-    val composeRule = createComposeRule()
+    val composeRule = createAndroidComposeRule<ComponentActivity>()
 
     @Test
     fun clickingACard_navigatesToItWithItsStoreColor() {
         val card = aLoyaltyCard(id = cardId(5), store = aStore(name = "Test Store", color = "#AA0000"))
         val viewModel = ListViewModel(FakeLoyaltyCardRepository(listOf(card)), FakeUserPreferencesRepository(), SavedStateHandle())
         var navigatedTo: Pair<String, String>? = null
-        val directions = ListDirections(toCard = { id, color -> navigatedTo = id to color; true }, toAddCard = {})
+        val directions = ListDirections(toCard = { id, color -> navigatedTo = id to color; true }, toAddCard = {}, toEditCard = { _, _ -> })
 
         composeRule.setContent {
             SharedTransitionLayout {
@@ -145,7 +154,7 @@ class ListScreenTest {
     @Test
     fun addCard_startsAddingACard() {
         var addCardOpened = 0
-        setScreen(directions = ListDirections(toCard = { _, _ -> true }, toAddCard = { addCardOpened++ }))
+        setScreen(directions = ListDirections(toCard = { _, _ -> true }, toAddCard = { addCardOpened++ }, toEditCard = { _, _ -> }))
 
         composeRule.onNodeWithContentDescription("Add card").performClick()
 
@@ -155,7 +164,7 @@ class ListScreenTest {
     @Test
     fun noCards_offersToAddTheFirstOne_withoutASearchField() {
         var addCardOpened = 0
-        setScreen(directions = ListDirections(toCard = { _, _ -> true }, toAddCard = { addCardOpened++ }))
+        setScreen(directions = ListDirections(toCard = { _, _ -> true }, toAddCard = { addCardOpened++ }, toEditCard = { _, _ -> }))
 
         composeRule.onNodeWithText("No cards yet").assertIsDisplayed()
         composeRule.onNodeWithTag(CARD_SEARCH_TAG).assertDoesNotExist()
@@ -238,7 +247,7 @@ class ListScreenTest {
         composeRule.setContent {
             SharedTransitionLayout {
                 AnimatedVisibility(visible = true) {
-                    ListScreen(animatedVisibilityScope = this, directions = ListDirections({ _, _ -> true }, {}), viewModel = viewModel)
+                    ListScreen(animatedVisibilityScope = this, directions = ListDirections({ _, _ -> true }, {}, { _, _ -> }), viewModel = viewModel)
                 }
             }
         }
@@ -246,6 +255,169 @@ class ListScreenTest {
         composeRule.onNodeWithText("No card matches “berry”").assertDoesNotExist()
         repository.loadGate!!.complete(Unit)
         composeRule.onNodeWithText("Berry").assertIsDisplayed()
+    }
+
+    @Test
+    fun longPressingATile_selectsIt_inPlaceOfTheTitleAndTheAddButton() { // #7: multi-select
+        setScreen(aLoyaltyCard(id = cardId(1), store = aStore(name = "Apple")), aLoyaltyCard(id = cardId(2), store = aStore(name = "Berry")))
+
+        composeRule.onNodeWithText("Apple").performTouchInput { longClick() }
+
+        composeRule.onNodeWithText("1 selected").assertIsDisplayed()
+        composeRule.onNodeWithText("Apple").assert(isSelected())
+        composeRule.onNodeWithText("Berry").assert(isNotSelected())
+        composeRule.onNodeWithText("My Cards").assertDoesNotExist()
+        composeRule.onNodeWithContentDescription("Add card").assertDoesNotExist()
+    }
+
+    @Test
+    fun aTile_offersToSelectIt_toTalkBack() {
+        setScreen(aLoyaltyCard(store = aStore(name = "Apple")))
+
+        composeRule.onNodeWithText("Apple").assert(
+            SemanticsMatcher("long click labelled Select") { it.config.getOrNull(SemanticsActions.OnLongClick)?.label == "Select" }
+        )
+    }
+
+    @Test
+    fun whileSelecting_aTapSelectsTheCard_insteadOfOpeningIt() {
+        var opened = 0
+        setScreen(
+            aLoyaltyCard(id = cardId(1), store = aStore(name = "Apple")), aLoyaltyCard(id = cardId(2), store = aStore(name = "Berry")),
+            directions = ListDirections(toCard = { _, _ -> opened++; true }, toAddCard = {}, toEditCard = { _, _ -> }),
+        )
+
+        composeRule.onNodeWithText("Apple").performTouchInput { longClick() }
+        composeRule.onNodeWithText("Berry").performClick()
+
+        composeRule.onNodeWithText("2 selected").assertIsDisplayed()
+        composeRule.onNodeWithText("Berry").assert(isSelected())
+        assertThat(opened).isEqualTo(0)
+    }
+
+    @Test
+    fun deselectingTheLastSelectedCard_endsTheSelection() {
+        setScreen(aLoyaltyCard(store = aStore(name = "Apple")))
+
+        composeRule.onNodeWithText("Apple").performTouchInput { longClick() }
+        composeRule.onNodeWithText("Apple").performClick()
+
+        composeRule.onNodeWithText("My Cards").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Add card").assertIsDisplayed()
+    }
+
+    @Test
+    fun close_endsTheSelection() {
+        setScreen(aLoyaltyCard(store = aStore(name = "Apple")))
+        composeRule.onNodeWithText("Apple").performTouchInput { longClick() }
+
+        composeRule.onNodeWithContentDescription("Close").performClick()
+
+        composeRule.onNodeWithText("My Cards").assertIsDisplayed()
+        composeRule.onNodeWithText("Apple").assert(isNotSelected())
+    }
+
+    @Test
+    fun back_endsTheSelection_andStaysOnTheList() {
+        setScreen(aLoyaltyCard(store = aStore(name = "Apple")))
+        composeRule.onNodeWithText("Apple").performTouchInput { longClick() }
+
+        composeRule.runOnUiThread { composeRule.activity.onBackPressedDispatcher.onBackPressed() }
+
+        composeRule.onNodeWithText("My Cards").assertIsDisplayed()
+        assertThat(composeRule.activity.isFinishing).isFalse()
+    }
+
+    @Test
+    fun edit_isOfferedForOneSelectedCard_andOpensItsForm_endingTheSelection() {
+        var edited: Pair<String, String>? = null
+        setScreen(
+            aLoyaltyCard(id = cardId(1), store = aStore(id = "apple", name = "Apple")), aLoyaltyCard(id = cardId(2), store = aStore(id = "berry", name = "Berry")),
+            directions = ListDirections(toCard = { _, _ -> true }, toAddCard = {}, toEditCard = { id, storeId -> edited = id to storeId }),
+        )
+        composeRule.onNodeWithText("Apple").performTouchInput { longClick() }
+        composeRule.onNodeWithText("Berry").performClick()
+        composeRule.onNodeWithContentDescription("Edit").assertDoesNotExist()
+        composeRule.onNodeWithText("Apple").performClick()
+
+        composeRule.onNodeWithContentDescription("Edit").performClick()
+
+        assertThat(edited).isEqualTo(cardId(2) to "berry")
+        composeRule.onNodeWithText("My Cards").assertIsDisplayed()
+    }
+
+    @Test
+    fun deletingTheSelection_asksFirst_thenDeletesTheCards() {
+        val repository = FakeLoyaltyCardRepository(
+            listOf(aLoyaltyCard(id = cardId(1), store = aStore(name = "Apple")), aLoyaltyCard(id = cardId(2), store = aStore(name = "Berry")), aLoyaltyCard(id = cardId(3), store = aStore(name = "Cherry")))
+        )
+        setScreen(viewModel = ListViewModel(repository, FakeUserPreferencesRepository(), SavedStateHandle()))
+        composeRule.onNodeWithText("Apple").performTouchInput { longClick() }
+        composeRule.onNodeWithText("Cherry").performClick()
+
+        composeRule.onNodeWithContentDescription("Delete").performClick()
+        composeRule.onNodeWithText("Delete 2 cards?").assertIsDisplayed()
+        assertThat(repository.cards.value).hasSize(3)
+        composeRule.onNode(hasText("Delete") and hasAnyAncestor(isDialog())).performClick()
+
+        composeRule.onNodeWithText("Delete 2 cards?").assertDoesNotExist()
+        composeRule.onNodeWithText("Apple").assertDoesNotExist()
+        composeRule.onNodeWithText("Cherry").assertDoesNotExist()
+        composeRule.onNodeWithText("Berry").assert(isNotSelected())
+        composeRule.onNodeWithText("My Cards").assertIsDisplayed()
+    }
+
+    @Test
+    fun deletingOneSelectedCard_asksAboutThatCard() {
+        setScreen(aLoyaltyCard(store = aStore(name = "Apple")))
+        composeRule.onNodeWithText("Apple").performTouchInput { longClick() }
+
+        composeRule.onNodeWithContentDescription("Delete").performClick()
+
+        composeRule.onNodeWithText("Delete this card?").assertIsDisplayed()
+    }
+
+    @Test
+    fun cancellingTheDelete_keepsTheCardsAndTheSelection() {
+        val repository = FakeLoyaltyCardRepository(listOf(aLoyaltyCard(store = aStore(name = "Apple"))))
+        setScreen(viewModel = ListViewModel(repository, FakeUserPreferencesRepository(), SavedStateHandle()))
+        composeRule.onNodeWithText("Apple").performTouchInput { longClick() }
+        composeRule.onNodeWithContentDescription("Delete").performClick()
+
+        composeRule.onNodeWithText("Cancel").performClick()
+
+        assertThat(repository.cards.value).hasSize(1)
+        composeRule.onNodeWithText("1 selected").assertIsDisplayed()
+        composeRule.onNode(isDialog()).assertDoesNotExist()
+    }
+
+    @Test
+    fun aFailedDelete_saysSo_andDeleteTriesAgain() {
+        val repository = FakeLoyaltyCardRepository(listOf(aLoyaltyCard(store = aStore(name = "Apple"))))
+        repository.deleteFailure = IllegalStateException("disk I/O error")
+        setScreen(viewModel = ListViewModel(repository, FakeUserPreferencesRepository(), SavedStateHandle()))
+        composeRule.onNodeWithText("Apple").performTouchInput { longClick() }
+        composeRule.onNodeWithContentDescription("Delete").performClick()
+
+        composeRule.onNode(hasText("Delete") and hasAnyAncestor(isDialog())).performClick()
+
+        composeRule.onNodeWithText("The card couldn't be deleted. Try again.").assertIsDisplayed()
+        repository.deleteFailure = null
+        composeRule.onNode(hasText("Delete") and hasAnyAncestor(isDialog())).performClick()
+        composeRule.onNodeWithText("No cards yet").assertIsDisplayed()
+    }
+
+    @Test
+    fun aNewSelectionAfterADelete_doesNotReopenTheDialog() {
+        setScreen(aLoyaltyCard(id = cardId(1), store = aStore(name = "Apple")), aLoyaltyCard(id = cardId(2), store = aStore(name = "Berry")))
+        composeRule.onNodeWithText("Apple").performTouchInput { longClick() }
+        composeRule.onNodeWithContentDescription("Delete").performClick()
+        composeRule.onNode(hasText("Delete") and hasAnyAncestor(isDialog())).performClick()
+
+        composeRule.onNodeWithText("Berry").performTouchInput { longClick() }
+
+        composeRule.onNodeWithText("1 selected").assertIsDisplayed()
+        composeRule.onNode(isDialog()).assertDoesNotExist()
     }
 
     @Test
@@ -375,7 +547,7 @@ class ListScreenTest {
         restorationTester.setContent {
             SharedTransitionLayout {
                 AnimatedVisibility(visible = true) {
-                    ListScreen(animatedVisibilityScope = this, directions = ListDirections({ _, _ -> true }, {}), viewModel = viewModel)
+                    ListScreen(animatedVisibilityScope = this, directions = ListDirections({ _, _ -> true }, {}, { _, _ -> }), viewModel = viewModel)
                 }
             }
         }
@@ -445,7 +617,7 @@ class ListScreenTest {
         val showList = mutableStateOf(true)
         val viewModel = ListViewModel(repository, FakeUserPreferencesRepository(CardSort.MOST_USED), SavedStateHandle())
         // Opens a card only from the shown list, as the app's directions do (#69).
-        val directions = ListDirections(toCard = { _, _ -> showList.value.also { showList.value = false } }, toAddCard = {})
+        val directions = ListDirections(toCard = { _, _ -> showList.value.also { showList.value = false } }, toAddCard = {}, toEditCard = { _, _ -> })
         val setContent: (@Composable () -> Unit) -> Unit = restorationTester?.let { it::setContent } ?: composeRule::setContent
         setContent {
             val savedState = rememberSaveableStateHolder()
@@ -470,7 +642,7 @@ class ListScreenTest {
 
     private fun setScreen(
         vararg cards: LoyaltyCard,
-        directions: ListDirections = ListDirections(toCard = { _, _ -> true }, toAddCard = {}),
+        directions: ListDirections = ListDirections(toCard = { _, _ -> true }, toAddCard = {}, toEditCard = { _, _ -> }),
         preferences: FakeUserPreferencesRepository = FakeUserPreferencesRepository(),
         viewModel: ListViewModel = ListViewModel(FakeLoyaltyCardRepository(cards.toList()), preferences, SavedStateHandle()),
         fontScale: Float = 1f,

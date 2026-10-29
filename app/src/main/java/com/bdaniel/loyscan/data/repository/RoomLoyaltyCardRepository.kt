@@ -29,5 +29,7 @@ class RoomLoyaltyCardRepository @Inject constructor(
 
     override suspend fun delete(id: String) = loyaltyCardDao.deleteById(id)
 
+    override suspend fun deleteAll(ids: Set<String>) = loyaltyCardDao.deleteByIds(ids)
+
     override fun countForStore(storeId: String): Flow<Int> = loyaltyCardDao.countForStore(storeId)
 }

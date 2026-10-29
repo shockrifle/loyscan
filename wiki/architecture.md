@@ -21,7 +21,8 @@ All paths below are under `app/src/main/java/com/bdaniel/loyscan/` unless writte
 | **Navigation** | `Navigation.kt`, `MainActivity.kt` (`AppNavigation`) | `@Serializable` routes + `NavController.*Directions(entry)` factories | See [[2025-12-09-type-safe-navigation-directions]]. |
 | **DI** | `di/DatabaseModule.kt`, `di/PreferencesModule.kt`, `di/ImageLoaderModule.kt`, `di/RepositoryModule.kt` | `@Module @InstallIn(SingletonComponent)` providers; `@Binds` repository interface → Room / DataStore impl | Implementations use `@Inject constructor`. |
 
-Note: `LoyaltyCardRepository` also counts a store's cards (`countForStore`, a `Flow<Int>`, #53). Its writes are `recordUse(id)` (opening a card counts a use, #4), `delete(id)` and `update(card)` (#8), and
+Note: `LoyaltyCardRepository` also counts a store's cards (`countForStore`, a `Flow<Int>`, #53). Its writes are `recordUse(id)` (opening a card counts a use, #4), `delete(id)` and `update(card)` (#8), `deleteAll(ids)` (the list's
+multi-select, #7: one `DELETE … WHERE id IN (:ids)`), and
 `add(card)` (the add-card flow, #6), which maps the domain card to its row with `LoyaltyCard.toEntity()` (`data/mapper/LoyaltyCardMapper.kt`).
 `update` writes only the columns an edit changes, through Room's partial `@Update(entity = …)` with `LoyaltyCardEdit`
 (`LoyaltyCard.toEdit()`), so usage and creation time are never overwritten from a stale copy ([[edit-card]]).
@@ -114,7 +115,7 @@ here exist; read them next to the code.
 5. **List ViewModel.** *Test first:* `ListViewModelTest`: built with the fake repositories and a `SavedStateHandle`,
    Turbine on `cards`. It checks the initial empty list, then each update, the stored sort and the search.
    Then `ListViewModel.cards` = the repository flow combined with the sort preference and the query, sorted then
-   searched, `.stateIn(viewModelScope, WhileSubscribed(5_000), null)` (`null`: not loaded yet; `ListViewModel.kt:42-55`, [[card-list]]).
+   searched, `.stateIn(viewModelScope, WhileSubscribed(5_000), null)` (`null`: not loaded yet; `ListViewModel.kt:48-61`, [[card-list]]).
 6. **List UI.** *Test first:* `ListScreenTest`: a fake-backed ViewModel and a recording `ListDirections`. It
    checks one tile per card, and that a click calls `toCard(id, color)`.
    Then `ListScreen` collects `cards` and renders a 2-column `LazyVerticalGrid` of `CardItem`s, keyed by card id. Each `CardItem`'s
@@ -122,7 +123,7 @@ here exist; read them next to the code.
    `directions.toCard(card.id, card.store.color)` ([[card-list]]).
 7. **Navigation.** *Test first:* `AppNavigationTest`, the one end-to-end test for this flow: real Hilt and
    navigation over `InMemoryDatabaseModule`, list → detail → back.
-   Then `NavController.listDirections(entry).toCard` → `navigate(Detail(id, color))` (`Navigation.kt:20-26, 30-31`).
+   Then `NavController.listDirections(entry).toCard` → `navigate(Detail(id, color))` (`Navigation.kt:22-32, 36-37`).
    `AppNavigation` maps `composable<Detail>` to `DetailScreen`, pulling `cardId` and `color` out of the route and
    passing them as plain parameters (`MainActivity.kt:67-75`).
 8. **Detail ViewModel.** *Test first:* `DetailViewModelTest` with `SavedStateHandle(route = Detail(…))`. It

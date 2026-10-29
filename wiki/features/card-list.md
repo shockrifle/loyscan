@@ -1,7 +1,7 @@
 # Card list ("My Cards")
 
 The start destination: a top bar titled "My Cards" with a Sort menu, a search field, and a 2-column grid of card
-tiles, one per row in `loyalty_cards`, live-updating from Room. Sort and search: #7.
+tiles, one per row in `loyalty_cards`, live-updating from Room. Sort, search and multi-select: #7.
 
 **Entry points:** `ListScreen` and `CardItem` in `app/src/main/java/com/bdaniel/loyscan/ListScreen.kt`;
 `ListViewModel` (`app/src/main/java/com/bdaniel/loyscan/ListViewModel.kt`); sort and search in
@@ -11,7 +11,7 @@ tiles, one per row in `loyalty_cards`, live-updating from Room. Sort and search:
 ## Behavior
 
 - Data: `ListViewModel.cards` ← `LoyaltyCardRepository.getAllWithStore()` (each card with its store), sorted by the
-  stored choice, then narrowed by the query (`ListViewModel.kt:42-55`). Initial value `null` (not loaded): the grid is
+  stored choice, then narrowed by the query (`ListViewModel.kt:48-61`). Initial value `null` (not loaded): the grid is
   briefly empty on cold start, and "No card matches" waits for the load, since a query restored after process death
   is there at once (`ListScreenTest.aRestoredSearch_doesNotSayNothingMatches_beforeTheCardsHaveLoaded`). The SQL has no `ORDER BY`; ordering is done in Kotlin (`CardSort`), so it ignores
   case and accents the way search does.
@@ -52,8 +52,27 @@ tiles, one per row in `loyalty_cards`, live-updating from Room. Sort and search:
   box (`contrastingTextColor()`, `ui/BrandColor.kt`; `BrandColorTest`). Tests: `ListScreenTest.aTile_…`,
   `aTileWithoutALabel_showsTheStoreName`.
 - The colored box is the shared element `card/{id}` — [[card-transition]].
-- Tap → `directions.toCard(card.id, card.store.color)` → [[card-detail]].
-- The Settings icon in the top bar is a no-op (`ListScreen.kt:75`, `/* TODO */`).
+- Tap → `directions.toCard(card.id, card.store.color)` → [[card-detail]], unless cards are selected.
+- **Multi-select.** A long press on a tile selects it (TalkBack offers it as "Select"). While any card is selected, the
+  top bar is the `SelectionBar`: Close, "N selected", Edit when exactly one card is selected, and Delete; the Add
+  button is hidden. A tap then selects or deselects a tile instead of opening it, and deselecting the last one, Close
+  or system Back (`BackHandler`) ends the selection. A selected tile has a primary-colour border and a tick, and is
+  `selected` in semantics. Tests: `ListScreenTest.longPressingATile_…`, `whileSelecting_…`, `close_…`, `back_…`.
+  - The selected ids live in `ListViewModel`'s `SavedStateHandle`, so they survive process death
+    (`ListViewModelTest.theSelection_isRestoredAfterProcessDeath`). `selection` keeps only ids of cards the list
+    shows, so a card deleted elsewhere drops out. A new search ends the selection, so a card the search hides is never
+    selected, and never deleted with the others (`changingTheQuery_clearsTheSelection`).
+  - **Edit** → `directions.toEditCard(id, storeId)` → the card form over the list ([[edit-card]]), and the selection
+    ends. Saving opens the card, as an edit from the card does; Back from it returns to the list
+    (`AddCardDirectionsTest.editOnTheList_…`, `AppNavigationTest.editingTheOneSelectedCard_…`).
+  - **Delete** asks first ("Delete this card?" / "Delete N cards?"), then deletes the selected cards in one write,
+    `LoyaltyCardRepository.deleteAll(ids)` → `DELETE … WHERE id IN (:ids)`, and the selection ends. The write
+    finishes even if the list is cleared meanwhile, as on the card screen (#65); a second tap on Delete while it
+    runs is ignored. A failed delete keeps the cards and the selection, the dialog says so, and Delete tries again
+    (`ListViewModelTest.deletingTheSelection_…`, `aFailedDelete_…`, `ListScreenTest.deletingTheSelection_…`,
+    `AppNavigationTest.selectingCardsOnTheList_andDeletingThem_keepsTheOthers`). Photo files aren't deleted with the
+    cards yet: there are none until #10.
+- The Settings icon in the top bar is a no-op (`ListScreen.kt:128`, `/* TODO */`).
 - The "Add card" floating button → `directions.toAddCard()` → the store picker of [[add-card]]. The grid has 88dp of bottom content
   padding so the button never covers the last row (`ListScreenTest.theLastTile_isNotCoveredByTheAddButtonWhenScrolledToTheEnd`).
 
