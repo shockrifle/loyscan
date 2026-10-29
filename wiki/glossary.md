@@ -62,8 +62,9 @@ separators removed, letter case applied). Rules turn it into barcode content. Se
 
 **Directions** — Per-screen data class of navigation lambdas (`ListDirections`, `DetailDirections`), created by
 `NavController.listDirections()` / `detailDirections()` (`Navigation.kt`). Screens depend on Directions, never on
-`NavController`. A factory that takes the screen's back-stack entry navigates only while that entry is current
-(`whileCurrent`, [[2026-10-28-save-navigates-after-back]]). See [[2025-12-09-type-safe-navigation-directions]].
+`NavController`. Every `toBack`, and every direction called when a write ends, navigates only while the
+screen's own back-stack entry is current (`whileCurrent`, [[2026-10-28-save-navigates-after-back]]); the other
+forward directions don't check. See [[2025-12-09-type-safe-navigation-directions]].
 
 **Domain model** — Plain Kotlin data classes in `domain/` (`LoyaltyCard`, `Store`) that the UI consumes.
 
