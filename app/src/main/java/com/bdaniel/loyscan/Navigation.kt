@@ -36,8 +36,9 @@ data class DetailDirections(
     val toEdit: (cardId: String, storeId: String) -> Unit,
 )
 
-fun NavController.detailDirections() = DetailDirections(
-    toBack = { navigateUp() },
+/** After a delete, back leaves the card only while [card], its own entry, is current (#65). */
+fun NavController.detailDirections(card: NavBackStackEntry) = DetailDirections(
+    toBack = { whileCurrent(card) { navigateUp() } },
     toEdit = { cardId, storeId -> navigate(CardForm(storeId, cardId = cardId)) },
 )
 
@@ -73,14 +74,19 @@ data class CustomStoreDirections(
     val toBack: () -> Unit
 )
 
-/** The created store's scanner replaces the form, so back returns to the picker, where the new store is listed. */
-fun NavController.customStoreDirections() = CustomStoreDirections(
+/**
+ * The created store's scanner replaces the form, so back returns to the picker, where the new store is listed. Only
+ * while [form], the form's own entry, is current: a save or delete that ends after Back leaves the user there (#65).
+ */
+fun NavController.customStoreDirections(form: NavBackStackEntry) = CustomStoreDirections(
     toScanner = { storeId ->
-        navigate(Scanner(storeId)) {
-            popUpTo<CustomStore> { inclusive = true }
+        whileCurrent(form) {
+            navigate(Scanner(storeId)) {
+                popUpTo<CustomStore> { inclusive = true }
+            }
         }
     },
-    toBack = { navigateUp() }
+    toBack = { whileCurrent(form) { navigateUp() } }
 )
 
 
@@ -136,7 +142,7 @@ data class CardFormDirections(
  */
 fun NavController.cardFormDirections(form: NavBackStackEntry) = CardFormDirections(
     toCard = { id, color ->
-        if (currentBackStackEntry == form) {
+        whileCurrent(form) {
             navigate(Detail(id, color, countUse = false)) {
                 popUpTo<CardList>()
             }
@@ -144,3 +150,12 @@ fun NavController.cardFormDirections(form: NavBackStackEntry) = CardFormDirectio
     },
     toBack = { navigateUp() }
 )
+
+
+/**
+ * Navigates only while [entry] is the current screen. A screen still runs its effects while it animates out after Back,
+ * so one that navigates when a write ends would otherwise do it from wherever Back went (#64, #65).
+ */
+private inline fun NavController.whileCurrent(entry: NavBackStackEntry, navigation: () -> Unit) {
+    if (currentBackStackEntry == entry) navigation()
+}

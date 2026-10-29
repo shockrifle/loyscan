@@ -46,8 +46,12 @@ class FakeStoreRepository(stores: List<Store> = emptyList()) : StoreRepository {
     /** When set, [update] throws it instead of saving. */
     var updateFailure: Exception? = null
 
+    /** When set, [update] suspends until it completes. */
+    var updateGate: CompletableDeferred<Unit>? = null
+
     /** Like the Room repository: only a custom store's name, colour, format and `updatedAt` change. */
     override suspend fun update(store: Store) {
+        updateGate?.await()
         updateFailure?.let { throw it }
         stores.value = stores.value.map {
             if (it.id != store.id || !it.isCustom) it

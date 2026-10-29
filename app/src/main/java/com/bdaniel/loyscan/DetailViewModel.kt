@@ -8,6 +8,7 @@ import com.bdaniel.loyscan.data.repository.LoyaltyCardRepository
 import com.bdaniel.loyscan.domain.LoyaltyCard
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -15,6 +16,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -52,7 +54,8 @@ class DetailViewModel @Inject constructor(
         _deletion.value = Deletion.DELETING
         viewModelScope.launch {
             _deletion.value = try {
-                loyaltyCardRepository.delete(cardId)
+                // A delete still running when the card closes (Back) is finished (#65).
+                withContext(NonCancellable) { loyaltyCardRepository.delete(cardId) }
                 Deletion.DELETED
             } catch (e: CancellationException) {
                 throw e

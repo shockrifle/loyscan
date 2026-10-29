@@ -1,6 +1,7 @@
 package com.bdaniel.loyscan
 
 import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModelStore
 import androidx.navigation.testing.invoke
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.cash.turbine.test
@@ -11,6 +12,7 @@ import com.bdaniel.loyscan.testing.aLoyaltyCard
 import com.bdaniel.loyscan.testing.cardId
 import com.bdaniel.loyscan.testing.MainDispatcherRule
 import com.bdaniel.loyscan.testing.aStore
+import com.bdaniel.loyscan.testing.keep
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.test.runTest
@@ -364,6 +366,64 @@ class CustomStoreViewModelTest {
             viewModel.delete()
             assertThat(expectMostRecentItem().deletion).isEqualTo(Deletion.DELETED)
         }
+    }
+
+    @Test
+    fun aNewStoreStillSavingWhenTheFormCloses_isStillSaved() = runTest { // #65: Back pressed during the save
+        val gate = CompletableDeferred<Unit>()
+        stores.addGate = gate
+        val owner = ViewModelStore()
+        val viewModel = owner.keep { viewModel() }
+        viewModel.state.test {
+            skipItems(1)
+            viewModel.onNameChange("My Gym")
+            viewModel.save()
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        owner.clear()
+        gate.complete(Unit)
+
+        assertThat(stores.stores.value.map { it.name }).containsExactly("Existing Store", "My Gym")
+    }
+
+    @Test
+    fun anEditStillSavingWhenTheFormCloses_isStillSaved() = runTest { // #65
+        stores.stores.value += custom
+        val gate = CompletableDeferred<Unit>()
+        stores.updateGate = gate
+        val owner = ViewModelStore()
+        val viewModel = owner.keep { editViewModel() }
+        viewModel.state.test {
+            skipItems(1)
+            viewModel.onNameChange("My Gym")
+            viewModel.save()
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        owner.clear()
+        gate.complete(Unit)
+
+        assertThat(stores.stores.value.single { it.id == custom.id }.name).isEqualTo("My Gym")
+    }
+
+    @Test
+    fun aDeleteStillRunningWhenTheFormCloses_isStillDone() = runTest { // #65
+        stores.stores.value += custom
+        val gate = CompletableDeferred<Unit>()
+        stores.deleteGate = gate
+        val owner = ViewModelStore()
+        val viewModel = owner.keep { editViewModel() }
+        viewModel.state.test {
+            skipItems(1)
+            viewModel.delete()
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        owner.clear()
+        gate.complete(Unit)
+
+        assertThat(stores.stores.value.map { it.id }).containsExactly("existing")
     }
 
     @Test

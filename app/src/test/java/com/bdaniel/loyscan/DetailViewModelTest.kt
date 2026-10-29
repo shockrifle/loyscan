@@ -1,6 +1,7 @@
 package com.bdaniel.loyscan
 
 import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModelStore
 import androidx.navigation.testing.invoke
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.cash.turbine.test
@@ -12,6 +13,7 @@ import com.bdaniel.loyscan.testing.aLoyaltyCard
 import com.bdaniel.loyscan.testing.aStore
 import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.testing.cardId
+import com.bdaniel.loyscan.testing.keep
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.test.runTest
@@ -120,6 +122,22 @@ class DetailViewModelTest {
 
         assertThat(viewModel.deletion.value).isEqualTo(Deletion.DELETED)
         assertThat(repository.cards.value.map { it.id }).containsExactly(cardId(1))
+    }
+
+    @Test
+    fun aDeleteStillRunningWhenTheCardCloses_isStillDone() = runTest { // #65: Back pressed during the delete
+        val gate = CompletableDeferred<Unit>()
+        repository.deleteGate = gate
+        val owner = ViewModelStore()
+        val viewModel = owner.keep {
+            DetailViewModel(SavedStateHandle(route = Detail(cardId = cardId(1), color = "#336699")), repository)
+        }
+        viewModel.delete()
+
+        owner.clear()
+        gate.complete(Unit)
+
+        assertThat(repository.cards.value).isEmpty()
     }
 
     @Test

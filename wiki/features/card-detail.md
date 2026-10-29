@@ -73,6 +73,10 @@ UUID string.
   Closing the dialog forgets the failure (`dismissDeletion`), and a delete already under way or done isn't repeated.
   Tests: `DetailViewModelTest.delete_…`, `DetailScreenTest.deleteAction_…`, `confirmingDelete_…`,
   `aDeleteThatFails_…`, `AppNavigationTest.deletingACard_afterConfirming_returnsToTheListWithoutIt`.
+  **Back during the delete** (#65): the card is still deleted (`withContext(NonCancellable)`), and `toBack` goes back
+  only while the card's own back-stack entry is current (`detailDirections(entry)`), so it can't leave a card opened
+  since ([[2026-10-28-save-navigates-after-back]]). Tests: `DetailViewModelTest.aDeleteStillRunningWhenTheCardCloses_…`,
+  `AddCardDirectionsTest.aCardDeletedAfterBack_leavesACardOpenedSinceAsItIs`.
 - The whole `Scaffold` is the shared element `card/{id}` — [[card-transition]].
 
 ## Not implemented (as of 2026-10-22)

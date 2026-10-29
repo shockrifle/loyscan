@@ -70,14 +70,14 @@ fun SharedTransitionScope.AppNavigation(modifier: Modifier = Modifier) {
                 detail.cardId,
                 detail.color,
                 animatedVisibilityScope = this,
-                directions = navController.detailDirections()
+                directions = navController.detailDirections(it)
             )
         }
         composable<StorePicker> {
             StorePickerScreen(directions = navController.storePickerDirections())
         }
         composable<CustomStore> {
-            CustomStoreScreen(directions = navController.customStoreDirections())
+            CustomStoreScreen(directions = navController.customStoreDirections(it))
         }
         composable<Scanner> {
             ScannerScreen(directions = navController.scannerDirections(it.toRoute<Scanner>().storeId))

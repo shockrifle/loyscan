@@ -159,7 +159,8 @@ Each step is red → green → refactor: the test is written and seen failing be
    register `composable<Route>` in `AppNavigation`. Test: extend or add an `AppNavigationTest`-style flow, one per
    user journey. A direction called from a `LaunchedEffect` on ViewModel state (e.g. "saved → open it") can fire
    after Back, while the popped screen animates out. It must navigate only while its own back-stack entry is current
-   (`cardFormDirections(entry)`), and the write
+   (`whileCurrent(entry)` in `Navigation.kt`; the factory takes the composable's entry, `cardFormDirections(it)`), and
+   the write
    must not be cancelled with `viewModelScope` ([[2026-10-28-save-navigates-after-back]]).
 5. Screen composable as `SharedTransitionScope.XScreen(animatedVisibilityScope, directions, viewModel = hiltViewModel())`,
    with `Scaffold(containerColor = Color.Transparent)` (the app background comes from `MainActivity`,

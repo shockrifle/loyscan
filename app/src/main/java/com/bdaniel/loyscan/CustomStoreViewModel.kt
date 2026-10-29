@@ -10,6 +10,7 @@ import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.domain.Store
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -18,6 +19,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.time.Clock
 import java.util.UUID
@@ -144,13 +146,10 @@ class CustomStoreViewModel @Inject constructor(
         progress.value = Progress(saving = true)
         viewModelScope.launch {
             progress.value = try {
-                if (edited is Edited.Found) {
-                    storeRepository.update(store)
-                    Progress(saved = true)
-                } else {
-                    storeRepository.add(store)
-                    Progress(createdStoreId = store.id)
+                withContext(NonCancellable) { // a save still running when the form closes is finished (#65)
+                    if (edited is Edited.Found) storeRepository.update(store) else storeRepository.add(store)
                 }
+                if (edited is Edited.Found) Progress(saved = true) else Progress(createdStoreId = store.id)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) { // as a failed card save (#49): the form stays open
@@ -167,7 +166,7 @@ class CustomStoreViewModel @Inject constructor(
         deletion.value = Deletion.DELETING
         viewModelScope.launch {
             deletion.value = try {
-                storeRepository.delete(store.id)
+                withContext(NonCancellable) { storeRepository.delete(store.id) } // as a save (#65)
                 Deletion.DELETED
             } catch (e: CancellationException) {
                 throw e

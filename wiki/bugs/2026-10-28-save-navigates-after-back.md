@@ -1,6 +1,6 @@
 # A save that ended after Back still opened the card
 
-**Fixed in:** #64 · **Date:** 2026-10-28 · **Area:** [[add-card]], [[edit-card]]
+**Fixed in:** #64; the same bug on the custom store and card screens in #65 · **Date:** 2026-10-28 · **Area:** [[add-card]], [[edit-card]]
 
 ## Symptom
 If Back was pressed on the card form while its save was still running, the form closed. When the save then ended,
@@ -31,5 +31,7 @@ There were two causes:
 - Navigating from a `LaunchedEffect` on ViewModel state can fire after the user has left the screen. The directions
   it calls must check that their screen is still the current one.
 - A write the user has asked for must not run only in `viewModelScope`.
-- Both patterns are still in `CustomStoreScreen` (create → scanner, save or delete → back) and `DetailScreen`
-  (delete → back): [#65](https://github.com/shockrifle/loyscan/issues/65).
+- The same two patterns were in `CustomStoreScreen` (create → scanner, save or delete → back) and `DetailScreen`
+  (delete → back). Fixed the same way in [#65](https://github.com/shockrifle/loyscan/issues/65): every direction
+  called when a write ends goes through `whileCurrent(entry)` in `Navigation.kt`, and the writes run
+  `NonCancellable` ([[edit-store]], [[card-detail]]).
