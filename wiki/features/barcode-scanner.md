@@ -7,7 +7,7 @@ after the store picker of [[add-card]]; a scan or "Enter manually" replaces it w
 
 **Entry points** (under `app/src/main/java/com/bdaniel/loyscan/`):
 - `ScannerScreen.kt:46`, `ScannerScreen`; state in `ScannerViewModel.kt`.
-- Route `Scanner(storeId)`, `ScannerDirections` and `scannerDirections()` in `Navigation.kt:92-115`; registered in
+- Route `Scanner(storeId)`, `ScannerDirections` and `scannerDirections()` in `Navigation.kt:93-124`; registered in
   `MainActivity.kt:82-84`.
 - `ui/scanner/`: `CameraPermission.kt` (permission state), `CameraScanner.kt` (CameraX, `ScanAnalyzer`),
   `ZxingCppFrameReader.kt` and `ZxingCppFormats.kt` (decoding).
@@ -39,7 +39,9 @@ after the store picker of [[add-card]]; a scan or "Enter manually" replaces it w
   screen.
 - **Scan.** Each analysis frame (about 1280×720) is read on a background thread; the first barcode found is handed
   to `directions.onScanned` on the main thread. Later frames keep being read, but `ScannerViewModel.onScanned`
-  drops them, so one scan navigates once.
+  drops them, so one scan navigates once. A frame decoded while the scanner animates out after Back doesn't open the
+  form: `onScanned` and `toManualEntry` navigate only while the scanner's own entry is current (#68,
+  `AddCardDirectionsTest.aScanDecodedAfterBackFromTheScanner_…`).
 - **Torch.** A toggle in the top bar, only when the camera has a flash unit. Its state is in the ViewModel, so it
   survives rotation, and it is set again on every resume: CameraX turns the torch off when it closes the camera on
   pause.

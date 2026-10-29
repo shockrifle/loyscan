@@ -55,16 +55,15 @@ separators removed, letter case applied). Rules turn it into barcode content. Se
 
 **DAO** — Room data-access interface in `data/local/db/dao/`. Reads return `Flow`.
 
-**Detail** — Navigation route `data class Detail(val cardId: String, val color: String, val countUse: Boolean = true)` (`Navigation.kt:28-29`).
+**Detail** — Navigation route `data class Detail(val cardId: String, val color: String, val countUse: Boolean = true)` (`Navigation.kt:29-30`).
 
 **Display number** — `LoyaltyCard.displayNumber`: the number formatted by the store rule's display pattern
 (`CardNumberEngine.displayNumber`); the trimmed number when there is no rule. Shown on the detail screen.
 
 **Directions** — Per-screen data class of navigation lambdas (`ListDirections`, `DetailDirections`), created by
-`NavController.listDirections()` / `detailDirections()` (`Navigation.kt`). Screens depend on Directions, never on
-`NavController`. Every `toBack`, and every direction called when a write ends, navigates only while the
-screen's own back-stack entry is current (`whileCurrent`, [[2026-10-28-save-navigates-after-back]]); the other
-forward directions don't check. See [[2025-12-09-type-safe-navigation-directions]].
+`NavController.listDirections(entry)` / `detailDirections(entry)` (`Navigation.kt`). Screens depend on Directions, never on
+`NavController`. Every direction navigates only while the screen's own back-stack entry is current
+(`whileCurrent`, [[2026-10-28-save-navigates-after-back]]), so each factory takes that entry. See [[2025-12-09-type-safe-navigation-directions]].
 
 **Domain model** — Plain Kotlin data classes in `domain/` (`LoyaltyCard`, `Store`) that the UI consumes.
 

@@ -61,7 +61,7 @@ fun SharedTransitionScope.AppNavigation(modifier: Modifier = Modifier) {
         composable<CardList> {
             ListScreen(
                 animatedVisibilityScope = this,
-                directions = navController.listDirections()
+                directions = navController.listDirections(it)
             )
         }
         composable<Detail> {

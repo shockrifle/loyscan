@@ -1,6 +1,6 @@
 # A save that ended after Back still opened the card
 
-**Fixed in:** #64; the same bug on the custom store and card screens in #65 · **Date:** 2026-10-28 · **Area:** [[add-card]], [[edit-card]]
+**Fixed in:** #64; the same bug on the custom store and card screens in #65, and on the other directions in #66, #68, #69 · **Date:** 2026-10-28 · **Area:** [[add-card]], [[edit-card]]
 
 ## Symptom
 If Back was pressed on the card form while its save was still running, the form closed. When the save then ended,
@@ -38,3 +38,9 @@ There were two causes:
 - A popped screen also takes taps while it animates out, so a second tap on its Back arrow popped the screen below
   too. Since [#66](https://github.com/shockrifle/loyscan/issues/66) every `toBack` goes through `whileCurrent(entry)`
   (`AddCardDirectionsTest.aSecondBackFrom…`). The list had a `toBack` that nothing called; it was removed.
+- The same holds for forward directions: a screen takes taps until the next one covers it, so a double tap on a store,
+  a card, Add or Edit pushed the next screen twice, and a camera frame decoded after Back from the scanner opened the
+  card form over the picker. Since [#68](https://github.com/shockrifle/loyscan/issues/68) and
+  [#69](https://github.com/shockrifle/loyscan/issues/69) every direction goes through `whileCurrent(entry)`, and
+  `listDirections` takes the list's entry too (`AddCardDirectionsTest.aSecondTapOn…`, `…AfterBackFromTheScanner_…`).
+  A new direction does the same.

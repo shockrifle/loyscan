@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-29 · every direction navigates only while its screen is current: a scan decoded after Back from the scanner, or a second tap on a store, card, Add or Edit, no longer navigates; Navigation.kt line links shifted · architecture, glossary, bugs/2026-10-28-save-navigates-after-back, features/barcode-scanner, features/card-detail, decisions/2025-12-12-brand-color-in-route · #68, #69
 - 2026-10-29 · review fix: the Directions entry says which directions are guarded, not every one of a factory that takes its entry · glossary · review of #66
 - 2026-10-29 · every Back direction navigates only while its screen is current, so a double tap pops one screen; the list's unused toBack removed; Navigation.kt line links shifted · architecture, bugs/2026-10-28-save-navigates-after-back, glossary, decisions/2025-12-09-type-safe-navigation-directions, decisions/2025-12-12-brand-color-in-route, features/card-detail, features/barcode-scanner · #66
 - 2026-10-29 · review fix: Back during "Create" noted on the add-card flow; DetailViewModel line link shifted · features/add-card, architecture · review of #65

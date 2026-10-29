@@ -122,7 +122,7 @@ here exist; read them next to the code.
    `directions.toCard(card.id, card.store.color)` ([[card-list]]).
 7. **Navigation.** *Test first:* `AppNavigationTest`, the one end-to-end test for this flow: real Hilt and
    navigation over `InMemoryDatabaseModule`, list → detail → back.
-   Then `NavController.listDirections().toCard` → `navigate(Detail(id, color))` (`Navigation.kt:19-24, 28-29`).
+   Then `NavController.listDirections(entry).toCard` → `navigate(Detail(id, color))` (`Navigation.kt:19-25, 29-30`).
    `AppNavigation` maps `composable<Detail>` to `DetailScreen`, pulling `cardId` and `color` out of the route and
    passing them as plain parameters (`MainActivity.kt:67-75`).
 8. **Detail ViewModel.** *Test first:* `DetailViewModelTest` with `SavedStateHandle(route = Detail(…))`. It
@@ -159,9 +159,9 @@ Each step is red → green → refactor: the test is written and seen failing be
    register `composable<Route>` in `AppNavigation`. Test: extend or add an `AppNavigationTest`-style flow, one per
    user journey. A popped screen still runs its effects and takes taps while it animates out, so a direction called
    from a `LaunchedEffect` on ViewModel state (e.g. "saved → open it"), or a second tap on a Back arrow, can fire
-   after Back. Such a direction navigates only while its own back-stack entry is current (`whileCurrent(entry)` in
-   `Navigation.kt`; the factory takes the composable's entry, `cardFormDirections(it)`): every `toBack`, and every
-   direction called when a write ends. The write must not be cancelled with `viewModelScope`
+   after Back; a tap or a late camera frame can also arrive before the next screen covers this one. So every direction
+   navigates only while its own back-stack entry is current (`whileCurrent(entry)` in `Navigation.kt`; the factory
+   takes the composable's entry, `cardFormDirections(it)`). The write must not be cancelled with `viewModelScope`
    ([[2026-10-28-save-navigates-after-back]]).
 5. Screen composable as `SharedTransitionScope.XScreen(animatedVisibilityScope, directions, viewModel = hiltViewModel())`,
    with `Scaffold(containerColor = Color.Transparent)` (the app background comes from `MainActivity`,

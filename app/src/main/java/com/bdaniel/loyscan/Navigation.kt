@@ -16,11 +16,12 @@ data class ListDirections(
     val toAddCard: () -> Unit,
 )
 
-fun NavController.listDirections() = ListDirections(
+/** Only while [list], its own entry, is current: a second tap before the next screen covers it opens nothing (#69). */
+fun NavController.listDirections(list: NavBackStackEntry) = ListDirections(
     toCard = { id, color ->
-        navigate(Detail(id, color))
+        whileCurrent(list) { navigate(Detail(id, color)) }
     },
-    toAddCard = { navigate(StorePicker) },
+    toAddCard = { whileCurrent(list) { navigate(StorePicker) } },
 )
 
 
@@ -34,10 +35,10 @@ data class DetailDirections(
     val toEdit: (cardId: String, storeId: String) -> Unit,
 )
 
-/** After a delete, back leaves the card only while [card], its own entry, is current (#65). */
+/** Only while [card], its own entry, is current: after a delete (#65), and for a second tap on Edit (#69). */
 fun NavController.detailDirections(card: NavBackStackEntry) = DetailDirections(
     toBack = { whileCurrent(card) { navigateUp() } },
-    toEdit = { cardId, storeId -> navigate(CardForm(storeId, cardId = cardId)) },
+    toEdit = { cardId, storeId -> whileCurrent(card) { navigate(CardForm(storeId, cardId = cardId)) } },
 )
 
 
@@ -54,10 +55,11 @@ data class StorePickerDirections(
     val toBack: () -> Unit
 )
 
+/** Only while [picker], its own entry, is current: a second tap opens nothing (#66, #69). */
 fun NavController.storePickerDirections(picker: NavBackStackEntry) = StorePickerDirections(
-    toStore = { storeId -> navigate(Scanner(storeId)) },
-    toCustomStore = { navigate(CustomStore()) },
-    toEditStore = { storeId -> navigate(CustomStore(storeId)) },
+    toStore = { storeId -> whileCurrent(picker) { navigate(Scanner(storeId)) } },
+    toCustomStore = { whileCurrent(picker) { navigate(CustomStore()) } },
+    toEditStore = { storeId -> whileCurrent(picker) { navigate(CustomStore(storeId)) } },
     toBack = { whileCurrent(picker) { navigateUp() } }
 )
 
@@ -99,16 +101,23 @@ data class ScannerDirections(
     val toBack: () -> Unit
 )
 
-/** A scan, or "enter manually", replaces the scanner with the card form, so back from the form returns to the picker. */
+/**
+ * A scan, or "enter manually", replaces the scanner with the card form, so back from the form returns to the picker.
+ * Only while [scanner], its own entry, is current: a frame decoded after Back leaves the user on the picker (#68).
+ */
 fun NavController.scannerDirections(storeId: String, scanner: NavBackStackEntry) = ScannerDirections(
     onScanned = { barcode ->
-        navigate(CardForm(storeId, scannedContent = barcode.content, scannedFormat = barcode.format)) {
-            popUpTo<Scanner> { inclusive = true }
+        whileCurrent(scanner) {
+            navigate(CardForm(storeId, scannedContent = barcode.content, scannedFormat = barcode.format)) {
+                popUpTo<Scanner> { inclusive = true }
+            }
         }
     },
     toManualEntry = {
-        navigate(CardForm(storeId)) {
-            popUpTo<Scanner> { inclusive = true }
+        whileCurrent(scanner) {
+            navigate(CardForm(storeId)) {
+                popUpTo<Scanner> { inclusive = true }
+            }
         }
     },
     toBack = { whileCurrent(scanner) { navigateUp() } }
@@ -151,9 +160,10 @@ fun NavController.cardFormDirections(form: NavBackStackEntry) = CardFormDirectio
 
 
 /**
- * Navigates only while [entry] is the current screen. A screen still runs its effects and takes taps while it animates
- * out after Back, so one that navigates when a write ends, or a second tap on its Back arrow, would otherwise do it from
- * wherever Back went (#64, #65, #66).
+ * Navigates only while [entry] is the current screen. Every direction goes through it. A screen still runs its effects
+ * and takes taps while it animates out after Back, or until the next screen covers it, so a write that ends, a scan
+ * decoded late or a second tap would otherwise navigate from wherever the first navigation went (#64, #65, #66, #68,
+ * #69).
  */
 private inline fun NavController.whileCurrent(entry: NavBackStackEntry, navigation: () -> Unit) {
     if (currentBackStackEntry == entry) navigation()
