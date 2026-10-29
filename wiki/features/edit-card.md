@@ -2,8 +2,8 @@
 
 The detail screen's Edit icon opens the card form ([[add-card]]) for that card: its label and number, checked live
 against the store's rule as when adding it, and its store, which "Change store" replaces with any other. Saving writes
-the edit and opens the card again. Issue [#8](https://github.com/shockrifle/loyscan/issues/8); this page covers the
-slice that exists: editing the label, number and store of one card. Deleting a card is on [[card-detail]].
+the edit and opens the card again. Issue [#8](https://github.com/shockrifle/loyscan/issues/8): editing the label,
+number and store of one card. Deleting a card is on [[card-detail]].
 
 **Entry points** (under `app/src/main/java/com/bdaniel/loyscan/`):
 - `DetailScreen.kt`: the Edit icon → `DetailDirections.toEdit(cardId, storeId)` → `CardForm(storeId, cardId = cardId)`
@@ -32,8 +32,10 @@ slice that exists: editing the label, number and store of one card. Deleting a c
   makes the form that store's through `CardFormViewModel.switchStore`, as a suggested store does: the label and the
   number, typed or an untouched scan, stay and are checked against the new store's rule, so a number it rejects needs
   "Save anyway". Close (or system Back) keeps the store. The chosen store is kept in the `SavedStateHandle`, so it
-  survives process death. Adding a card doesn't offer it: Back returns to the picker there. Catalogue and custom stores
-  are both listed; "Other card" isn't, so a card can't be moved to a store that doesn't exist yet.
+  survives process death. Once saving has started the store can't be switched (`switchStore` refuses), so the card
+  opens in the colour of the store it was saved in (found in review). Adding a card doesn't offer it: Back returns to
+  the picker there. Catalogue and custom stores are both listed; "Other card" isn't, so a card can't be moved to a
+  store that doesn't exist yet.
 - **Saving writes only what the form edits:** the store, label, number, scanned format and `updatedAt` (now). Room's
   partial `@Update(entity = LoyaltyCardEntity::class)` with `LoyaltyCardEdit` writes those columns and no others, so
   `createdAt`, the use count, `lastUsedAt`, the note and the photo paths stay as stored even if they changed after the
@@ -56,7 +58,8 @@ slice that exists: editing the label, number and store of one card. Deleting a c
   `anEditThatEndsAfterBackFromTheForm_…`; `CardFormViewModelTest.anEditStillSavingWhenTheFormCloses_isStillSaved`
   (#64).
 - Change store: `CardFormViewModelTest.editingACard_offersEveryOtherStore_byName`, `addingACard_offersNoOtherStore`,
-  `movingATypedCardToAnotherStore_checksItsNumberAgainstThatStoresRule_andSavesItThere`;
+  `movingATypedCardToAnotherStore_checksItsNumberAgainstThatStoresRule_andSavesItThere`,
+  `movingAScannedCardToAStoreWhoseRuleRejectsIt_…`, `theStoreCantBeSwitchedWhileTheCardIsSaving`;
   `CardFormScreenTest.editingACard_canMoveItToAnotherStore_foundBySearch`,
   `theStoreChooser_canBeClosedWithoutChangingTheStore`, `addingACard_saysAddCard_andDoesNotOfferToChangeTheStore`.
 - `AppNavigationTest.editingACardsLabel_savesIt_showsTheCard_andBackReturnsToTheList`,
@@ -64,6 +67,5 @@ slice that exists: editing the label, number and store of one card. Deleting a c
 
 ## Not implemented
 
-From #8: deleting several cards at once (needs the list's multi-select, #7), and deleting photo files (needs photos,
-#10). A custom store's
-barcode format belongs to the store, so changing it is editing the store (#53).
+Deleting several cards at once belongs to the list's multi-select (#7), and deleting a card's photo files to photos
+(#10). A custom store's barcode format belongs to the store, so changing it is editing the store (#53).

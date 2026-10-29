@@ -65,8 +65,8 @@ stores already in the database, and custom stores). Everything runs offline on t
     `ShippedCatalogueTest.aTescoScan_offersTescoFirst`). Every match is offered, so the user chooses when several
     rules read the same number. Stores without a rule are never offered. Tapping one makes the form that store's
     (`CardFormViewModel.switchStore`): the scan and the label stay, the check runs against the new rule, and the card
-    is saved for it. The chosen store is kept in the `SavedStateHandle`, so back still returns to the picker and the
-    choice survives process death. The form reads every store for this (`StoreRepository.getAll`).
+    is saved for it; not once saving has started ([[edit-card]]). The chosen store is kept in the `SavedStateHandle`,
+    so back still returns to the picker and the choice survives process death. The form reads every store for this (`StoreRepository.getAll`).
   - **"Save anyway":** with a problem shown, the button says "Save anyway" and saves the card as it is.
   - The field isn't reformatted while typing. When the card will show the number differently (the rule's display
     pattern), the field says "Shown as 1234 5674" under it.

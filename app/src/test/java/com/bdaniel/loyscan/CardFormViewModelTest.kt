@@ -664,6 +664,52 @@ class CardFormViewModelTest {
     }
 
     @Test
+    fun movingAScannedCardToAStoreWhoseRuleRejectsIt_saysSo_offersItsStoreBack_andSavesTheScanAsItWas() = runTest { // #8 review
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, number = "12345674", scannedFormat = BarcodeFormat.CODE_128))
+        val viewModel = viewModel(CardForm("ruled", cardId = cardId(1)))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.switchStore("nine")
+
+            val state = expectMostRecentItem()
+            assertThat(state.check).isEqualTo(NumberCheck.ScanDoesNotMatchStore)
+            assertThat(state.scannedFormat).isEqualTo(BarcodeFormat.CODE_128)
+            assertThat(state.suggestedStores).contains(store)
+
+            viewModel.save()
+            expectMostRecentItem()
+            val saved = cards.cards.value.single()
+            assertThat(saved.store.id).isEqualTo("nine")
+            assertThat(saved.number).isEqualTo("12345674")
+            assertThat(saved.scannedFormat).isEqualTo(BarcodeFormat.CODE_128)
+        }
+    }
+
+    @Test
+    fun theStoreCantBeSwitchedWhileTheCardIsSaving() = runTest { // #8 review: the card would open in the other store's colour
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, number = "12345674"))
+        val gate = CompletableDeferred<Unit>()
+        cards.updateGate = gate
+        val viewModel = viewModel(CardForm("ruled", cardId = cardId(1)))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.save()
+            viewModel.switchStore("nine")
+            gate.complete(Unit)
+
+            val state = expectMostRecentItem()
+            assertThat(state.savedCardId).isEqualTo(cardId(1))
+            assertThat(state.store).isEqualTo(store)
+            viewModel.switchStore("nine") // nor once it is saved, while the card opens
+            assertThat(viewModel.state.value.store).isEqualTo(store)
+            assertThat(cards.cards.value.single().store).isEqualTo(store)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun anEdit_isRestoredAfterProcessDeath() = runTest { // #8
         cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, label = "Gold card", number = "12345674"))
         val handle = SavedStateHandle(route = CardForm("ruled", cardId = cardId(1)))

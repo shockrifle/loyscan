@@ -148,9 +148,12 @@ class CardFormViewModel @Inject constructor(
 
     /**
      * Makes the form [storeId]'s, keeping the scan or typed number and the label; for a store from
-     * [CardFormState.suggestedStores] or, while editing, [CardFormState.otherStores].
+     * [CardFormState.suggestedStores] or, while editing, [CardFormState.otherStores]. Not once saving has started: the
+     * saved card opens in the form's store's colour (#8 review).
      */
     fun switchStore(storeId: String) {
+        val progress = progress.value
+        if (progress.saving || progress.savedCardId != null) return
         savedStateHandle[STORE_ID] = storeId
     }
 

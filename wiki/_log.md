@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-29 · review fix: the store can't be switched once a save has started; #8 done, its "Not implemented" items named as #7's, #10's and #53's · features/edit-card, features/_index, features/add-card · review of #8
 - 2026-10-29 · editing a card can move it to any other store ("Change store", a search dialog sharing the picker's list) · features/edit-card, features/add-card, features/_index, index · #8
 - 2026-10-29 · review fix: Navigation.kt line links shifted by the toCard KDoc; card-transition sentence split · architecture, glossary, features/card-detail, features/barcode-scanner, features/card-transition, decisions/2025-12-12-brand-color-in-route · review of #69
 - 2026-10-29 · review fix: ListDirections.toCard says whether it opened the card, so a second tile tapped while the list leaves isn't held on return; factories written with their entry · features/card-transition, architecture, decisions/2025-12-09-type-safe-navigation-directions · review of #69
