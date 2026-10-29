@@ -123,9 +123,9 @@ here exist; read them next to the code.
    `directions.toCard(card.id, card.store.color)` ([[card-list]]).
 7. **Navigation.** *Test first:* `AppNavigationTest`, the one end-to-end test for this flow: real Hilt and
    navigation over `InMemoryDatabaseModule`, list → detail → back.
-   Then `NavController.listDirections(entry).toCard` → `navigate(Detail(id, color))` (`Navigation.kt:22-32, 36-37`).
+   Then `NavController.listDirections(entry).toCard` → `navigate(Detail(id, color))` (`Navigation.kt:23-33, 40-41`).
    `AppNavigation` maps `composable<Detail>` to `DetailScreen`, pulling `cardId` and `color` out of the route and
-   passing them as plain parameters (`MainActivity.kt:67-75`).
+   passing them as plain parameters (`MainActivity.kt:67-76`).
 8. **Detail ViewModel.** *Test first:* `DetailViewModelTest` with `SavedStateHandle(route = Detail(…))`. It
    checks `EMPTY` first, then the routed card. A missing card stays `EMPTY`, and a deleted card keeps the last
    value.
@@ -137,7 +137,7 @@ here exist; read them next to the code.
    grows into the screen before the card has loaded.
    Then `DetailScreen` paints the top bar and header with the **route** color (available on frame 1), and fills
    text/logo from the **ViewModel** card (available once Room emits). The whole `Scaffold` is the matching shared
-   element, keyed from the **route** `cardId` (`DetailScreen.kt:116-119`, #16). Back → `directions.toBack()` → `navigateUp()`.
+   element, keyed from the **route** `cardId` (`DetailScreen.kt:132-135`, #16). Back → `directions.toBack()` → `navigateUp()`.
    See [[card-detail]], [[card-transition]].
 
 ### Checklist for a new screen/feature (derived from the example)

@@ -3,6 +3,7 @@ package com.bdaniel.loyscan
 import androidx.compose.runtime.Immutable
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
+import androidx.navigation.toRoute
 import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.domain.ScannedBarcode
 import kotlinx.serialization.Serializable
@@ -32,20 +33,29 @@ fun NavController.listDirections(list: NavBackStackEntry) = ListDirections(
 )
 
 
-/** One card. [countUse] is false when it opens right after being added, which isn't a use at a till. */
+/**
+ * One card. [countUse] is false when it opens right after being added or edited, which isn't a use at a till. [added]
+ * is true right after adding it: the card offers to add another (#6).
+ */
 @Serializable
-data class Detail(val cardId: String, val color: String, val countUse: Boolean = true)
+data class Detail(val cardId: String, val color: String, val countUse: Boolean = true, val added: Boolean = false)
 
 @Immutable
 data class DetailDirections(
     val toBack: () -> Unit,
     val toEdit: (cardId: String, storeId: String) -> Unit,
+    /** "Add another" on a card just added (#6). */
+    val toAddCard: () -> Unit,
 )
 
-/** Only while [card], its own entry, is current: after a delete (#65), and for a second tap on Edit (#69). */
+/**
+ * Only while [card], its own entry, is current: after a delete (#65), and for a second tap on Edit (#69) or "Add
+ * another". Another card is added from the picker over this one, so back from the picker returns to it.
+ */
 fun NavController.detailDirections(card: NavBackStackEntry) = DetailDirections(
     toBack = { whileCurrent(card) { navigateUp() } },
     toEdit = { cardId, storeId -> whileCurrent(card) { navigate(CardForm(storeId, cardId = cardId)) } },
+    toAddCard = { whileCurrent(card) { navigate(StorePicker) } },
 )
 
 
@@ -150,14 +160,16 @@ data class CardFormDirections(
 )
 
 /**
- * The saved card opens in place of the whole add-card flow, so back from it returns to the list. An edited card opens
- * in place of the card and its form, in its store's current colour (#8). Only while [form], the form's own entry, is
- * current: after Back during the save, the user stays where Back took them, even on a form opened since (#64).
+ * The saved card opens in place of the whole add-card flow, so back from it returns to the list; a new card offers to
+ * add another (#6). An edited card opens in place of the card and its form, in its store's current colour (#8). Only
+ * while [form], the form's own entry, is current: after Back during the save, the user stays where Back took them,
+ * even on a form opened since (#64).
  */
 fun NavController.cardFormDirections(form: NavBackStackEntry) = CardFormDirections(
     toCard = { id, color ->
         whileCurrent(form) {
-            navigate(Detail(id, color, countUse = false)) {
+            val added = form.toRoute<CardForm>().cardId == null
+            navigate(Detail(id, color, countUse = false, added = added)) {
                 popUpTo<CardList>()
             }
         }

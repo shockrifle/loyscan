@@ -140,16 +140,43 @@ class AddCardDirectionsTest {
     }
 
     @Test
-    fun savingTheForm_opensTheNewCardOverTheList_withoutCountingAUse() {
+    fun savingTheForm_opensTheNewCardOverTheList_withoutCountingAUse_offeringToAddAnother() {
         composeRule.runOnIdle { navController.storePickerDirections(navController.currentBackStackEntry!!).toStore("some-store") }
         composeRule.runOnIdle { navController.scannerDirections("some-store", navController.currentBackStackEntry!!).toManualEntry() }
         composeRule.runOnIdle { navController.cardFormDirections(navController.currentBackStackEntry!!).toCard("new-card", "#112233") }
 
         composeRule.runOnIdle {
             assertThat(navController.currentBackStackEntry!!.toRoute<Detail>())
-                .isEqualTo(Detail("new-card", "#112233", countUse = false))
+                .isEqualTo(Detail("new-card", "#112233", countUse = false, added = true))
             assertThat(navController.previousBackStackEntry?.destination?.hasRoute(CardList::class)).isTrue()
         }
+    }
+
+    @Test
+    fun addAnotherOnTheNewCard_opensThePickerOverIt() { // #6
+        composeRule.runOnIdle { navController.storePickerDirections(navController.currentBackStackEntry!!).toStore("some-store") }
+        composeRule.runOnIdle { navController.scannerDirections("some-store", navController.currentBackStackEntry!!).toManualEntry() }
+        composeRule.runOnIdle { navController.cardFormDirections(navController.currentBackStackEntry!!).toCard("new-card", "#112233") }
+
+        composeRule.runOnIdle { navController.detailDirections(navController.currentBackStackEntry!!).toAddCard() }
+
+        composeRule.runOnIdle {
+            assertThat(currentIs<StorePicker>()).isTrue()
+            assertThat(navController.previousBackStackEntry!!.toRoute<Detail>().cardId).isEqualTo("new-card")
+        }
+    }
+
+    @Test
+    fun aSecondTapOnAddAnother_opensOnePicker() { // as #69
+        composeRule.runOnIdle { navController.storePickerDirections(navController.currentBackStackEntry!!).toStore("some-store") }
+        composeRule.runOnIdle { navController.scannerDirections("some-store", navController.currentBackStackEntry!!).toManualEntry() }
+        composeRule.runOnIdle { navController.cardFormDirections(navController.currentBackStackEntry!!).toCard("new-card", "#112233") }
+        val card = composeRule.runOnIdle { navController.detailDirections(navController.currentBackStackEntry!!) }
+        composeRule.runOnIdle { card.toAddCard() }
+
+        composeRule.runOnIdle { card.toAddCard() }
+
+        composeRule.runOnIdle { assertThat(navController.previousBackStackEntry?.destination?.hasRoute(Detail::class)).isTrue() }
     }
 
     @Test

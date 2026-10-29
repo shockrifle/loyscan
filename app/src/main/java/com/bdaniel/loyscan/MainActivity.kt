@@ -69,6 +69,7 @@ fun SharedTransitionScope.AppNavigation(modifier: Modifier = Modifier) {
             DetailScreen(
                 detail.cardId,
                 detail.color,
+                detail.added,
                 animatedVisibilityScope = this,
                 directions = navController.detailDirections(it)
             )

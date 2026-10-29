@@ -75,6 +75,15 @@ stores already in the database, and custom stores). Everything runs offline on t
   injected `Clock`, no use yet. Then the card's detail opens in place of the flow (`popUpTo<CardList>()`), so back from it
   returns to the list. That opening isn't counted as a use (`Detail.countUse = false`): it is the end of adding the
   card, not showing it at a till.
+- **Add another** (step 6 of #6; a snackbar was the product choice, 2026-10-29): the new card opens with
+  `Detail.added = true` (set by `cardFormDirections` when the form's route has no `cardId`, so not after an edit), and
+  says "Card added" in a snackbar with an "Add another" action (`SnackbarDuration.Long`; Material's `SnackbarHost`
+  lengthens it when accessibility services are on). The action opens the store picker over the card
+  (`DetailDirections.toAddCard`, `whileCurrent`), so back from the picker returns to the new card, and saving the next
+  card replaces the whole stack above the list as usual. The offer is made once: a `rememberSaveable` flag keeps it
+  while it shows, so a rotation shows it again, and drops it when the snackbar ends (timed out or used), so it isn't
+  made again on return from the picker. Back from an Edit opened while it shows makes it again (the effect was
+  cancelled before it ended).
 - **Back during the save** (#64): the user stays where Back took them, and the card is still saved.
   `CardFormDirections.toCard` navigates only while the form's own back-stack entry (`cardFormDirections(entry)`) is
   current, so not after Back, nor over a form opened since (Edit again while the first one animates out; found in
@@ -114,10 +123,14 @@ stores already in the database, and custom stores). Everything runs offline on t
 - `CardFormViewModelTest.aSaveStillRunningWhenTheFormCloses_isStillSaved` (#64): a save held by
   `FakeLoyaltyCardRepository.addGate` is finished after the ViewModel is cleared.
 - `DetailViewModelTest.opening_aCardJustAdded_countsNoUse`.
-- `AppNavigationTest`: picker → scanner → back, adding a card by hand end to end, and for a new custom store.
+- `AppNavigationTest`: picker → scanner → back, adding a card by hand end to end, and for a new custom store;
+  "Add another" → picker → back to the new card (`addingACard_offersAnother_…`).
+- "Add another": `AddCardDirectionsTest` (`savingTheForm_…_offeringToAddAnother`, `addAnotherOnTheNewCard_…`,
+  `aSecondTapOnAddAnother_…`; the edit tests check an edit's card has `added = false`), `DetailScreenTest`
+  (`aCardJustAdded_…`, `aCardOpenedOtherwise_…`, `theOffer_…`).
 
 ## Not implemented
 
-From #6: "frequently added" stores for the user's country, and "add another". A custom store abandoned before its
+From #6: "frequently added" stores for the user's country. A custom store abandoned before its
 first card stays in the picker until it is deleted there ([[edit-store]]). A GS1 Aztec or PDF417 scan loses its GS1
 mark when saved (#48).

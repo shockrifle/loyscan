@@ -1,9 +1,9 @@
 # Detail shared-element key depends on async-loaded data
 
 **Status:** Resolved 2026-10-28 (#16) · **Issue:** [#16](https://github.com/shockrifle/loyscan/issues/16) · **Since:** 2025-12-04 (`1ea9fe0`) · **Where:**
-`app/src/main/java/com/bdaniel/loyscan/DetailScreen.kt:117-120`
+`app/src/main/java/com/bdaniel/loyscan/DetailScreen.kt:133-136`
 
-**Resolved:** `DetailScreen` takes `cardId` from the route, as it takes `color` (`MainActivity.kt:67-75`), and
+**Resolved:** `DetailScreen` takes `cardId` from the route, as it takes `color` (`MainActivity.kt:67-76`), and
 keys its `Scaffold` with `cardTransitionKey(cardId)`, the helper the list tile uses too (`ListScreen.kt:322`).
 The regression test, `DetailScreenTest.aTileOpeningTheCard_growsIntoTheScreen_beforeTheCardHasLoaded`, confirmed
 the suspicion on Robolectric, not on a device: with the old key and a card not loaded yet, the detail screen didn't

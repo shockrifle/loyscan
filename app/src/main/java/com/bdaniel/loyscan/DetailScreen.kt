@@ -27,6 +27,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -71,6 +75,7 @@ import kotlinx.coroutines.launch
 fun SharedTransitionScope.DetailScreen(
     cardId: String,
     color: String,
+    added: Boolean = false,
     animatedVisibilityScope: AnimatedVisibilityScope,
     modifier: Modifier = Modifier,
     directions: DetailDirections,
@@ -89,6 +94,16 @@ fun SharedTransitionScope.DetailScreen(
         BarcodeEncoder.encode(card.barcodeContent, card.barcodeFormat)
     }
     var scanMode by rememberSaveable { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    // A card just added offers another once (#6). Kept until the snackbar ends, so turning the phone shows it again,
+    // and gone after that, so it isn't made again on return from the picker.
+    var offeringAnother by rememberSaveable { mutableStateOf(added) }
+    LaunchedEffect(offeringAnother) {
+        if (!offeringAnother) return@LaunchedEffect
+        val result = snackbarHostState.showSnackbar("Card added", actionLabel = "Add another", duration = SnackbarDuration.Long)
+        offeringAnother = false
+        if (result == SnackbarResult.ActionPerformed) directions.toAddCard()
+    }
 
     Box(Modifier.fillMaxSize()) {
         Scaffold(
@@ -113,6 +128,7 @@ fun SharedTransitionScope.DetailScreen(
                     )
                 )
             },
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             modifier = Modifier.sharedElement(
                 // From the route, like the colour: the loaded card's id is empty until Room emits (#16).
                 sharedContentState = rememberSharedContentState(key = cardTransitionKey(cardId)),

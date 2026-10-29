@@ -4,9 +4,9 @@ Shows one card at the checkout: a top bar and a 200dp header in the store's bran
 name), then a `Card` with the card's label, the store name, the barcode on white and the display number in large
 type. The screen runs at full brightness; a double-tap on the barcode opens a full-screen scan mode.
 
-**Entry points:** `DetailScreen` (`app/src/main/java/com/bdaniel/loyscan/DetailScreen.kt:69-78`);
+**Entry points:** `DetailScreen` (`app/src/main/java/com/bdaniel/loyscan/DetailScreen.kt:73-83`);
 `DetailViewModel` (`app/src/main/java/com/bdaniel/loyscan/DetailViewModel.kt`); route
-`Detail(cardId, color, countUse)` (`app/src/main/java/com/bdaniel/loyscan/Navigation.kt:36-37`), where `cardId` is the card's
+`Detail(cardId, color, countUse, added)` (`app/src/main/java/com/bdaniel/loyscan/Navigation.kt:40-41`), where `cardId` is the card's
 UUID string.
 
 ## Behavior
@@ -77,6 +77,8 @@ UUID string.
   only while the card's own back-stack entry is current (`detailDirections(entry)`), so it can't leave a card opened
   since ([[2026-10-28-save-navigates-after-back]]). Tests: `DetailViewModelTest.aDeleteStillRunningWhenTheCardCloses_…`,
   `AddCardDirectionsTest.aCardDeletedAfterBack_leavesACardOpenedSinceAsItIs`.
+- **Right after adding** (`Detail.added`), a snackbar says "Card added" and offers "Add another", once
+  ([[add-card]], #6).
 - The whole `Scaffold` is the shared element `card/{id}` — [[card-transition]].
 
 ## Not implemented (as of 2026-10-22)

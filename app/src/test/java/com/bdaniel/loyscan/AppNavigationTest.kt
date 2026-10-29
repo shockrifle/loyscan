@@ -145,6 +145,27 @@ class AppNavigationTest {
     }
 
     @Test
+    fun addingACard_offersAnother_whichOpensThePicker_andBackReturnsToTheNewCard() { // #6
+        composeRule.onNodeWithContentDescription("Add card").performClick()
+        waitForText("Choose store")
+        composeRule.onNodeWithText("Test Store").performClick()
+        waitForText("Enter manually")
+        composeRule.onNodeWithText("Enter manually").performClick()
+        waitForText("Card number")
+        composeRule.onNodeWithTag(CARD_NUMBER_TAG).performTextInput("777")
+        composeRule.onNodeWithText("Save").performClick()
+        waitForTheCardFormToClose()
+
+        waitForText("Add another")
+        composeRule.onNodeWithText("Add another").performClick()
+        waitForText("Choose store")
+        composeRule.onNodeWithContentDescription("Back").performClick()
+
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) { composeRule.onAllNodes(hasText("Choose store")).fetchSemanticsNodes().isEmpty() }
+        composeRule.onNodeWithText("777").assertIsDisplayed()
+    }
+
+    @Test
     fun addingACardForANewCustomStore_createsTheStore_savesTheCard_andTheListShowsIt() { // #6
         composeRule.onNodeWithContentDescription("Add card").performClick()
         waitForText("Other card")

@@ -8,6 +8,7 @@ import androidx.activity.ComponentActivity
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.width
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -18,6 +19,7 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.hasAnyAncestor
@@ -64,21 +66,26 @@ class DetailScreenTest {
         repository: FakeLoyaltyCardRepository = FakeLoyaltyCardRepository(listOf(card)),
         onBack: () -> Unit = {},
         onEdit: (cardId: String, storeId: String) -> Unit = { _, _ -> },
+        added: Boolean = false,
+        onAddAnother: () -> Unit = {},
+        restorationTester: StateRestorationTester? = null,
     ) {
-        val viewModel = DetailViewModel(SavedStateHandle(route = Detail(cardId = card.id, color = color)), repository)
-        composeRule.setContent {
+        val viewModel = DetailViewModel(SavedStateHandle(route = Detail(cardId = card.id, color = color, added = added)), repository)
+        val content = @Composable {
             SharedTransitionLayout {
                 AnimatedVisibility(visible = true) {
                     DetailScreen(
                         cardId = card.id,
                         color = color,
+                        added = added,
                         animatedVisibilityScope = this,
-                        directions = DetailDirections(toBack = onBack, toEdit = onEdit),
+                        directions = DetailDirections(toBack = onBack, toEdit = onEdit, toAddCard = onAddAnother),
                         viewModel = viewModel,
                     )
                 }
             }
         }
+        if (restorationTester != null) restorationTester.setContent(content) else composeRule.setContent(content)
     }
 
     @Test
@@ -250,6 +257,60 @@ class DetailScreenTest {
     }
 
     @Test
+    fun aCardJustAdded_saysSo_andOffersToAddAnother() { // #6
+        var addedAnother = false
+        setScreen(added = true, onAddAnother = { addedAnother = true })
+
+        composeRule.onNodeWithText("Card added").assertIsDisplayed()
+        composeRule.onNodeWithText("Add another").performClick()
+
+        assertThat(addedAnother).isTrue()
+    }
+
+    @Test
+    fun aCardOpenedOtherwise_offersNoOtherCard() { // #6: from the list, or after an edit
+        setScreen()
+
+        composeRule.onNodeWithText("Card added").assertDoesNotExist()
+        composeRule.onNodeWithText("Add another").assertDoesNotExist()
+    }
+
+    @Test
+    fun theOffer_goesAway_andDoesNotComeBack_onceItHasTimedOut() { // #6
+        val restorationTester = StateRestorationTester(composeRule)
+        setScreen(added = true, restorationTester = restorationTester)
+        composeRule.onNodeWithText("Card added").assertIsDisplayed()
+
+        composeRule.mainClock.advanceTimeBy(SNACKBAR_LONG_MS + 1_000)
+        composeRule.onNodeWithText("Card added").assertDoesNotExist()
+        restorationTester.emulateSavedInstanceStateRestore()
+
+        composeRule.onNodeWithText("Card added").assertDoesNotExist()
+    }
+
+    @Test
+    fun theOffer_doesNotComeBack_afterAddAnother() { // #6: Back from the picker returns to this card
+        val restorationTester = StateRestorationTester(composeRule)
+        setScreen(added = true, restorationTester = restorationTester)
+        composeRule.onNodeWithText("Add another").performClick()
+
+        restorationTester.emulateSavedInstanceStateRestore()
+
+        composeRule.onNodeWithText("Card added").assertDoesNotExist()
+    }
+
+    @Test
+    fun theOffer_isMadeAgain_whenTheScreenIsRecreatedWhileItShows() { // #6: the card screen turns with the phone
+        val restorationTester = StateRestorationTester(composeRule)
+        setScreen(added = true, restorationTester = restorationTester)
+        composeRule.onNodeWithText("Card added").assertIsDisplayed()
+
+        restorationTester.emulateSavedInstanceStateRestore()
+
+        composeRule.onNodeWithText("Card added").assertIsDisplayed()
+    }
+
+    @Test
     fun editAction_isDisabledUntilTheCardHasLoaded() { // review of #8: an empty id would open a blank form
         setScreen(repository = FakeLoyaltyCardRepository(emptyList()))
 
@@ -328,7 +389,7 @@ class DetailScreenTest {
                             color = "#336699",
                             animatedVisibilityScope = this,
                             modifier = Modifier.onSizeChanged { widths += it.width },
-                            directions = DetailDirections(toBack = {}, toEdit = { _, _ -> }),
+                            directions = DetailDirections(toBack = {}, toEdit = { _, _ -> }, toAddCard = {}),
                             viewModel = viewModel,
                         )
                     } else {
@@ -363,5 +424,7 @@ class DetailScreenTest {
 
     private companion object {
         val TILE_SIZE = 80.dp
+        /** `SnackbarDuration.Long` without accessibility services. */
+        const val SNACKBAR_LONG_MS = 10_000L
     }
 }

@@ -6,7 +6,7 @@ Alphabetical.
 **AnimatedVisibilityScope** — Compose scope passed from each `composable<Route> { }` block (`this`) into a screen;
 required by `Modifier.sharedElement`. See [[card-transition]].
 
-**AppNavigation** — The `NavHost` composable, defined in `MainActivity.kt:51-89`, that maps routes to screens.
+**AppNavigation** — The `NavHost` composable, defined in `MainActivity.kt:51-90`, that maps routes to screens.
 
 **Barcode content** — The exact string a card's barcode encodes. Derived from the core number by the store's
 card-number rule (`CardNumberEngine.barcodeContent`); equals the raw number when there is no rule.
@@ -44,7 +44,7 @@ See [[2026-10-09-card-number-rule-engine]].
 **Card number** — `LoyaltyCard.number`: the raw input, as typed or exactly as scanned (`scannedFormat` set).
 Barcode content and display number are derived from it on read ([[2026-10-12-data-model-v2]]).
 
-**CardList** — Navigation route `object CardList` (`Navigation.kt:10-11`), the start destination: "My Cards".
+**CardList** — Navigation route `object CardList` (`Navigation.kt:11-12`), the start destination: "My Cards".
 Was `object List` until #17, which shadowed `kotlin.collections.List` — [[list-route-shadows-kotlin-list]].
 
 **`card/{id}`** — The shared-content key that links a list tile to the detail screen in the shared-element transition.
@@ -55,7 +55,7 @@ separators removed, letter case applied). Rules turn it into barcode content. Se
 
 **DAO** — Room data-access interface in `data/local/db/dao/`. Reads return `Flow`.
 
-**Detail** — Navigation route `data class Detail(val cardId: String, val color: String, val countUse: Boolean = true)` (`Navigation.kt:36-37`).
+**Detail** — Navigation route `data class Detail(val cardId: String, val color: String, val countUse: Boolean = true, val added: Boolean = false)` (`Navigation.kt:40-41`).
 
 **Display number** — `LoyaltyCard.displayNumber`: the number formatted by the store rule's display pattern
 (`CardNumberEngine.displayNumber`); the trimmed number when there is no rule. Shown on the detail screen.
