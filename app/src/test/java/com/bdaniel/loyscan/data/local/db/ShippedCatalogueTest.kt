@@ -37,13 +37,16 @@ class ShippedCatalogueTest {
         Vector("hu-coop", "6028532123456789", "906028532123456789", "6028 5321 2345 6789"),
         Vector("hu-decathlon", "2090000123456", "2090000123456", "2090000123456"),
         Vector("hu-dm", "2410000123452", "2410000123452", "2 410000 123452"),
-        Vector("hu-auchan", "9700000123457", "9700000123457", "9700000123457"),
+        Vector("hu-auchan", "2097000123455", "2097000123455", "2097000123455"),
+        Vector("hu-douglas", "60088400012345675", "60088400012345675", "60088400012345675"),
         Vector("hu-ikea-family", "6275980421234567893", "6275980421234567893", "627598 042 123 456 7893"),
-        Vector("hu-momax", "1234567890", "1234567890", "1234567890"),
+        Vector("hu-libri", "2020000123453", "2020000123453", "2020000123453"),
+        Vector("hu-mol-move", "6369000012345676", "6369000012345676", "6369 0000 1234 5676"),
+        Vector("hu-momax", "3121234567", "3121234567", "3121234567"),
         Vector("hu-penny", "9940000123457", "9940000123457", "9940000123457"),
-        Vector("hu-praktiker", "123456789", "123456789", "123 456 789"),
+        Vector("hu-praktiker", "3601234567", "3601234567", "360 123 4567"),
         Vector("hu-rossmann", "9991234567890", "9991234567890", "9991234567890"),
-        Vector("hu-shell-clubsmart", "70044200012345678", "70044200012345678", "7004 4200 0123 4567 8"),
+        Vector("hu-shell-clubsmart", "70043400012345678", "70043400012345678", "7004 3400 0123 4567 8"),
         Vector("hu-supershop", "2000010112345678", "2000010112345678", "2000 0101 1234 5678"),
         Vector("hu-tesco", "634009123456789012", "9799123456789012", "634009 1234 5678 9012"),
     )
@@ -110,10 +113,29 @@ class ShippedCatalogueTest {
         assertThat(matching).doesNotContain("hu-supershop")
     }
 
-    /** The stores whose leading digits were confirmed (real card or retailer, #31) tell each other's scans apart. */
+    /** SuperShop's own app shows the card as a QR code (#31, 2026-10-30); its old chip cards have no barcode. */
+    @Test
+    fun superShop_isDrawnAsAQrCode() {
+        val superShop = shipped.single { it.id == "hu-supershop" }
+
+        assertThat(superShop.defaultBarcodeFormat).isEqualTo(BarcodeFormat.QR_CODE)
+        assertThat(superShop.cardNumberRule!!.format).isEqualTo(BarcodeFormat.QR_CODE)
+    }
+
+    /** Auchan's and Decathlon's EAN-13 numbers both start `209`; a scan of one isn't offered as the other (#52). */
+    @Test
+    fun anAuchanScan_isNotOfferedAsDecathlon() {
+        val stores = shipped.map { it.toStoreEntity(Instant.EPOCH).toDomainModel() }
+
+        val matching = stores.matchingScan("2097000123455", BarcodeFormat.EAN_13).map { it.id }
+
+        assertThat(matching).containsExactly("hu-auchan")
+    }
+
+    /** Every rule requires its confirmed leading digits (real card or retailer, #31), so the rules tell scans apart. */
     @Test
     fun storesWithConfirmedLeadingDigits_rejectOtherStoresCards() {
-        val confirmed = setOf("hu-decathlon", "hu-dm", "hu-ikea-family", "hu-penny", "hu-rossmann", "hu-supershop", "hu-tesco")
+        val confirmed = vectors.map { it.storeId }.toSet() - "hu-coop" // Coop's barcode prefix `90` sets it apart
         for (id in confirmed) {
             val rule = shipped.single { it.id == id }.cardNumberRule!!
             for (other in vectors.filter { it.storeId != id }) {

@@ -45,14 +45,13 @@ specific a rule is, and the case it catches (Auchan) goes away once Auchan's pre
 every match instead of the best one avoids guessing between stores whose rules read the same number.
 
 ## Consequences
-- With Auchan picked, a dm, Penny or Rossmann scan is still saved as Auchan without a hint, until Auchan's prefix is
-  confirmed (#52; until 2026-10-22 tracked as #32's last criterion).
-- A store without a rule gets false hints from the catch-all rules: a card whose length fits is offered
-  Praktiker (9–10), Shell ClubSmart (17), mömax (10-digit ITF) or Auchan (any valid EAN-13), with no problem shown.
-  The user picks, so nothing is switched; confirming those stores' prefixes (#31) narrows it (#52). SuperShop (any
-  16 digits) was on this list until 2026-10-30, when its rule began to require `20000101`.
-  Found in review. A new catalogue store with a catch-all rule adds to this, e.g. Möbelix, whose cards share mömax's
-  10-digit ITF (#44).
+- Until 2026-10-30, with Auchan picked, a dm, Penny or Rossmann scan was saved as Auchan without a hint, because
+  Auchan's rule read any EAN-13 (#52). Now Auchan requires `2097`.
+- Until 2026-10-30 a store without a rule got false hints from catch-all rules: a card whose length fit was offered
+  SuperShop (16 digits), Praktiker (9–10), Shell ClubSmart (17), mömax (10-digit ITF) or Auchan (any valid EAN-13).
+  Found in review. Since then every rule except Coop's requires its confirmed leading digits ([[store-catalogue]],
+  #52), so a hint names a store whose start the scan has. A new catalogue store needs the same, e.g. Möbelix, whose
+  cards share mömax's 10-digit ITF (#44).
 - A typed number never gets a suggestion.
 - Tests: `CardFormViewModelTest` (each case above), `StoreSearchTest` (ranking),
   `ShippedCatalogueTest.aTescoScan_isNotOfferedAsSuperShop`, `CardFormScreenTest`.

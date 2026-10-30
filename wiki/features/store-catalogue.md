@@ -50,20 +50,35 @@ why it has no logos, and why it is loaded this way: [[2026-10-13-curated-store-c
   and drugstores among the 16): Auchan, Coop, dm, Penny, Rossmann, Tesco. Pinned by
   `ShippedCatalogueTest.theFrequentlyAddedHungarianStores_areTheEditorialPick`
   ([[2026-10-30-frequently-added-stores]]).
-- **16 Hungarian stores (2026-10-13), 12 with a card-number rule. Some number facts are still provisional.** The
+- **16 Hungarian stores (2026-10-13), 15 with a card-number rule (since 2026-10-30). Some number facts are still provisional.** The
   retailers' public pages confirm that each programme exists, and most of the colours. The first barcode formats and
   rules came from an existing app's catalogue, which the user accepted for the first entries
   ([[2026-10-13-curated-store-catalogue]]). On 2026-10-19, decoding photos of real cards confirmed Decathlon, dm,
-  IKEA Family, mömax, Penny and Rossmann, and added Decathlon's rule. Per-store status, with what each card showed:
+  IKEA Family, mömax, Penny and Rossmann, and added Decathlon's rule. On 2026-10-30 more cards and the retailers'
+  own apps (a card's barcode screen counts as the retailer's material) confirmed Auchan, Coop, Douglas, Libri, MOL
+  Move, mömax, Praktiker, Shell ClubSmart, SuperShop, Szerencsejáték and a second Tesco card, and added rules for
+  Douglas, Libri and MOL Move. Szerencsejáték has no rule: its virtual card is Code 128, 15 digits starting `400`,
+  but 10-digit plastic cards may also exist. Per-store status, with what each card showed:
   [#31](https://github.com/shockrifle/loyscan/issues/31).
 - **The core is the full printed number.** EAN-13 stores use 13 digits with a `GTIN_MOD10` `VERIFY` check and no
   prefix, because the card prints all 13 digits. Since 2026-10-19 the stores whose leading digits were seen on a real
-  card require them (`coreStartsWith`): Decathlon `209`, dm `241`, Penny `994`, Rossmann `999`, IKEA Family
-  `627598042`, since 2026-10-20 Tesco `634009`, and since 2026-10-30 SuperShop `20000101` (from the SuperShop FAQ,
-  [supershop.hu/ugyfelszolgalat](https://supershop.hu/ugyfelszolgalat); the catalogue's earlier `5540` was wrong).
-  Other starts that the first catalogue listed (Penny `9980`/`9981`, dm `90`, Rossmann `2`) were left out until a
-  card shows them. Auchan still accepts any EAN-13, so `CardNumberEngine.match` can't tell it from the
-  others (matters for #6): [[rules-cannot-require-leading-digits]], [#52](https://github.com/shockrifle/loyscan/issues/52).
+  card require them (`coreStartsWith`): dm `241`, Penny `994`, Rossmann `999`, IKEA Family `627598042`, since
+  2026-10-20 Tesco `634009`, and since 2026-10-30 Auchan `2097`, Decathlon `2090`/`2091` (it was `209`, which
+  also read Auchan's `2097…`), Douglas `6008`, Libri `202`/`204` (`202` on a card, `204` on a number stored in another
+  app), MOL Move `6369`, mömax `312`, Praktiker `360`, Shell ClubSmart `7004` (a card showed `700434`, the first
+  catalogue said `700442`) and SuperShop `20000101` (from the SuperShop FAQ,
+  [supershop.hu/ugyfelszolgalat](https://supershop.hu/ugyfelszolgalat); the first catalogue's `5540` was wrong). One
+  card per store, so a rule requires the first three or four digits seen, or the issuer prefix where the number looks
+  like an ISO card number. Every rule except Coop's (whose barcode starts with `90`) now requires a start, so no
+  rule reads another store's scan (`ShippedCatalogueTest.storesWithConfirmedLeadingDigits_rejectOtherStoresCards`,
+  [#52](https://github.com/shockrifle/loyscan/issues/52)). Other starts that the first catalogue listed (Penny
+  `9980`/`9981`, dm `90`, Rossmann `2`) were left out until a card shows them. A card from a number range not seen
+  yet is flagged when typed; "Save anyway" still saves it.
+- **ISO card numbers carry a Luhn check digit.** Coop, Douglas, IKEA Family, MOL Move, Shell ClubSmart and Tesco print
+  numbers that start with an issuer prefix (`6…`, `7…`) and pass Luhn, so their rules verify it. SuperShop's card
+  passes Luhn too, but the FAQ doesn't say it has one, so its rule doesn't.
+- **SuperShop is drawn as a QR code** (since 2026-10-30): SuperShop's own app shows the 16-digit number as a QR code,
+  and its old chip cards have no barcode.
 - **Tesco's barcode leaves out the first six printed digits.** The Clubcard prints 18 digits starting `634009`, with a
   Luhn check digit, and its barcode is GS1-128 holding `9799` + the last 12 of them (one card seen, 2026-10-19, #31).
   `hu-tesco`'s rule (since 2026-10-20, #43) builds that from the typed number with `dropLeading`, and a scan reads back

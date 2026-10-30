@@ -4,10 +4,9 @@
 `app/src/main/java/com/bdaniel/loyscan/domain/cardnumber/CardNumberRule.kt`, `app/src/main/assets/catalogue/stores.json`
 
 **Resolved:** 2026-10-15 (`ae363bf`, `6c58575`, `a76d6c3`): rules can require leading digits (`coreStartsWith`), and
-since 2026-10-19 (`e5be559`) the EAN-13 stores confirmed on real cards use it. Auchan's rule still accepts any valid
-EAN-13 because its prefix isn't confirmed; that is a catch-all rule like the ones in
-[#52](https://github.com/shockrifle/loyscan/issues/52), which tracks it since 2026-10-22
-([[2026-10-22-store-suggestion-trigger]] → Consequences).
+since 2026-10-19 (`e5be559`) the EAN-13 stores confirmed on real cards use it. Auchan's rule accepted any valid
+EAN-13 until its prefix was confirmed on 2026-10-30
+([#52](https://github.com/shockrifle/loyscan/issues/52), [[store-catalogue]]).
 
 ## What
 Until 2026-10-19 the shipped EAN-13 entries didn't require their store's leading digits; now only Auchan doesn't. (Until 2026-10-15 the rule model couldn't
