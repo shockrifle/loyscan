@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-30 · review fix: the in-place schema rewrite's data loss (a pre-change install must clear its data and loses its cards) stated explicitly · decisions/2026-10-30-frequently-added-stores, workflows/database-schema-changes · review of #6
 - 2026-10-30 · Auchan, Coop, dm, Penny, Rossmann and Tesco marked frequently added; #6 done · features/store-catalogue, features/add-card, features/_index · #6
 - 2026-10-30 · "frequently added" stores for the user's country in the store picker: catalogue flag, `stores.frequentlyAdded` added to schema v2 in place, country from SIM/network/locale · decisions/2026-10-30-frequently-added-stores (new), decisions/_index, features/add-card, features/store-catalogue, workflows/add-a-catalogue-store, workflows/database-schema-changes, workflows/tdd, tech-debt/no-room-migrations, architecture, glossary · #6 step 1
 - 2026-10-29 · review fix: "Add another" is dropped on Edit and waits while scan mode is open; card-detail no longer says only an added card skips the use count; DetailScreen.kt line links fixed · features/add-card, features/card-detail, architecture, features/card-transition, tech-debt/shared-element-key-from-async-state · review of #6

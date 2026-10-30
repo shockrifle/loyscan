@@ -32,7 +32,7 @@ knows what other users add, and the catalogue ([[store-catalogue]]) has only Hun
 - The picker shows the flagged stores whose `countryCodes` contain that country (`frequentlyAddedIn`), by name, under
   "Frequently added" above "All stores", while nothing is searched ([[add-card]]).
 - No version bump: the column was added and `2.json` rewritten at version 2 (product choice, 2026-10-30: early
-  development, no migrations yet). A dev install from before must clear its data ([[reset-local-database]]).
+  development, no migrations yet). A dev install from before crashes on open (Room's identity check) until its data is cleared, which deletes its cards ([[reset-local-database]]). The old v2 schema is not kept, so no migration from it can be written; accepted as nothing is released.
 
 ## Why
 

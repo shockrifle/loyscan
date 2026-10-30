@@ -32,4 +32,4 @@ migration (or a wipe) exists.
   nothing had been released, so a dev install has to be wiped ([[reset-local-database]]).
 - 2026-10-30 (#6): `stores.frequentlyAdded` was added and `2.json` rewritten **without** bumping the version (product
   choice: early development, no migrations yet; [[2026-10-30-frequently-added-stores]]). A dev install from before
-  fails Room's identity check on open until its data is cleared ([[reset-local-database]]).
+  fails Room's identity check on open until its data is cleared, which deletes its cards ([[reset-local-database]]); the previous `2.json` is in git history only.
