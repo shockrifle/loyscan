@@ -14,6 +14,10 @@ fun List<Store>.search(query: String): List<Store> {
         .sortedWith(BY_NAME)
 }
 
+/** The stores marked frequently added that operate in [country] (#6), by name; none when the country isn't known. */
+fun List<Store>.frequentlyAddedIn(country: String?): List<Store> =
+    filter { it.frequentlyAdded && country != null && country in it.countryCodes }.sortedWith(BY_NAME)
+
 /**
  * The stores whose card-number rule can have produced the scanned [content] ([CardNumberEngine.match]): those whose
  * rule names the scan's exact format first, then those with the same symbology with or without the GS1 mark, then

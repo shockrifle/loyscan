@@ -17,7 +17,7 @@ The first entity change after any real install crashes the app on launch for tho
 it's a recurring crash after schema edits — [[reset-local-database]].
 
 ## How to pay it down
-Before the first release: freeze the current schema export (`2.json` as of 2026-10-22; `1.json` is the record of
+Before the first release: freeze the current schema export (`2.json` as of 2026-10-30, rewritten in place for `stores.frequentlyAdded`; `1.json` is the record of
 the unreleased v1, [[2026-10-12-data-model-v2]]), and from then on bump the version per change with `@AutoMigration` or
 explicit `Migration`s (the schemas are already exported to `app/schemas/`). Procedure: [[database-schema-changes]]. (Corrected 2026-10-22: this
 said to freeze `1.json`, which predates the v2 bump.)

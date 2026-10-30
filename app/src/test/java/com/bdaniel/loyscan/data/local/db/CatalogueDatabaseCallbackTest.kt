@@ -69,6 +69,16 @@ class CatalogueDatabaseCallbackTest {
     }
 
     @Test
+    fun reopen_anEntryNowFrequentlyAdded_isRewritten() = runTest { // #6
+        open(catalogue(entry("hu-one")), at = FIRST).storeDao().getAll().first()
+        closeAll()
+
+        val db = open(catalogue(entry("hu-one", frequentlyAdded = true)), at = SECOND)
+
+        assertThat(db.storeDao().getAll().first()).containsExactly(store("hu-one", frequentlyAdded = true, updatedAt = SECOND))
+    }
+
+    @Test
     fun reopen_storedRuleThatNoLongerParses_isRewrittenBeforeItIsRead() = runTest {
         // A rule stored by an older app version that today's CardNumberRule rejects (strict decoding throws on read).
         open(catalogue(entry("hu-one")), at = FIRST).openHelper.writableDatabase
@@ -132,11 +142,17 @@ class CatalogueDatabaseCallbackTest {
 
     private fun catalogue(vararg entries: String) = entries.joinToString(",", "[", "]")
 
-    private fun entry(id: String, name: String = "Store", rule: String = "null") =
+    private fun entry(id: String, name: String = "Store", rule: String = "null", frequentlyAdded: Boolean = false) =
         """{ "id": "$id", "name": "$name", "aliases": ["alias"], "countryCodes": ["HU"], "color": "#102030",
-             "defaultBarcodeFormat": "EAN_13", "cardNumberRule": $rule }"""
+             "defaultBarcodeFormat": "EAN_13", "cardNumberRule": $rule, "frequentlyAdded": $frequentlyAdded }"""
 
-    private fun store(id: String, name: String = "Store", rule: CardNumberRule? = null, updatedAt: Instant) =
+    private fun store(
+        id: String,
+        name: String = "Store",
+        rule: CardNumberRule? = null,
+        frequentlyAdded: Boolean = false,
+        updatedAt: Instant,
+    ) =
         StoreEntity(
             id = id,
             name = name,
@@ -146,6 +162,7 @@ class CatalogueDatabaseCallbackTest {
             countryCodes = listOf("HU"),
             defaultBarcodeFormat = BarcodeFormat.EAN_13,
             cardNumberRule = rule,
+            frequentlyAdded = frequentlyAdded,
             isCustom = false,
             updatedAt = updatedAt,
         )

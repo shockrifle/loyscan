@@ -23,6 +23,7 @@ class StoreCatalogueTest {
               "countryCodes": ["HU", "AT"],
               "color": "#1A2B3C",
               "defaultBarcodeFormat": "EAN_13",
+              "frequentlyAdded": true,
               "cardNumberRule": {
                 "id": "hu-example", "format": "EAN_13", "minLength": 9, "maxLength": 9, "prefix": "200",
                 "checkDigit": { "algorithm": "GTIN_MOD10", "mode": "APPEND" }
@@ -39,6 +40,7 @@ class StoreCatalogueTest {
                 countryCodes = listOf("HU", "AT"),
                 color = "#1A2B3C",
                 defaultBarcodeFormat = BarcodeFormat.EAN_13,
+                frequentlyAdded = true,
                 cardNumberRule = CardNumberRule(
                     id = "hu-example",
                     format = BarcodeFormat.EAN_13,
@@ -60,6 +62,7 @@ class StoreCatalogueTest {
 
         assertThat(entry.aliases).isEmpty()
         assertThat(entry.cardNumberRule).isNull()
+        assertThat(entry.frequentlyAdded).isFalse() // #6
     }
 
     @Test

@@ -14,6 +14,7 @@ fun CatalogueEntry.toStoreEntity(updatedAt: Instant) = StoreEntity(
     countryCodes = countryCodes,
     defaultBarcodeFormat = defaultBarcodeFormat,
     cardNumberRule = cardNumberRule,
+    frequentlyAdded = frequentlyAdded,
     isCustom = false,
     updatedAt = updatedAt,
 )

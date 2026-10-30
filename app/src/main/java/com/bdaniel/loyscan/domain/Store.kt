@@ -22,6 +22,8 @@ data class Store(
     val defaultBarcodeFormat: BarcodeFormat,
     /** How the store's card numbers become barcode content; `null` means the number is the content. */
     val cardNumberRule: CardNumberRule?,
+    /** Offered first when adding a card in one of [countryCodes]; only catalogue stores (#6). */
+    val frequentlyAdded: Boolean,
     val isCustom: Boolean,
     val updatedAt: Instant,
 ) {
@@ -44,6 +46,7 @@ data class Store(
             countryCodes = emptyList(),
             defaultBarcodeFormat = BarcodeFormat.CODE_128,
             cardNumberRule = null,
+            frequentlyAdded = false,
             isCustom = false,
             updatedAt = Instant.EPOCH,
         )

@@ -7,7 +7,8 @@ stores already in the database, and custom stores). Everything runs offline on t
 
 **Entry points** (under `app/src/main/java/com/bdaniel/loyscan/`):
 - `StorePickerScreen.kt`, `StorePickerViewModel.kt`; the search field and list in `StoreList.kt` (`StoreSearchList`,
-  shared with the edit form's "Change store", [[edit-card]]); search in `domain/StoreSearch.kt`.
+  shared with the edit form's "Change store", [[edit-card]]); search and `frequentlyAddedIn` in
+  `domain/StoreSearch.kt`; the country in `data/device/UserCountry.kt` (bound in `di/UserCountryModule.kt`).
 - `CustomStoreScreen.kt`, `CustomStoreViewModel.kt` ("Other card"); formats in `BarcodeFormat.forCustomStores`.
 - [[barcode-scanner]] (`ScannerScreen.kt`), unchanged except for where its directions lead.
 - `CardFormScreen.kt`, `CardFormViewModel.kt` (`CardFormState`).
@@ -22,7 +23,10 @@ stores already in the database, and custom stores). Everything runs offline on t
   (`StoreSearch.search`: NFD, combining marks removed), so "mobelix" finds "Möbelix". Sorting uses the same key. With
   no match the screen says "No store matches “…”". Tapping a store opens the scanner for it. "Other card", first in
   the list and shown whatever the search, opens the custom-store form. A custom store's row has an Edit button
-  ([[edit-store]]).
+  ([[edit-store]]). While nothing is searched, "Frequently added" (step 1 of #6,
+  [[2026-10-30-frequently-added-stores]]) lists the catalogue stores flagged `frequentlyAdded` whose `countryCodes`
+  contain the user's country (`UserCountry`: SIM, then network, then locale), by name, between "Other card" and an
+  "All stores" heading; they stay in the full list too. With none for the country, neither heading is shown.
 - **Custom store** ([[2026-10-22-custom-stores]]): a name (required, trimmed), one of eight colours (the first picked
   by default) and the barcode format for the store's typed numbers (Code 128 by default; the 13 formats of
   `BarcodeFormat.forCustomStores`, no GS1 or DataBar, #47). A scan keeps its own format. "Create" saves the store once
@@ -112,7 +116,9 @@ stores already in the database, and custom stores). Everything runs offline on t
 
 - `domain/StoreSearchTest`: matching (name, alias, case, accents) and order; stores whose rule reads a scan, incl. a
   GS1 scan against a plain rule and the reverse (#47).
-- `StorePickerViewModelTest`, `StorePickerScreenTest` (incl. "Other card").
+- `StorePickerViewModelTest`, `StorePickerScreenTest` (incl. "Other card" and "Frequently added": the user's
+  country's flagged stores by name, hidden while searching or when there are none); `data/device/DeviceUserCountryTest`
+  (SIM, network, locale, none; Robolectric's `ShadowTelephonyManager` and locale qualifiers).
 - `CustomStoreViewModelTest` (defaults, a blank name, what is saved, one save only, a failed save, process death),
   `CustomStoreScreenTest`; the format list in `domain/BarcodeFormatTest` and
   `BarcodeEncoderTest.everyFormatACustomStoreCanPick_isDrawnAsItself`; `RoomStoreRepositoryTest.add_…`.

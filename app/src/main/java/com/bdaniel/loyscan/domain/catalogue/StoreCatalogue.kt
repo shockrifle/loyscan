@@ -23,6 +23,8 @@ data class CatalogueEntry(
     val defaultBarcodeFormat: BarcodeFormat,
     /** Its id equals the store's [id]. */
     val cardNumberRule: CardNumberRule? = null,
+    /** Offered first when adding a card in one of [countryCodes] (#6): an editorial pick, [[store-catalogue]]. */
+    val frequentlyAdded: Boolean = false,
 ) {
     init {
         require(ID.matches(id)) { "'$id': id must be a country-prefixed slug like hu-ikea-family" }

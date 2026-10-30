@@ -68,6 +68,7 @@ fun StoreEntity.toDomainModel(): Store {
         countryCodes = countryCodes,
         defaultBarcodeFormat = defaultBarcodeFormat,
         cardNumberRule = cardNumberRule,
+        frequentlyAdded = frequentlyAdded,
         isCustom = isCustom,
         updatedAt = updatedAt
     )
@@ -84,6 +85,7 @@ fun Store.toEntity(): StoreEntity {
         countryCodes = countryCodes,
         defaultBarcodeFormat = defaultBarcodeFormat,
         cardNumberRule = cardNumberRule,
+        frequentlyAdded = frequentlyAdded,
         isCustom = isCustom,
         updatedAt = updatedAt
     )

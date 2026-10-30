@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 2,
-    "identityHash": "6f9a723f32c009895f23dc5a6c23f707",
+    "identityHash": "fe9f0878fb2710f56065c05fbf78cfc3",
     "entities": [
       {
         "tableName": "stores",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `color` TEXT NOT NULL, `logo` TEXT, `aliases` TEXT NOT NULL, `countryCodes` TEXT NOT NULL, `defaultBarcodeFormat` TEXT NOT NULL, `cardNumberRule` TEXT, `isCustom` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `color` TEXT NOT NULL, `logo` TEXT, `aliases` TEXT NOT NULL, `countryCodes` TEXT NOT NULL, `defaultBarcodeFormat` TEXT NOT NULL, `cardNumberRule` TEXT, `frequentlyAdded` INTEGER NOT NULL, `isCustom` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -53,6 +53,12 @@
             "fieldPath": "cardNumberRule",
             "columnName": "cardNumberRule",
             "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "frequentlyAdded",
+            "columnName": "frequentlyAdded",
+            "affinity": "INTEGER",
+            "notNull": true
           },
           {
             "fieldPath": "isCustom",
@@ -179,7 +185,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '6f9a723f32c009895f23dc5a6c23f707')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'fe9f0878fb2710f56065c05fbf78cfc3')"
     ]
   }
 }

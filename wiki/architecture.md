@@ -19,7 +19,7 @@ All paths below are under `app/src/main/java/com/bdaniel/loyscan/` unless writte
 | **Presentation state** | root package — `ListViewModel`, `DetailViewModel`, `ScannerViewModel` (UI state only, no repository) | `@HiltViewModel`; turn repository Flows into `StateFlow` via `stateIn(viewModelScope, WhileSubscribed(5_000), initial)` | Route args read with `savedStateHandle.toRoute<Route>()`. |
 | **UI** | root package — `ListScreen`, `DetailScreen`; `ui/` — theme, icons, `hiltImageLoader()`; `ui/barcode/` — ZXing encoding and barcode drawing ([[zxing-core]]); `ui/scanner/` — camera, permission and zxing-cpp decoding for `ScannerScreen` ([[zxing-cpp]]) | Composables, extensions on `SharedTransitionScope` | Screens receive a `*Directions` object, never a `NavController`. |
 | **Navigation** | `Navigation.kt`, `MainActivity.kt` (`AppNavigation`) | `@Serializable` routes + `NavController.*Directions(entry)` factories | See [[2025-12-09-type-safe-navigation-directions]]. |
-| **DI** | `di/DatabaseModule.kt`, `di/PreferencesModule.kt`, `di/ImageLoaderModule.kt`, `di/RepositoryModule.kt` | `@Module @InstallIn(SingletonComponent)` providers; `@Binds` repository interface → Room / DataStore impl | Implementations use `@Inject constructor`. |
+| **DI** | `di/DatabaseModule.kt`, `di/PreferencesModule.kt`, `di/ImageLoaderModule.kt`, `di/RepositoryModule.kt`, `di/UserCountryModule.kt` | `@Module @InstallIn(SingletonComponent)` providers; `@Binds` repository interface → Room / DataStore impl | Implementations use `@Inject constructor`. |
 
 Note: `LoyaltyCardRepository` also counts a store's cards (`countForStore`, a `Flow<Int>`, #53). Its writes are `recordUse(id)` (opening a card counts a use, #4), `delete(id)` and `update(card)` (#8), `deleteAll(ids)` (the list's
 multi-select, #7: one `DELETE … WHERE id IN (:ids)`), and
@@ -63,6 +63,9 @@ Tests run on the JVM (`./gradlew testDebugUnitTest`, see [[build-and-run]]); sha
   ViewModel and lambdas that record navigation (`ListScreenTest`). What Robolectric can't run is a parameter too:
   `ScannerScreen` takes a `CameraPermission` and a `ScannerCamera` composable lambda, which `ScannerScreenTest`
   replaces with `FakeCameraPermission` and a recording fake ([[barcode-scanner]] → Tests).
+- **Device facts behind a seam.** The user's country is a `fun interface UserCountry` (`data/device/UserCountry.kt`), so
+  a ViewModel test passes a lambda (`StorePickerViewModel(repository) { "HU" }`) and only `DeviceUserCountry` reads
+  the phone, tested on Robolectric's telephony shadow (`DeviceUserCountryTest`).
 - **Hardware behind a seam.** The CameraX glue takes a `CameraOpener` and a `FrameReader`, so the camera lifecycle
   is tested with fakes (`CameraXScannerTest`) and only the few lines that call the real camera or native code are
   untested. A permission request is answered by an `ActivityResultRegistry` provided through

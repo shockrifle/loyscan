@@ -23,6 +23,7 @@ inferred.
 - [[2026-10-22-custom-stores]] — "Other card" saves a custom store on its own screen, with the barcode format for its typed numbers; the picker offers the 13 formats ZXing core writes as themselves, no GS1 or DataBar
 - [[2026-10-28-datastore-for-user-preferences]] — user preferences (the card list's sort) in one DataStore Preferences file behind `UserPreferencesRepository`; unknown values read as the default
 - [[2026-10-28-portrait-on-phones]] — on a phone every screen but the card is held in portrait; screens 600dp or wider rotate freely (#63)
+- [[2026-10-30-frequently-added-stores]] — "frequently added" is a curated catalogue flag; the country is the SIM's, then the network's, then the locale's; added to schema v2 in place
 - [[2026-10-22-store-suggestion-trigger]] — the card form offers other stores for a scan the picked store rejects, reads only by symbology, or has no rule for; exact format ranks first
 
 ## Superseded

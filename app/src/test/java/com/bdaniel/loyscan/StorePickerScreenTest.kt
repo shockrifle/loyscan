@@ -1,6 +1,8 @@
 package com.bdaniel.loyscan
 
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -93,6 +95,40 @@ class StorePickerScreenTest {
     }
 
     @Test
+    fun frequentlyAddedStores_comeFirst_underTheirOwnHeading_andCanBePicked() { // #6
+        setScreen(aStore(id = "hu-zeta", name = "Zeta"), aStore(id = "hu-tesco", name = "Tesco", frequentlyAdded = true))
+
+        composeRule.onNodeWithText("Frequently added").assertIsDisplayed()
+        composeRule.onNodeWithText("All stores").assertIsDisplayed()
+        val tescoRows = composeRule.onAllNodesWithText("Tesco")
+        tescoRows.assertCountEquals(2) // in both sections
+        assertThat(tescoRows[0].fetchSemanticsNode().boundsInRoot.top)
+            .isLessThan(composeRule.onNodeWithText("All stores").fetchSemanticsNode().boundsInRoot.top)
+        tescoRows[0].performClick()
+
+        assertThat(picked).containsExactly("hu-tesco")
+    }
+
+    @Test
+    fun withoutAFrequentlyAddedStore_thereAreNoHeadings() { // #6
+        setScreen(aStore(id = "hu-tesco", name = "Tesco", frequentlyAdded = true), country = "AT")
+
+        composeRule.onNodeWithText("Frequently added").assertDoesNotExist()
+        composeRule.onNodeWithText("All stores").assertDoesNotExist()
+        composeRule.onAllNodesWithText("Tesco").assertCountEquals(1)
+    }
+
+    @Test
+    fun searching_hidesTheFrequentlyAddedSection() { // #6
+        setScreen(aStore(id = "hu-tesco", name = "Tesco", frequentlyAdded = true))
+
+        composeRule.onNodeWithTag(STORE_SEARCH_TAG).performTextInput("tes")
+
+        composeRule.onNodeWithText("Frequently added").assertDoesNotExist()
+        composeRule.onAllNodesWithText("Tesco").assertCountEquals(1)
+    }
+
+    @Test
     fun back_goesBack() {
         setScreen()
 
@@ -101,8 +137,8 @@ class StorePickerScreenTest {
         assertThat(backs).isEqualTo(1)
     }
 
-    private fun setScreen(vararg stores: Store) {
-        val viewModel = StorePickerViewModel(FakeStoreRepository(stores.toList()))
+    private fun setScreen(vararg stores: Store, country: String? = "HU") {
+        val viewModel = StorePickerViewModel(FakeStoreRepository(stores.toList())) { country }
         val directions = StorePickerDirections(
             toStore = { picked += it },
             toCustomStore = { customStores++ },

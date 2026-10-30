@@ -14,7 +14,9 @@ why it has no logos, and why it is loaded this way: [[2026-10-13-curated-store-c
   - the id must be a country-prefixed slug (`hu-ikea-family`) whose country is in `countryCodes`;
   - `color` must be `#RRGGBB`;
   - a `cardNumberRule` must have the store's id, and it is validated like any rule
-    ([[2026-10-09-card-number-rule-engine]]).
+    ([[2026-10-09-card-number-rule-engine]]);
+  - `frequentlyAdded` is optional (`false` by default): `true` offers the store first in the store picker to a user
+    in one of its `countryCodes` ([[2026-10-30-frequently-added-stores]], [[add-card]]).
 - **Loading:** `CatalogueDatabaseCallback.onOpen`
   (`app/src/main/java/com/bdaniel/loyscan/data/local/db/CatalogueDatabaseCallback.kt`), registered first in
   `DatabaseModule.provideAppDatabase`. `CatalogueEntry.toStoreEntity` (`data/mapper/CatalogueMapper.kt`) builds the

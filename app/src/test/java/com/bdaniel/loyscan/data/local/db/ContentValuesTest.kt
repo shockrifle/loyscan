@@ -49,6 +49,7 @@ class ContentValuesTest {
             countryCodes = listOf("HU", "AT"),
             defaultBarcodeFormat = BarcodeFormat.EAN_13,
             cardNumberRule = CardNumberRule(id = "example", format = BarcodeFormat.CODE_128, minLength = 4, maxLength = 10),
+            frequentlyAdded = true,
             isCustom = true,
             updatedAt = Instant.parse("2026-05-06T07:08:09.123Z"),
         )

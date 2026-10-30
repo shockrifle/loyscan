@@ -19,6 +19,7 @@ fun StoreEntity.toContentValues(): ContentValues = contentValuesOf(
     "countryCodes" to converters.fromStringList(countryCodes),
     "defaultBarcodeFormat" to defaultBarcodeFormat.name,
     "cardNumberRule" to converters.fromCardNumberRule(cardNumberRule),
+    "frequentlyAdded" to if (frequentlyAdded) 1 else 0,
     "isCustom" to if (isCustom) 1 else 0,
     "updatedAt" to converters.fromInstant(updatedAt),
 )

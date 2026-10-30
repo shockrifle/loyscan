@@ -17,6 +17,7 @@ data class StoreEntity(
     val countryCodes: List<String>,
     val defaultBarcodeFormat: BarcodeFormat,
     val cardNumberRule: CardNumberRule?,
+    val frequentlyAdded: Boolean,
     val isCustom: Boolean,
     val updatedAt: Instant,
 )

@@ -72,6 +72,9 @@ separators removed, letter case applied). Rules turn it into barcode content. Se
 
 **Entity** — Room table class in `data/local/db/entity/` (`StoreEntity`, `LoyaltyCardEntity`). Stays inside `data/`.
 
+**Frequently added** — Catalogue stores flagged `frequentlyAdded`, offered first in the store picker to a user in one
+of their countries (#6). An editorial pick: [[2026-10-30-frequently-added-stores]].
+
 **GS1-128** — Code 128 with a leading FNC1, which tells the reader the content is GS1 data (Application
 Identifiers such as `90` or `97`). `BarcodeFormat.GS1_128`: scanned as a Code 128 marked GS1 ([[zxing-cpp]]),
 drawn with the FNC1 ([[zxing-core]]). See [[gs1-128-drawn-as-code-128]]. `GS1_DATA_MATRIX` and `GS1_QR_CODE` are

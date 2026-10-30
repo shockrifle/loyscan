@@ -70,15 +70,21 @@ fun StoreSearchList(
         LazyColumn {
             header()
             items(stores, key = { it.id }) { store ->
-                ListItem(
-                    headlineContent = { Text(store.name) },
-                    leadingContent = { StoreDot(store, 24.dp) },
-                    trailingContent = trailing(store),
-                    modifier = Modifier.clickable { onStoreClick(store) },
-                )
+                StoreRow(store, onClick = { onStoreClick(store) }, trailing = trailing(store))
             }
         }
     }
+}
+
+/** One store in a list: its colour dot and name, with an optional [trailing] action. */
+@Composable
+fun StoreRow(store: Store, onClick: () -> Unit, trailing: (@Composable () -> Unit)? = null) {
+    ListItem(
+        headlineContent = { Text(store.name) },
+        leadingContent = { StoreDot(store, 24.dp) },
+        trailingContent = trailing,
+        modifier = Modifier.clickable(onClick = onClick),
+    )
 }
 
 /**

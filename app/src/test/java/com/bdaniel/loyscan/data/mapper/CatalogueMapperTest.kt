@@ -21,6 +21,7 @@ class CatalogueMapperTest {
             color = "#123456",
             defaultBarcodeFormat = BarcodeFormat.EAN_13,
             cardNumberRule = CardNumberRule(id = "hu-example", format = BarcodeFormat.CODE_39),
+            frequentlyAdded = true,
         )
 
         assertThat(entry.toStoreEntity(updatedAt)).isEqualTo(
@@ -33,6 +34,7 @@ class CatalogueMapperTest {
                 countryCodes = listOf("HU", "SK"),
                 defaultBarcodeFormat = BarcodeFormat.EAN_13,
                 cardNumberRule = CardNumberRule(id = "hu-example", format = BarcodeFormat.CODE_39),
+                frequentlyAdded = true,
                 isCustom = false,
                 updatedAt = updatedAt,
             )

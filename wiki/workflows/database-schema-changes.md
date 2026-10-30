@@ -30,3 +30,6 @@ migration (or a wipe) exists.
 - 2026-10-12 (#1): v2 replaced `brands` with `stores` and rebuilt `loyalty_cards` (string ids, new fields;
   [[2026-10-12-data-model-v2]]). The version was bumped and `1.json` kept unchanged. No migration from v1:
   nothing had been released, so a dev install has to be wiped ([[reset-local-database]]).
+- 2026-10-30 (#6): `stores.frequentlyAdded` was added and `2.json` rewritten **without** bumping the version (product
+  choice: early development, no migrations yet; [[2026-10-30-frequently-added-stores]]). A dev install from before
+  fails Room's identity check on open until its data is cleared ([[reset-local-database]]).

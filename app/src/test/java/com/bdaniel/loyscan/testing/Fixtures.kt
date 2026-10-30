@@ -28,6 +28,7 @@ fun aStore(
     countryCodes: List<String> = listOf("HU"),
     defaultBarcodeFormat: BarcodeFormat = BarcodeFormat.CODE_128,
     cardNumberRule: CardNumberRule? = null,
+    frequentlyAdded: Boolean = false,
     isCustom: Boolean = false,
     updatedAt: Instant = SOME_INSTANT,
 ) = Store(
@@ -39,6 +40,7 @@ fun aStore(
     countryCodes = countryCodes,
     defaultBarcodeFormat = defaultBarcodeFormat,
     cardNumberRule = cardNumberRule,
+    frequentlyAdded = frequentlyAdded,
     isCustom = isCustom,
     updatedAt = updatedAt,
 )
@@ -80,6 +82,7 @@ fun aStoreEntity(
     countryCodes: List<String> = listOf("HU"),
     defaultBarcodeFormat: BarcodeFormat = BarcodeFormat.CODE_128,
     cardNumberRule: CardNumberRule? = null,
+    frequentlyAdded: Boolean = false,
     isCustom: Boolean = false,
     updatedAt: Instant = SOME_INSTANT,
 ) = StoreEntity(
@@ -91,6 +94,7 @@ fun aStoreEntity(
     countryCodes = countryCodes,
     defaultBarcodeFormat = defaultBarcodeFormat,
     cardNumberRule = cardNumberRule,
+    frequentlyAdded = frequentlyAdded,
     isCustom = isCustom,
     updatedAt = updatedAt,
 )
