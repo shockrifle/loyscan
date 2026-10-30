@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-30 · seven stores found on real cards added (Brendon, KiK, Lidl Plus, Líra, Möbelix, Ofotért without a rule, Unix Autó with its programme unconfirmed); GS1 tech-debt Resolved SHA corrected to 365a52c · features/store-catalogue, tech-debt/gs1-128-drawn-as-code-128 · #44
 - 2026-10-30 · GS1-128 tech debt resolved: Coop stays plain Code 128 on the evidence of Coop's own app, accepted in place of a till test · tech-debt/gs1-128-drawn-as-code-128, tech-debt/_index, features/store-catalogue · #33
 - 2026-10-30 · Coop's own app draws its barcode as plain Code 128 (no FNC1), so Coop tills most likely accept LoyScan's; till test still open · tech-debt/gs1-128-drawn-as-code-128, features/store-catalogue · #33
 - 2026-10-30 · catalogue facts from real cards and retailer apps: every rule but Coop's requires its leading digits (Auchan `2097`, Decathlon narrowed to `2090`/`2091`, Praktiker `360`, Shell `7004`, mömax `312`), new rules for Douglas, Libri, MOL Move, ISO-style numbers verify Luhn, SuperShop drawn as QR · features/store-catalogue, decisions/2026-10-22-store-suggestion-trigger, tech-debt/rules-cannot-require-leading-digits · #31, #52

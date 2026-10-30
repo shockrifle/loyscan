@@ -50,7 +50,9 @@ why it has no logos, and why it is loaded this way: [[2026-10-13-curated-store-c
   and drugstores among the 16): Auchan, Coop, dm, Penny, Rossmann, Tesco. Pinned by
   `ShippedCatalogueTest.theFrequentlyAddedHungarianStores_areTheEditorialPick`
   ([[2026-10-30-frequently-added-stores]]).
-- **16 Hungarian stores (2026-10-13), 15 with a card-number rule (since 2026-10-30). Some number facts are still provisional.** The
+- **23 Hungarian stores, 21 with a card-number rule. Some number facts are still provisional.** 16 shipped on
+  2026-10-13; seven found on real cards were added on 2026-10-30 (#44): Brendon, KiK (myKiK), Lidl Plus, Líra,
+  Möbelix, Ofotért and Unix Autó. The
   retailers' public pages confirm that each programme exists, and most of the colours. The first barcode formats and
   rules came from an existing app's catalogue, which the user accepted for the first entries
   ([[2026-10-13-curated-store-catalogue]]). On 2026-10-19, decoding photos of real cards confirmed Decathlon, dm,
@@ -77,6 +79,16 @@ why it has no logos, and why it is loaded this way: [[2026-10-13-curated-store-c
 - **ISO card numbers carry a Luhn check digit.** Coop, Douglas, IKEA Family, MOL Move, Shell ClubSmart and Tesco print
   numbers that start with an issuer prefix (`6…`, `7…`) and pass Luhn, so their rules verify it. SuperShop's card
   passes Luhn too, but the FAQ doesn't say it has one, so its rule doesn't.
+- **The stores added from real cards (#44, 2026-10-30)** each come from one card, and require the start seen on it:
+  Brendon EAN-8 `167` (GTIN check), KiK QR 14 digits `985`, Lidl Plus QR 17 digits `7736`, Möbelix ITF 10 digits
+  `112` (apart from mömax's `312`), Unix Autó Code 39 `H` + 6 digits. Líra prints a 7-digit serial and its EAN-13
+  barcode is `00000` + the serial + a GTIN check digit, so its rule has `prefix` and an `APPEND` check digit.
+  **Ofotért has no rule:** its card prints 16 digits (`1001` + `0000` + 8 digits) but the EAN-13 barcode holds `1001` +
+  the last 8 + a check digit; a rule can only drop leading digits, not the zeros in the middle. A scanned Ofotért card
+  works; a typed one is the barcode's 13 digits. Colours are from each retailer's site CSS (Brendon's pink, KiK,
+  Lidl, Möbelix's `theme-color`, Ofotért), or from the logo where the site has no brand colour of its own (Unix Autó's
+  SVG, Líra's PNG). **Unix Autó's programme (Autókártya) isn't mentioned on unixauto.hu or in its app**; it was added
+  on the project owner's decision because the card exists.
 - **SuperShop is drawn as a QR code** (since 2026-10-30): SuperShop's own app shows the 16-digit number as a QR code,
   and its old chip cards have no barcode.
 - **Tesco's barcode leaves out the first six printed digits.** The Clubcard prints 18 digits starting `634009`, with a

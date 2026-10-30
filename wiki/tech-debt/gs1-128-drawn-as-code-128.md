@@ -1,9 +1,9 @@
 # GS1-128 barcodes are drawn as plain Code 128
 
-**Status:** Resolved (`b8a297e`) · **Issue:** [#33](https://github.com/shockrifle/loyscan/issues/33) · **Since:** 2026-10-13 (`ee569f1`) · **Where:**
+**Status:** Resolved (`365a52c`) · **Issue:** [#33](https://github.com/shockrifle/loyscan/issues/33) · **Since:** 2026-10-13 (`ee569f1`) · **Where:**
 `hu-coop` in `app/src/main/assets/catalogue/stores.json`
 
-**Resolved:** 2026-10-30 (`b8a297e`). `hu-coop` stays plain `CODE_128`: Coop's own app draws the same barcode
+**Resolved:** 2026-10-30 (`365a52c`; evidence noted in `b8a297e`). `hu-coop` stays plain `CODE_128`: Coop's own app draws the same barcode
 without FNC1, for scanning at Coop tills. The project owner accepted that as evidence in place of a till test (#33).
 
 ## What

@@ -34,13 +34,18 @@ class ShippedCatalogueTest {
     private data class Vector(val storeId: String, val printed: String, val barcodeContent: String, val display: String)
 
     private val vectors = listOf(
+        Vector("hu-brendon", "16712348", "16712348", "16712348"),
         Vector("hu-coop", "6028532123456789", "906028532123456789", "6028 5321 2345 6789"),
         Vector("hu-decathlon", "2090000123456", "2090000123456", "2090000123456"),
         Vector("hu-dm", "2410000123452", "2410000123452", "2 410000 123452"),
         Vector("hu-auchan", "2097000123455", "2097000123455", "2097000123455"),
         Vector("hu-douglas", "60088400012345675", "60088400012345675", "60088400012345675"),
         Vector("hu-ikea-family", "6275980421234567893", "6275980421234567893", "627598 042 123 456 7893"),
+        Vector("hu-kik", "98512345678901", "98512345678901", "98512345678901"),
         Vector("hu-libri", "2020000123453", "2020000123453", "2020000123453"),
+        Vector("hu-lidl-plus", "77360001234567890", "77360001234567890", "77360001234567890"),
+        Vector("hu-lira", "1234567", "0000012345670", "1234567"),
+        Vector("hu-moebelix", "1121234567", "1121234567", "1121234567"),
         Vector("hu-mol-move", "6369000012345676", "6369000012345676", "6369 0000 1234 5676"),
         Vector("hu-momax", "3121234567", "3121234567", "3121234567"),
         Vector("hu-penny", "9940000123457", "9940000123457", "9940000123457"),
@@ -49,6 +54,7 @@ class ShippedCatalogueTest {
         Vector("hu-shell-clubsmart", "70043400012345678", "70043400012345678", "7004 3400 0123 4567 8"),
         Vector("hu-supershop", "2000010112345678", "2000010112345678", "2000 0101 1234 5678"),
         Vector("hu-tesco", "634009123456789012", "9799123456789012", "634009 1234 5678 9012"),
+        Vector("hu-unix-auto", "H123456", "H123456", "H 123 456"),
     )
 
     @Test
@@ -111,6 +117,14 @@ class ShippedCatalogueTest {
 
         assertThat(matching.first()).isEqualTo("hu-tesco")
         assertThat(matching).doesNotContain("hu-supershop")
+    }
+
+    /** The stores found on real cards in #44 ship; Ofotért without a rule (its barcode drops digits from the middle). */
+    @Test
+    fun theStoresFoundOnRealCards_ship() {
+        val found = listOf("hu-brendon", "hu-kik", "hu-lidl-plus", "hu-lira", "hu-moebelix", "hu-ofotert", "hu-unix-auto")
+
+        assertThat(shipped.map { it.id }).containsAtLeastElementsIn(found)
     }
 
     /** SuperShop's own app shows the card as a QR code (#31, 2026-10-30); its old chip cards have no barcode. */
