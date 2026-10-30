@@ -90,8 +90,8 @@ data class CardFormState(
 }
 
 /**
- * Last step of adding a card: the label and number for the routed store, from a scan or typed. The store can be switched
- * to one whose rule reads the scan; the scan and label stay. With [CardForm.cardId] it edits that card (#8): the form
+ * Last step of adding a card: the label, number and note (#9) for the routed store, the number from a scan or typed. The
+ * store can be switched to one whose rule reads the scan; the scan, label and note stay. With [CardForm.cardId] it edits that card (#8): the form
  * starts as the card, a scanned card as its untouched scan, and the card can be moved to any other store.
  */
 @HiltViewModel
@@ -156,7 +156,7 @@ class CardFormViewModel @Inject constructor(
     }
 
     /**
-     * Makes the form [storeId]'s, keeping the scan or typed number and the label; for a store from
+     * Makes the form [storeId]'s, keeping the scan or typed number, the label and the note; for a store from
      * [CardFormState.suggestedStores] or, while editing, [CardFormState.otherStores]. Not once saving has started: the
      * saved card opens in the form's store's colour (#8 review).
      */
