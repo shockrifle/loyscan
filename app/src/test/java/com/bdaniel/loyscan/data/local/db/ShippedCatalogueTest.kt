@@ -69,10 +69,11 @@ class ShippedCatalogueTest {
     }
 
     @Test
-    fun theFrequentlyAddedHungarianStores_areTheEditorialPick() { // #6: groceries and drugstores, 2026-10-30
+    fun theFrequentlyAddedHungarianStores_areTheEditorialPick() { // #6: groceries and drugstores, 2026-10-30; Lidl Plus added once it shipped
         val frequentlyAdded = shipped.filter { it.frequentlyAdded && "HU" in it.countryCodes }.map { it.id }
 
-        assertThat(frequentlyAdded).containsExactly("hu-auchan", "hu-coop", "hu-dm", "hu-penny", "hu-rossmann", "hu-tesco")
+        assertThat(frequentlyAdded)
+            .containsExactly("hu-auchan", "hu-coop", "hu-dm", "hu-lidl-plus", "hu-penny", "hu-rossmann", "hu-tesco")
     }
 
     @Test

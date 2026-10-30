@@ -47,7 +47,7 @@ why it has no logos, and why it is loaded this way: [[2026-10-13-curated-store-c
 ## Contents and known gaps
 
 - **Frequently added in Hungary** (`frequentlyAdded`, editorial pick by the project owner, 2026-10-30: the groceries
-  and drugstores among the 16): Auchan, Coop, dm, Penny, Rossmann, Tesco. Pinned by
+  and drugstores): Auchan, Coop, dm, Lidl Plus (added once it shipped with #44), Penny, Rossmann, Tesco. Pinned by
   `ShippedCatalogueTest.theFrequentlyAddedHungarianStores_areTheEditorialPick`
   ([[2026-10-30-frequently-added-stores]]).
 - **23 Hungarian stores, 21 with a card-number rule. Some number facts are still provisional.** 16 shipped on
