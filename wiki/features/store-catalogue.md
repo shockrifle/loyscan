@@ -46,6 +46,10 @@ why it has no logos, and why it is loaded this way: [[2026-10-13-curated-store-c
 
 ## Contents and known gaps
 
+- **Frequently added in Hungary** (`frequentlyAdded`, editorial pick by the project owner, 2026-10-30: the groceries
+  and drugstores among the 16): Auchan, Coop, dm, Penny, Rossmann, Tesco. Pinned by
+  `ShippedCatalogueTest.theFrequentlyAddedHungarianStores_areTheEditorialPick`
+  ([[2026-10-30-frequently-added-stores]]).
 - **16 Hungarian stores (2026-10-13), 12 with a card-number rule. Some number facts are still provisional.** The
   retailers' public pages confirm that each programme exists, and most of the colours. The first barcode formats and
   rules came from an existing app's catalogue, which the user accepted for the first entries

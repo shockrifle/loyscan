@@ -1,9 +1,8 @@
 # Add card
 
 The list's "Add card" button starts adding a card: pick the store, scan its barcode (or enter the number by hand),
-check the number and give the card a label, then save it. The new card opens. Issue
-[#6](https://github.com/shockrifle/loyscan/issues/6); this page describes the slice that exists (catalogue and other
-stores already in the database, and custom stores). Everything runs offline on the local database.
+check the number and give the card a label, then save it. The new card opens and offers to add another. Issue
+[#6](https://github.com/shockrifle/loyscan/issues/6), done 2026-10-30. Everything runs offline on the local database.
 
 **Entry points** (under `app/src/main/java/com/bdaniel/loyscan/`):
 - `StorePickerScreen.kt`, `StorePickerViewModel.kt`; the search field and list in `StoreList.kt` (`StoreSearchList`,
@@ -138,6 +137,5 @@ stores already in the database, and custom stores). Everything runs offline on t
 
 ## Not implemented
 
-From #6: "frequently added" stores for the user's country. A custom store abandoned before its
-first card stays in the picker until it is deleted there ([[edit-store]]). A GS1 Aztec or PDF417 scan loses its GS1
+A custom store abandoned before its first card stays in the picker until it is deleted there ([[edit-store]]). A GS1 Aztec or PDF417 scan loses its GS1
 mark when saved (#48).

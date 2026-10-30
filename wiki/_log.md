@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-30 · Auchan, Coop, dm, Penny, Rossmann and Tesco marked frequently added; #6 done · features/store-catalogue, features/add-card, features/_index · #6
 - 2026-10-30 · "frequently added" stores for the user's country in the store picker: catalogue flag, `stores.frequentlyAdded` added to schema v2 in place, country from SIM/network/locale · decisions/2026-10-30-frequently-added-stores (new), decisions/_index, features/add-card, features/store-catalogue, workflows/add-a-catalogue-store, workflows/database-schema-changes, workflows/tdd, tech-debt/no-room-migrations, architecture, glossary · #6 step 1
 - 2026-10-29 · review fix: "Add another" is dropped on Edit and waits while scan mode is open; card-detail no longer says only an added card skips the use count; DetailScreen.kt line links fixed · features/add-card, features/card-detail, architecture, features/card-transition, tech-debt/shared-element-key-from-async-state · review of #6
 - 2026-10-29 · updated · features/add-card, features/card-detail, glossary; shifted Navigation.kt, DetailScreen.kt and MainActivity.kt line links fixed in architecture, features/card-list, features/card-transition, features/barcode-scanner, decisions/2025-12-12-brand-color-in-route, hacks/list-route-shadows-kotlin-list, tech-debt/shared-element-key-from-async-state · #6 slice: a new card offers "Add another" in a snackbar, which opens the store picker over it
