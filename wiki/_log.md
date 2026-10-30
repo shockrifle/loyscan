@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-30 · Coop's own app draws its barcode as plain Code 128 (no FNC1), so Coop tills most likely accept LoyScan's; till test still open · tech-debt/gs1-128-drawn-as-code-128, features/store-catalogue · #33
 - 2026-10-30 · catalogue facts from real cards and retailer apps: every rule but Coop's requires its leading digits (Auchan `2097`, Decathlon narrowed to `2090`/`2091`, Praktiker `360`, Shell `7004`, mömax `312`), new rules for Douglas, Libri, MOL Move, ISO-style numbers verify Luhn, SuperShop drawn as QR · features/store-catalogue, decisions/2026-10-22-store-suggestion-trigger, tech-debt/rules-cannot-require-leading-digits · #31, #52
 - 2026-10-30 · SuperShop's rule requires `20000101` (SuperShop FAQ: 16 digits, always starting so; the catalogue's `5540` was wrong), so it no longer reads a Tesco scan · features/store-catalogue, features/add-card, decisions/2026-10-22-store-suggestion-trigger · #31, #52
 - 2026-10-30 · backlog reassessed: `v1 – release` milestone (#12, #71–#75), `needs-field-check` label (#31, #33, #52), #7 closed with photo tiles moved to #10, #11 and #24 to Later; /next-task milestone order updated · CLAUDE, tech-debt/list-screen-bypasses-image-loader, tech-debt/_index · issue triage

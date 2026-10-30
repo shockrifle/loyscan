@@ -17,8 +17,9 @@ The enum follows ZXing's names ([[2026-10-09-card-number-rule-engine]]), and GS1
 only added once scans needed it (#33).
 
 ## Risk / impact
-A till that parses GS1 may reject or misread a Coop barcode without FNC1. It is unconfirmed: plain Code 128 may scan
-fine at Coop tills.
+A till that parses GS1 may reject or misread a Coop barcode without FNC1. Coop's own app suggests it doesn't: its
+barcode view draws `90` + the printed number as plain Code 128, without FNC1 (decoded 2026-10-30, symbology identifier
+`]C0`, #31), and that screen is meant to be scanned at Coop tills. Not yet tested at a till.
 
 A Coop card whose barcode really is GS1-128 is scanned as `GS1_128`. `CardNumberEngine.match` recovers its core from
 the content and, since 2026-10-22 (#47), reports `formatMatches = true` against `hu-coop`'s `CODE_128` rule: it compares
