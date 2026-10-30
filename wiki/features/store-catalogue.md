@@ -91,7 +91,7 @@ why it has no logos, and why it is loaded this way: [[2026-10-13-curated-store-c
 - **Coop is catalogued as plain Code 128.** Its barcode starts with Application Identifier `90`, and a till that parses
   GS1 may expect the leading FNC1 of GS1-128 (`BarcodeFormat.GS1_128`), which a typed Coop card is drawn without. A
   scan marked GS1 is stored and drawn as `GS1_128` whatever the catalogue says. Coop's own app draws the same plain
-  Code 128 (2026-10-30), so tills most likely accept it; not yet tested at a till: [[gs1-128-drawn-as-code-128]].
+  Code 128 (2026-10-30), so it stays plain Code 128; no till test was made: [[gs1-128-drawn-as-code-128]].
 
 ## Tests
 

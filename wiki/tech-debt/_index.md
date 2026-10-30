@@ -9,11 +9,11 @@ delete the page.
 - [[list-screen-bypasses-image-loader]] — list tiles use Coil's default loader (no SVG, no logging); no tile loads
   an image today, so it waits for tile photos (#10)
 - [[no-room-migrations]] — DB v2, no migration path
-- [[gs1-128-drawn-as-code-128]] — scans keep their FNC1 (`GS1_128`); `hu-coop` is still plain Code 128, unconfirmed at
-  the till (#33)
 
 ## Resolved
 
+- [[gs1-128-drawn-as-code-128]] — scans keep their FNC1 (`GS1_128`); `hu-coop` stays plain Code 128, as Coop's own
+  app draws it (#33)
 - [[shared-element-key-from-async-state]] — the detail key comes from the route, so the transition pairs before
   Room emits (#16)
 - [[rules-cannot-require-leading-digits]] — rules can require leading digits, and confirmed EAN-13 stores do;
