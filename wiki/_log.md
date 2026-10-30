@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-30 · SuperShop's rule requires `20000101` (SuperShop FAQ: 16 digits, always starting so; the catalogue's `5540` was wrong), so it no longer reads a Tesco scan · features/store-catalogue, features/add-card, decisions/2026-10-22-store-suggestion-trigger · #31, #52
 - 2026-10-30 · backlog reassessed: `v1 – release` milestone (#12, #71–#75), `needs-field-check` label (#31, #33, #52), #7 closed with photo tiles moved to #10, #11 and #24 to Later; /next-task milestone order updated · CLAUDE, tech-debt/list-screen-bypasses-image-loader, tech-debt/_index · issue triage
 - 2026-10-30 · the card's note shown read-only under the number on the detail screen (not in scan mode); #9 done; stale "Not implemented" items (#7, #8) corrected · features/card-detail · #9
 - 2026-10-30 · card notes edited in the card form: a Note field when adding and editing, trimmed, blank stored as null, written by the partial edit (`LoyaltyCardEdit.note`) · features/add-card, features/edit-card, features/card-list · #9

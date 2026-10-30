@@ -44,7 +44,7 @@ class ShippedCatalogueTest {
         Vector("hu-praktiker", "123456789", "123456789", "123 456 789"),
         Vector("hu-rossmann", "9991234567890", "9991234567890", "9991234567890"),
         Vector("hu-shell-clubsmart", "70044200012345678", "70044200012345678", "7004 4200 0123 4567 8"),
-        Vector("hu-supershop", "5540000012345678", "5540000012345678", "5540 0000 1234 5678"),
+        Vector("hu-supershop", "2000010112345678", "2000010112345678", "2000 0101 1234 5678"),
         Vector("hu-tesco", "634009123456789012", "9799123456789012", "634009 1234 5678 9012"),
     )
 
@@ -99,21 +99,21 @@ class ShippedCatalogueTest {
             .isEqualTo(RuleMatch("634009123456789012", formatMatches = true)) // same symbology (#47)
     }
 
-    /** SuperShop's rule (any 16 digits, Code 128) also reads a Tesco GS1-128 barcode; Tesco's exact format ranks first. */
+    /** A Tesco GS1-128 barcode is 16 digits; SuperShop's rule, also 16 digits, requires SuperShop's start (#52). */
     @Test
-    fun aTescoScan_offersTescoFirst() { // review of #6
+    fun aTescoScan_isNotOfferedAsSuperShop() {
         val stores = shipped.map { it.toStoreEntity(Instant.EPOCH).toDomainModel() }
 
         val matching = stores.matchingScan("9799123456789012", BarcodeFormat.GS1_128).map { it.id }
 
-        assertThat(matching).containsAtLeast("hu-tesco", "hu-supershop")
         assertThat(matching.first()).isEqualTo("hu-tesco")
+        assertThat(matching).doesNotContain("hu-supershop")
     }
 
-    /** The stores whose leading digits were confirmed on a real card (#31) tell each other's scans apart. */
+    /** The stores whose leading digits were confirmed (real card or retailer, #31) tell each other's scans apart. */
     @Test
     fun storesWithConfirmedLeadingDigits_rejectOtherStoresCards() {
-        val confirmed = setOf("hu-decathlon", "hu-dm", "hu-ikea-family", "hu-penny", "hu-rossmann", "hu-tesco")
+        val confirmed = setOf("hu-decathlon", "hu-dm", "hu-ikea-family", "hu-penny", "hu-rossmann", "hu-supershop", "hu-tesco")
         for (id in confirmed) {
             val rule = shipped.single { it.id == id }.cardNumberRule!!
             for (other in vectors.filter { it.storeId != id }) {

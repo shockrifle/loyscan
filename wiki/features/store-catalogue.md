@@ -59,8 +59,10 @@ why it has no logos, and why it is loaded this way: [[2026-10-13-curated-store-c
 - **The core is the full printed number.** EAN-13 stores use 13 digits with a `GTIN_MOD10` `VERIFY` check and no
   prefix, because the card prints all 13 digits. Since 2026-10-19 the stores whose leading digits were seen on a real
   card require them (`coreStartsWith`): Decathlon `209`, dm `241`, Penny `994`, Rossmann `999`, IKEA Family
-  `627598042`, and since 2026-10-20 Tesco `634009`. Other starts that the first catalogue listed (Penny `9980`/`9981`, dm `90`, Rossmann `2`) were left
-  out until a card shows them. Auchan still accepts any EAN-13, so `CardNumberEngine.match` can't tell it from the
+  `627598042`, since 2026-10-20 Tesco `634009`, and since 2026-10-30 SuperShop `20000101` (from the SuperShop FAQ,
+  [supershop.hu/ugyfelszolgalat](https://supershop.hu/ugyfelszolgalat); the catalogue's earlier `5540` was wrong).
+  Other starts that the first catalogue listed (Penny `9980`/`9981`, dm `90`, Rossmann `2`) were left out until a
+  card shows them. Auchan still accepts any EAN-13, so `CardNumberEngine.match` can't tell it from the
   others (matters for #6): [[rules-cannot-require-leading-digits]], [#52](https://github.com/shockrifle/loyscan/issues/52).
 - **Tesco's barcode leaves out the first six printed digits.** The Clubcard prints 18 digits starting `634009`, with a
   Luhn check digit, and its barcode is GS1-128 holding `9799` + the last 12 of them (one card seen, 2026-10-19, #31).

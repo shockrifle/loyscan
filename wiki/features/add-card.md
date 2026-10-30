@@ -64,9 +64,10 @@ check the number and give the card a label, then save it. The new card opens and
     GS1 mark and the picked rule names the same symbology without it; none otherwise (the picked rule reads it in the
     exact format, without the mark the rule has, or in another symbology), and none for a typed number. Ranked by `matchingScan` in `domain/StoreSearch.kt`: exact format, then the same
     symbology with or without the GS1 mark, then the rest, each by name. The exact format ranks first because
-    SuperShop's rule (any 16 digits, Code 128) also reads a Tesco GS1-128 barcode (found in review;
-    `ShippedCatalogueTest.aTescoScan_offersTescoFirst`). Every match is offered, so the user chooses when several
-    rules read the same number. Stores without a rule are never offered. Tapping one makes the form that store's
+    a loose rule can read another store's barcode by symbology: until 2026-10-30 SuperShop's rule (any 16 digits,
+    Code 128) read a Tesco GS1-128 barcode (found in review). Since it requires `20000101` it doesn't
+    (`ShippedCatalogueTest.aTescoScan_isNotOfferedAsSuperShop`, #52). Every match is offered, so the user chooses
+    when several rules read the same number. Stores without a rule are never offered. Tapping one makes the form that store's
     (`CardFormViewModel.switchStore`): the scan and the label stay, the check runs against the new rule, and the card
     is saved for it; not once saving has started ([[edit-card]]). The chosen store is kept in the `SavedStateHandle`,
     so back still returns to the picker and the choice survives process death. The form reads every store for this (`StoreRepository.getAll`).
