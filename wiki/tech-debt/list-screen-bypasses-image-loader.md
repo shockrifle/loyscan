@@ -1,7 +1,7 @@
 # List tiles don't use the app's ImageLoader
 
-**Status:** Open · **Issue:** [#7](https://github.com/shockrifle/loyscan/issues/7) (was
-[#15](https://github.com/shockrifle/loyscan/issues/15), folded into #7 on 2026-10-22) · **Since:** 2025-12-12 (`45a33e1`) · **Where:** `CardItem` in
+**Status:** Open · **Issue:** [#10](https://github.com/shockrifle/loyscan/issues/10) (was
+[#15](https://github.com/shockrifle/loyscan/issues/15), folded into #7 on 2026-10-22, moved to #10 on 2026-10-30) · **Since:** 2025-12-12 (`45a33e1`) · **Where:** `CardItem` in
 `app/src/main/java/com/bdaniel/loyscan/ListScreen.kt` (`AsyncImage(model = card.store.logo, …)` with no
 `imageLoader`)
 
@@ -19,5 +19,5 @@ just missed.
   the app's decoders, logging and cache.
 
 ## How to pay it down
-Load any tile image through `hiltImageLoader()`, which #7 lists as part of its tile work. To prevent recurrences,
+Load any tile image through `hiltImageLoader()`, which #10 lists as part of its photo tiles. To prevent recurrences,
 consider making the Hilt loader Coil's default (see the Consequences in [[2025-12-12-singleton-image-loader]]).

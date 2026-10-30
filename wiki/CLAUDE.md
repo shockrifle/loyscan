@@ -90,7 +90,8 @@ Work is tracked in GitHub Issues on `shockrifle/loyscan` (use `gh`). The split:
   detail", "an empty brand colour falls back to `surfaceVariant`"), not tasks ("refactor X") or vague qualities
   ("works well"). Each criterion maps to at least one test ([[tdd]]). Documentation criteria (a wiki page, a
   decision) are fine as they are. Labels: `feature`, `bug`,
-  `tech-debt`, `hack`. Milestones: `v1 – core cards`, `v1 – extras`, `Later`.
+  `tech-debt`, `hack`, `needs-field-check` (moves only with a real card or a till test). Milestones:
+  `v1 – core cards` (closed), `v1 – extras`, `v1 – release`, `Later`.
 - **Wiki = why and how.** Decisions, architecture, feature docs, postmortems, runbooks. Wiki pages don't hold
   backlogs or TODO lists; issues don't hold design rationale (link to the wiki page instead).
 - **Linking.** Commits reference the issue (`Fixes #N` closes it on push to `master`). Wiki pages that

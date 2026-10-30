@@ -28,7 +28,8 @@ If an issue number was given, use it and skip to step 2.
 Otherwise list open issues (`gh issue list --state open --limit 100 --json number,title,labels,milestone,body`)
 and rank them:
 
-1. Milestone order: `v1 – core cards`, then `v1 – extras`, then no milestone, then `Later`.
+1. Milestone order: `v1 – extras`, then `v1 – release`, then no milestone, then `Later`. Skip issues labelled
+   `needs-field-check`: they need a real card or a till test, not code.
 2. Dependencies: skip an issue whose body names another open issue it depends on / is blocked by / builds on,
    or that obviously needs another open issue first (e.g. a UI on a data model that doesn't exist yet). Check
    the code, not only the text.

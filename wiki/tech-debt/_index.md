@@ -7,7 +7,7 @@ delete the page.
 ## Open
 
 - [[list-screen-bypasses-image-loader]] — list tiles use Coil's default loader (no SVG, no logging); no tile loads
-  an image today, so it waits for tile photos (#7)
+  an image today, so it waits for tile photos (#10)
 - [[no-room-migrations]] — DB v2, no migration path
 - [[gs1-128-drawn-as-code-128]] — scans keep their FNC1 (`GS1_128`); `hu-coop` is still plain Code 128, unconfirmed at
   the till (#33)
