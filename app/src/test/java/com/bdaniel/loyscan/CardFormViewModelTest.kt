@@ -535,14 +535,17 @@ class CardFormViewModelTest {
     }
 
     @Test
-    fun editingATypedCard_startsWithItsStoreLabelAndNumber() = runTest { // #8
-        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, label = "Gold card", number = "12345674"))
+    fun editingATypedCard_startsWithItsStoreLabelNumberAndNote() = runTest { // #8, note: #9
+        cards.cards.value = listOf(
+            aLoyaltyCard(id = cardId(1), store = store, label = "Gold card", number = "12345674", note = "Expires in May")
+        )
 
         viewModel(CardForm("ruled", cardId = cardId(1))).state.test {
             val state = awaitLoaded()
             assertThat(state.editing).isTrue()
             assertThat(state.store).isEqualTo(store)
             assertThat(state.label).isEqualTo("Gold card")
+            assertThat(state.note).isEqualTo("Expires in May")
             assertThat(state.number).isEqualTo("12345674")
             assertThat(state.scannedFormat).isNull()
             assertThat(state.check).isEqualTo(NumberCheck.Valid)
@@ -586,6 +589,53 @@ class CardFormViewModelTest {
 
             assertThat(cards.cards.value).containsExactly(original.copy(label = null, number = "1234 5682", updatedAt = NOW))
             assertThat(expectMostRecentItem().savedCardId).isEqualTo(cardId(1))
+        }
+    }
+
+    @Test
+    fun aNote_isSavedWithANewCard_trimmed() = runTest { // #9
+        val viewModel = viewModel(CardForm("ruled"))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.onNumberChange("12345674")
+            viewModel.onNoteChange("  PIN hint: birthday\nGold tier \n")
+            viewModel.save()
+
+            assertThat(cards.cards.value.single().note).isEqualTo("PIN hint: birthday\nGold tier")
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun editingTheNote_savesIt() = runTest { // #9
+        val original = aLoyaltyCard(id = cardId(1), store = store, number = "12345674", note = "Expires in May")
+        cards.cards.value = listOf(original)
+        val viewModel = viewModel(CardForm("ruled", cardId = cardId(1)))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.onNoteChange("Expires in June")
+            assertThat(awaitItem().note).isEqualTo("Expires in June")
+            viewModel.save()
+
+            assertThat(cards.cards.value).containsExactly(original.copy(note = "Expires in June", updatedAt = NOW))
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun aBlankNote_isSavedAsNull() = runTest { // #9
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, number = "12345674", note = "Expires in May"))
+        val viewModel = viewModel(CardForm("ruled", cardId = cardId(1)))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.onNoteChange(" \n ")
+            viewModel.save()
+
+            assertThat(cards.cards.value.single().note).isNull()
+            cancelAndIgnoreRemainingEvents()
         }
     }
 
@@ -710,7 +760,7 @@ class CardFormViewModelTest {
     }
 
     @Test
-    fun anEdit_isRestoredAfterProcessDeath() = runTest { // #8
+    fun anEdit_isRestoredAfterProcessDeath() = runTest { // #8, note: #9
         cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, label = "Gold card", number = "12345674"))
         val handle = SavedStateHandle(route = CardForm("ruled", cardId = cardId(1)))
         viewModel(handle).run {
@@ -718,6 +768,7 @@ class CardFormViewModelTest {
                 awaitLoaded()
                 onLabelChange("")
                 onNumberChange("1234")
+                onNoteChange("Expires in June")
                 cancelAndIgnoreRemainingEvents()
             }
         }
@@ -727,6 +778,7 @@ class CardFormViewModelTest {
             val state = awaitLoaded()
             assertThat(state.label).isEmpty()
             assertThat(state.number).isEqualTo("1234")
+            assertThat(state.note).isEqualTo("Expires in June")
         }
     }
 

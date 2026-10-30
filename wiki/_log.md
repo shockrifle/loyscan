@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-10-30 · card notes edited in the card form: a Note field when adding and editing, trimmed, blank stored as null, written by the partial edit (`LoyaltyCardEdit.note`) · features/add-card, features/edit-card, features/card-list · #9
 - 2026-10-30 · review fix: the in-place schema rewrite's data loss (a pre-change install must clear its data and loses its cards) stated explicitly · decisions/2026-10-30-frequently-added-stores, workflows/database-schema-changes · review of #6
 - 2026-10-30 · Auchan, Coop, dm, Penny, Rossmann and Tesco marked frequently added; #6 done · features/store-catalogue, features/add-card, features/_index · #6
 - 2026-10-30 · "frequently added" stores for the user's country in the store picker: catalogue flag, `stores.frequentlyAdded` added to schema v2 in place, country from SIM/network/locale · decisions/2026-10-30-frequently-added-stores (new), decisions/_index, features/add-card, features/store-catalogue, workflows/add-a-catalogue-store, workflows/database-schema-changes, workflows/tdd, tech-debt/no-room-migrations, architecture, glossary · #6 step 1

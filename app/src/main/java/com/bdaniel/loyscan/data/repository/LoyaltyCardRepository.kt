@@ -18,8 +18,8 @@ interface LoyaltyCardRepository {
     suspend fun add(card: LoyaltyCard)
 
     /**
-     * Saves an edit of an existing card (#8): its store, label, number, scanned format and `updatedAt`. Its creation
-     * time, uses, note and photos stay as stored. Does nothing for an unknown id.
+     * Saves an edit of an existing card (#8): its store, label, number, scanned format, note (#9) and `updatedAt`. Its
+     * creation time, uses and photos stay as stored. Does nothing for an unknown id.
      */
     suspend fun update(card: LoyaltyCard)
 

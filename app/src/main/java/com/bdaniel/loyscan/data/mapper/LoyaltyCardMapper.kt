@@ -54,6 +54,7 @@ fun LoyaltyCard.toEdit(): LoyaltyCardEdit {
         label = label,
         number = number,
         scannedFormat = scannedFormat,
+        note = note,
         updatedAt = updatedAt
     )
 }

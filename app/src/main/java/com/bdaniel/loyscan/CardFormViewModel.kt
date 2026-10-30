@@ -36,6 +36,8 @@ data class CardFormState(
     /** `null` until the store has loaded, or if no store has the route's id. */
     val store: Store? = null,
     val label: String = "",
+    /** The note field's text: free text, e.g. a PIN hint or an expiry date (#9). */
+    val note: String = "",
     /** The number field's text. An untouched scan shows the number the store's rule recovers from it. */
     val number: String = "",
     /** Set while the number is the untouched scan; editing the number makes it a typed number. */
@@ -114,6 +116,9 @@ class CardFormViewModel @Inject constructor(
     /** `null` until the label is changed: the edited card's label, or none. */
     private val label = savedStateHandle.getStateFlow<String?>(LABEL, null)
 
+    /** `null` until the note is changed: the edited card's note, or none. */
+    private val note = savedStateHandle.getStateFlow<String?>(NOTE, null)
+
     /** `null` until the number is changed: the untouched scan, the edited card's typed number, or nothing typed. */
     private val typedNumber = savedStateHandle.getStateFlow<String?>(TYPED_NUMBER, null)
 
@@ -125,9 +130,9 @@ class CardFormViewModel @Inject constructor(
      * store has loaded.
      */
     val state: StateFlow<CardFormState> =
-        combine(storeId, storeRepository.getAll(), original, combine(label, typedNumber, ::Pair), progress) {
-                id, stores, original, (label, typed), progress ->
-            formState(id, stores, original, label, typed, progress)
+        combine(storeId, storeRepository.getAll(), original, combine(label, note, typedNumber, ::Triple), progress) {
+                id, stores, original, (label, note, typed), progress ->
+            formState(id, stores, original, label, note, typed, progress)
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.Eagerly,
@@ -136,6 +141,10 @@ class CardFormViewModel @Inject constructor(
 
     fun onLabelChange(label: String) {
         savedStateHandle[LABEL] = label
+    }
+
+    fun onNoteChange(note: String) {
+        savedStateHandle[NOTE] = note
     }
 
     fun onNumberChange(number: String) {
@@ -176,6 +185,7 @@ class CardFormViewModel @Inject constructor(
         val now = clock.instant()
         val draft = draft(store, original, typedNumber.value).copy(
             label = current.label.trim().ifEmpty { null },
+            note = current.note.trim().ifEmpty { null },
             updatedAt = now,
         )
         val card = original?.let { draft } ?: draft.copy(id = UUID.randomUUID().toString(), createdAt = now)
@@ -204,7 +214,7 @@ class CardFormViewModel @Inject constructor(
 
     /**
      * The card as it would be saved: the untouched scan verbatim with its format, else the typed number (trimmed). An
-     * edit starts from the [original] card, so its id, creation, uses and note stay.
+     * edit starts from the [original] card, so its id, creation and uses stay.
      */
     private fun draft(store: Store, original: LoyaltyCard?, typed: String?): LoyaltyCard {
         val typedNumber = typedOrNull(original, typed)
@@ -221,17 +231,19 @@ class CardFormViewModel @Inject constructor(
         stores: List<Store>,
         original: LoyaltyCard?,
         changedLabel: String?,
+        changedNote: String?,
         changedNumber: String?,
         progress: Progress,
     ): CardFormState {
         val editing = route.cardId != null
         val label = changedLabel ?: original?.label.orEmpty()
+        val note = changedNote ?: original?.note.orEmpty()
         val typed = typedOrNull(original, changedNumber)
         val store = stores.firstOrNull { it.id == storeId }
         // Nothing to show until the store has loaded, and the edited card (which may be gone). The stores have loaded
         // here, so a missing store is gone, e.g. a custom store deleted (#51).
         if (store == null || editing && original == null) {
-            return CardFormState(label = label, number = typed.orEmpty(), editing = editing, storeGone = store == null)
+            return CardFormState(label = label, note = note, number = typed.orEmpty(), editing = editing, storeGone = store == null)
         }
         val draft = draft(store, original, changedNumber)
         val scannedFormat = draft.scannedFormat
@@ -257,6 +269,7 @@ class CardFormViewModel @Inject constructor(
         return CardFormState(
             store = store,
             label = label,
+            note = note,
             number = number,
             scannedFormat = scannedFormat,
             // Editable when the field holds the scan's core (read back by the rule) or its content as it is.
@@ -302,6 +315,7 @@ class CardFormViewModel @Inject constructor(
     private companion object {
         const val STORE_ID = "chosenStoreId"
         const val LABEL = "label"
+        const val NOTE = "note"
         const val TYPED_NUMBER = "typedNumber"
     }
 }

@@ -21,13 +21,14 @@ data class LoyaltyCardWithStore(
     val store: StoreEntity
 )
 
-/** The columns an edit of a card writes (#8); the rest of the row stays as stored. */
+/** The columns an edit of a card writes (#8, the note #9); the rest of the row stays as stored. */
 data class LoyaltyCardEdit(
     val id: String,
     val storeId: String,
     val label: String?,
     val number: String,
     val scannedFormat: BarcodeFormat?,
+    val note: String?,
     val updatedAt: Instant,
 )
 

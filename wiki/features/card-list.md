@@ -24,8 +24,8 @@ tiles, one per row in `loyalty_cards`, live-updating from Room. Sort, search and
 - **Search** (`CARD_SEARCH_TAG` field, "Search cards"): keeps the cards whose store name, store alias, label or
   note contains the query, ignoring case and accents (`searchKey()`, shared with the store picker), in the sort
   order. The number isn't searched. A query that matches nothing says "No card matches “…”". The query is kept
-  in the saved state: it survives process death, not a restart, and is cleared when no card is left. Notes can't be edited yet (#9), but a stored
-  note is searched.
+  in the saved state: it survives process death, not a restart, and is cleared when no card is left. A card's note is written in the card form
+  ([[add-card]], #9).
 - **Empty state** (`EmptyCardList`): once the cards have loaded, with none stored and no search, the screen shows "No
   cards yet" and an "Add your first card" button (→ `directions.toAddCard()`, like the floating button) in place of the
   search field and grid. It waits for the load (`cards` is `null` until then), and a search that matches nothing keeps

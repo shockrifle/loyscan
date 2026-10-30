@@ -209,6 +209,20 @@ class CardFormScreenTest {
     }
 
     @Test
+    fun editingACard_showsItsNote_andSavesTheChangedNote() { // #9
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, number = "12345674", note = "Expires in May"))
+        setScreen(CardForm("ruled", cardId = cardId(1)))
+
+        composeRule.onNodeWithTag(CARD_NOTE_TAG).performScrollTo().assertTextContains("Expires in May")
+        composeRule.onNodeWithTag(CARD_NOTE_TAG).performTextClearance()
+        composeRule.onNodeWithTag(CARD_NOTE_TAG).performTextInput("PIN hint: birthday")
+        composeRule.onNodeWithText("Save").performScrollTo().performClick()
+
+        composeRule.waitForIdle()
+        assertThat(cards.cards.value.single().note).isEqualTo("PIN hint: birthday")
+    }
+
+    @Test
     fun editingACard_canMoveItToAnotherStore_foundBySearch() { // #8
         cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, label = "Gold card", number = "12345674"))
         setScreen(CardForm("ruled", cardId = cardId(1)))

@@ -155,6 +155,7 @@ class LoyaltyCardDaoTest {
                 label = null,
                 number = "777",
                 scannedFormat = null,
+                note = "PIN hint: birthday",
                 updatedAt = Instant.parse("2026-04-04T00:00:00Z"),
             )
         )
@@ -165,6 +166,7 @@ class LoyaltyCardDaoTest {
                 label = null,
                 number = "777",
                 scannedFormat = null,
+                note = "PIN hint: birthday",
                 updatedAt = Instant.parse("2026-04-04T00:00:00Z"),
             )
         )

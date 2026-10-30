@@ -74,6 +74,9 @@ check the number and give the card a label, then save it. The new card opens and
   - The field isn't reformatted while typing. When the card will show the number differently (the rule's display
     pattern), the field says "Shown as 1234 5674" under it.
 - **Label** is optional; blank is stored as `null`.
+- **Note** (#9) is optional free text under the label, several lines (e.g. a PIN hint, a membership tier, an expiry
+  date). It is trimmed, and blank is stored as `null`. The detail screen shows it ([[card-detail]]); the list's search
+  finds it ([[card-list]]). Tests: `CardFormViewModelTest.aNote_isSavedWithANewCard_trimmed`, `aBlankNote_isSavedAsNull`.
 - **Save** writes the card once (a second tap does nothing): a new UUID, `createdAt` = `updatedAt` = now from the
   injected `Clock`, no use yet. Then the card's detail opens in place of the flow (`popUpTo<CardList>()`), so back from it
   returns to the list. That opening isn't counted as a use (`Detail.countUse = false`): it is the end of adding the
@@ -105,7 +108,7 @@ check the number and give the card a label, then save it. The new card opens and
   (`CardFormState.storeGone`). Tests: `CardFormViewModelTest.aStoreRemovedWhileTheFormIsOpen_…`,
   `CardFormScreenTest.aStoreRemovedWhileTheFormIsOpen_…`. The store picker sits below the form on the back stack, so
   today only a stale route reaches this.
-- Label, typed number and a switched store are kept in the `SavedStateHandle`, so they survive process death.
+- Label, note, typed number and a switched store are kept in the `SavedStateHandle`, so they survive process death.
 - `onNumberChange` (the read-only guard) and `save` read `state.value`, so both refuse until the store has loaded:
   the initial state is editable, and the stores come from Room after construction. `state` is started `Eagerly` so it
   stays current when nothing observes it (#50; the pre-load gap was found in review).

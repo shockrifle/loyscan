@@ -29,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -39,10 +40,11 @@ import com.bdaniel.loyscan.ui.theme.icons.Icons
 
 const val CARD_NUMBER_TAG = "cardNumber"
 const val CARD_LABEL_TAG = "cardLabel"
+const val CARD_NOTE_TAG = "cardNote"
 
 /**
  * Last step of adding a card, or editing one (#8): the number (scanned or typed), checked live against the store's rule,
- * and an optional label. A number that fails the check can still be saved ("Save anyway"); a scan another store's rule
+ * and an optional label and note (#9). A number that fails the check can still be saved ("Save anyway"); a scan another store's rule
  * reads offers that store, and an edited card can be moved to any other store. Saving opens the card.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -131,6 +133,14 @@ fun CardFormScreen(
                 modifier = Modifier.fillMaxWidth().testTag(CARD_LABEL_TAG),
                 label = { Text("Label (optional)") },
                 singleLine = true,
+            )
+            OutlinedTextField(
+                value = state.note,
+                onValueChange = viewModel::onNoteChange,
+                modifier = Modifier.fillMaxWidth().testTag(CARD_NOTE_TAG),
+                label = { Text("Note (optional)") },
+                minLines = 2,
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
             )
             if (state.saveFailed) {
                 Text(

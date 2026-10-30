@@ -1,7 +1,7 @@
 # Edit card
 
 The detail screen's Edit icon, or Edit on the list with one card selected ([[card-list]] → Multi-select), opens the card form ([[add-card]]) for that card: its label and number, checked live
-against the store's rule as when adding it, and its store, which "Change store" replaces with any other. Saving writes
+against the store's rule as when adding it, its note (#9), and its store, which "Change store" replaces with any other. Saving writes
 the edit and opens the card again. Issue [#8](https://github.com/shockrifle/loyscan/issues/8): editing the label,
 number and store of one card. Deleting a card is on [[card-detail]].
 
@@ -18,10 +18,10 @@ number and store of one card. Deleting a card is on [[card-detail]].
 
 ## Behaviour
 
-- **The form starts as the card.** The ViewModel loads the card by `CardForm.cardId`. Until the label or the number is
+- **The form starts as the card.** The ViewModel loads the card by `CardForm.cardId`. Until the label, the note or the number is
   changed, the form shows the card's own: a typed card's number as typed, a scanned card as its untouched scan
   ("Scanned · <format>", the number the rule recovers, read-only if it is shown as printed, with "Type the number
-  instead"). The saved-state keys for the label and number stay `null` until the user changes them, so the card's
+  instead"). The saved-state keys for the label, note and number stay `null` until the user changes them, so the card's
   values aren't copied into them and a change survives process death.
 - **Editing a scanned card's number by hand** makes it a typed number: `scannedFormat` is cleared, so the barcode is
   built from the typed number by the store's rule, not drawn verbatim ([[2026-10-12-data-model-v2]]). Changing only the
@@ -37,10 +37,10 @@ number and store of one card. Deleting a card is on [[card-detail]].
   opens in the colour of the store it was saved in (found in review). Adding a card doesn't offer it: Back returns to
   the picker there. Catalogue and custom stores are both listed; "Other card" isn't, so a card can't be moved to a
   store that doesn't exist yet.
-- **Saving writes only what the form edits:** the store, label, number, scanned format and `updatedAt` (now). Room's
-  partial `@Update(entity = LoyaltyCardEntity::class)` with `LoyaltyCardEdit` writes those columns and no others, so
-  `createdAt`, the use count, `lastUsedAt`, the note and the photo paths stay as stored even if they changed after the
-  form loaded the card. A blank label is saved as `null`.
+- **Saving writes only what the form edits:** the store, label, number, scanned format, note (#9) and `updatedAt`
+  (now). Room's partial `@Update(entity = LoyaltyCardEntity::class)` with `LoyaltyCardEdit` writes those columns and no
+  others, so `createdAt`, the use count, `lastUsedAt` and the photo paths stay as stored even if they changed after the
+  form loaded the card. A blank label or note is saved as `null`; the note is trimmed.
 - **After saving**, `CardFormDirections.toCard` opens the card in place of the card and its form
   (`popUpTo<CardList>()`, `Detail.countUse = false`), the same direction as after adding. The new `Detail` route carries
   the store's current colour, which matters when the store was switched. Back returns to the list.
@@ -50,6 +50,9 @@ number and store of one card. Deleting a card is on [[card-detail]].
 
 ## Tests
 
+- Note (#9): `CardFormViewModelTest.editingATypedCard_startsWithItsStoreLabelNumberAndNote`, `editingTheNote_savesIt`,
+  `aBlankNote_isSavedAsNull`, `anEdit_isRestoredAfterProcessDeath`; `CardFormScreenTest.editingACard_showsItsNote_andSavesTheChangedNote`;
+  `LoyaltyCardDaoTest.updateEdit_…`, `RoomLoyaltyCardRepositoryTest.update_…`, `LoyaltyCardMapperTest.toEdit_…`.
 - `CardFormViewModelTest`: `editingATypedCard_…`, `editingAScannedCard_…`, `savingAnEdit_…`,
   `editingAScannedCardsNumberByHand_…`, `savingAScannedCardWithOnlyItsLabelEdited_…`, `anEdit_isRestoredAfterProcessDeath`,
   `editingACardThatIsGone_cantBeSaved`, `aFailedEdit_…`. `CardFormScreenTest.editingACard_saysSo_andSavingOpensTheCard`.

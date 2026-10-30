@@ -102,6 +102,7 @@ class LoyaltyCardMapperTest {
                 label = card.label,
                 number = card.number,
                 scannedFormat = card.scannedFormat,
+                note = card.note,
                 updatedAt = card.updatedAt,
             )
         )
