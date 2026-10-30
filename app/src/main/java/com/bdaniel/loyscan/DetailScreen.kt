@@ -211,6 +211,17 @@ fun SharedTransitionScope.DetailScreen(
                             number = card.displayNumber,
                             modifier = Modifier.padding(top = 16.dp),
                         )
+                        // Under the number, so the barcode keeps its place at the top (#9).
+                        card.note?.let {
+                            Text(
+                                text = it,
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier
+                                    .padding(top = 16.dp)
+                                    .fillMaxWidth()
+                                    .testTag(CARD_NOTE_TAG),
+                            )
+                        }
                     }
                 }
             }

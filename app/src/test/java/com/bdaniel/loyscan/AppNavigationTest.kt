@@ -5,6 +5,7 @@ import android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
 import android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_FULL
 import android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -207,6 +208,32 @@ class AppNavigationTest {
         composeRule.onNodeWithContentDescription("Back").performClick()
         waitForText("My Cards")
         assertThat(runBlocking { db.loyaltyCardDao().getAllWithStore().first() }.single().loyaltyCard.label).isEqualTo("Silver card")
+    }
+
+    @Test
+    fun aNoteWrittenInTheCardForm_isShownOnTheCard_andKeptByTheNextEdit() { // #9
+        waitForText("Gold card")
+        composeRule.onNodeWithText("Gold card").performClick()
+        waitForText("0042")
+
+        composeRule.onNodeWithContentDescription("Edit").performClick()
+        waitForText("Edit card")
+        composeRule.onNodeWithTag(CARD_NOTE_TAG).performScrollTo().performTextInput("PIN hint: birthday")
+        composeRule.onNodeWithText("Save").performScrollTo().performClick()
+        waitForTheCardFormToClose()
+        waitForText("PIN hint: birthday")
+
+        composeRule.onNodeWithContentDescription("Edit").performClick()
+        waitForText("Edit card")
+        composeRule.onNodeWithTag(CARD_LABEL_TAG).performTextClearance()
+        composeRule.onNodeWithTag(CARD_LABEL_TAG).performTextInput("Silver card")
+        composeRule.onNodeWithText("Save").performScrollTo().performClick()
+        waitForTheCardFormToClose()
+        waitForText("Silver card")
+
+        composeRule.onNodeWithTag(CARD_NOTE_TAG).performScrollTo().assertTextEquals("PIN hint: birthday")
+        assertThat(runBlocking { db.loyaltyCardDao().getAllWithStore().first() }.single().loyaltyCard.note)
+            .isEqualTo("PIN hint: birthday")
     }
 
     @Test

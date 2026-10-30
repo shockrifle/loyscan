@@ -1,8 +1,8 @@
 # Card detail
 
 Shows one card at the checkout: a top bar and a 200dp header in the store's brand color with its logo (or store
-name), then a `Card` with the card's label, the store name, the barcode on white and the display number in large
-type. The screen runs at full brightness; a double-tap on the barcode opens a full-screen scan mode.
+name), then a `Card` with the card's label, the store name, the barcode on white, the display number in large
+type and the card's note. The screen runs at full brightness; a double-tap on the barcode opens a full-screen scan mode.
 
 **Entry points:** `DetailScreen` (`app/src/main/java/com/bdaniel/loyscan/DetailScreen.kt:73-83`);
 `DetailViewModel` (`app/src/main/java/com/bdaniel/loyscan/DetailViewModel.kt`); route
@@ -48,6 +48,12 @@ UUID string.
 - **Number:** `displayNumber` in `headlineMedium` below the barcode. A tap copies it to the clipboard exactly as
   shown, rule spacing included (product choice, 2026-10-15). Android 13+ confirms the copy itself; on 10–12 a toast
   says "Number copied".
+- **Note** (#9): the card's note, when it has one, in `bodyMedium` under the number, start-aligned and on as many
+  lines as it has (`CARD_NOTE_TAG`). It is read-only here: it is written in the card form, through Edit ([[add-card]],
+  [[edit-card]]; product choice, 2026-10-30: one way to change a card). Under the number so the barcode keeps its
+  place at the top; scan mode doesn't show it. Tests: `DetailScreenTest.showsTheCardsNote_underTheNumber`,
+  `aCardWithoutANote_showsNone`, `scanMode_showsNoNote`; end to end
+  `AppNavigationTest.aNoteWrittenInTheCardForm_isShownOnTheCard_andKeptByTheNextEdit`.
 - The card's content scrolls vertically when it doesn't fit.
 - **Rotation:** the only screen that turns with a phone; every other screen is held in portrait on a phone
   ([[2026-10-28-portrait-on-phones]], `AppNavigationTest.onAPhone_onlyTheCardRotates`).
@@ -58,7 +64,7 @@ UUID string.
   `ScreenEffectsTest`, `DetailScreenTest`, `AppNavigationTest.detailsFullBrightness_isRestoredOnBack`.
 - **Scan mode:** a double-tap on the barcode (or the accessibility action "Show full screen") lays `ScanMode` over
   the whole screen, status bar included: white, the barcode as large as fits inside 24dp padding with the number
-  below it in black (1D: full width, 200dp high; 2D: square modules, height-bound in landscape so the number keeps
+  below it in black (no note) (1D: full width, 200dp high; 2D: square modules, height-bound in landscape so the number keeps
   its room). It keeps the screen on (`KeepScreenOn()`, `FLAG_KEEP_SCREEN_ON`, same
   resumed-only rule as the brightness). A tap anywhere or back closes it. Its open state survives rotation
   (`rememberSaveable`). 1D barcodes are not rotated to the long side.
@@ -81,10 +87,10 @@ UUID string.
   ([[add-card]], #6).
 - The whole `Scaffold` is the shared element `card/{id}` — [[card-transition]].
 
-## Not implemented (as of 2026-10-22)
+## Not implemented (as of 2026-10-30)
 
-- Picking another store for a card (#8, [[edit-card]]). Deleting several cards at once waits for the list's multi-select (#7),
-  and deleting a card's photo files for photos (#10); nothing stores photos yet.
+- Deleting a card's photo files waits for photos (#10); nothing stores photos yet. (Corrected 2026-10-30: this also
+  listed picking another store and deleting several cards, done since in #8 and #7: [[edit-card]], [[card-list]].)
 
 ## Known issues
 

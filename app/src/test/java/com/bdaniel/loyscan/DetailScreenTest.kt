@@ -19,6 +19,8 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -94,6 +96,34 @@ class DetailScreenTest {
 
         composeRule.onNodeWithText("Gold card").assertIsDisplayed()
         composeRule.onNodeWithText("0042").assertIsDisplayed()
+    }
+
+    @Test
+    fun showsTheCardsNote_underTheNumber() { // #9
+        setScreen(card = card.copy(note = "PIN hint: birthday\nGold tier"))
+
+        val note = composeRule.onNodeWithTag(CARD_NOTE_TAG).performScrollTo()
+        note.assertTextEquals("PIN hint: birthday\nGold tier")
+        assertThat(note.getUnclippedBoundsInRoot().top)
+            .isAtLeast(composeRule.onNodeWithText("0042").getUnclippedBoundsInRoot().bottom)
+    }
+
+    @Test
+    fun aCardWithoutANote_showsNone() { // #9
+        setScreen()
+
+        composeRule.onNodeWithText("0042").assertIsDisplayed()
+        composeRule.onNodeWithTag(CARD_NOTE_TAG).assertDoesNotExist()
+    }
+
+    @Test
+    fun scanMode_showsNoNote() { // #9: barcode and number only
+        setScreen(card = card.copy(note = "PIN hint: birthday"))
+        composeRule.onNodeWithContentDescription("Barcode").performTouchInput { doubleClick() }
+
+        val inScanMode = hasAnyAncestor(hasTestTag("scanMode"))
+        composeRule.onNode(hasText("0042") and inScanMode, useUnmergedTree = true).assertIsDisplayed()
+        composeRule.onNode(hasText("PIN hint: birthday") and inScanMode, useUnmergedTree = true).assertDoesNotExist()
     }
 
     @Test
