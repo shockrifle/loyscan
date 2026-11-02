@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-02 · added: opening a picked picture times out after 30 s as Unreadable, the late picture recycled; virtual-time timeouts vs real threads in tests · integrations/zxing-cpp, features/barcode-scanner, workflows/tdd · #79
 - 2026-11-02 · added: picture reading rethrows cancellation instead of reporting Unreadable; no timeout on cloud downloads · integrations/zxing-cpp · review of #76
 - 2026-11-02 · corrected: pictures are capped at 8 MP instead of 2048 px on the long side (screenshots read at their own size); decode on IO, any provider exception is Unreadable · integrations/zxing-cpp · review of #76
 - 2026-11-02 · added: "Scan from image" on the scanner (photo picker, picture read like a camera scan, first scan only); picker/reader test seams · features/barcode-scanner, architecture, workflows/tdd · #76

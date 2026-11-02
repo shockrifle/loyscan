@@ -6,20 +6,30 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.domain.ScannedBarcode
 import com.google.common.truth.Truth.assertThat
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.currentTime
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.FileNotFoundException
 import java.io.IOException
-import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * The reading around zxing-cpp, with the decoding and the native reader replaced: zxing-cpp's library doesn't run on
  * the JVM. Robolectric for [Bitmap] and [Uri].
+ *
+ * The decode runs on the test scheduler, so its timeout is in virtual time. A test that decodes on a real thread uses
+ * `runBlocking`: under `runTest`, virtual time jumps to the timeout as soon as the test thread is idle, before the other
+ * thread has decoded (#79).
  */
 @RunWith(AndroidJUnit4::class)
 class ZxingCppPictureReaderTest {
@@ -28,10 +38,16 @@ class ZxingCppPictureReaderTest {
     private val picture = Bitmap.createBitmap(4, 4, Bitmap.Config.ARGB_8888)
     private val barcode = ScannedBarcode("5901234123457", BarcodeFormat.EAN_13)
 
-    private fun reader(
-        decode: (Uri) -> Bitmap = { picture },
+    private fun TestScope.reader(
+        decode: suspend (Uri) -> Bitmap = { picture },
         read: BitmapReader = BitmapReader { barcode },
-    ) = ZxingCppPictureReader(decode, newReader = { read })
+        decodeTimeout: Duration = 30.seconds,
+    ) = ZxingCppPictureReader(
+        decode,
+        newReader = { read },
+        decodeContext = StandardTestDispatcher(testScheduler),
+        decodeTimeout = decodeTimeout,
+    )
 
     @Test
     fun aPictureWithABarcode_isFound() = runTest {
@@ -59,19 +75,42 @@ class ZxingCppPictureReaderTest {
 
     @Test
     fun leavingWhileThePictureIsDecoded_cancelsTheRead() = runTest { // review of #76: not swallowed as Unreadable
-        val decoding = CountDownLatch(1)
-        val release = CountDownLatch(1)
+        val download = CompletableDeferred<Unit>()
         var scan: PictureScan? = null
-        val job = launch(Dispatchers.Default) {
-            scan = reader(decode = { decoding.countDown(); release.await(); picture }).read(uri)
-        }
-        decoding.await()
+        val job = launch { scan = reader(decode = { download.await(); picture }).read(uri) }
+        runCurrent()
 
         job.cancel()
-        release.countDown()
         job.join()
+        download.complete(Unit)
+        runCurrent()
 
         assertThat(scan).isNull()
+        assertThat(picture.isRecycled).isTrue() // #79: the caller doesn't wait for the decode, so the late picture is recycled
+    }
+
+    @Test
+    fun aPictureWhoseDecodeDoesNotFinishInTime_isUnreadable() = runTest { // #79: a cloud photo on a slow network
+        val download = CompletableDeferred<Unit>()
+
+        val scan = reader(decode = { download.await(); picture }, decodeTimeout = 30.seconds).read(uri)
+
+        assertThat(scan).isEqualTo(PictureScan.Unreadable)
+        assertThat(currentTime).isEqualTo(30.seconds.inWholeMilliseconds)
+    }
+
+    @Test
+    fun aDecodeFinishingAfterTheTimeout_isNotReadAndItsPictureIsRecycled() = runTest { // #79
+        val download = CompletableDeferred<Unit>()
+        var reads = 0
+        val scan = reader(decode = { download.await(); picture }, read = { reads++; barcode }).read(uri)
+
+        download.complete(Unit)
+        runCurrent()
+
+        assertThat(scan).isEqualTo(PictureScan.Unreadable)
+        assertThat(picture.isRecycled).isTrue()
+        assertThat(reads).isEqualTo(0)
     }
 
     @Test
@@ -104,20 +143,24 @@ class ZxingCppPictureReaderTest {
 
     @Test
     fun aReaderWithoutItsNativeLibrary_isUnreadable() = runTest {
-        val scan = ZxingCppPictureReader({ picture }, newReader = { throw UnsatisfiedLinkError("no zxingcpp") }).read(uri)
+        val scan = ZxingCppPictureReader(
+            { picture },
+            newReader = { throw UnsatisfiedLinkError("no zxingcpp") },
+            decodeContext = StandardTestDispatcher(testScheduler),
+        ).read(uri)
 
         assertThat(scan).isEqualTo(PictureScan.Unreadable)
     }
 
     @Test
-    fun thePicture_isDecodedOnTheIoContextAndReadOnTheReadContext() = runTest { // review of #76: a cloud photo downloads
+    fun thePicture_isDecodedOnTheIoContextAndReadOnTheReadContext() = runBlocking { // review of #76: a cloud photo downloads
         val io = Executors.newSingleThreadExecutor { Thread(it, "test-io") }
         val cpu = Executors.newSingleThreadExecutor { Thread(it, "test-read") }
         val threads = mutableListOf<String>()
         try {
             ZxingCppPictureReader(
-                decode = { threads += Thread.currentThread().name; picture },
-                newReader = { BitmapReader { threads += Thread.currentThread().name; barcode } },
+                decode = { threads += threadName(); picture },
+                newReader = { BitmapReader { threads += threadName(); barcode } },
                 decodeContext = io.asCoroutineDispatcher(),
                 readContext = cpu.asCoroutineDispatcher(),
             ).read(uri)
@@ -130,18 +173,21 @@ class ZxingCppPictureReaderTest {
     }
 
     @Test
-    fun byDefault_thePictureIsDecodedAndReadOffTheCallersThread() = runTest {
+    fun byDefault_thePictureIsDecodedAndReadOffTheCallersThread() = runBlocking {
         val caller = Thread.currentThread()
         val threads = mutableListOf<Thread>()
 
-        reader(
+        ZxingCppPictureReader(
             decode = { threads += Thread.currentThread(); picture },
-            read = { threads += Thread.currentThread(); barcode },
+            newReader = { BitmapReader { threads += Thread.currentThread(); barcode } },
         ).read(uri)
 
         assertThat(threads).hasSize(2)
         assertThat(threads).doesNotContain(caller)
     }
+
+    /** The thread's own name, without the coroutine name that coroutines' debug mode appends to it. */
+    private fun threadName() = Thread.currentThread().name.substringBefore(" @")
 
     @Test
     fun thePicture_isRecycledOnceRead() = runTest {

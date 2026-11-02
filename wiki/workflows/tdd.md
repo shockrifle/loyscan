@@ -71,7 +71,9 @@ Shared helpers are in `testing/`:
   When you change an interface's contract, change the fake in the same commit. No mocking library.
 - **`MainDispatcherRule`** for anything that uses `viewModelScope`. A timer in a ViewModel takes its duration as a
   constructor parameter (`ScannerViewModel(hintDelay)`): `advanceTimeBy` tests it in virtual time, and a screen test
-  passes `Duration.ZERO`.
+  passes `Duration.ZERO`. A timeout around work on another thread fires at once under `runTest`, which jumps virtual
+  time ahead whenever the test thread is idle: run the work on the test scheduler behind a `CompletableDeferred`, or
+  use `runBlocking` for a test about real threads (`ZxingCppPictureReaderTest`, #79).
 - **`TemporaryPreferencesModule`** replaces `PreferencesModule` in every `@HiltAndroidTest`: a new preferences file per
   test, since DataStore throws when two stores open one file.
 - **`InMemoryDatabaseModule`** replaces `DatabaseModule` in every `@HiltAndroidTest`: an empty database that the

@@ -1,5 +1,6 @@
 package com.bdaniel.loyscan
 
+import android.graphics.Bitmap
 import android.net.Uri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.cash.turbine.test
@@ -7,7 +8,9 @@ import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.domain.ScannedBarcode
 import com.bdaniel.loyscan.testing.FakePictureReader
 import com.bdaniel.loyscan.testing.MainDispatcherRule
+import com.bdaniel.loyscan.ui.scanner.BitmapReader
 import com.bdaniel.loyscan.ui.scanner.PictureScan
+import com.bdaniel.loyscan.ui.scanner.ZxingCppPictureReader
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -207,5 +210,40 @@ class ScannerViewModelTest {
         viewModel.onPicturePicked(Uri.parse("content://media/picker/0/43"))
 
         assertThat(pictureReader.reads).containsExactly(picture)
+    }
+
+    @Test
+    fun aPictureThatTimesOut_canBePickedAgain_andItsLateResultIsIgnored() = runTest { // #79
+        val firstDownload = CompletableDeferred<Unit>()
+        var decodes = 0
+        val viewModel = ScannerViewModel(
+            hintDelay = 8.seconds,
+            ZxingCppPictureReader(
+                decode = {
+                    if (decodes++ == 0) firstDownload.await()
+                    Bitmap.createBitmap(4, 4, Bitmap.Config.ARGB_8888)
+                },
+                newReader = { BitmapReader { barcode } },
+                decodeContext = mainDispatcherRule.testDispatcher,
+                decodeTimeout = 30.seconds,
+            ),
+        )
+
+        viewModel.pictureScans.test {
+            viewModel.onPicturePicked(picture)
+            advanceTimeBy(30.seconds)
+            runCurrent()
+            val timedOut = viewModel.state.value
+            assertThat(timedOut.readingPicture).isFalse()
+            assertThat(timedOut.pictureProblem).isEqualTo(ScannerViewModel.PictureProblem.UNREADABLE)
+
+            firstDownload.complete(Unit)
+            runCurrent()
+            expectNoEvents()
+            assertThat(viewModel.state.value).isEqualTo(timedOut)
+
+            viewModel.onPicturePicked(picture)
+            assertThat(awaitItem()).isEqualTo(barcode)
+        }
     }
 }

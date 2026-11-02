@@ -58,8 +58,10 @@ after the store picker of [[add-card]]; a scan or "Enter manually" replaces it w
   `directions.onScanned` from a `LaunchedEffect` collecting `pictureScans` (`ScannerScreen.kt:66`): the card form
   opens with its content and format exactly as after a camera scan. No barcode, or a picture that can't be opened,
   keeps the scanner open with a message in place of the hint; a cancelled picker changes nothing. While a picture is
-  read, the button says "Reading the picture…" and is disabled, so one picture is read at a time. A read in progress
-  isn't kept over process death; the user picks the picture again.
+  read, the button says "Reading the picture…" and is disabled, so one picture is read at a time. Opening a picture
+  that takes longer than 30 s (a cloud photo on a slow network) is reported as "couldn't be opened" and the button is
+  usable again; the late picture is dropped (#79, [[zxing-cpp]] → Reading a picture). A read in progress isn't kept
+  over process death; the user picks the picture again.
 - **Enter manually** is always at the bottom, with or without the camera.
 
 ## Tests
@@ -69,7 +71,8 @@ after the store picker of [[add-card]]; a scan or "Enter manually" replaces it w
   each permission state, the first-scan-only rule (also between a camera scan and a picture), torch, hint, camera
   failure, and "Scan from image" in every camera state with each reading outcome.
 - `ScannerViewModelTest` (Robolectric, for `Uri`): hint timing with virtual time (`ScannerViewModel(hintDelay, …)`),
-  torch, one scan, reading a picture (found, none, unreadable, cancelled, one at a time).
+  torch, one scan, reading a picture (found, none, unreadable, cancelled, one at a time, and a timed-out read over
+  the real `ZxingCppPictureReader`: picked again, its late result ignored).
 - `PicturePickerTest`: the real picker over a test `ActivityResultRegistry`: images only, a pick and a cancel.
 - `ZxingCppPictureReaderTest`: see [[zxing-cpp]].
 - `CameraXScannerTest`: the camera lifecycle with a fake `CameraOpener` (open, a frame's barcode reaching

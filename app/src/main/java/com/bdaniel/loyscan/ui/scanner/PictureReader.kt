@@ -8,14 +8,21 @@ import android.net.Uri
 import com.bdaniel.loyscan.domain.ScannedBarcode
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
 import zxingcpp.BarcodeReader
 import java.io.IOException
 import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
 import kotlin.math.sqrt
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 /** What reading a picked picture found. */
 sealed interface PictureScan {
@@ -42,10 +49,11 @@ fun interface BitmapReader {
  * while it is read: never copied, stored or sent anywhere.
  */
 class ZxingCppPictureReader(
-    private val decode: (Uri) -> Bitmap,
+    private val decode: suspend (Uri) -> Bitmap,
     private val newReader: () -> BitmapReader,
     private val decodeContext: CoroutineContext = Dispatchers.IO,
     private val readContext: CoroutineContext = Dispatchers.Default,
+    private val decodeTimeout: Duration = PICTURE_DECODE_TIMEOUT,
 ) : PictureReader {
 
     @Inject
@@ -54,8 +62,10 @@ class ZxingCppPictureReader(
 
     override suspend fun read(uri: Uri): PictureScan {
         val bitmap = try {
-            // Opening it can wait on the network: the photo picker also lists cloud photos, downloaded when opened.
-            withContext(decodeContext) { decode(uri) }
+            decodeInTime(uri) ?: run {
+                Timber.w("Opening the picked picture took longer than %s", decodeTimeout)
+                return PictureScan.Unreadable
+            }
         } catch (e: IOException) { // missing, not an image, or a format the decoder doesn't know
             Timber.w(e, "Couldn't decode the picked picture")
             return PictureScan.Unreadable
@@ -79,7 +89,33 @@ class ZxingCppPictureReader(
             }
         }
     }
+
+    /**
+     * The decoded picture, or `null` when it takes longer than [decodeTimeout] (#79). Opening it can wait on the network:
+     * the photo picker also lists cloud photos, downloaded when opened. A provider's download can't be cancelled, so
+     * the decode runs outside the caller's job and the caller stops waiting for it; a picture that arrives after the
+     * timeout, or after the caller was cancelled, is recycled and not read.
+     */
+    private suspend fun decodeInTime(uri: Uri): Bitmap? {
+        val decoded = CompletableDeferred<Bitmap>()
+        decodeScope.launch {
+            runCatching { decode(uri) }.fold(
+                onSuccess = { if (!decoded.complete(it)) it.recycle() },
+                onFailure = { decoded.completeExceptionally(it) },
+            )
+        }
+        return try {
+            withTimeoutOrNull(decodeTimeout) { decoded.await() }
+        } finally {
+            decoded.cancel() // nothing once it has completed; a picture completing in the same instant is left to the GC
+        }
+    }
+
+    private val decodeScope = CoroutineScope(SupervisorJob() + decodeContext)
 }
+
+/** How long opening a picked picture may take before it is reported as unreadable (#79): a cloud photo downloads. */
+internal val PICTURE_DECODE_TIMEOUT = 30.seconds
 
 /** zxing-cpp on a bitmap. Not unit-tested: the native library doesn't run on the JVM (wiki: integrations/zxing-cpp). */
 class ZxingCppBitmapReader : BitmapReader {

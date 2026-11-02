@@ -59,10 +59,17 @@ Code: `app/src/main/java/com/bdaniel/loyscan/ui/scanner/ZxingCppFrameReader.kt` 
   opened) and reads on `Dispatchers.Default`, recycles the bitmap, and turns any failure to open or decode the
   picture (I/O, a revoked grant, any provider exception), a reader exception or a missing native library into
   `PictureScan.Unreadable`; a cancellation (the screen left mid-read) is rethrown, since `CancellationException` is
-  an `IllegalStateException` and the broad catch would otherwise swallow it. A slow cloud download has no timeout:
-  "Enter manually" stays usable meanwhile. Tests: `ZxingCppPictureReaderTest` (with the decoder and the native reader replaced;
+  an `IllegalStateException` and the broad catch would otherwise swallow it. **Opening times out** after
+  `PICTURE_DECODE_TIMEOUT` (30 s) as `Unreadable` (#79): a cloud photo on a slow or missing network would otherwise
+  keep the button on "Reading the picture…" until the download ends. A provider's download can't be cancelled, so
+  the decode runs in the reader's own scope, outside the caller's job (`decodeInTime`), and the caller stops waiting
+  for it at the timeout or when it is cancelled; a picture that arrives later is recycled and never read. Tests:
+  `ZxingCppPictureReaderTest` (with the decoder and the native reader replaced;
   Robolectric's `ImageDecoder` can't decode a picture: its legacy graphics mode has no decoder, and its native mode
-  doesn't run on Windows; `toReadableConfig` and the target size are tested directly).
+  doesn't run on Windows; `toReadableConfig` and the target size are tested directly). The decoder is a `suspend`
+  lambda, so a test holds a "download" open with a `CompletableDeferred` on the test scheduler and the timeout runs
+  in virtual time; a test that decodes on a real thread uses `runBlocking`, since under `runTest` virtual time jumps
+  to the timeout as soon as the test thread is idle, before the other thread has decoded.
 - **Dropped results are logged** (`firstScannedBarcode`, `Timber.d` "Dropped a … result", format only, never the
   content). Test: `ZxingCppResultsTest`.
 - Options: `tryHarder`, `tryRotate` (a card held sideways), `tryInvert` (light bars on a dark card), one symbol per
