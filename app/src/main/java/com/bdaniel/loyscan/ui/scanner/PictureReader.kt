@@ -147,17 +147,27 @@ internal fun decodePicture(
     uri: Uri,
     cancel: CancellationSignal,
     maxPixels: Long = MAX_PICTURE_PIXELS,
-): Bitmap = ImageDecoder.decodeBitmap(
-    // Opened with the signal, so a cloud provider can stop its download when the read is abandoned (review of #79).
-    ImageDecoder.createSource(
-        Callable { resolver.openAssetFileDescriptor(uri, "r", cancel) ?: throw FileNotFoundException("No file for $uri") },
-    ),
-) { decoder, info, _ ->
+): Bitmap {
+    val decodeSoftware = ImageDecoder.OnHeaderDecodedListener { decoder, info, _ ->
         decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
         pictureTargetSize(info.size.width, info.size.height, maxPixels)?.let { (width, height) ->
             decoder.setTargetSize(width, height)
         }
-    }.toReadableConfig()
+    }
+    // Opened as ImageDecoder's own content source opens it, plus the signal, so a cloud provider can stop its download
+    // when the read is abandoned (review of #79).
+    val withSignal = Callable {
+        resolver.openTypedAssetFileDescriptor(uri, "image/*", null, cancel)
+            ?: throw FileNotFoundException("No picture for $uri")
+    }
+    val bitmap = try {
+        ImageDecoder.decodeBitmap(ImageDecoder.createSource(withSignal), decodeSoftware)
+    } catch (e: FileNotFoundException) {
+        // A provider that only streams the picture: ImageDecoder's content source falls back to a stream, without a signal.
+        ImageDecoder.decodeBitmap(ImageDecoder.createSource(resolver, uri), decodeSoftware)
+    }
+    return bitmap.toReadableConfig()
+}
 
 /** This bitmap, or for any other config (a wide-gamut picture decodes as RGBA_F16) an ARGB_8888 copy; the original is recycled. */
 internal fun Bitmap.toReadableConfig(): Bitmap {

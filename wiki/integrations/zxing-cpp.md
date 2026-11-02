@@ -63,10 +63,12 @@ Code: `app/src/main/java/com/bdaniel/loyscan/ui/scanner/ZxingCppFrameReader.kt` 
   `PICTURE_DECODE_TIMEOUT` (30 s) as `Unreadable` (#79): a cloud photo on a slow or missing network would otherwise
   keep the button on "Reading the picture…" until the download ends. The decode blocks inside the provider, which a
   coroutine can't interrupt, so it runs in the reader's own scope, outside the caller's job (`decodeInTime`), and the
-  caller stops waiting for it at the timeout or when it is cancelled. `decodePicture` opens the file with
-  `openAssetFileDescriptor(uri, "r", signal)` through `ImageDecoder.createSource(Callable)`, and the signal is
-  cancelled when the read is abandoned, so a cloud provider can stop its download (review of #79; whether the
-  picker's cloud provider honours it is not checked on a device). A picture that still arrives later is recycled
+  caller stops waiting for it at the timeout or when it is cancelled. `decodePicture` opens the file as
+  `ImageDecoder`'s own content source does, `openTypedAssetFileDescriptor(uri, "image/*", null, signal)`, but through
+  `ImageDecoder.createSource(Callable)` so it can pass a `CancellationSignal`, which is cancelled when the read is
+  abandoned: a cloud provider can stop its download (review of #79; whether the picker's cloud provider honours it
+  is not checked on a device). A provider that has no file for it (`FileNotFoundException`) is read through
+  `createSource(resolver, uri)`, whose stream fallback has no signal. A picture that still arrives later is recycled
   and never read. Tests:
   `ZxingCppPictureReaderTest` (with the decoder and the native reader replaced;
   Robolectric's `ImageDecoder` can't decode a picture: its legacy graphics mode has no decoder, and its native mode
