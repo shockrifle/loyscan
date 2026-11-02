@@ -95,9 +95,17 @@ why it has no logos, and why it is loaded this way: [[2026-10-13-curated-store-c
   brand green; the MOL red it had was a guess), Shell ClubSmart `#FBCE07` (in shell.hu's code). IKEA Family's
   `#0058A3` wasn't found in ikea.com's stylesheets and stays unconfirmed.
 - **What the retailers' apps show (2026-11-02):** Rossmann's app shows the plastic card's EAN-13, IKEA's a QR code
-  holding the 19-digit number, as LoyScan draws them. dm's app shows a QR code holding the card's EAN-13 number, then
-  `1000` and a long token that changes how the code reads; LoyScan can't make the token, so it keeps drawing the plastic
-  card's EAN-13 (another app's catalogue claimed a 24-digit Code 128, which the app doesn't show).
+  holding the 19-digit number, as LoyScan draws them. dm is the exception (see below).
+- **dm's app shows a sealed QR, not the plastic card's barcode.** The QR holds the active-beauty EAN-13 number, then
+  `1000`, then an 80-byte lowercase-hex token (177 characters total, decoded from one screenshot, #31). The token has
+  the shape of a cryptographic seal: 80 random-looking bytes that only dm can verify, almost certainly proving the
+  code came from the signed-in app (so app-only perks — activated coupons, the digital receipt — can't be claimed from
+  a bare card number). It is a **fixed signature, not a rotating code**: it was unchanged after an hour and after
+  activating coupons (2026-11-02). LoyScan draws the plastic card's EAN-13 instead, which dm tills still read for
+  points and the card discount; it does **not** reproduce the token (that would mean forging dm's app credential —
+  declined, and fragile if dm rotates the key). The gap is app-only coupons, which need dm's own app; the first
+  catalogue's claim of a 24-digit Code 128 is wrong (the app shows no such barcode). Not till-tested: whether the
+  EAN-13 alone earns points and the card discount.
 - **SuperShop is drawn as a QR code** (since 2026-10-30): SuperShop's own app shows the 16-digit number as a QR code,
   and its old chip cards have no barcode.
 - **Tesco's barcode leaves out the first six printed digits.** The Clubcard prints 18 digits starting `634009`, with a
