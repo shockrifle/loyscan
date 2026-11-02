@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-02 · SuperShop's rule verifies Luhn (five cards pass) and also allows digital cards' `20170001` start · features/store-catalogue · #31
 - 2026-10-30 · Lidl Plus added to the frequently-added pick (project owner's choice) · features/store-catalogue · #6
 - 2026-10-30 · seven stores found on real cards added (Brendon, KiK, Lidl Plus, Líra, Möbelix, Ofotért without a rule, Unix Autó with its programme unconfirmed); GS1 tech-debt Resolved SHA corrected to 365a52c · features/store-catalogue, tech-debt/gs1-128-drawn-as-code-128 · #44
 - 2026-10-30 · GS1-128 tech debt resolved: Coop stays plain Code 128 on the evidence of Coop's own app, accepted in place of a till test · tech-debt/gs1-128-drawn-as-code-128, tech-debt/_index, features/store-catalogue · #33

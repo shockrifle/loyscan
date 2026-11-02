@@ -137,6 +137,23 @@ class ShippedCatalogueTest {
         assertThat(superShop.cardNumberRule!!.format).isEqualTo(BarcodeFormat.QR_CODE)
     }
 
+    /** Two SuperShop cards pass Luhn (#31, 2026-11-02), so a mistyped digit is caught. */
+    @Test
+    fun superShop_verifiesALuhnCheckDigit() {
+        val rule = shipped.single { it.id == "hu-supershop" }.cardNumberRule
+
+        assertThat(CardNumberEngine.validate("2000010112345679", rule))
+            .isEqualTo(Validation.Invalid("2000010112345679", setOf(Validation.Error.BAD_CHECK_DIGIT)))
+    }
+
+    /** A digital SuperShop card starts `20170001`, not the `20000101` the FAQ names for plastic cards (#31). */
+    @Test
+    fun aDigitalSuperShopCard_isValid() {
+        val rule = shipped.single { it.id == "hu-supershop" }.cardNumberRule
+
+        assertThat(CardNumberEngine.validate("2017000112345670", rule)).isEqualTo(Validation.Valid("2017000112345670"))
+    }
+
     /** Auchan's and Decathlon's EAN-13 numbers both start `209`; a scan of one isn't offered as the other (#52). */
     @Test
     fun anAuchanScan_isNotOfferedAsDecathlon() {

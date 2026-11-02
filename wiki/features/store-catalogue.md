@@ -68,8 +68,9 @@ why it has no logos, and why it is loaded this way: [[2026-10-13-curated-store-c
   2026-10-20 Tesco `634009`, and since 2026-10-30 Auchan `2097`, Decathlon `2090`/`2091` (it was `209`, which
   also read Auchan's `2097…`), Douglas `6008`, Libri `202`/`204` (`202` on a card, `204` on a number stored in another
   app), MOL Move `6369`, mömax `312`, Praktiker `360`, Shell ClubSmart `7004` (a card showed `700434`, the first
-  catalogue said `700442`) and SuperShop `20000101` (from the SuperShop FAQ,
-  [supershop.hu/ugyfelszolgalat](https://supershop.hu/ugyfelszolgalat); the first catalogue's `5540` was wrong). One
+  catalogue said `700442`) and SuperShop `20000101` or `20170001` (the first from the SuperShop FAQ,
+  [supershop.hu/ugyfelszolgalat](https://supershop.hu/ugyfelszolgalat), the second from a digital card; the first
+  catalogue's `5540` was wrong). One
   card per store, so a rule requires the first three or four digits seen, or the issuer prefix where the number looks
   like an ISO card number. Every rule except Coop's (whose barcode starts with `90`) now requires a start, so no
   rule reads another store's scan (`ShippedCatalogueTest.storesWithConfirmedLeadingDigits_rejectOtherStoresCards`,
@@ -77,8 +78,8 @@ why it has no logos, and why it is loaded this way: [[2026-10-13-curated-store-c
   `9980`/`9981`, dm `90`, Rossmann `2`) were left out until a card shows them. A card from a number range not seen
   yet is flagged when typed; "Save anyway" still saves it.
 - **ISO card numbers carry a Luhn check digit.** Coop, Douglas, IKEA Family, MOL Move, Shell ClubSmart and Tesco print
-  numbers that start with an issuer prefix (`6…`, `7…`) and pass Luhn, so their rules verify it. SuperShop's card
-  passes Luhn too, but the FAQ doesn't say it has one, so its rule doesn't.
+  numbers that start with an issuer prefix (`6…`, `7…`) and pass Luhn, so their rules verify it. SuperShop's rule
+  verifies Luhn too since 2026-11-02: the FAQ doesn't mention a check digit, but five different cards pass it.
 - **The stores added from real cards (#44, 2026-10-30)** each come from one card, and require the start seen on it:
   Brendon EAN-8 `167` (GTIN check), KiK QR 14 digits `985`, Lidl Plus QR 17 digits `7736`, Möbelix ITF 10 digits
   `112` (apart from mömax's `312`), Unix Autó Code 39 `H` + 6 digits. Líra prints a 7-digit serial and its EAN-13
