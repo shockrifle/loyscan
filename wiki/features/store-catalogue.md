@@ -50,7 +50,7 @@ why it has no logos, and why it is loaded this way: [[2026-10-13-curated-store-c
   and drugstores): Auchan, Coop, dm, Lidl Plus (added once it shipped with #44), Penny, Rossmann, Tesco. Pinned by
   `ShippedCatalogueTest.theFrequentlyAddedHungarianStores_areTheEditorialPick`
   ([[2026-10-30-frequently-added-stores]]).
-- **23 Hungarian stores, 21 with a card-number rule. Some number facts are still provisional.** 16 shipped on
+- **23 Hungarian stores, 22 with a card-number rule. Some number facts are still provisional.** 16 shipped on
   2026-10-13; seven found on real cards were added on 2026-10-30 (#44): Brendon, KiK (myKiK), Lidl Plus, Líra,
   Möbelix, Ofotért and Unix Autó. The
   retailers' public pages confirm that each programme exists, and most of the colours. The first barcode formats and
@@ -59,8 +59,9 @@ why it has no logos, and why it is loaded this way: [[2026-10-13-curated-store-c
   IKEA Family, mömax, Penny and Rossmann, and added Decathlon's rule. On 2026-10-30 more cards and the retailers'
   own apps (a card's barcode screen counts as the retailer's material) confirmed Auchan, Coop, Douglas, Libri, MOL
   Move, mömax, Praktiker, Shell ClubSmart, SuperShop, Szerencsejáték and a second Tesco card, and added rules for
-  Douglas, Libri and MOL Move. Szerencsejáték has no rule: its virtual card is Code 128, 15 digits starting `400`,
-  but 10-digit plastic cards may also exist. Per-store status, with what each card showed:
+  Douglas, Libri and MOL Move. Szerencsejáték's rule (since 2026-11-02) is Code 128, 15 digits starting
+  `400`: a virtual card showed that, and szerencsejatek.hu's login field for the plastic card number takes exactly
+  15 digits, so the 10-digit numbers the first catalogue listed don't exist. Per-store status, with what each card showed:
   [#31](https://github.com/shockrifle/loyscan/issues/31).
 - **The core is the full printed number.** EAN-13 stores use 13 digits with a `GTIN_MOD10` `VERIFY` check and no
   prefix, because the card prints all 13 digits. Since 2026-10-19 the stores whose leading digits were seen on a real
