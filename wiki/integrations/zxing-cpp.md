@@ -46,6 +46,16 @@ Code: `app/src/main/java/com/bdaniel/loyscan/ui/scanner/ZxingCppFrameReader.kt` 
   GS1-128). Tests: `ZxingCppResultsTest.aGs1Code128Result_isAGs1_128Scan`, `aPlainCode128Result_isNotGs1`,
   `ZxingCppFormatsTest.scannedBarcode_code128MarkedGs1_isGs1_128`, `scannedBarcode_dataMatrixAndQrMarkedGs1_areTheirGs1Formats`. Checked on a device (2026-10-20): a GS1-128 barcode reads as Code 128 marked GS1, a
   plain Code 128 unmarked, DataBar marked (shown in the interim dialog).
+- **Reading a picture** (#76, `ui/scanner/PictureReader.kt`). `read(Bitmap)` takes the same `ZXING_CPP_OPTIONS` and
+  goes through the same `firstScannedBarcode`, so a picture's scan is exactly a camera scan (content, format, GS1
+  mark). The JNI side locks the bitmap's pixels, so a hardware bitmap can't be read, and the upstream Android
+  wrapper takes only 8-bit RGBA and alpha bitmaps (not verified against 3.1.1's native source, which the sources jar
+  doesn't include, nor on a device). So `decodePicture` decodes with `ImageDecoder.ALLOCATOR_SOFTWARE`, copies anything that
+  isn't `ARGB_8888` (a wide-gamut picture comes back as `RGBA_F16`), and scales the long side down to
+  `MAX_PICTURE_SIDE` (2048 px). `ZxingCppPictureReader` decodes and reads on `Dispatchers.Default`, recycles the
+  bitmap, and turns a missing or undecodable picture, a revoked grant, a reader exception or a missing native
+  library into `PictureScan.Unreadable`. Tests: `ZxingCppPictureReaderTest` (with the decoder and the native reader
+  replaced; Robolectric's `ImageDecoder` can't decode a picture on Windows).
 - **Dropped results are logged** (`firstScannedBarcode`, `Timber.d` "Dropped a … result", format only, never the
   content). Test: `ZxingCppResultsTest`.
 - Options: `tryHarder`, `tryRotate` (a card held sideways), `tryInvert` (light bars on a dark card), one symbol per
@@ -64,6 +74,7 @@ Code: `app/src/main/java/com/bdaniel/loyscan/ui/scanner/ZxingCppFrameReader.kt` 
   Stacked, Code 39 including a PZN-shaped `-12345678` read as plain Code 39; all from screens or labels, not
   loyalty cards); after every zxing-cpp upgrade or format-list change,
   check each family again. JVM tests cover the mapping, the options, `ScanAnalyzer` (with `FakeImageProxy`) and the camera
-  lifecycle (with a fake `CameraOpener`).
+  lifecycle (with a fake `CameraOpener`). Reading a picture: `ZxingCppBitmapReader` and `decodePicture` are untested
+  on the JVM; `ZxingCppPictureReader` around them is.
 - The AAR's consumer ProGuard rule keeps `zxingcpp.**`, which the JNI side needs. Release builds aren't minified yet
   ([[android-app]]).
