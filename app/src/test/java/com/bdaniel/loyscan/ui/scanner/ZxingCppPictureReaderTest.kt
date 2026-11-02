@@ -6,11 +6,13 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.domain.ScannedBarcode
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.FileNotFoundException
 import java.io.IOException
+import java.util.concurrent.Executors
 
 /**
  * The reading around zxing-cpp, with the decoding and the native reader replaced: zxing-cpp's library doesn't run on
@@ -43,6 +45,13 @@ class ZxingCppPictureReaderTest {
         val scan = reader(read = { null }).read(uri)
 
         assertThat(scan).isEqualTo(PictureScan.NoBarcode)
+    }
+
+    @Test
+    fun aPictureWhoseProviderThrows_isUnreadable() = runTest { // review of #76: any provider failure, not only I/O
+        val scan = reader(decode = { throw IllegalArgumentException("unknown URI") }).read(uri)
+
+        assertThat(scan).isEqualTo(PictureScan.Unreadable)
     }
 
     @Test
@@ -81,7 +90,27 @@ class ZxingCppPictureReaderTest {
     }
 
     @Test
-    fun thePicture_isDecodedAndReadOffTheCallersThread() = runTest {
+    fun thePicture_isDecodedOnTheIoContextAndReadOnTheReadContext() = runTest { // review of #76: a cloud photo downloads
+        val io = Executors.newSingleThreadExecutor { Thread(it, "test-io") }
+        val cpu = Executors.newSingleThreadExecutor { Thread(it, "test-read") }
+        val threads = mutableListOf<String>()
+        try {
+            ZxingCppPictureReader(
+                decode = { threads += Thread.currentThread().name; picture },
+                newReader = { BitmapReader { threads += Thread.currentThread().name; barcode } },
+                decodeContext = io.asCoroutineDispatcher(),
+                readContext = cpu.asCoroutineDispatcher(),
+            ).read(uri)
+        } finally {
+            io.shutdown()
+            cpu.shutdown()
+        }
+
+        assertThat(threads).containsExactly("test-io", "test-read").inOrder()
+    }
+
+    @Test
+    fun byDefault_thePictureIsDecodedAndReadOffTheCallersThread() = runTest {
         val caller = Thread.currentThread()
         val threads = mutableListOf<Thread>()
 
@@ -109,19 +138,38 @@ class ZxingCppPictureReaderTest {
     }
 
     @Test
-    fun aSmallPicture_isDecodedAtItsOwnSize() {
-        assertThat(pictureTargetSize(1080, 2400, maxSide = 2400)).isNull()
-        assertThat(pictureTargetSize(640, 480, maxSide = 2048)).isNull()
+    fun aScreenshot_isDecodedAtItsOwnSize() { // review of #76: resampling a screenshot can lose a dense barcode's modules
+        assertThat(pictureTargetSize(1440, 3200)).isNull() // QHD+ phone
+        assertThat(pictureTargetSize(1344, 2992)).isNull()
+        assertThat(pictureTargetSize(2208, 1840)).isNull() // foldable, inner screen
+        assertThat(pictureTargetSize(2560, 1600)).isNull() // tablet
     }
 
     @Test
-    fun aLargePicture_isScaledDownToTheMaximumOnItsLongSide() {
-        assertThat(pictureTargetSize(4000, 3000, maxSide = 2000)).isEqualTo(2000 to 1500)
-        assertThat(pictureTargetSize(1440, 3200, maxSide = 2048)).isEqualTo(922 to 2048)
+    fun aLargePhoto_isScaledDownToTheMaximumNumberOfPixels() {
+        assertThat(pictureTargetSize(8000, 6000, maxPixels = 12_000_000)).isEqualTo(4000 to 3000)
+        assertThat(pictureTargetSize(6000, 8000, maxPixels = 12_000_000)).isEqualTo(3000 to 4000)
     }
 
     @Test
     fun aVeryThinPicture_keepsAtLeastOnePixel() {
-        assertThat(pictureTargetSize(10_000, 1, maxSide = 2048)).isEqualTo(2048 to 1)
+        assertThat(pictureTargetSize(1_000_000, 1, maxPixels = 1000)).isEqualTo(1000 to 1)
+        assertThat(pictureTargetSize(1, 1_000_000, maxPixels = 1000)).isEqualTo(1 to 1000)
+    }
+
+    @Test
+    fun aWideGamutPicture_isCopiedToArgb8888AndTheOriginalRecycled() { // zxing-cpp reads only 8-bit RGBA bitmaps
+        val wide = Bitmap.createBitmap(4, 2, Bitmap.Config.RGBA_F16)
+
+        val readable = wide.toReadableConfig()
+
+        assertThat(readable.config).isEqualTo(Bitmap.Config.ARGB_8888)
+        assertThat(listOf(readable.width, readable.height)).containsExactly(4, 2).inOrder()
+        assertThat(wide.isRecycled).isTrue()
+    }
+
+    @Test
+    fun anArgb8888Picture_isKeptAsItIs() {
+        assertThat(picture.toReadableConfig()).isSameInstanceAs(picture)
     }
 }

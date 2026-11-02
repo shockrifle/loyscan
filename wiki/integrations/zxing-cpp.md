@@ -50,12 +50,17 @@ Code: `app/src/main/java/com/bdaniel/loyscan/ui/scanner/ZxingCppFrameReader.kt` 
   goes through the same `firstScannedBarcode`, so a picture's scan is exactly a camera scan (content, format, GS1
   mark). The JNI side locks the bitmap's pixels, so a hardware bitmap can't be read, and the upstream Android
   wrapper takes only 8-bit RGBA and alpha bitmaps (not verified against 3.1.1's native source, which the sources jar
-  doesn't include, nor on a device). So `decodePicture` decodes with `ImageDecoder.ALLOCATOR_SOFTWARE`, copies anything that
-  isn't `ARGB_8888` (a wide-gamut picture comes back as `RGBA_F16`), and scales the long side down to
-  `MAX_PICTURE_SIDE` (2048 px). `ZxingCppPictureReader` decodes and reads on `Dispatchers.Default`, recycles the
-  bitmap, and turns a missing or undecodable picture, a revoked grant, a reader exception or a missing native
-  library into `PictureScan.Unreadable`. Tests: `ZxingCppPictureReaderTest` (with the decoder and the native reader
-  replaced; Robolectric's `ImageDecoder` can't decode a picture on Windows).
+  doesn't include, nor on a device). So `decodePicture` decodes with `ImageDecoder.ALLOCATOR_SOFTWARE` and
+  `toReadableConfig` copies anything that isn't `ARGB_8888` (a wide-gamut picture comes back as `RGBA_F16`). A picture
+  over `MAX_PICTURE_PIXELS` (8 MP) is scaled down, keeping its aspect ratio; any phone or tablet screenshot is under
+  it, so a store app's card is read at its own size. A first version capped the long side at 2048 px, which
+  resampled nearly every phone screenshot to about 0.64× and could blur a dense barcode's modules (review of #76).
+  `ZxingCppPictureReader` decodes on `Dispatchers.IO` (the photo picker also lists cloud photos, downloaded when
+  opened) and reads on `Dispatchers.Default`, recycles the bitmap, and turns any failure to open or decode the
+  picture (I/O, a revoked grant, any provider exception), a reader exception or a missing native library into
+  `PictureScan.Unreadable`. Tests: `ZxingCppPictureReaderTest` (with the decoder and the native reader replaced;
+  Robolectric's `ImageDecoder` can't decode a picture: its legacy graphics mode has no decoder, and its native mode
+  doesn't run on Windows; `toReadableConfig` and the target size are tested directly).
 - **Dropped results are logged** (`firstScannedBarcode`, `Timber.d` "Dropped a … result", format only, never the
   content). Test: `ZxingCppResultsTest`.
 - Options: `tryHarder`, `tryRotate` (a card held sideways), `tryInvert` (light bars on a dark card), one symbol per

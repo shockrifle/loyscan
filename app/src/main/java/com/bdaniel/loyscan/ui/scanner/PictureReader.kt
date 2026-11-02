@@ -13,7 +13,8 @@ import timber.log.Timber
 import zxingcpp.BarcodeReader
 import java.io.IOException
 import javax.inject.Inject
-import kotlin.math.roundToInt
+import kotlin.coroutines.CoroutineContext
+import kotlin.math.sqrt
 
 /** What reading a picked picture found. */
 sealed interface PictureScan {
@@ -42,32 +43,37 @@ fun interface BitmapReader {
 class ZxingCppPictureReader(
     private val decode: (Uri) -> Bitmap,
     private val newReader: () -> BitmapReader,
+    private val decodeContext: CoroutineContext = Dispatchers.IO,
+    private val readContext: CoroutineContext = Dispatchers.Default,
 ) : PictureReader {
 
     @Inject
     constructor(@ApplicationContext context: Context) :
         this({ decodePicture(context.contentResolver, it) }, ::ZxingCppBitmapReader)
 
-    override suspend fun read(uri: Uri): PictureScan = withContext(Dispatchers.Default) {
+    override suspend fun read(uri: Uri): PictureScan {
         val bitmap = try {
-            decode(uri)
+            // Opening it can wait on the network: the photo picker also lists cloud photos, downloaded when opened.
+            withContext(decodeContext) { decode(uri) }
         } catch (e: IOException) { // missing, not an image, or a format the decoder doesn't know
             Timber.w(e, "Couldn't decode the picked picture")
-            return@withContext PictureScan.Unreadable
-        } catch (e: SecurityException) { // the picker's grant is gone
+            return PictureScan.Unreadable
+        } catch (e: RuntimeException) { // the grant is gone (SecurityException), or the provider failed some other way
             Timber.w(e, "Couldn't open the picked picture")
-            return@withContext PictureScan.Unreadable
+            return PictureScan.Unreadable
         }
-        try {
-            newReader().read(bitmap)?.let(PictureScan::Found) ?: PictureScan.NoBarcode
-        } catch (e: RuntimeException) {
-            Timber.w(e, "Couldn't read the picked picture")
-            PictureScan.Unreadable
-        } catch (e: UnsatisfiedLinkError) { // zxing-cpp has no native library for this ABI
-            Timber.e(e, "Couldn't load the barcode reader")
-            PictureScan.Unreadable
-        } finally {
-            bitmap.recycle()
+        return withContext(readContext) {
+            try {
+                newReader().read(bitmap)?.let(PictureScan::Found) ?: PictureScan.NoBarcode
+            } catch (e: RuntimeException) {
+                Timber.w(e, "Couldn't read the picked picture")
+                PictureScan.Unreadable
+            } catch (e: UnsatisfiedLinkError) { // zxing-cpp has no native library for this ABI
+                Timber.e(e, "Couldn't load the barcode reader")
+                PictureScan.Unreadable
+            } finally {
+                bitmap.recycle()
+            }
         }
     }
 }
@@ -79,32 +85,45 @@ class ZxingCppBitmapReader : BitmapReader {
     override fun read(bitmap: Bitmap): ScannedBarcode? = firstScannedBarcode(reader.read(bitmap))
 }
 
-/** The long side a picture is decoded at, at most: plenty for a barcode, and a 50 MP photo doesn't fill the memory. */
-internal const val MAX_PICTURE_SIDE = 2048
+/**
+ * The most pixels a picture is decoded at (32 MB as ARGB_8888). Above any phone or tablet screenshot, so a store app's
+ * card is read at its own size: scaling it down could blur a dense barcode's modules. A 50 MP photo is scaled down.
+ */
+internal const val MAX_PICTURE_PIXELS = 8_000_000L
 
 /**
- * Decodes a picture into a software ARGB_8888 bitmap, at most [maxSide] on its long side. zxing-cpp's JNI side can't
- * lock a hardware bitmap's pixels and reads only 8-bit RGBA (or alpha) ones, so a wide-gamut picture decoded as
- * RGBA_F16 is copied. Not unit-tested: Robolectric's `ImageDecoder` can't decode a picture (its legacy graphics mode
- * has no decoder, and its native mode doesn't run on Windows).
+ * Decodes a picture into a software ARGB_8888 bitmap of at most [maxPixels]. zxing-cpp's JNI side can't lock a hardware
+ * bitmap's pixels and reads only 8-bit RGBA (or alpha) ones. Not unit-tested: Robolectric's `ImageDecoder` can't
+ * decode a picture (its legacy graphics mode has no decoder, and its native mode doesn't run on Windows).
  */
-internal fun decodePicture(resolver: ContentResolver, uri: Uri, maxSide: Int = MAX_PICTURE_SIDE): Bitmap {
-    val decoded = ImageDecoder.decodeBitmap(ImageDecoder.createSource(resolver, uri)) { decoder, info, _ ->
+internal fun decodePicture(resolver: ContentResolver, uri: Uri, maxPixels: Long = MAX_PICTURE_PIXELS): Bitmap =
+    ImageDecoder.decodeBitmap(ImageDecoder.createSource(resolver, uri)) { decoder, info, _ ->
         decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
-        pictureTargetSize(info.size.width, info.size.height, maxSide)?.let { (width, height) ->
+        pictureTargetSize(info.size.width, info.size.height, maxPixels)?.let { (width, height) ->
             decoder.setTargetSize(width, height)
         }
-    }
-    if (decoded.config == Bitmap.Config.ARGB_8888) return decoded
-    val copy = decoded.copy(Bitmap.Config.ARGB_8888, false)
-    decoded.recycle()
-    return copy ?: throw IOException("Couldn't convert a ${decoded.config} picture")
+    }.toReadableConfig()
+
+/** This bitmap, or for any other config (a wide-gamut picture decodes as RGBA_F16) an ARGB_8888 copy; the original is recycled. */
+internal fun Bitmap.toReadableConfig(): Bitmap {
+    if (config == Bitmap.Config.ARGB_8888) return this
+    val original = config
+    val copy = copy(Bitmap.Config.ARGB_8888, false)
+    recycle()
+    return copy ?: throw IOException("Couldn't convert a $original picture")
 }
 
-/** The size to decode a [width]×[height] picture at so its long side is at most [maxSide]; `null` when it already fits. */
-internal fun pictureTargetSize(width: Int, height: Int, maxSide: Int): Pair<Int, Int>? {
-    val longSide = maxOf(width, height)
-    if (longSide <= maxSide) return null
-    val scale = maxSide.toDouble() / longSide
-    return (width * scale).roundToInt().coerceAtLeast(1) to (height * scale).roundToInt().coerceAtLeast(1)
+/** The size to decode a [width]×[height] picture at so it has at most [maxPixels]; `null` when it already fits. */
+internal fun pictureTargetSize(width: Int, height: Int, maxPixels: Long = MAX_PICTURE_PIXELS): Pair<Int, Int>? {
+    val pixels = width.toLong() * height
+    if (pixels <= maxPixels) return null
+    val scale = sqrt(maxPixels.toDouble() / pixels)
+    val targetWidth = (width * scale).toInt().coerceAtLeast(1)
+    val targetHeight = (height * scale).toInt().coerceAtLeast(1)
+    // A short side kept at 1 px would leave the long one over the limit.
+    return when {
+        targetWidth.toLong() * targetHeight <= maxPixels -> targetWidth to targetHeight
+        targetWidth > targetHeight -> (maxPixels / targetHeight).toInt() to targetHeight
+        else -> targetWidth to (maxPixels / targetWidth).toInt()
+    }
 }
