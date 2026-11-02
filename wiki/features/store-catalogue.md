@@ -90,6 +90,9 @@ why it has no logos, and why it is loaded this way: [[2026-10-13-curated-store-c
   Lidl, Möbelix's `theme-color`, Ofotért), or from the logo where the site has no brand colour of its own (Unix Autó's
   SVG, Líra's PNG). **Unix Autó's programme (Autókártya) isn't mentioned on unixauto.hu or in its app**; it was added
   on the project owner's decision because the card exists.
+- **Colours checked on 2026-11-02:** Coop `#DD042B` (coop.hu's `--color-coop-red`), MOL Move `#066D52` (molmove.hu's
+  brand green; the MOL red it had was a guess), Shell ClubSmart `#FBCE07` (in shell.hu's code). IKEA Family's
+  `#0058A3` wasn't found in ikea.com's stylesheets and stays unconfirmed.
 - **SuperShop is drawn as a QR code** (since 2026-10-30): SuperShop's own app shows the 16-digit number as a QR code,
   and its old chip cards have no barcode.
 - **Tesco's barcode leaves out the first six printed digits.** The Clubcard prints 18 digits starting `634009`, with a
