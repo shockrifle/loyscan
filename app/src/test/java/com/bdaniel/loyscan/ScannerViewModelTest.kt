@@ -219,7 +219,7 @@ class ScannerViewModelTest {
         val viewModel = ScannerViewModel(
             hintDelay = 8.seconds,
             ZxingCppPictureReader(
-                decode = {
+                decode = { _, _ ->
                     if (decodes++ == 0) firstDownload.await()
                     Bitmap.createBitmap(4, 4, Bitmap.Config.ARGB_8888)
                 },

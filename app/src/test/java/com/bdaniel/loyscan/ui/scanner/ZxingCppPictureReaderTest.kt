@@ -2,12 +2,14 @@ package com.bdaniel.loyscan.ui.scanner
 
 import android.graphics.Bitmap
 import android.net.Uri
+import android.os.CancellationSignal
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.domain.ScannedBarcode
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -39,7 +41,7 @@ class ZxingCppPictureReaderTest {
     private val barcode = ScannedBarcode("5901234123457", BarcodeFormat.EAN_13)
 
     private fun TestScope.reader(
-        decode: suspend (Uri) -> Bitmap = { picture },
+        decode: suspend (Uri, CancellationSignal) -> Bitmap = { _, _ -> picture },
         read: BitmapReader = BitmapReader { barcode },
         decodeTimeout: Duration = 30.seconds,
     ) = ZxingCppPictureReader(
@@ -53,7 +55,7 @@ class ZxingCppPictureReaderTest {
     fun aPictureWithABarcode_isFound() = runTest {
         val decoded = mutableListOf<Uri>()
 
-        val scan = reader(decode = { decoded += it; picture }).read(uri)
+        val scan = reader(decode = { uri, _ -> decoded += uri; picture }).read(uri)
 
         assertThat(scan).isEqualTo(PictureScan.Found(barcode))
         assertThat(decoded).containsExactly(uri)
@@ -68,7 +70,7 @@ class ZxingCppPictureReaderTest {
 
     @Test
     fun aPictureWhoseProviderThrows_isUnreadable() = runTest { // review of #76: any provider failure, not only I/O
-        val scan = reader(decode = { throw IllegalArgumentException("unknown URI") }).read(uri)
+        val scan = reader(decode = { _, _ -> throw IllegalArgumentException("unknown URI") }).read(uri)
 
         assertThat(scan).isEqualTo(PictureScan.Unreadable)
     }
@@ -77,7 +79,7 @@ class ZxingCppPictureReaderTest {
     fun leavingWhileThePictureIsDecoded_cancelsTheRead() = runTest { // review of #76: not swallowed as Unreadable
         val download = CompletableDeferred<Unit>()
         var scan: PictureScan? = null
-        val job = launch { scan = reader(decode = { download.await(); picture }).read(uri) }
+        val job = launch { scan = reader(decode = { _, _ -> download.await(); picture }).read(uri) }
         runCurrent()
 
         job.cancel()
@@ -93,7 +95,7 @@ class ZxingCppPictureReaderTest {
     fun aPictureWhoseDecodeDoesNotFinishInTime_isUnreadable() = runTest { // #79: a cloud photo on a slow network
         val download = CompletableDeferred<Unit>()
 
-        val scan = reader(decode = { download.await(); picture }, decodeTimeout = 30.seconds).read(uri)
+        val scan = reader(decode = { _, _ -> download.await(); picture }, decodeTimeout = 30.seconds).read(uri)
 
         assertThat(scan).isEqualTo(PictureScan.Unreadable)
         assertThat(currentTime).isEqualTo(30.seconds.inWholeMilliseconds)
@@ -103,7 +105,7 @@ class ZxingCppPictureReaderTest {
     fun aDecodeFinishingAfterTheTimeout_isNotReadAndItsPictureIsRecycled() = runTest { // #79
         val download = CompletableDeferred<Unit>()
         var reads = 0
-        val scan = reader(decode = { download.await(); picture }, read = { reads++; barcode }).read(uri)
+        val scan = reader(decode = { _, _ -> download.await(); picture }, read = { reads++; barcode }).read(uri)
 
         download.complete(Unit)
         runCurrent()
@@ -114,22 +116,52 @@ class ZxingCppPictureReaderTest {
     }
 
     @Test
+    fun aDecodeThatTimesOut_hasItsDownloadCancelled() = runTest { // review of #79: don't leave it using the network
+        var signal: CancellationSignal? = null
+
+        reader(decode = { _, cancel -> signal = cancel; awaitCancellation() }).read(uri)
+
+        assertThat(signal!!.isCanceled).isTrue()
+    }
+
+    @Test
+    fun leavingWhileThePictureIsDecoded_cancelsItsDownload() = runTest {
+        var signal: CancellationSignal? = null
+        val job = launch { reader(decode = { _, cancel -> signal = cancel; awaitCancellation() }).read(uri) }
+        runCurrent()
+
+        job.cancel()
+        job.join()
+
+        assertThat(signal!!.isCanceled).isTrue()
+    }
+
+    @Test
+    fun aDecodeThatFinishesInTime_isNotCancelled() = runTest {
+        var signal: CancellationSignal? = null
+
+        reader(decode = { _, cancel -> signal = cancel; picture }).read(uri)
+
+        assertThat(signal!!.isCanceled).isFalse()
+    }
+
+    @Test
     fun aPictureThatCannotBeOpened_isUnreadable() = runTest {
-        val scan = reader(decode = { throw FileNotFoundException("gone") }).read(uri)
+        val scan = reader(decode = { _, _ -> throw FileNotFoundException("gone") }).read(uri)
 
         assertThat(scan).isEqualTo(PictureScan.Unreadable)
     }
 
     @Test
     fun aPictureThatCannotBeDecoded_isUnreadable() = runTest { // ImageDecoder.DecodeException is an IOException
-        val scan = reader(decode = { throw IOException("not an image") }).read(uri)
+        val scan = reader(decode = { _, _ -> throw IOException("not an image") }).read(uri)
 
         assertThat(scan).isEqualTo(PictureScan.Unreadable)
     }
 
     @Test
     fun aPictureWeMayNotOpen_isUnreadable() = runTest { // e.g. the picker's grant has expired
-        val scan = reader(decode = { throw SecurityException("no grant") }).read(uri)
+        val scan = reader(decode = { _, _ -> throw SecurityException("no grant") }).read(uri)
 
         assertThat(scan).isEqualTo(PictureScan.Unreadable)
     }
@@ -144,7 +176,7 @@ class ZxingCppPictureReaderTest {
     @Test
     fun aReaderWithoutItsNativeLibrary_isUnreadable() = runTest {
         val scan = ZxingCppPictureReader(
-            { picture },
+            { _, _ -> picture },
             newReader = { throw UnsatisfiedLinkError("no zxingcpp") },
             decodeContext = StandardTestDispatcher(testScheduler),
         ).read(uri)
@@ -159,7 +191,7 @@ class ZxingCppPictureReaderTest {
         val threads = mutableListOf<String>()
         try {
             ZxingCppPictureReader(
-                decode = { threads += threadName(); picture },
+                decode = { _, _ -> threads += threadName(); picture },
                 newReader = { BitmapReader { threads += threadName(); barcode } },
                 decodeContext = io.asCoroutineDispatcher(),
                 readContext = cpu.asCoroutineDispatcher(),
@@ -178,7 +210,7 @@ class ZxingCppPictureReaderTest {
         val threads = mutableListOf<Thread>()
 
         ZxingCppPictureReader(
-            decode = { threads += Thread.currentThread(); picture },
+            decode = { _, _ -> threads += Thread.currentThread(); picture },
             newReader = { BitmapReader { threads += Thread.currentThread(); barcode } },
         ).read(uri)
 

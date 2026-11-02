@@ -5,6 +5,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.net.Uri
+import android.os.CancellationSignal
 import com.bdaniel.loyscan.domain.ScannedBarcode
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellationException
@@ -17,7 +18,9 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
 import zxingcpp.BarcodeReader
+import java.io.FileNotFoundException
 import java.io.IOException
+import java.util.concurrent.Callable
 import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
 import kotlin.math.sqrt
@@ -49,7 +52,7 @@ fun interface BitmapReader {
  * while it is read: never copied, stored or sent anywhere.
  */
 class ZxingCppPictureReader(
-    private val decode: suspend (Uri) -> Bitmap,
+    private val decode: suspend (Uri, CancellationSignal) -> Bitmap,
     private val newReader: () -> BitmapReader,
     private val decodeContext: CoroutineContext = Dispatchers.IO,
     private val readContext: CoroutineContext = Dispatchers.Default,
@@ -58,7 +61,7 @@ class ZxingCppPictureReader(
 
     @Inject
     constructor(@ApplicationContext context: Context) :
-        this({ decodePicture(context.contentResolver, it) }, ::ZxingCppBitmapReader)
+        this({ uri, cancel -> decodePicture(context.contentResolver, uri, cancel) }, ::ZxingCppBitmapReader)
 
     override suspend fun read(uri: Uri): PictureScan {
         val bitmap = try {
@@ -92,14 +95,16 @@ class ZxingCppPictureReader(
 
     /**
      * The decoded picture, or `null` when it takes longer than [decodeTimeout] (#79). Opening it can wait on the network:
-     * the photo picker also lists cloud photos, downloaded when opened. A provider's download can't be cancelled, so
-     * the decode runs outside the caller's job and the caller stops waiting for it; a picture that arrives after the
-     * timeout, or after the caller was cancelled, is recycled and not read.
+     * the photo picker also lists cloud photos, downloaded when opened. The decode blocks in the provider, which a
+     * coroutine can't interrupt, so it runs outside the caller's job and the caller stops waiting for it. The provider
+     * is asked to stop through a [CancellationSignal]; a picture that still arrives after the timeout, or after the
+     * caller was cancelled, is recycled and not read.
      */
     private suspend fun decodeInTime(uri: Uri): Bitmap? {
         val decoded = CompletableDeferred<Bitmap>()
+        val download = CancellationSignal()
         decodeScope.launch {
-            runCatching { decode(uri) }.fold(
+            runCatching { decode(uri, download) }.fold(
                 onSuccess = { if (!decoded.complete(it)) it.recycle() },
                 onFailure = { decoded.completeExceptionally(it) },
             )
@@ -107,7 +112,9 @@ class ZxingCppPictureReader(
         return try {
             withTimeoutOrNull(decodeTimeout) { decoded.await() }
         } finally {
-            decoded.cancel() // nothing once it has completed; a picture completing in the same instant is left to the GC
+            // Nothing once it has completed; a picture completing in the same instant is left to the GC.
+            decoded.cancel()
+            if (decoded.isCancelled) download.cancel() // abandoned (or failed, when cancelling is harmless)
         }
     }
 
@@ -135,8 +142,17 @@ internal const val MAX_PICTURE_PIXELS = 8_000_000L
  * bitmap's pixels and reads only 8-bit RGBA (or alpha) ones. Not unit-tested: Robolectric's `ImageDecoder` can't
  * decode a picture (its legacy graphics mode has no decoder, and its native mode doesn't run on Windows).
  */
-internal fun decodePicture(resolver: ContentResolver, uri: Uri, maxPixels: Long = MAX_PICTURE_PIXELS): Bitmap =
-    ImageDecoder.decodeBitmap(ImageDecoder.createSource(resolver, uri)) { decoder, info, _ ->
+internal fun decodePicture(
+    resolver: ContentResolver,
+    uri: Uri,
+    cancel: CancellationSignal,
+    maxPixels: Long = MAX_PICTURE_PIXELS,
+): Bitmap = ImageDecoder.decodeBitmap(
+    // Opened with the signal, so a cloud provider can stop its download when the read is abandoned (review of #79).
+    ImageDecoder.createSource(
+        Callable { resolver.openAssetFileDescriptor(uri, "r", cancel) ?: throw FileNotFoundException("No file for $uri") },
+    ),
+) { decoder, info, _ ->
         decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
         pictureTargetSize(info.size.width, info.size.height, maxPixels)?.let { (width, height) ->
             decoder.setTargetSize(width, height)
