@@ -68,7 +68,7 @@ Code: `app/src/main/java/com/bdaniel/loyscan/ui/scanner/ZxingCppFrameReader.kt` 
   `ImageDecoder.createSource(Callable)` so it can pass a `CancellationSignal`, which is cancelled when the read is
   abandoned: a cloud provider can stop its download (review of #79; whether the picker's cloud provider honours it
   is not checked on a device). A provider that has no file for it (`FileNotFoundException`) is read through
-  `createSource(resolver, uri)`, whose stream fallback has no signal. A picture that still arrives later is recycled
+  `createSource(resolver, uri)`, whose stream fallback has no signal, unless the read was already abandoned. A picture that still arrives later is recycled
   and never read. Tests:
   `ZxingCppPictureReaderTest` (with the decoder and the native reader replaced;
   Robolectric's `ImageDecoder` can't decode a picture: its legacy graphics mode has no decoder, and its native mode

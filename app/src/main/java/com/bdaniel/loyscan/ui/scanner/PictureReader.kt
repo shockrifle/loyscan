@@ -163,6 +163,7 @@ internal fun decodePicture(
     val bitmap = try {
         ImageDecoder.decodeBitmap(ImageDecoder.createSource(withSignal), decodeSoftware)
     } catch (e: FileNotFoundException) {
+        if (cancel.isCanceled) throw e // abandoned: don't start a second open that can't be cancelled
         // A provider that only streams the picture: ImageDecoder's content source falls back to a stream, without a signal.
         ImageDecoder.decodeBitmap(ImageDecoder.createSource(resolver, uri), decodeSoftware)
     }
