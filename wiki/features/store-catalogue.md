@@ -107,7 +107,8 @@ why it has no logos, and why it is loaded this way: [[2026-10-13-curated-store-c
   EAN-13 instead, which dm tills still read for points and the card discount; it does **not** reproduce the token
   (that would mean forging dm's app credential — declined, and worthless once the token expires or rotates anyway).
   The gap is app-only coupons, which need dm's own app; the first catalogue's claim of a 24-digit Code 128 is wrong
-  (the app shows no such barcode). Not till-tested: whether the EAN-13 alone earns points and the card discount.
+  (the app shows no such barcode). Not till-tested: whether the EAN-13 alone earns points and the card discount, and
+  whether app-activated coupons redeem without the app ([#78](https://github.com/shockrifle/loyscan/issues/78)).
 - **SuperShop is drawn as a QR code** (since 2026-10-30): SuperShop's own app shows the 16-digit number as a QR code,
   and its old chip cards have no barcode.
 - **Tesco's barcode leaves out the first six printed digits.** The Clubcard prints 18 digits starting `634009`, with a
