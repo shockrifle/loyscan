@@ -3,6 +3,8 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-02 · corrected: dm's QR token rotates on logout/login and expires (not a fixed signature as first written); a saved dm QR eventually stops working · features/store-catalogue · #31
+
 - 2026-11-02 · dm QR written up: a fixed 80-byte signature (unchanged after an hour / activating coupons), not reproduced (forging dm's app credential, declined); LoyScan keeps the plastic EAN-13 · features/store-catalogue · #31
 
 - 2026-11-02 · what the dm, IKEA and Rossmann apps show recorded; no catalogue change (dm's app QR carries a token LoyScan can't make) · features/store-catalogue · #31

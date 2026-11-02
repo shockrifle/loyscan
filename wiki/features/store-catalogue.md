@@ -100,12 +100,14 @@ why it has no logos, and why it is loaded this way: [[2026-10-13-curated-store-c
   `1000`, then an 80-byte lowercase-hex token (177 characters total, decoded from one screenshot, #31). The token has
   the shape of a cryptographic seal: 80 random-looking bytes that only dm can verify, almost certainly proving the
   code came from the signed-in app (so app-only perks — activated coupons, the digital receipt — can't be claimed from
-  a bare card number). It is a **fixed signature, not a rotating code**: it was unchanged after an hour and after
-  activating coupons (2026-11-02). LoyScan draws the plastic card's EAN-13 instead, which dm tills still read for
-  points and the card discount; it does **not** reproduce the token (that would mean forging dm's app credential —
-  declined, and fragile if dm rotates the key). The gap is app-only coupons, which need dm's own app; the first
-  catalogue's claim of a 24-digit Code 128 is wrong (the app shows no such barcode). Not till-tested: whether the
-  EAN-13 alone earns points and the card discount.
+  a bare card number). It is a **rotating, expiring code**: it stayed the same over an hour and across coupon
+  activations, but a logout/login issues a new token, and the code carries an expiry (2026-11-02; corrected from an
+  earlier note that called it a fixed signature, which only saw the hour-long window). So a saved copy of the dm QR
+  eventually stops working — another reason LoyScan can't stand in for the app here. LoyScan draws the plastic card's
+  EAN-13 instead, which dm tills still read for points and the card discount; it does **not** reproduce the token
+  (that would mean forging dm's app credential — declined, and worthless once the token expires or rotates anyway).
+  The gap is app-only coupons, which need dm's own app; the first catalogue's claim of a 24-digit Code 128 is wrong
+  (the app shows no such barcode). Not till-tested: whether the EAN-13 alone earns points and the card discount.
 - **SuperShop is drawn as a QR code** (since 2026-10-30): SuperShop's own app shows the 16-digit number as a QR code,
   and its old chip cards have no barcode.
 - **Tesco's barcode leaves out the first six printed digits.** The Clubcard prints 18 digits starting `634009`, with a
