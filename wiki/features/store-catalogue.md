@@ -94,6 +94,10 @@ why it has no logos, and why it is loaded this way: [[2026-10-13-curated-store-c
 - **Colours checked on 2026-11-02:** Coop `#DD042B` (coop.hu's `--color-coop-red`), MOL Move `#066D52` (molmove.hu's
   brand green; the MOL red it had was a guess), Shell ClubSmart `#FBCE07` (in shell.hu's code). IKEA Family's
   `#0058A3` wasn't found in ikea.com's stylesheets and stays unconfirmed.
+- **What the retailers' apps show (2026-11-02):** Rossmann's app shows the plastic card's EAN-13, IKEA's a QR code
+  holding the 19-digit number, as LoyScan draws them. dm's app shows a QR code holding the card's EAN-13 number, then
+  `1000` and a long token that changes how the code reads; LoyScan can't make the token, so it keeps drawing the plastic
+  card's EAN-13 (another app's catalogue claimed a 24-digit Code 128, which the app doesn't show).
 - **SuperShop is drawn as a QR code** (since 2026-10-30): SuperShop's own app shows the 16-digit number as a QR code,
   and its old chip cards have no barcode.
 - **Tesco's barcode leaves out the first six printed digits.** The Clubcard prints 18 digits starting `634009`, with a

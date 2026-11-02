@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-02 · what the dm, IKEA and Rossmann apps show recorded; no catalogue change (dm's app QR carries a token LoyScan can't make) · features/store-catalogue · #31
 - 2026-11-02 · Szerencsejáték rule: Code 128, 15 digits, `400` (szerencsejatek.hu's plastic-card login field takes exactly 15 digits) · features/store-catalogue · #31
 - 2026-11-02 · brand colours from the retailers' sites: Coop `#DD042B`, MOL Move `#066D52`, Shell confirmed, IKEA unconfirmed · features/store-catalogue · #31
 - 2026-11-02 · SuperShop's rule verifies Luhn (five cards pass) and also allows digital cards' `20170001` start · features/store-catalogue · #31
