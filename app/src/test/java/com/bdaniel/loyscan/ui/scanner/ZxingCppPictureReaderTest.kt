@@ -6,12 +6,15 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.domain.ScannedBarcode
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.FileNotFoundException
 import java.io.IOException
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 
 /**
@@ -52,6 +55,23 @@ class ZxingCppPictureReaderTest {
         val scan = reader(decode = { throw IllegalArgumentException("unknown URI") }).read(uri)
 
         assertThat(scan).isEqualTo(PictureScan.Unreadable)
+    }
+
+    @Test
+    fun leavingWhileThePictureIsDecoded_cancelsTheRead() = runTest { // review of #76: not swallowed as Unreadable
+        val decoding = CountDownLatch(1)
+        val release = CountDownLatch(1)
+        var scan: PictureScan? = null
+        val job = launch(Dispatchers.Default) {
+            scan = reader(decode = { decoding.countDown(); release.await(); picture }).read(uri)
+        }
+        decoding.await()
+
+        job.cancel()
+        release.countDown()
+        job.join()
+
+        assertThat(scan).isNull()
     }
 
     @Test

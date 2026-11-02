@@ -58,7 +58,9 @@ Code: `app/src/main/java/com/bdaniel/loyscan/ui/scanner/ZxingCppFrameReader.kt` 
   `ZxingCppPictureReader` decodes on `Dispatchers.IO` (the photo picker also lists cloud photos, downloaded when
   opened) and reads on `Dispatchers.Default`, recycles the bitmap, and turns any failure to open or decode the
   picture (I/O, a revoked grant, any provider exception), a reader exception or a missing native library into
-  `PictureScan.Unreadable`. Tests: `ZxingCppPictureReaderTest` (with the decoder and the native reader replaced;
+  `PictureScan.Unreadable`; a cancellation (the screen left mid-read) is rethrown, since `CancellationException` is
+  an `IllegalStateException` and the broad catch would otherwise swallow it. A slow cloud download has no timeout:
+  "Enter manually" stays usable meanwhile. Tests: `ZxingCppPictureReaderTest` (with the decoder and the native reader replaced;
   Robolectric's `ImageDecoder` can't decode a picture: its legacy graphics mode has no decoder, and its native mode
   doesn't run on Windows; `toReadableConfig` and the target size are tested directly).
 - **Dropped results are logged** (`firstScannedBarcode`, `Timber.d` "Dropped a … result", format only, never the

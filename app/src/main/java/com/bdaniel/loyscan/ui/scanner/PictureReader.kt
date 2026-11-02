@@ -7,6 +7,7 @@ import android.graphics.ImageDecoder
 import android.net.Uri
 import com.bdaniel.loyscan.domain.ScannedBarcode
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -58,6 +59,8 @@ class ZxingCppPictureReader(
         } catch (e: IOException) { // missing, not an image, or a format the decoder doesn't know
             Timber.w(e, "Couldn't decode the picked picture")
             return PictureScan.Unreadable
+        } catch (e: CancellationException) { // the screen was left: an IllegalStateException, but not a failure
+            throw e
         } catch (e: RuntimeException) { // the grant is gone (SecurityException), or the provider failed some other way
             Timber.w(e, "Couldn't open the picked picture")
             return PictureScan.Unreadable
