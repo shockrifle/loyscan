@@ -62,7 +62,8 @@ Tests run on the JVM (`./gradlew testDebugUnitTest`, see [[build-and-run]]); sha
 - **Screens** take the ViewModel and a `*Directions` object as parameters, so a test passes a fake-backed
   ViewModel and lambdas that record navigation (`ListScreenTest`). What Robolectric can't run is a parameter too:
   `ScannerScreen` takes a `CameraPermission` and a `ScannerCamera` composable lambda, which `ScannerScreenTest`
-  replaces with `FakeCameraPermission` and a recording fake ([[barcode-scanner]] → Tests).
+  replaces with `FakeCameraPermission` and a recording fake ([[barcode-scanner]] → Tests). A system picker is a
+  `PicturePicker` parameter, and reading what it returns a `PictureReader` in the ViewModel (`FakePictureReader`).
 - **Device facts behind a seam.** The user's country is a `fun interface UserCountry` (`data/device/UserCountry.kt`), so
   a ViewModel test passes a lambda (`StorePickerViewModel(repository) { "HU" }`) and only `DeviceUserCountry` reads
   the phone, tested on Robolectric's telephony shadow (`DeviceUserCountryTest`).

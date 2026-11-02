@@ -1,9 +1,12 @@
 package com.bdaniel.loyscan
 
+import android.net.Uri
 import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -13,10 +16,14 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.domain.ScannedBarcode
 import com.bdaniel.loyscan.testing.FakeCameraPermission
+import com.bdaniel.loyscan.testing.FakePictureReader
 import com.bdaniel.loyscan.ui.scanner.CameraEvents
 import com.bdaniel.loyscan.ui.scanner.CameraPermission.Status
+import com.bdaniel.loyscan.ui.scanner.PicturePicker
+import com.bdaniel.loyscan.ui.scanner.PictureScan
 import com.bdaniel.loyscan.ui.scanner.ScannerCamera
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.CompletableDeferred
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -38,6 +45,8 @@ class ScannerScreenTest {
         Box(modifier.testTag("camera"))
     }
 
+    private val pictureReader = FakePictureReader()
+
     private val scanned = mutableListOf<ScannedBarcode>()
     private var manualEntries = 0
     private var backs = 0
@@ -47,13 +56,24 @@ class ScannerScreenTest {
         toBack = { backs++ },
     )
 
+    /** The "picked" picture: each pick hands it to the screen's ViewModel, as the photo picker would; `null` cancels. */
+    private var pickedPicture: Uri? = Uri.parse("content://media/picker/0/42")
+    private var picks = 0
+    private lateinit var viewModel: ScannerViewModel
+    private val fakePicker = PicturePicker {
+        picks++
+        viewModel.onPicturePicked(pickedPicture)
+    }
+
     private fun setScreen(permission: FakeCameraPermission, hintDelay: Duration = 8.seconds) {
+        viewModel = ScannerViewModel(hintDelay, pictureReader)
         composeRule.setContent {
             ScannerScreen(
                 directions = directions,
-                viewModel = ScannerViewModel(hintDelay),
+                viewModel = viewModel,
                 permission = permission,
                 camera = fakeCamera,
+                picker = fakePicker,
             )
         }
     }
@@ -227,5 +247,115 @@ class ScannerScreenTest {
         composeRule.onNodeWithText("The camera isn't available", substring = true).assertDoesNotExist()
         composeRule.onNodeWithTag("camera").assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Turn on torch").assertIsDisplayed()
+    }
+
+    @Test
+    fun scanFromImage_isOfferedWithTheCamera() { // #76
+        setScreen(FakeCameraPermission(Status.GRANTED))
+
+        composeRule.onNodeWithText("Scan from image").performClick()
+
+        assertThat(picks).isEqualTo(1)
+    }
+
+    @Test
+    fun scanFromImage_isOfferedWithoutTheCameraPermission() {
+        setScreen(FakeCameraPermission(Status.DENIED_PERMANENTLY))
+
+        composeRule.onNodeWithText("Scan from image").performClick()
+
+        assertThat(picks).isEqualTo(1)
+    }
+
+    @Test
+    fun scanFromImage_isOfferedAfterACameraFailure() {
+        setScreen(FakeCameraPermission(Status.GRANTED))
+        composeRule.runOnIdle { events!!.onFailed() }
+
+        composeRule.onNodeWithText("Scan from image").performClick()
+
+        assertThat(picks).isEqualTo(1)
+    }
+
+    @Test
+    fun scanFromImage_isOfferedWhileTheCameraIsUnavailable() {
+        setScreen(FakeCameraPermission(Status.GRANTED))
+        composeRule.runOnIdle { events!!.onAvailable(false) }
+
+        composeRule.onNodeWithText("Scan from image").performClick()
+
+        assertThat(picks).isEqualTo(1)
+    }
+
+    @Test
+    fun aPictureWithABarcode_isHandedOnAsAScan() {
+        val barcode = ScannedBarcode("5901234123457", BarcodeFormat.EAN_13)
+        pictureReader.result = PictureScan.Found(barcode)
+        setScreen(FakeCameraPermission(Status.GRANTED))
+
+        composeRule.onNodeWithText("Scan from image").performClick()
+
+        composeRule.runOnIdle { assertThat(scanned).containsExactly(barcode) }
+    }
+
+    @Test
+    fun aPictureWithoutABarcode_saysSo_andKeepsTheScannerOpen() {
+        pictureReader.result = PictureScan.NoBarcode
+        setScreen(FakeCameraPermission(Status.GRANTED))
+
+        composeRule.onNodeWithText("Scan from image").performClick()
+
+        composeRule.onNodeWithText("No barcode was found in that picture", substring = true).assertIsDisplayed()
+        composeRule.onNodeWithText("Enter manually").assertIsDisplayed()
+        composeRule.onNodeWithTag("camera").assertExists()
+        composeRule.runOnIdle { assertThat(scanned).isEmpty() }
+    }
+
+    @Test
+    fun aPictureThatCannotBeRead_saysSo() {
+        pictureReader.result = PictureScan.Unreadable
+        setScreen(FakeCameraPermission(Status.DENIED))
+
+        composeRule.onNodeWithText("Scan from image").performClick()
+
+        composeRule.onNodeWithText("That picture couldn't be opened", substring = true).assertIsDisplayed()
+        composeRule.onNodeWithText("Enter manually").assertIsDisplayed()
+    }
+
+    @Test
+    fun cancellingThePicker_leavesTheScannerAsItWas() {
+        pickedPicture = null
+        setScreen(FakeCameraPermission(Status.GRANTED))
+
+        composeRule.onNodeWithText("Scan from image").performClick()
+
+        composeRule.onNodeWithText("Scan from image").assertIsEnabled()
+        composeRule.onNodeWithTag("camera").assertExists()
+        composeRule.runOnIdle {
+            assertThat(pictureReader.reads).isEmpty()
+            assertThat(scanned).isEmpty()
+        }
+    }
+
+    @Test
+    fun whileAPictureIsRead_scanFromImageWaits() {
+        pictureReader.gate = CompletableDeferred()
+        setScreen(FakeCameraPermission(Status.GRANTED))
+
+        composeRule.onNodeWithText("Scan from image").performClick()
+
+        composeRule.onNodeWithText("Reading the picture…").assertIsNotEnabled()
+    }
+
+    @Test
+    fun aPictureReadAfterACameraScan_doesNotNavigateAgain() { // first scan only
+        val first = ScannedBarcode("5901234123457", BarcodeFormat.EAN_13)
+        pictureReader.result = PictureScan.Found(ScannedBarcode("other", BarcodeFormat.QR_CODE))
+        setScreen(FakeCameraPermission(Status.GRANTED))
+        composeRule.runOnIdle { events!!.onScanned(first) }
+
+        composeRule.onNodeWithText("Scan from image").performClick()
+
+        composeRule.runOnIdle { assertThat(scanned).containsExactly(first) }
     }
 }

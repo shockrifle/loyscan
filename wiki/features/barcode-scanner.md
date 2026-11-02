@@ -1,16 +1,17 @@
 # Barcode scanner
 
-A full-screen camera view that reads a card's barcode and hands on the first scan: its content exactly as decoded,
+A full-screen camera view that reads a card's barcode, or reads it from a picked picture, and hands on the first scan: its content exactly as decoded,
 its format, and whether it holds GS1 data (a Code 128, Data Matrix or QR marked GS1 is handed on as `GS1_128`, `GS1_DATA_MATRIX` or
 `GS1_QR_CODE`: [[zxing-cpp]] → Contract). Offline, without Play Services ([[2026-10-16-zxing-cpp-for-scanning]], [[zxing-cpp]]). It is the step
 after the store picker of [[add-card]]; a scan or "Enter manually" replaces it with the card form.
 
 **Entry points** (under `app/src/main/java/com/bdaniel/loyscan/`):
-- `ScannerScreen.kt:46`, `ScannerScreen`; state in `ScannerViewModel.kt`.
+- `ScannerScreen.kt:51`, `ScannerScreen`; state in `ScannerViewModel.kt`.
 - Route `Scanner(storeId)`, `ScannerDirections` and `scannerDirections()` in `Navigation.kt:110-141`; registered in
   `MainActivity.kt:83-85`.
 - `ui/scanner/`: `CameraPermission.kt` (permission state), `CameraScanner.kt` (CameraX, `ScanAnalyzer`),
-  `ZxingCppFrameReader.kt` and `ZxingCppFormats.kt` (decoding).
+  `ZxingCppFrameReader.kt` and `ZxingCppFormats.kt` (decoding), `PicturePicker.kt` and `PictureReader.kt` (reading a
+  picture, #76).
 
 ## Behaviour
 
@@ -47,13 +48,30 @@ after the store picker of [[add-card]]; a scan or "Enter manually" replaces it w
   pause.
 - **Hint.** 8 s after the camera first starts (`ScannerViewModel.HINT_DELAY`), a card says "Card won't scan?" with
   tips. A camera restart (rotation) doesn't reset the timer.
+- **Scan from image** (#76) is always at the bottom, above "Enter manually": with the camera, without the permission,
+  after a camera failure, while the camera is unavailable. It opens the system photo picker for images only
+  (`rememberPicturePicker`, `PickVisualMedia.ImageOnly`; no storage permission, the app gets a read grant for the one
+  picture; where the photo picker isn't available, androidx falls back to the document picker). The picture is read
+  by `ZxingCppPictureReader` off the main thread with the camera's formats and options ([[zxing-cpp]] → Reading a
+  picture), and only held in memory while it is read. A barcode found goes through `ScannerViewModel.onScanned`, the
+  same first-scan-only rule as the camera (`ScannerViewModel.onPicturePicked`, `ScannerViewModel.kt:90`), then to
+  `directions.onScanned` from a `LaunchedEffect` collecting `pictureScans` (`ScannerScreen.kt:66`): the card form
+  opens with its content and format exactly as after a camera scan. No barcode, or a picture that can't be opened,
+  keeps the scanner open with a message in place of the hint; a cancelled picker changes nothing. While a picture is
+  read, the button says "Reading the picture…" and is disabled, so one picture is read at a time. A read in progress
+  isn't kept over process death; the user picks the picture again.
 - **Enter manually** is always at the bottom, with or without the camera.
 
 ## Tests
 
-- `ScannerScreenTest`: the screen with a fake camera (a `ScannerCamera` lambda that records torch and events) and
-  `FakeCameraPermission`. Covers each permission state, the first-scan-only rule, torch, hint, camera failure.
-- `ScannerViewModelTest`: hint timing with virtual time (`ScannerViewModel(hintDelay)`), torch, one scan.
+- `ScannerScreenTest`: the screen with a fake camera (a `ScannerCamera` lambda that records torch and events),
+  `FakeCameraPermission`, a fake `PicturePicker` that hands a URI to the ViewModel, and `FakePictureReader`. Covers
+  each permission state, the first-scan-only rule (also between a camera scan and a picture), torch, hint, camera
+  failure, and "Scan from image" in every camera state with each reading outcome.
+- `ScannerViewModelTest` (Robolectric, for `Uri`): hint timing with virtual time (`ScannerViewModel(hintDelay, …)`),
+  torch, one scan, reading a picture (found, none, unreadable, cancelled, one at a time).
+- `PicturePickerTest`: the real picker over a test `ActivityResultRegistry`: images only, a pick and a cancel.
+- `ZxingCppPictureReaderTest`: see [[zxing-cpp]].
 - `CameraXScannerTest`: the camera lifecycle with a fake `CameraOpener` (open, a frame's barcode reaching
   `onScanned`, an error after opening and its recovery, torch also after a pause, close on leave, failures) and the
   analysis settings (`scannerUseCases`).
@@ -65,8 +83,9 @@ after the store picker of [[add-card]]; a scan or "Enter manually" replaces it w
 - `ZxingCppFormatsTest`, `ZxingCppResultsTest`, `NoPlayServicesTest`: see [[zxing-cpp]].
 - `AddCardDirectionsTest`, `AppNavigationTest.addCard_opensTheStorePicker_pickingAStoreOpensTheScanner_andBackReturnsToThePicker`: navigation.
 
-Not covered by JVM tests: `ProcessCameraOpener` and `ZxingCppFrameReader.read`, which need a camera and the native
-library. Checked on a device (Android 15, 2026-10-19, final build): EAN-13, Code 128, QR, PDF417, GS1 DataBar and
+Not covered by JVM tests: `ProcessCameraOpener`, `ZxingCppFrameReader.read`, `ZxingCppBitmapReader` and
+`decodePicture`, which need a camera, the native library or a real image decoder. Reading a picture is not yet checked
+on a device (#76). Checked on a device (Android 15, 2026-10-19, final build): EAN-13, Code 128, QR, PDF417, GS1 DataBar and
 DataBar Stacked (gs1.org samples on a screen; content `01` + digits, no brackets), Code 39 (also a PZN-shaped one,
 read as plain Code 39); GS1 marking (2026-10-20: a GS1-128 barcode marked GS1, plain Code 128 not); torch after a pause; the permission flow; the hint; "Enter manually"; the list's bottom padding. The first
 device check found DataBar never scanned: [[2026-10-19-zxing-cpp-3-0-databar]].

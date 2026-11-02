@@ -35,7 +35,7 @@ check the number and give the card a label, then save it. The new card opens and
   the store is still created ([[edit-store]], #65). The rest of the flow is the same as for any store; with no
   rule, any number is valid and a scan another store's rule reads gets that store as a hint. The fields survive
   process death.
-- **Scanner → form.** A scan, or "Enter manually", *replaces* the scanner with the form (`popUpTo<Scanner>
+- **Scanner → form.** A scan (from the camera or a picked picture, #76), or "Enter manually", *replaces* the scanner with the form (`popUpTo<Scanner>
   { inclusive = true }`), so back from the form returns to the picker, not to a scanner that has already handed on
   its one scan.
 - **Number field.** A scan fills it with the number the card will show (`LoyaltyCard.displayNumber` of the scan:

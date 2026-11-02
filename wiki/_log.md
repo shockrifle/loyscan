@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-02 · added: "Scan from image" on the scanner (photo picker, picture read like a camera scan, first scan only); picker/reader test seams · features/barcode-scanner, architecture, workflows/tdd · #76
 - 2026-11-02 · added: reading a barcode from a picture with zxing-cpp (software ARGB_8888 bitmap, downscaled, off the main thread) · integrations/zxing-cpp · #76
 - 2026-11-02 · opened #78 (needs-field-check) for the dm till test: does LoyScan's EAN-13 earn points/discount and redeem app coupons · features/store-catalogue · #78
 
