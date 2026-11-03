@@ -55,7 +55,7 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
 
 - `DetailScreenTest`: `aCardWithPhotos_showsThemUnderTheNumber`, `aCardWithOnlyABackPhoto_showsOnlyThat`,
   `aCardWithoutPhotos_showsNone`, `tappingAPhoto_showsItFullScreen_andATapOrBackClosesIt`,
-  `aPhotoWhoseFileIsMissing_showsNoThumbnail_andNoViewer`, `aCardWhosePhotoFilesAreAllMissing_showsNoPhotos` (#87),
+  `aPhotoWhoseFileIsMissing_showsNoThumbnail` (the thumbnail is the viewer's only way in), `aCardWhosePhotoFilesAreAllMissing_showsNoPhotos` (#87),
   `theOpenPhoto_staysOpenWhenThePhoneTurns`. End to end: `AppNavigationTest.aCardsPhoto_isShownOnTheCard`,
   `deletingACardFromTheList_deletesItsPhotoFiles`.
 - `CardFormViewModelTest`: `aPickedFrontPhoto_…`, `editingACard_startsWithItsPhotos_…`, `removingACardsPhoto_…`,
@@ -70,7 +70,7 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   `CardFormScreenTest.editingACardWhosePhotoFileIsMissing_offersToAddThatPhoto`.
 - `ui/CardPhotoTest`: the app's loader maps a `CardPhoto` to its file.
 - `CardPhotoSweepCallbackTest` (on-disk database, closed and reopened), `DatabaseModuleTest.opening_sweepsAnOldPhotoNoCardNames`,
-  `FileCardPhotosTest.deleteUnnamed_…`, `exists_…`; `CardFormViewModelTest.aPickedPhotoWhoseFileIsGone_isNotSaved`.
+  `FileCardPhotosTest.deleteUnnamed_…`, `exists_…` (a name that isn't a photo name is `false`, not a throw, #87); `CardFormViewModelTest.aPickedPhotoWhoseFileIsGone_isNotSaved`.
 - `BackupRulesTest`: cloud backup excludes `card_photos/` on Android 12+ and 10–11; device transfer doesn't.
 - `data/photos/FileCardPhotosTest`: a picked picture is copied under a new name; an unreadable one, one that fails
   partway and a copy cancelled midway (a blocking stream through the `openPicture` lambda) leave no file;

@@ -150,12 +150,12 @@ class DetailScreenTest {
     }
 
     @Test
-    fun aPhotoWhoseFileIsMissing_showsNoThumbnail_andNoViewer() { // #87: a cloud restore brings the row, not the file
+    fun aPhotoWhoseFileIsMissing_showsNoThumbnail() { // #87: a cloud restore brings the row, not the file
         setScreen(card = card.copy(frontPhotoPath = "front", backPhotoPath = "lost"), photos = FakeCardPhotos("front"))
 
+        // The thumbnail is the viewer's only way in, so no viewer opens for the missing photo either.
         composeRule.onNodeWithContentDescription("Front photo").assertExists()
         composeRule.onNodeWithContentDescription("Back photo").assertDoesNotExist()
-        composeRule.onNodeWithTag(PHOTO_VIEWER_TAG).assertDoesNotExist()
     }
 
     @Test

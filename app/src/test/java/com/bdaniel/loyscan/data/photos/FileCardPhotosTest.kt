@@ -129,6 +129,12 @@ class FileCardPhotosTest {
     }
 
     @Test
+    fun exists_ofANameThatIsntAPhotoName_isFalse() = runTest { // #87 review: the card screen and form ask for every stored name
+        assertThat(photos.exists("../loyscan.db")).isFalse()
+        assertThat(photos.exists("")).isFalse()
+    }
+
+    @Test
     fun deleteUnnamed_deletesOnlyOldPhotosNotNamed() {
         val now = Instant.parse("2026-05-05T05:05:05Z")
         fun photo(name: String, age: Duration) =

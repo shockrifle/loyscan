@@ -76,7 +76,9 @@ class FileCardPhotos(
         }
     }
 
-    override suspend fun exists(name: String): Boolean = withContext(ioDispatcher) { file(name).isFile }
+    /** A name that isn't a photo's has no file, rather than throwing: it comes from a row, which a screen shows (#87). */
+    override suspend fun exists(name: String): Boolean =
+        isPhotoName(name) && withContext(ioDispatcher) { file(name).isFile }
 
     /** Outlives any screen: a discard runs to the end even after its caller is gone. */
     private val background = CoroutineScope(SupervisorJob() + ioDispatcher)
@@ -101,7 +103,9 @@ class FileCardPhotos(
 
     /** The file of the photo [name]. A name is a file name only, so it can't reach outside [directory]. */
     fun file(name: String): File {
-        require(name.isNotEmpty() && name == File(name).name && name != "..") { "Not a photo name: $name" }
+        require(isPhotoName(name)) { "Not a photo name: $name" }
         return File(directory, name)
     }
+
+    private fun isPhotoName(name: String) = name.isNotEmpty() && name == File(name).name && name != ".."
 }
