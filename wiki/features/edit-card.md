@@ -37,10 +37,10 @@ number and store of one card. Deleting a card is on [[card-detail]].
   opens in the colour of the store it was saved in (found in review). Adding a card doesn't offer it: Back returns to
   the picker there. Catalogue and custom stores are both listed; "Other card" isn't, so a card can't be moved to a
   store that doesn't exist yet.
-- **Saving writes only what the form edits:** the store, label, number, scanned format, note (#9) and `updatedAt`
-  (now). Room's partial `@Update(entity = LoyaltyCardEntity::class)` with `LoyaltyCardEdit` writes those columns and no
-  others, so `createdAt`, the use count, `lastUsedAt` and the photo paths stay as stored even if they changed after the
-  form loaded the card. A blank label or note is saved as `null`; the note is trimmed.
+- **Saving writes only what the form edits:** the store, label, number, scanned format, note (#9), photos (#10) and
+  `updatedAt` (now). Room's partial `@Update(entity = LoyaltyCardEntity::class)` with `LoyaltyCardEdit` writes those
+  columns and no others, so `createdAt`, the use count and `lastUsedAt` stay as stored even if they changed after the
+  form loaded the card. A photo the edit replaces or removes is deleted ([[card-photos]]). A blank label or note is saved as `null`; the note is trimmed.
 - **After saving**, `CardFormDirections.toCard` opens the card in place of the card and its form
   (`popUpTo<CardList>()`, `Detail.countUse = false`), the same direction as after adding. The new `Detail` route carries
   the store's current colour, which matters when the store was switched. Back returns to the list.
@@ -71,5 +71,4 @@ number and store of one card. Deleting a card is on [[card-detail]].
 
 ## Not implemented
 
-Deleting several cards at once belongs to the list's multi-select (#7), and deleting a card's photo files to photos
-(#10). A custom store's barcode format belongs to the store, so changing it is editing the store (#53).
+Deleting several cards at once belongs to the list's multi-select (#7). A custom store's barcode format belongs to the store, so changing it is editing the store (#53).

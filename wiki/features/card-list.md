@@ -73,8 +73,8 @@ tiles, one per row in `loyalty_cards`, live-updating from Room. Sort, search and
     delete keeps the cards and the selection, the dialog says so, and Delete tries again; a failure is forgotten once
     the selection ends
     (`ListViewModelTest.deletingTheSelection_…`, `aFailedDelete_…`, `ListScreenTest.deletingTheSelection_…`,
-    `AppNavigationTest.selectingCardsOnTheList_andDeletingThem_keepsTheOthers`). Photo files aren't deleted with the
-    cards yet: there are none until #10.
+    `AppNavigationTest.selectingCardsOnTheList_andDeletingThem_keepsTheOthers`). The cards' photo files are deleted
+    with them ([[card-photos]]).
 - The Settings icon in the top bar is a no-op (`ListScreen.kt:134`, `/* TODO */`).
 - The "Add card" floating button → `directions.toAddCard()` → the store picker of [[add-card]]. The grid has 88dp of bottom content
   padding so the button never covers the last row (`ListScreenTest.theLastTile_isNotCoveredByTheAddButtonWhenScrolledToTheEnd`).

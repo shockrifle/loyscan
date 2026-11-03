@@ -1,10 +1,12 @@
 package com.bdaniel.loyscan.data.repository
 
+import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.bdaniel.loyscan.data.local.db.AppDatabase
 import com.bdaniel.loyscan.data.mapper.toDomainModel
+import com.bdaniel.loyscan.data.photos.FileCardPhotos
 import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.testing.aLoyaltyCardEntity
 import com.bdaniel.loyscan.testing.cardId
@@ -15,15 +17,22 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
+import java.io.File
 import java.time.Instant
 
 /** The Room-backed store repository over a real in-memory database: rows come out as domain stores. */
 @RunWith(AndroidJUnit4::class)
 class RoomStoreRepositoryTest {
 
+    @get:Rule
+    val temporaryFolder = TemporaryFolder()
+
     private lateinit var db: AppDatabase
+    private lateinit var photos: FileCardPhotos
     private lateinit var repository: RoomStoreRepository
 
     @Before
@@ -31,7 +40,8 @@ class RoomStoreRepositoryTest {
         db = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), AppDatabase::class.java)
             .allowMainThreadQueries()
             .build()
-        repository = RoomStoreRepository(db.storeDao())
+        photos = FileCardPhotos(temporaryFolder.newFolder("card_photos"), ApplicationProvider.getApplicationContext<Context>().contentResolver)
+        repository = RoomStoreRepository(db.storeDao(), photos)
         db.storeDao().insert(aStoreEntity(id = "first", name = "First Store", aliases = listOf("First")))
         db.storeDao().insert(aStoreEntity(id = "second", name = "Second Store", color = "#112233"))
     }
@@ -118,4 +128,33 @@ class RoomStoreRepositoryTest {
         assertThat(repository.getAll().first().map { it.id }).containsExactly("first", "second")
         assertThat(db.loyaltyCardDao().getAllWithStore().first()).hasSize(1)
     }
+
+    @Test
+    fun delete_deletesThePhotosOfTheStoresCards() = runTest { // #10
+        repository.add(aStore(id = "custom", name = "Custom Store", countryCodes = emptyList(), isCustom = true))
+        db.loyaltyCardDao().insert(aLoyaltyCardEntity(id = cardId(1), storeId = "custom", frontPhotoPath = "front", backPhotoPath = "back"))
+        db.loyaltyCardDao().insert(aLoyaltyCardEntity(id = cardId(2), storeId = "first", frontPhotoPath = "kept"))
+        val front = storedPhoto("front")
+        val back = storedPhoto("back")
+        val kept = storedPhoto("kept")
+
+        repository.delete("custom")
+
+        assertThat(front.exists()).isFalse()
+        assertThat(back.exists()).isFalse()
+        assertThat(kept.exists()).isTrue()
+    }
+
+    @Test
+    fun delete_ofACatalogueStore_keepsItsCardsPhotos() = runTest { // #10: the store and its cards stay
+        db.loyaltyCardDao().insert(aLoyaltyCardEntity(id = cardId(1), storeId = "first", frontPhotoPath = "front"))
+        val front = storedPhoto("front")
+
+        repository.delete("first")
+
+        assertThat(front.exists()).isTrue()
+    }
+
+    /** A photo file as [FileCardPhotos] keeps it, named [name]. */
+    private fun storedPhoto(name: String): File = photos.file(name).apply { writeBytes(byteArrayOf(1)) }
 }

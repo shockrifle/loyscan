@@ -62,7 +62,7 @@ class FakeLoyaltyCardRepository(
         cards.value += card
     }
 
-    /** Like the Room repository: only the store, label, number, scanned format and `updatedAt` change. */
+    /** Like the Room repository: only the store, label, number, scanned format, note, photos and `updatedAt` change. */
     override suspend fun update(card: LoyaltyCard) {
         updateGate?.await()
         updateFailure?.let { throw it }
@@ -74,6 +74,8 @@ class FakeLoyaltyCardRepository(
                 number = card.number,
                 scannedFormat = card.scannedFormat,
                 note = card.note,
+                frontPhotoPath = card.frontPhotoPath,
+                backPhotoPath = card.backPhotoPath,
                 updatedAt = card.updatedAt,
             )
         }

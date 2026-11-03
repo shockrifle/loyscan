@@ -21,6 +21,7 @@ the way they are, what's fragile, and how to work on it.
 - [[card-transition]] — shared-element animation between list and detail
 - [[add-card]] — adding a card: pick the store, scan or type the number, save
 - [[edit-card]] — editing a card's label, number and store; deleting is on [[card-detail]]
+- [[card-photos]] — photos of the physical card, in private storage, deleted with the card
 - [[edit-store]] — editing or deleting a custom store from the store picker
 - [[barcode-scanner]] — reads a card's barcode with the camera (offline, no Play Services)
 - [[store-catalogue]] — curated store list, synced into the database on every open
@@ -37,7 +38,7 @@ the way they are, what's fragile, and how to work on it.
 
 | Folder | What's in it |
 |---|---|
-| [[decisions/_index\|decisions]] | Why the codebase looks the way it does (21 pages) |
+| [[decisions/_index\|decisions]] | Why the codebase looks the way it does (22 pages) |
 | [[bugs/_index\|bugs]] | Postmortems (4 pages) |
 | [[tech-debt/_index\|tech-debt]] | Owed work, open vs resolved (7 pages) |
 | [[hacks/_index\|hacks]] | Short-lived workarounds (3 pages) |

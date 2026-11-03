@@ -34,7 +34,8 @@ Paths are under `app/src/test/java/com/bdaniel/loyscan/`, in the same package as
 | DAO / SQL (`data/local/db/`) | Real Room, `Room.inMemoryDatabaseBuilder(…).allowMainThreadQueries()` | Robolectric | `data/local/db/dao/LoyaltyCardDaoTest` |
 | DB callbacks (catalogue) | The real callback on a real database; an on-disk one, closed and reopened, when the behaviour is about reopening | Robolectric | `data/local/db/CatalogueDatabaseCallbackTest` |
 | The database as the app builds it | `DatabaseModule.provideAppDatabase(context)` on Robolectric's file system; close it and delete `loyscan.db` after | Robolectric | `di/DatabaseModuleTest` |
-| Repository | The real repository over an in-memory database | Robolectric | `data/repository/RoomLoyaltyCardRepositoryTest` |
+| Repository | The real repository over an in-memory database, and a real `FileCardPhotos` over a `TemporaryFolder` | Robolectric | `data/repository/RoomLoyaltyCardRepositoryTest` |
+| Files the app keeps (`data/photos/`) | The real class over a `TemporaryFolder` directory; a picked picture is a `Uri.fromFile`, read through the app's `ContentResolver` | Robolectric | `data/photos/FileCardPhotosTest` |
 | Preferences repository | The real DataStore on a `TemporaryFolder` file; a restart is a second store on the same file after the first one's scope is cancelled. Write each file at most once ([[2026-10-28-datastore-for-user-preferences]]) | default | `data/repository/DataStoreUserPreferencesRepositoryTest` |
 | ViewModel (no route) | Constructed with a fake repository; Turbine on the `StateFlow`; `MainDispatcherRule` | default | `ListViewModelTest` |
 | ViewModel reading a route | Same, with `SavedStateHandle(route = Detail(…))` | Robolectric | `DetailViewModelTest` |

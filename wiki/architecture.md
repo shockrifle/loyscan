@@ -26,6 +26,9 @@ multi-select, #7: one `DELETE … WHERE id IN (:ids)`), and
 `add(card)` (the add-card flow, #6), which maps the domain card to its row with `LoyaltyCard.toEntity()` (`data/mapper/LoyaltyCardMapper.kt`).
 `update` writes only the columns an edit changes, through Room's partial `@Update(entity = …)` with `LoyaltyCardEdit`
 (`LoyaltyCard.toEdit()`), so usage and creation time are never overwritten from a stale copy ([[edit-card]]).
+`update`, `delete`/`deleteAll` and `StoreRepository.delete` also delete the photo files the write drops, after it: the
+DAO's `@Transaction` methods (`…ReturningPhotos`, `updateReturningDroppedPhotos`) return the names ([[card-photos]],
+[[2026-11-03-card-photos-as-private-files]]).
 `StoreRepository` reads every store (`getAll`), adds one (`add(store)`, a custom store, #6; mapped with
 `Store.toEntity()`) and edits or deletes a custom store (`update(store)`, `delete(id)`, #53: `StoreDao.updateCustom` / `deleteCustom`,
 `… AND isCustom = 1`, so a catalogue row is never touched; the cards go by `ON DELETE CASCADE`, [[edit-store]]), an
@@ -44,6 +47,7 @@ terms, with domain→entity mappers. Time comes from an injected `java.time.Cloc
   cards any more ([[seed-data]], #55); `DatabaseModuleTest` checks a new database holds only the catalogue.
 - `PreferencesModule` provides the singleton preferences `DataStore` (file `datastore/user_preferences.preferences_pb`,
   pinned by `PreferencesModuleTest`) behind `UserPreferencesRepository` ([[2026-10-28-datastore-for-user-preferences]]).
+- `CardPhotosModule` provides `FileCardPhotos` over `files/card_photos/`, bound as `CardPhotos` ([[card-photos]]).
 - `ImageLoaderModule` provides a singleton Coil `ImageLoader`. Composables can't `@Inject`, so it is reached
   through a Hilt `@EntryPoint` wrapped in the `hiltImageLoader()` composable (`ui/ImageLoader.kt:10-19`).
   See [[2025-12-12-singleton-image-loader]] and [[coil-image-loading]].
@@ -72,7 +76,8 @@ Tests run on the JVM (`./gradlew testDebugUnitTest`, see [[build-and-run]]); sha
   untested. A permission request is answered by an `ActivityResultRegistry` provided through
   `LocalActivityResultRegistryOwner` (`CameraPermissionTest`).
 - **DAOs and the repository** are tested against `Room.inMemoryDatabaseBuilder` (`LoyaltyCardDaoTest`,
-  `RoomLoyaltyCardRepositoryTest`, `RoomStoreRepositoryTest`). Database callbacks are tested on a real database too: an on-disk one that is
+  `RoomLoyaltyCardRepositoryTest`, `RoomStoreRepositoryTest`), with a real `FileCardPhotos` over a `TemporaryFolder`
+  so a test can check which photo files are left. Database callbacks are tested on a real database too: an on-disk one that is
   closed and reopened for the catalogue loader (`CatalogueDatabaseCallbackTest`).
 - **The wired-up app** (`MainActivity`, Hilt, navigation) runs in `@HiltAndroidTest`s on Robolectric.
   `testing/TemporaryPreferencesModule` swaps `PreferencesModule` for a new preferences file per test, and

@@ -92,7 +92,7 @@ class LoyaltyCardMapperTest {
     }
 
     @Test
-    fun toEdit_copiesTheFieldsAnEditChanges() { // #8
+    fun toEdit_copiesTheFieldsAnEditChanges() { // #8, photos: #10
         val card = withStore.toDomainModel()
 
         assertThat(card.toEdit()).isEqualTo(
@@ -103,6 +103,8 @@ class LoyaltyCardMapperTest {
                 number = card.number,
                 scannedFormat = card.scannedFormat,
                 note = card.note,
+                frontPhotoPath = card.frontPhotoPath,
+                backPhotoPath = card.backPhotoPath,
                 updatedAt = card.updatedAt,
             )
         )

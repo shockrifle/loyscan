@@ -93,8 +93,8 @@ UUID string.
 
 ## Not implemented (as of 2026-10-30)
 
-- Deleting a card's photo files waits for photos (#10); nothing stores photos yet. (Corrected 2026-10-30: this also
-  listed picking another store and deleting several cards, done since in #8 and #7: [[edit-card]], [[card-list]].)
+- (Corrected 2026-11-03: this listed deleting a card's photo files, done since in #10: [[card-photos]]. Corrected
+  2026-10-30: it also listed picking another store and deleting several cards, done since in #8 and #7: [[edit-card]], [[card-list]].)
 
 ## Known issues
 

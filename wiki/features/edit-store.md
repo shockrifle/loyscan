@@ -40,7 +40,7 @@ Catalogue stores have no Edit button and can't be changed or deleted. Issue [#53
   while its delete is under way isn't reported as gone (found in review; `aStoreGoneBeforeItsDeleteReturns_…`). This
   is the same lifecycle as deleting a card ([[card-detail]]): both use the `Deletion` enum
   (`Deletion.kt`). This also removes a store abandoned before its first card ([[2026-10-22-custom-stores]]).
-- Photo files of the deleted cards aren't deleted: no card has photos yet (#10, as for deleting a card, #8).
+- The deleted cards' photo files are deleted too ([[card-photos]]).
 - **Back during a save or delete** (#65): the user stays where Back took them, and the store is still created,
   saved or deleted. `customStoreDirections(entry)` navigates (to the scanner, or back) only while the form's own
   back-stack entry is current, and the writes run in `withContext(NonCancellable)`, as the card form's do

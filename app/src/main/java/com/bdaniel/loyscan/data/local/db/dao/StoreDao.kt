@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import com.bdaniel.loyscan.data.local.db.entity.StoreEntity
 import com.bdaniel.loyscan.domain.BarcodeFormat
@@ -31,6 +32,20 @@ interface StoreDao {
     /** Deletes a custom store (#53); the foreign key deletes its cards. A catalogue store is left alone. */
     @Query("DELETE FROM stores WHERE id = :id AND isCustom = 1")
     suspend fun deleteCustom(id: String)
+
+    /** Deletes a custom store, as [deleteCustom] does, and returns the photo names of the cards that went with it (#10). */
+    @Transaction
+    suspend fun deleteCustomReturningCardPhotos(id: String): List<String> {
+        val photos = cardPhotosOfCustomStore(id)
+        deleteCustom(id)
+        return photos.flatMap { it.names }
+    }
+
+    @Query(
+        "SELECT frontPhotoPath, backPhotoPath FROM loyalty_cards " +
+            "WHERE storeId = :id AND storeId IN (SELECT id FROM stores WHERE isCustom = 1)"
+    )
+    suspend fun cardPhotosOfCustomStore(id: String): List<CardPhotoNames>
 
     @Query("SELECT * FROM stores")
     fun getAll(): Flow<List<StoreEntity>>

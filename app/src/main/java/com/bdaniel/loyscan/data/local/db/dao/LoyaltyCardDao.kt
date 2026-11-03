@@ -21,7 +21,7 @@ data class LoyaltyCardWithStore(
     val store: StoreEntity
 )
 
-/** The columns an edit of a card writes (#8, the note #9); the rest of the row stays as stored. */
+/** The columns an edit of a card writes (#8, the note #9, the photos #10); the rest of the row stays as stored. */
 data class LoyaltyCardEdit(
     val id: String,
     val storeId: String,
@@ -29,8 +29,15 @@ data class LoyaltyCardEdit(
     val number: String,
     val scannedFormat: BarcodeFormat?,
     val note: String?,
+    val frontPhotoPath: String?,
+    val backPhotoPath: String?,
     val updatedAt: Instant,
 )
+
+/** A card's photo names, as stored (#10). */
+data class CardPhotoNames(val frontPhotoPath: String?, val backPhotoPath: String?) {
+    val names: List<String> get() = listOfNotNull(frontPhotoPath, backPhotoPath)
+}
 
 @Dao
 interface LoyaltyCardDao {
@@ -40,12 +47,29 @@ interface LoyaltyCardDao {
     @Update(entity = LoyaltyCardEntity::class)
     suspend fun update(edit: LoyaltyCardEdit)
 
-    @Query("DELETE FROM loyalty_cards WHERE id = :id")
-    suspend fun deleteById(id: String)
+    /** Saves [edit] and returns the names of the photos it replaced or removed, whose files can go (#10). */
+    @Transaction
+    suspend fun updateReturningDroppedPhotos(edit: LoyaltyCardEdit): List<String> {
+        val before = photosOf(setOf(edit.id))
+        update(edit)
+        val kept = setOfNotNull(edit.frontPhotoPath, edit.backPhotoPath)
+        return before.flatMap { it.names }.filterNot { it in kept }
+    }
+
+    @Query("SELECT frontPhotoPath, backPhotoPath FROM loyalty_cards WHERE id IN (:ids)")
+    suspend fun photosOf(ids: Set<String>): List<CardPhotoNames>
 
     // One bound variable per id: SQLite on API 29 allows 999, far more cards than a phone holds.
     @Query("DELETE FROM loyalty_cards WHERE id IN (:ids)")
     suspend fun deleteByIds(ids: Set<String>)
+
+    /** Deletes these cards and returns their photo names, whose files can go (#10). */
+    @Transaction
+    suspend fun deleteReturningPhotos(ids: Set<String>): List<String> {
+        val photos = photosOf(ids)
+        deleteByIds(ids)
+        return photos.flatMap { it.names }
+    }
 
     @Query("SELECT COUNT(*) FROM loyalty_cards WHERE storeId = :storeId")
     fun countForStore(storeId: String): Flow<Int>

@@ -156,6 +156,8 @@ class LoyaltyCardDaoTest {
                 number = "777",
                 scannedFormat = null,
                 note = "PIN hint: birthday",
+                frontPhotoPath = "new-front",
+                backPhotoPath = null,
                 updatedAt = Instant.parse("2026-04-04T00:00:00Z"),
             )
         )
@@ -167,6 +169,8 @@ class LoyaltyCardDaoTest {
                 number = "777",
                 scannedFormat = null,
                 note = "PIN hint: birthday",
+                frontPhotoPath = "new-front",
+                backPhotoPath = null,
                 updatedAt = Instant.parse("2026-04-04T00:00:00Z"),
             )
         )
@@ -174,24 +178,30 @@ class LoyaltyCardDaoTest {
     }
 
     @Test
-    fun deleteById_deletesThatCardOnly() = runTest {
+    fun updateReturningDroppedPhotos_returnsThePhotosTheEditNoLongerNames() = runTest { // #10
         db.storeDao().insert(aStoreEntity())
-        dao.insert(aLoyaltyCardEntity(id = cardId(1)))
-        dao.insert(aLoyaltyCardEntity(id = cardId(2)))
+        dao.insert(aLoyaltyCardEntity(id = cardId(1), frontPhotoPath = "front", backPhotoPath = "back"))
+        val edit = aLoyaltyCardEntity(id = cardId(1)).let {
+            LoyaltyCardEdit(it.id, it.storeId, it.label, it.number, it.scannedFormat, it.note, "new-front", "back", it.updatedAt)
+        }
 
-        dao.deleteById(cardId(1))
+        val dropped = dao.updateReturningDroppedPhotos(edit)
 
-        assertThat(dao.getAllWithStore().first().map { it.loyaltyCard.id }).containsExactly(cardId(2))
+        assertThat(dropped).containsExactly("front")
+        assertThat(dao.getByIdWithStore(cardId(1)).first()!!.loyaltyCard.frontPhotoPath).isEqualTo("new-front")
     }
 
     @Test
-    fun deleteById_unknownId_deletesNothing() = runTest {
+    fun deleteReturningPhotos_deletesThoseCardsOnly_andReturnsTheirPhotos() = runTest { // #10
         db.storeDao().insert(aStoreEntity())
-        dao.insert(aLoyaltyCardEntity(id = cardId(1)))
+        dao.insert(aLoyaltyCardEntity(id = cardId(1), frontPhotoPath = "front", backPhotoPath = "back"))
+        dao.insert(aLoyaltyCardEntity(id = cardId(2), frontPhotoPath = "kept"))
+        dao.insert(aLoyaltyCardEntity(id = cardId(3)))
 
-        dao.deleteById(cardId(99))
+        val photos = dao.deleteReturningPhotos(setOf(cardId(1), cardId(3), cardId(99)))
 
-        assertThat(dao.getAllWithStore().first()).hasSize(1)
+        assertThat(photos).containsExactly("front", "back")
+        assertThat(dao.getAllWithStore().first().map { it.loyaltyCard.id }).containsExactly(cardId(2))
     }
 
     @Test

@@ -18,15 +18,16 @@ interface LoyaltyCardRepository {
     suspend fun add(card: LoyaltyCard)
 
     /**
-     * Saves an edit of an existing card (#8): its store, label, number, scanned format, note (#9) and `updatedAt`. Its
-     * creation time, uses and photos stay as stored. Does nothing for an unknown id.
+     * Saves an edit of an existing card (#8): its store, label, number, scanned format, note (#9), photos (#10) and
+     * `updatedAt`. Its creation time and uses stay as stored. A photo the edit replaces or removes is deleted. Does
+     * nothing for an unknown id.
      */
     suspend fun update(card: LoyaltyCard)
 
-    /** Deletes the card. Does nothing for an unknown id. */
+    /** Deletes the card and its photos (#10). Does nothing for an unknown id. */
     suspend fun delete(id: String)
 
-    /** Deletes these cards in one write (#7: multi-select). Unknown ids are skipped. */
+    /** Deletes these cards and their photos in one write (#7: multi-select). Unknown ids are skipped. */
     suspend fun deleteAll(ids: Set<String>)
 
     /** How many cards the store [storeId] has, updated as cards change (#53). */
