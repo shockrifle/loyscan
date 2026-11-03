@@ -22,7 +22,8 @@ The single build step:
 Caches:
 - Gradle user home, through `gradle/actions/setup-gradle` (which also validates the wrapper)
 - Robolectric's downloaded `android-all` jars (`~/.m2/repository/org/robolectric`, keyed on
-  `gradle/libs.versions.toml`)
+  `gradle/libs.versions.toml`). A cache hit saves nothing, so a jar for an SDK a test newly pins (`@Config(sdk = [N])`)
+  is kept only once that file next changes; until then every run downloads it (#94)
 
 **Runtime** (measured 2026-10-12): about 2 minutes with a warm Gradle cache (2m4s), and about 5 minutes cold
 (4m57s–5m32s, the first run, or after the cache key changes, e.g. a dependency bump).

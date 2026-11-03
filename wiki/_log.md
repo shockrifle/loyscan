@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-03 · updated: the Robolectric cache keeps a newly pinned SDK's jar only when its key changes (#94) · workflows/ci · review of #92
 - 2026-11-03 · corrected: CI caches a newly pinned SDK's android-all jar only when the cache key (libs.versions.toml) changes, not always · workflows/tdd · review of #92
 - 2026-11-03 · updated: a card photo's EXIF orientation is read with androidx's ExifInterface, so a PNG or WebP is stored upright on Android 10 too; photo fixtures in PNG/WebP, a test on @Config(sdk = [29]) · features/card-photos, workflows/tdd · #92
 - 2026-11-03 · updated: the cloud-backup exclusion's reasons restated now that photos carry no location and are about 1 MB · decisions/2026-11-03-card-photos-as-private-files · review of #88
