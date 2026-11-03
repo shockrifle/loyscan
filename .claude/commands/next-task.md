@@ -1,5 +1,5 @@
 ---
-description: Pick the next GitHub issue, implement it test-first, get it reviewed by an independent Fable subagent, fix the findings, push and update the issue
+description: Pick the next GitHub issue, implement it test-first, get it reviewed by an independent Sonnet subagent, fix the findings, push and update the issue
 argument-hint: "[issue #n] [notes]"
 ---
 
@@ -61,9 +61,10 @@ Commit locally on `master`: one focused commit per logical change, the repo's me
 `wiki/_log.md` line in the same commit as the code. The commit that completes the issue says `Fixes #<n>`;
 earlier ones and a partial slice say `Refs #<n>`. Do not push yet.
 
-## 4. Independent review (Fable subagent)
+## 4. Independent review (Sonnet subagent)
 
-Spawn a reviewer with the Agent tool: `subagent_type: "general-purpose"`, `model: "fable"`, not a fork. It must
+Spawn a reviewer with the Agent tool: `subagent_type: "general-purpose"`, `model: "sonnet"`, `effort: "high"`, not a
+fork. It must
 not inherit my reasoning, so its prompt is only this, filled in:
 
 > You are reviewing a change in this repository with fresh eyes. Read `.claude/commands/review-changes.md` and

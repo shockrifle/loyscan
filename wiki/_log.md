@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-03 · corrected: /next-task's reviewer runs on Sonnet at high effort; the Fable reviewer had silently fallen back to Opus (no Fable access on this account), how to check the model that actually answered · workflows/code-review · reviewer model check
 - 2026-11-03 · updated: the Robolectric cache keeps a newly pinned SDK's jar only when its key changes (#94) · workflows/ci · review of #92
 - 2026-11-03 · corrected: CI caches a newly pinned SDK's android-all jar only when the cache key (libs.versions.toml) changes, not always · workflows/tdd · review of #92
 - 2026-11-03 · updated: a card photo's EXIF orientation is read with androidx's ExifInterface, so a PNG or WebP is stored upright on Android 10 too; photo fixtures in PNG/WebP, a test on @Config(sdk = [29]) · features/card-photos, workflows/tdd · #92
