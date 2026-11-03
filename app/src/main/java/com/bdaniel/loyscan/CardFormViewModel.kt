@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.bdaniel.loyscan.CardFormState.NumberCheck
 import com.bdaniel.loyscan.data.photos.CardPhotos
+import com.bdaniel.loyscan.data.photos.withoutMissing
 import com.bdaniel.loyscan.data.repository.LoyaltyCardRepository
 import com.bdaniel.loyscan.data.repository.StoreRepository
 import com.bdaniel.loyscan.domain.BarcodeFormat
@@ -25,6 +26,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -120,9 +122,13 @@ class CardFormViewModel @Inject constructor(
     private val route = savedStateHandle.toRoute<CardForm>()
     private val routedScan = route.scannedContent?.let { content -> route.scannedFormat?.let { content to it } }
 
-    /** The card being edited, `null` until it has loaded and while adding one. */
+    /**
+     * The card being edited, `null` until it has loaded and while adding one. A photo whose file is missing is left off,
+     * so that side offers "Add" and the save clears its name (#87).
+     */
     private val original: StateFlow<LoyaltyCard?> =
         (route.cardId?.let { cardRepository.getByIdWithStore(it) } ?: flowOf(null))
+            .map { card -> card?.let { photos.withoutMissing(it) } }
             .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     /** The routed store, until [switchStore] picks another. */

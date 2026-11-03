@@ -41,6 +41,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.testing.invoke
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.bdaniel.loyscan.testing.FakeCardPhotos
 import com.bdaniel.loyscan.testing.FakeLoyaltyCardRepository
 import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.domain.LoyaltyCard
@@ -70,13 +71,14 @@ class DetailScreenTest {
         color: String = "#336699",
         card: LoyaltyCard = this.card,
         repository: FakeLoyaltyCardRepository = FakeLoyaltyCardRepository(listOf(card)),
+        photos: FakeCardPhotos = FakeCardPhotos("front", "back"),
         onBack: () -> Unit = {},
         onEdit: (cardId: String, storeId: String) -> Unit = { _, _ -> },
         added: Boolean = false,
         onAddAnother: () -> Unit = {},
         restorationTester: StateRestorationTester? = null,
     ) {
-        val viewModel = DetailViewModel(SavedStateHandle(route = Detail(cardId = card.id, color = color, added = added)), repository)
+        val viewModel = DetailViewModel(SavedStateHandle(route = Detail(cardId = card.id, color = color, added = added)), repository, photos)
         val content = @Composable {
             SharedTransitionLayout {
                 AnimatedVisibility(visible = true) {
@@ -141,6 +143,24 @@ class DetailScreenTest {
     @Test
     fun aCardWithoutPhotos_showsNone() { // #10
         setScreen()
+
+        composeRule.onNodeWithText("0042").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Front photo").assertDoesNotExist()
+        composeRule.onNodeWithContentDescription("Back photo").assertDoesNotExist()
+    }
+
+    @Test
+    fun aPhotoWhoseFileIsMissing_showsNoThumbnail_andNoViewer() { // #87: a cloud restore brings the row, not the file
+        setScreen(card = card.copy(frontPhotoPath = "front", backPhotoPath = "lost"), photos = FakeCardPhotos("front"))
+
+        composeRule.onNodeWithContentDescription("Front photo").assertExists()
+        composeRule.onNodeWithContentDescription("Back photo").assertDoesNotExist()
+        composeRule.onNodeWithTag(PHOTO_VIEWER_TAG).assertDoesNotExist()
+    }
+
+    @Test
+    fun aCardWhosePhotoFilesAreAllMissing_showsNoPhotos() { // #87
+        setScreen(card = card.copy(frontPhotoPath = "lost", backPhotoPath = "gone"), photos = FakeCardPhotos())
 
         composeRule.onNodeWithText("0042").assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Front photo").assertDoesNotExist()
@@ -533,7 +553,7 @@ class DetailScreenTest {
     @Test
     fun aTileOpeningTheCard_growsIntoTheScreen_beforeTheCardHasLoaded() { // #16: the key came from the loaded card
         val notLoadedYet = FakeLoyaltyCardRepository(emptyList())
-        val viewModel = DetailViewModel(SavedStateHandle(route = Detail(cardId = card.id, color = "#336699")), notLoadedYet)
+        val viewModel = DetailViewModel(SavedStateHandle(route = Detail(cardId = card.id, color = "#336699")), notLoadedYet, FakeCardPhotos())
         var showDetail by mutableStateOf(false)
         val widths = mutableListOf<Int>()
         composeRule.mainClock.autoAdvance = false

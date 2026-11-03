@@ -6,6 +6,7 @@ import androidx.navigation.testing.invoke
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.cash.turbine.test
 import com.bdaniel.loyscan.domain.LoyaltyCard
+import com.bdaniel.loyscan.testing.FakeCardPhotos
 import com.bdaniel.loyscan.testing.FakeLoyaltyCardRepository
 import com.bdaniel.loyscan.testing.MainDispatcherRule
 import com.bdaniel.loyscan.testing.SOME_INSTANT
@@ -33,9 +34,11 @@ class DetailViewModelTest {
 
     private val repository = FakeLoyaltyCardRepository(listOf(aLoyaltyCard(id = cardId(1))))
 
+    private val photos = FakeCardPhotos()
+
     @Test
     fun card_isTheOneNamedByTheRoute() = runTest {
-        val viewModel = DetailViewModel(SavedStateHandle(route = Detail(cardId = cardId(2), color = "#336699")), repository)
+        val viewModel = DetailViewModel(SavedStateHandle(route = Detail(cardId = cardId(2), color = "#336699")), repository, photos)
 
         viewModel.card.test {
             assertThat(awaitItem()).isEqualTo(LoyaltyCard.EMPTY)
@@ -47,10 +50,24 @@ class DetailViewModelTest {
     }
 
     @Test
+    fun aPhotoWhoseFileIsMissing_isLeftOffTheCard() = runTest { // #87: a cloud restore brings the row, not the file
+        photos.stored += "front"
+        val viewModel = DetailViewModel(SavedStateHandle(route = Detail(cardId = cardId(2), color = "#336699")), repository, photos)
+
+        viewModel.card.test {
+            assertThat(awaitItem()).isEqualTo(LoyaltyCard.EMPTY)
+            repository.cards.value += aLoyaltyCard(id = cardId(2), frontPhotoPath = "front", backPhotoPath = "lost")
+            val card = awaitItem()
+            assertThat(card.frontPhotoPath).isEqualTo("front")
+            assertThat(card.backPhotoPath).isNull()
+        }
+    }
+
+    @Test
     fun opening_countsOneUseOfTheRoutedCardOnly() = runTest {
         repository.cards.value += aLoyaltyCard(id = cardId(2), useCount = 4)
 
-        DetailViewModel(SavedStateHandle(route = Detail(cardId = cardId(2), color = "#336699")), repository)
+        DetailViewModel(SavedStateHandle(route = Detail(cardId = cardId(2), color = "#336699")), repository, photos)
 
         val (other, opened) = repository.cards.value
         assertThat(opened.useCount).isEqualTo(5)
@@ -62,14 +79,14 @@ class DetailViewModelTest {
     fun opening_aCardJustAdded_countsNoUse() {
         repository.cards.value += aLoyaltyCard(id = cardId(2))
 
-        DetailViewModel(SavedStateHandle(route = Detail(cardId = cardId(2), color = "#336699", countUse = false)), repository)
+        DetailViewModel(SavedStateHandle(route = Detail(cardId = cardId(2), color = "#336699", countUse = false)), repository, photos)
 
         assertThat(repository.cards.value.last().useCount).isEqualTo(0)
     }
 
     @Test
     fun card_staysEmpty_whileNoCardHasTheId() = runTest {
-        val viewModel = DetailViewModel(SavedStateHandle(route = Detail(cardId = cardId(99), color = "#336699")), repository)
+        val viewModel = DetailViewModel(SavedStateHandle(route = Detail(cardId = cardId(99), color = "#336699")), repository, photos)
 
         viewModel.card.test {
             assertThat(awaitItem()).isEqualTo(LoyaltyCard.EMPTY)
@@ -80,7 +97,7 @@ class DetailViewModelTest {
 
     @Test
     fun card_keepsTheLastCard_whenItIsDeleted() = runTest {
-        val viewModel = DetailViewModel(SavedStateHandle(route = Detail(cardId = cardId(1), color = "#336699")), repository)
+        val viewModel = DetailViewModel(SavedStateHandle(route = Detail(cardId = cardId(1), color = "#336699")), repository, photos)
 
         viewModel.card.test {
             assertThat(awaitItem().id).isEqualTo(cardId(1))
@@ -96,8 +113,8 @@ class DetailViewModelTest {
             aLoyaltyCard(id = cardId(1), store = store, number = "4242"),
             aLoyaltyCard(id = cardId(2), store = store, number = "5901234123457", scannedFormat = BarcodeFormat.EAN_13),
         )
-        val typed = DetailViewModel(SavedStateHandle(route = Detail(cardId = cardId(1), color = "#336699", countUse = false)), repository)
-        val scanned = DetailViewModel(SavedStateHandle(route = Detail(cardId = cardId(2), color = "#336699", countUse = false)), repository)
+        val typed = DetailViewModel(SavedStateHandle(route = Detail(cardId = cardId(1), color = "#336699", countUse = false)), repository, photos)
+        val scanned = DetailViewModel(SavedStateHandle(route = Detail(cardId = cardId(2), color = "#336699", countUse = false)), repository, photos)
 
         typed.card.test {
             assertThat(awaitItem().barcodeFormat).isEqualTo(BarcodeFormat.CODE_128)
@@ -114,7 +131,7 @@ class DetailViewModelTest {
     @Test
     fun delete_deletesTheRoutedCard_andSaysSo() = runTest {
         repository.cards.value += aLoyaltyCard(id = cardId(2))
-        val viewModel = DetailViewModel(SavedStateHandle(route = Detail(cardId = cardId(2), color = "#336699")), repository)
+        val viewModel = DetailViewModel(SavedStateHandle(route = Detail(cardId = cardId(2), color = "#336699")), repository, photos)
 
         assertThat(viewModel.deletion.value).isEqualTo(Deletion.NONE)
 
@@ -130,7 +147,7 @@ class DetailViewModelTest {
         repository.deleteGate = gate
         val owner = ViewModelStore()
         val viewModel = owner.keep {
-            DetailViewModel(SavedStateHandle(route = Detail(cardId = cardId(1), color = "#336699")), repository)
+            DetailViewModel(SavedStateHandle(route = Detail(cardId = cardId(1), color = "#336699")), repository, photos)
         }
         viewModel.delete()
 
@@ -144,7 +161,7 @@ class DetailViewModelTest {
     fun delete_whileDeleting_orOnceDeleted_isIgnored() = runTest { // review of #8: a double tap deletes once
         val gate = CompletableDeferred<Unit>()
         repository.deleteGate = gate
-        val viewModel = DetailViewModel(SavedStateHandle(route = Detail(cardId = cardId(1), color = "#336699")), repository)
+        val viewModel = DetailViewModel(SavedStateHandle(route = Detail(cardId = cardId(1), color = "#336699")), repository, photos)
 
         viewModel.delete()
         assertThat(viewModel.deletion.value).isEqualTo(Deletion.DELETING)
@@ -159,7 +176,7 @@ class DetailViewModelTest {
     @Test
     fun dismissingAFailedDelete_forgetsTheFailure() = runTest { // review of #8
         repository.deleteFailure = IllegalStateException("disk I/O error")
-        val viewModel = DetailViewModel(SavedStateHandle(route = Detail(cardId = cardId(1), color = "#336699")), repository)
+        val viewModel = DetailViewModel(SavedStateHandle(route = Detail(cardId = cardId(1), color = "#336699")), repository, photos)
         viewModel.delete()
 
         viewModel.dismissDeletion()
@@ -170,7 +187,7 @@ class DetailViewModelTest {
     @Test
     fun delete_thatFails_keepsTheCard_saysSo_andCanBeTriedAgain() = runTest { // the delete mustn't crash, as a save (#49)
         repository.deleteFailure = IllegalStateException("disk I/O error")
-        val viewModel = DetailViewModel(SavedStateHandle(route = Detail(cardId = cardId(1), color = "#336699")), repository)
+        val viewModel = DetailViewModel(SavedStateHandle(route = Detail(cardId = cardId(1), color = "#336699")), repository, photos)
 
         viewModel.delete()
         assertThat(viewModel.deletion.value).isEqualTo(Deletion.FAILED)

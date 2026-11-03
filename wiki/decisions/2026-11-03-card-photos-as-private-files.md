@@ -62,4 +62,6 @@ by deleting its custom store, where `ON DELETE CASCADE` deletes the rows in SQLi
 - A photo picked in a form that is then closed is the form's to delete ([[card-photos]]); the sweep catches the
   rest on the next start.
 - Cloud backup still holds `loyscan.db` (#71), but no longer the photos. So a cloud restore brings back rows that name
-  photo files it didn't restore, and nothing clears such a name: the card shows an empty photo.
+  photo files it didn't restore. Since #87 such a photo is shown as none, on the card screen and in the form, and a
+  saved edit clears its name ([[card-photos]]). (Updated 2026-11-03: this said nothing clears the name and the card
+  shows an empty photo.)

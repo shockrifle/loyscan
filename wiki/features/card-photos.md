@@ -35,6 +35,11 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   `CardPhotoSweepCallback` (`data/local/db/`, added in `di/DatabaseModule.kt`) deletes photo files that no card names
   and that are over a day old; newer ones may belong to a form still open or about to be restored. A save drops a
   picked photo whose file has gone since, and keeps the card's own photo for that side ([[2026-11-03-card-photos-as-private-files]]).
+- **A photo whose file is missing** (a cloud restore brings back the database but not the photos, see Backup) is
+  treated as no photo (#87). `CardPhotos.withoutMissing(card)` (`data/photos/CardPhotos.kt`) drops such a name from
+  the card `DetailViewModel` shows and from the card `CardFormViewModel` edits. So the card screen shows no thumbnail
+  or viewer for it, and the form shows that side as "Add … photo". Saving the edit writes the side as `null`, which
+  clears the name; until then the row keeps it.
 - **Backup:** `files/card_photos/` is excluded from cloud backup; device-to-device transfer takes it on Android 12+
   ([[android-app]], [[2026-11-03-card-photos-as-private-files]]).
 - Images load through `hiltImageLoader()`, never Coil's default ([[coil-image-loading]]).
@@ -50,6 +55,7 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
 
 - `DetailScreenTest`: `aCardWithPhotos_showsThemUnderTheNumber`, `aCardWithOnlyABackPhoto_showsOnlyThat`,
   `aCardWithoutPhotos_showsNone`, `tappingAPhoto_showsItFullScreen_andATapOrBackClosesIt`,
+  `aPhotoWhoseFileIsMissing_showsNoThumbnail_andNoViewer`, `aCardWhosePhotoFilesAreAllMissing_showsNoPhotos` (#87),
   `theOpenPhoto_staysOpenWhenThePhoneTurns`. End to end: `AppNavigationTest.aCardsPhoto_isShownOnTheCard`,
   `deletingACardFromTheList_deletesItsPhotoFiles`.
 - `CardFormViewModelTest`: `aPickedFrontPhoto_…`, `editingACard_startsWithItsPhotos_…`, `removingACardsPhoto_…`,
@@ -59,6 +65,9 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   `aPictureThatCantBeCopiedIn_…`, `aCancelledPick_…`, `noPhotoCanBePickedOrRemoved_onceSavingHasStarted`,
   `aPickedPhoto_isRestoredAfterProcessDeath`. `CardFormScreenTest`: `addingAFrontPhoto_…`,
   `editingACard_showsItsPhoto_whichCanBeReplacedOrRemoved`, `aPictureThatCantBeCopiedIn_saysSo`.
+- A missing file (#87): `DetailViewModelTest.aPhotoWhoseFileIsMissing_isLeftOffTheCard`,
+  `CardFormViewModelTest.editingACardWhosePhotoFileIsMissing_startsWithThatSideEmpty_andSavingClearsItsName`,
+  `CardFormScreenTest.editingACardWhosePhotoFileIsMissing_offersToAddThatPhoto`.
 - `ui/CardPhotoTest`: the app's loader maps a `CardPhoto` to its file.
 - `CardPhotoSweepCallbackTest` (on-disk database, closed and reopened), `DatabaseModuleTest.opening_sweepsAnOldPhotoNoCardNames`,
   `FileCardPhotosTest.deleteUnnamed_…`, `exists_…`; `CardFormViewModelTest.aPickedPhotoWhoseFileIsGone_isNotSaved`.

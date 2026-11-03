@@ -4,6 +4,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.bdaniel.loyscan.data.photos.CardPhotos
+import com.bdaniel.loyscan.data.photos.withoutMissing
 import com.bdaniel.loyscan.data.repository.LoyaltyCardRepository
 import com.bdaniel.loyscan.domain.LoyaltyCard
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -14,6 +16,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -23,7 +26,8 @@ import javax.inject.Inject
 @HiltViewModel
 class DetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val loyaltyCardRepository: LoyaltyCardRepository
+    private val loyaltyCardRepository: LoyaltyCardRepository,
+    private val photos: CardPhotos,
 ) : ViewModel() {
 
     private val route = savedStateHandle.toRoute<Detail>()
@@ -37,6 +41,7 @@ class DetailViewModel @Inject constructor(
     val card: StateFlow<LoyaltyCard> =
         loyaltyCardRepository.getByIdWithStore(cardId)
             .filterNotNull()
+            .map { photos.withoutMissing(it) }
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5_000),

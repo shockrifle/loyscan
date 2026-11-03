@@ -901,8 +901,29 @@ class CardFormViewModelTest {
     }
 
     @Test
+    fun editingACardWhosePhotoFileIsMissing_startsWithThatSideEmpty_andSavingClearsItsName() = runTest { // #87
+        // A cloud restore brings the row back without the photo files.
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, number = "12345674", frontPhotoPath = "front", backPhotoPath = "lost"))
+        photos.stored += "front"
+        val viewModel = viewModel(CardForm("ruled", cardId = cardId(1)))
+
+        viewModel.state.test {
+            val state = awaitLoaded()
+            assertThat(state.frontPhoto).isEqualTo("front")
+            assertThat(state.backPhoto).isNull()
+
+            viewModel.save()
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        assertThat(cards.cards.value.single().frontPhotoPath).isEqualTo("front")
+        assertThat(cards.cards.value.single().backPhotoPath).isNull()
+    }
+
+    @Test
     fun removingACardsPhoto_savesTheCardWithoutIt() = runTest { // #10
         cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, number = "12345674", frontPhotoPath = "front"))
+        photos.stored += "front"
         val viewModel = viewModel(CardForm("ruled", cardId = cardId(1)))
 
         viewModel.state.test {

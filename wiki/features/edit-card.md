@@ -40,7 +40,7 @@ number and store of one card. Deleting a card is on [[card-detail]].
 - **Saving writes only what the form edits:** the store, label, number, scanned format, note (#9), photos (#10) and
   `updatedAt` (now). Room's partial `@Update(entity = LoyaltyCardEntity::class)` with `LoyaltyCardEdit` writes those
   columns and no others, so `createdAt`, the use count and `lastUsedAt` stay as stored even if they changed after the
-  form loaded the card. A photo the edit replaces or removes is deleted ([[card-photos]]). A blank label or note is saved as `null`; the note is trimmed.
+  form loaded the card. A photo the edit replaces or removes is deleted, and one whose file is missing starts as no photo, so the save clears its name ([[card-photos]], #87). A blank label or note is saved as `null`; the note is trimmed.
 - **After saving**, `CardFormDirections.toCard` opens the card in place of the card and its form
   (`popUpTo<CardList>()`, `Detail.countUse = false`), the same direction as after adding. The new `Detail` route carries
   the store's current colour, which matters when the store was switched. Back returns to the list.

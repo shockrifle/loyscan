@@ -144,8 +144,8 @@ here exist; read them next to the code.
    checks `EMPTY` first, then the routed card. A missing card stays `EMPTY`, and a deleted card keeps the last
    value.
    Then `DetailViewModel` reads `savedStateHandle.toRoute<Detail>().cardId`, then
-   `repository.getByIdWithStore(cardId).filterNotNull().stateIn(…, initialValue = LoyaltyCard.EMPTY)`
-   (`DetailViewModel.kt:32-44`).
+   `repository.getByIdWithStore(cardId).filterNotNull().stateIn(…, initialValue = LoyaltyCard.EMPTY)`, with
+   a photo whose file is missing left off on the way (`CardPhotos.withoutMissing`, [[card-photos]]) (`DetailViewModel.kt:41-49`).
 9. **Detail UI.** *Test first:* `DetailScreenTest`: it shows the label and the display number (formatted by the
    store's rule), the back arrow calls `toBack`, an empty or malformed route color doesn't crash, and a tile
    grows into the screen before the card has loaded.

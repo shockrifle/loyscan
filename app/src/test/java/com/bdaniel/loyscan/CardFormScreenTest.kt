@@ -306,8 +306,18 @@ class CardFormScreenTest {
     }
 
     @Test
+    fun editingACardWhosePhotoFileIsMissing_offersToAddThatPhoto() { // #87: a cloud restore brings the row, not the file
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, number = "12345674", backPhotoPath = "lost"))
+        setScreen(CardForm("ruled", cardId = cardId(1)))
+
+        composeRule.onNodeWithText("Add back photo").performScrollTo().assertExists()
+        composeRule.onNodeWithContentDescription("Back photo").assertDoesNotExist()
+    }
+
+    @Test
     fun editingACard_showsItsPhoto_whichCanBeReplacedOrRemoved() { // #10
         cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, number = "12345674", backPhotoPath = "back"))
+        photos.stored += "back"
         setScreen(CardForm("ruled", cardId = cardId(1)))
         composeRule.onNodeWithContentDescription("Back photo").assertExists()
 

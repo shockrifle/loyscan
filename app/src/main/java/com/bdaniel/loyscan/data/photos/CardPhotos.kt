@@ -2,6 +2,7 @@ package com.bdaniel.loyscan.data.photos
 
 import android.content.ContentResolver
 import android.net.Uri
+import com.bdaniel.loyscan.domain.LoyaltyCard
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -37,6 +38,15 @@ interface CardPhotos {
     /** Whether the photo [name] is still there: an old one no card names is swept when the database opens. */
     suspend fun exists(name: String): Boolean
 }
+
+/**
+ * [card] without the photos whose files are missing, e.g. after a cloud restore, which brings back the database but not
+ * the photos (#87). Shown as no photo; a saved edit then clears the name.
+ */
+suspend fun CardPhotos.withoutMissing(card: LoyaltyCard): LoyaltyCard = card.copy(
+    frontPhotoPath = card.frontPhotoPath?.takeIf { exists(it) },
+    backPhotoPath = card.backPhotoPath?.takeIf { exists(it) },
+)
 
 /**
  * [CardPhotos] as files in [directory] (`files/card_photos`), never in a shared folder. [openPicture] opens a picked
