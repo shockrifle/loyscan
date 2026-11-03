@@ -97,7 +97,7 @@ until #1.
 `loyalty_cards`. UUID string id; fields per [[2026-10-12-data-model-v2]].
 
 **LoyaltyCardWithStore** — Room result class: the card `@Embedded`, its store loaded by `@Relation`
-(`data/local/db/dao/LoyaltyCardDao.kt:16-21`). Was `LoyaltyCardWithBrand` (a hand-aliased `JOIN`) until #1.
+(`data/local/db/dao/LoyaltyCardDao.kt:16-22`). Was `LoyaltyCardWithBrand` (a hand-aliased `JOIN`) until #1.
 
 **`loyscan.db`** — The on-device SQLite file name (`di/DatabaseModule.kt`, `provideAppDatabase`).
 

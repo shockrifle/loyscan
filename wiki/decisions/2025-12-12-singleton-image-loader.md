@@ -13,7 +13,7 @@
 
 ## Decision
 `ImageLoaderModule.provideImageLoader` is a `@Singleton` `@Provides`, plus `ImageLoaderEntryPoint`
-(`app/src/main/java/com/bdaniel/loyscan/di/ImageLoaderModule.kt:16-42`). The composable `hiltImageLoader()` reads
+(`app/src/main/java/com/bdaniel/loyscan/di/ImageLoaderModule.kt:18-46`). The composable `hiltImageLoader()` reads
 it via `EntryPointAccessors.fromApplication`, `remember`ed per context
 (`app/src/main/java/com/bdaniel/loyscan/ui/ImageLoader.kt:10-19`). The error log level was lowered from `e` to `w`.
 

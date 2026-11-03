@@ -1,7 +1,7 @@
 # Detail shared-element key depends on async-loaded data
 
 **Status:** Resolved 2026-10-28 (#16) · **Issue:** [#16](https://github.com/shockrifle/loyscan/issues/16) · **Since:** 2025-12-04 (`1ea9fe0`) · **Where:**
-`app/src/main/java/com/bdaniel/loyscan/DetailScreen.kt:139-143`
+`app/src/main/java/com/bdaniel/loyscan/DetailScreen.kt:152-156`
 
 **Resolved:** `DetailScreen` takes `cardId` from the route, as it takes `color` (`MainActivity.kt:90-99`), and
 keys its `Scaffold` with `cardTransitionKey(cardId)`, the helper the list tile uses too (`ListScreen.kt:322`).

@@ -21,5 +21,5 @@ The Material icons stopped resolving after the Compose BOM upgrade. See [[2025-1
 ### Where do logs go?
 Timber, with a `DebugTree` planted only in debug builds (`LoyScanApplication.kt:11-13`). Release builds log
 nothing. Image-load failures are logged at WARN with the message prefix `Image loading failed for:`
-(`app/src/main/java/com/bdaniel/loyscan/di/ImageLoaderModule.kt:31`) — but only for images loaded through
+(`app/src/main/java/com/bdaniel/loyscan/di/ImageLoaderModule.kt:35`) — but only for images loaded through
 the shared loader; see [[list-screen-bypasses-image-loader]].

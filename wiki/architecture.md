@@ -115,16 +115,16 @@ here exist; read them next to the code.
    (`…_unknownId_emitsNull`).
    Then the code: `LoyaltyCardDao.getAllWithStore()` / `getByIdWithStore(id)` select cards inside `@Transaction`,
    and Room fills `@Relation val store: StoreEntity` with a second query
-   (`data/local/db/dao/LoyaltyCardDao.kt:16-41`). They return `Flow`, so the UI updates when either table changes.
+   (`data/local/db/dao/LoyaltyCardDao.kt:16-22, 80-88`). They return `Flow`, so the UI updates when either table changes.
    The single-card query returns `Flow<…?>`: with a non-null type Room throws for a missing row
    ([[2026-10-09-missing-card-throws-from-room]]).
 3. **Mapping.** *Test first:* `LoyaltyCardMapperTest.toDomainModel_copiesEveryField`.
    Then `LoyaltyCardWithStore.toDomainModel()` builds `LoyaltyCard(…, store = Store(…))`
-   (`data/mapper/LoyaltyCardMapper.kt:12-42`). The derived fields (`barcodeContent`, `displayNumber`,
+   (`data/mapper/LoyaltyCardMapper.kt:14-29`). The derived fields (`barcodeContent`, `displayNumber`,
    `barcodeFormat`) are computed by `LoyaltyCard` itself; test: `domain/LoyaltyCardTest`.
 4. **Repository.** *Test first:* `RoomLoyaltyCardRepositoryTest`: a real in-memory database in, domain cards out.
    Then `RoomLoyaltyCardRepository.getAllWithStore()` = `dao.getAllWithStore().map { it.toDomainModel() }`
-   (`data/repository/RoomLoyaltyCardRepository.kt:14`), behind the `LoyaltyCardRepository` interface. Change
+   (`data/repository/RoomLoyaltyCardRepository.kt:22`), behind the `LoyaltyCardRepository` interface. Change
    `FakeLoyaltyCardRepository` in the same step, so it keeps the interface's contract.
 5. **List ViewModel.** *Test first:* `ListViewModelTest`: built with the fake repositories and a `SavedStateHandle`,
    Turbine on `cards`. It checks the initial empty list, then each update, the stored sort and the search.
@@ -151,7 +151,7 @@ here exist; read them next to the code.
    grows into the screen before the card has loaded.
    Then `DetailScreen` paints the top bar and header with the **route** color (available on frame 1), and fills
    text/logo from the **ViewModel** card (available once Room emits). The whole `Scaffold` is the matching shared
-   element, keyed from the **route** `cardId` (`DetailScreen.kt:139-143`, #16). Back → `directions.toBack()` → `navigateUp()`.
+   element, keyed from the **route** `cardId` (`DetailScreen.kt:152-156`, #16). Back → `directions.toBack()` → `navigateUp()`.
    See [[card-detail]], [[card-transition]].
 
 ### Checklist for a new screen/feature (derived from the example)
