@@ -23,7 +23,9 @@ adb logcat -d | grep -iE "sqlite|room|loyscan|catalogue" | tail -50
 Alternative: uninstall (`adb uninstall com.bdaniel.loyscan`), then `./gradlew installDebug`.
 
 **Caution:** `allowBackup="true"` is set, so after a reinstall Android may restore an old `loyscan.db` from
-auto-backup. `pm clear` avoids that.
+auto-backup. `pm clear` avoids that. This also hits a first install on a phone whose Google account has a backup from
+an earlier debug build: the restored database crashes the first launch (seen 2026-11-03, [[android-app]] → Manifest
+facts). `adb logcat -d | grep restoreAtInstall` shows whether a restore ran; then `pm clear`.
 
 ## If the catalogue itself is broken
 

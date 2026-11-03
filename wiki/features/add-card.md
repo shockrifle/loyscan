@@ -121,8 +121,9 @@ with the picture's barcode (#77, below). Everything runs offline on the local da
 - The same form edits a card (`CardForm.cardId`, title "Edit card"): [[edit-card]].
 
 - **Share → LoyScan** (#77). LoyScan is in the system share sheet for one image (`ACTION_SEND`, `image/*`; not
-  `SEND_MULTIPLE`). The share opens over the sharing app, or, when sent with `NEW_TASK`, reaches LoyScan's own task
-  through `onNewIntent`, replacing its open screen ([[2026-11-03-share-into-the-sharing-apps-task]]). Only a
+  `SEND_MULTIPLE`). On a device, every share through the system chooser started a new LoyScan task of its own, and
+  Back from it returned to the sharing app; a share that reached LoyScan's own task through `onNewIntent` would replace
+  its open screen, which a share sent through adb with `NEW_TASK` alone did, but no app checked does that ([[2026-11-03-share-into-the-sharing-apps-task]] → Device check). Only a
   `content://` URI is taken (a `file://` one could name the app's own files), and only the picture granted with the share is read, with the scanner's
   `PictureReader` ([[barcode-scanner]] → Scan from image): not copied, stored or sent. Steps:
   - `SharedPicture(uri)` opens over the card list, in place of anything open above it, and says "Reading the
@@ -144,7 +145,11 @@ with the picture's barcode (#77, below). Everything runs offline on the local da
     `SharedPicture` entry's `SavedStateHandle`, so the picture isn't read again (a read still running at process death
     is read again). `MainActivity` handles the intent only on a fresh `onCreate` and in `onNewIntent`, and ignores a
     share reopened from recents, so a recreated activity doesn't start the flow again.
-  - Not yet checked on a device (#77).
+  - Checked on a device (Android 15, 2026-11-03, #84, synthetic card pictures): a screenshot of an EAN-13 card
+    shared from Google Photos opened the picker with Auchan under "Suggested", then the form with the number and
+    "Scanned · EAN-13"; saving opened the card. A QR screenshot shared from the screenshot preview opened the form
+    with "Scanned · QR code" (no "Suggested": no rule reads its number). A picture without a barcode, shared from the
+    ASUS Gallery, said "No barcode was found in that picture…" with "Enter the number by hand".
 
 ## Tests
 

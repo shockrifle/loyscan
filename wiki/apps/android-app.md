@@ -24,7 +24,11 @@ versionName `1.0` (versionCode 1). minSdk 29, target/compileSdk 36, Java/JVM 21 
   declared `required="false"`: cards can be entered by hand, so phones without a camera can install the app.
 - Native code: zxing-cpp ships `.so` files for `arm64-v8a`, `armeabi-v7a`, `x86` and `x86_64` ([[zxing-cpp]]).
 - `allowBackup="true"` with the template `backup_rules.xml` / `data_extraction_rules.xml` (unchanged since
-  `00933cd`), so `loyscan.db` may be included in Android auto-backup.
+  `00933cd`), so `loyscan.db` is included in Android auto-backup and restored on install. Seen 2026-11-03: a fresh
+  `installDebug` got a `loyscan.db` restored from the Google account's backup at install (`BackupManagerService:
+  restoreAtInstall`), written by an older debug build with the same `version = 2` but another schema, and the app
+  crashed on launch with Room's identity-hash `IllegalStateException` until `pm clear` ([[reset-local-database]],
+  [[no-room-migrations]], #71, #12).
 
 ## Theme
 

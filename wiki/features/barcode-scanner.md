@@ -87,8 +87,12 @@ after the store picker of [[add-card]]; a scan or "Enter manually" replaces it w
 - `AddCardDirectionsTest`, `AppNavigationTest.addCard_opensTheStorePicker_pickingAStoreOpensTheScanner_andBackReturnsToThePicker`: navigation.
 
 Not covered by JVM tests: `ProcessCameraOpener`, `ZxingCppFrameReader.read`, `ZxingCppBitmapReader` and
-`decodePicture`, which need a camera, the native library or a real image decoder. Reading a picture is not yet checked
-on a device (#76). Checked on a device (Android 15, 2026-10-19, final build): EAN-13, Code 128, QR, PDF417, GS1 DataBar and
+`decodePicture`, which need a camera, the native library or a real image decoder. Reading a picture, checked on a
+device (Android 15, 2026-11-03, #76, synthetic pictures made with ZXing core): 1080×2400 screenshots of an EAN-13, a
+Code 128 and a QR card each opened the form with their number and format; a 5400×12000 (65 MP) JPEG of the EAN-13 card,
+scaled to 8 MP, read too; a picture without a barcode said so and kept the scanner open. The Android 15 photo picker
+(Google Photos tab) shows a "Done" bar even for this single-picture request, so picking takes a tap on the picture and
+one on "Done". Opening a cloud photo that times out is not checked (#80). Checked on a device (Android 15, 2026-10-19, final build): EAN-13, Code 128, QR, PDF417, GS1 DataBar and
 DataBar Stacked (gs1.org samples on a screen; content `01` + digits, no brackets), Code 39 (also a PZN-shaped one,
 read as plain Code 39); GS1 marking (2026-10-20: a GS1-128 barcode marked GS1, plain Code 128 not); torch after a pause; the permission flow; the hint; "Enter manually"; the list's bottom padding. The first
 device check found DataBar never scanned: [[2026-10-19-zxing-cpp-3-0-databar]].

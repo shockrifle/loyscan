@@ -3,6 +3,9 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-03 · added: device check of Share → LoyScan; every chooser share started a new LoyScan task (MULTIPLE_TASK | NEW_DOCUMENT), onNewIntent never ran, an open form was kept; an adb share with NEW_TASK alone went through onNewIntent and dropped the form (corrects the page's task model and title) · decisions/2026-11-03-share-into-the-sharing-apps-task, decisions/_index, features/add-card · #84, #83
+- 2026-11-03 · added: device check of reading a picture (EAN-13, Code 128, QR screenshots, 65 MP photo, no barcode); photo picker's "Done" bar · features/barcode-scanner · #76
+- 2026-11-03 · added: a fresh install got an old loyscan.db from Google cloud backup and crashed on launch · apps/android-app, runbooks/reset-local-database · #71, #12
 - 2026-11-03 · corrected: a chooser share lands in the sharing app's task, so onNewIntent runs only for a share sent with NEW_TASK, which brings LoyScan's own task forward and drops its open screen · decisions/2026-11-03-share-into-the-sharing-apps-task · review of #77
 - 2026-11-03 · added: the store picker of a shared picture suggests the stores whose rule reads its barcode ("Suggested", ranked by matchingScan, hidden while searching) · features/add-card · #77
 - 2026-11-03 · added: Share → LoyScan (shared picture read, then the picker with its barcode, the form without the scanner); singleTop decision; intent-launched test and FakePictureReaderModule; MainActivity line refs refreshed · features/add-card, apps/android-app, architecture, workflows/tdd, decisions/2026-11-03-share-into-the-sharing-apps-task, decisions/_index, index, glossary, features/barcode-scanner, features/card-transition, decisions/2025-12-12-brand-color-in-route, decisions/2026-10-28-portrait-on-phones, tech-debt/shared-element-key-from-async-state · #77
