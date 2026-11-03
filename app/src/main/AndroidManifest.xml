@@ -10,6 +10,13 @@
         android:name="android.hardware.camera.any"
         android:required="false" />
 
+    <!-- Android 11+ shows the app only the camera apps it asks for: a card photo is taken with one (#10). -->
+    <queries>
+        <intent>
+            <action android:name="android.media.action.IMAGE_CAPTURE" />
+        </intent>
+    </queries>
+
     <application
         android:name=".LoyScanApplication"
         android:allowBackup="true"

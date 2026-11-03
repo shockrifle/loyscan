@@ -26,6 +26,7 @@ inferred.
 - [[2026-10-30-frequently-added-stores]] — "frequently added" is a curated catalogue flag; the country is the SIM's, then the network's, then the locale's; added to schema v2 in place
 - [[2026-11-03-share-in-standard-launch-mode]] — `MainActivity` is `standard`; a share that reaches an open LoyScan (`onNewIntent`) is passed on to a new task, so a chooser, `NEW_TASK` or `SINGLE_TOP` share doesn't replace an open card form (#83)
 - [[2026-11-03-card-photos-as-private-files]] — card photos are files in `files/card_photos/`, named (not pathed) in the row, copied on pick; the repositories delete them on every write that drops them, the custom store's cascade included (#10)
+- [[2026-11-03-card-photos-from-the-system-camera-app]] — "Take photo" opens the system camera app, not a CameraX screen of our own (#10)
 - [[2026-10-22-store-suggestion-trigger]] — the card form offers other stores for a scan the picked store rejects, reads only by symbology, or has no rule for; exact format ranks first
 
 ## Superseded

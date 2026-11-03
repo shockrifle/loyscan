@@ -68,13 +68,16 @@ fun rememberCameraPermission(): CameraPermission {
                 requesting = true
                 launcher.launch(Manifest.permission.CAMERA)
             }
-            override fun openSettings() = context.startActivity(
-                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", context.packageName, null))
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
-            )
+            override fun openSettings() = openAppSettings(context)
         }
     }
 }
+
+/** Opens LoyScan's page in the system settings, where a permission denied for good can be allowed. */
+internal fun openAppSettings(context: Context) = context.startActivity(
+    Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", context.packageName, null))
+        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+)
 
 /**
  * Without a rationale after a denial, the system won't show its dialog again. Except after the first one: on

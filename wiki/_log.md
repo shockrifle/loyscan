@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-03 · updated: the card form's photo slots offer Take photo (system camera app, camera permission asked first) or Choose from gallery; FakePhotoCamera, PhotoCameraTest; IMAGE_CAPTURE <queries> · features/card-photos, features/add-card, apps/android-app, workflows/tdd, decisions/2026-11-03-card-photos-from-the-system-camera-app (new), decisions/_index, index · #10 camera slice
 - 2026-11-03 · updated: a photo taken with the camera is a capture file in card_photos/, handed out by a FileProvider, imported like a pick and deleted; CardPhotosModuleTest (FileProvider write skipped on Windows) · features/card-photos, decisions/2026-11-03-card-photos-as-private-files, apps/android-app, workflows/tdd · #10 camera slice
 - 2026-11-03 · corrected: /next-task's reviewer runs on Sonnet at high effort; the Fable reviewer had silently fallen back to Opus (no Fable access on this account), how to check the model that actually answered · workflows/code-review · reviewer model check
 - 2026-11-03 · updated: the Robolectric cache keeps a newly pinned SDK's jar only when its key changes (#94) · workflows/ci · review of #92

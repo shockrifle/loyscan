@@ -9,7 +9,8 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   the app's `FileProvider`).
 - `data/photos/CardPhotoEncoding.kt`: `encodeCardPhoto`, how an imported picture is stored (#88).
 - `DetailScreen.kt`: the photos under the note, `PhotoViewer`.
-- `CardFormScreen.kt` (`PhotoSlot`), `CardFormViewModel.kt` (`onPhotoPicked`, `startCapture`, `onPhotoTaken`,
+- `ui/PhotoCamera.kt`: `PhotoCamera`, `rememberPhotoCamera`, the system camera app and the camera permission it needs.
+- `CardFormScreen.kt` (`PhotoSlot`, its Take photo / Choose from gallery menu), `CardFormViewModel.kt` (`onPhotoPicked`, `startCapture`, `onPhotoTaken`,
   `removePhoto`, `onCleared`): adding, replacing and removing photos while adding or editing a card.
 - `ui/CardPhoto.kt`: `CardPhoto(name)`, the image model; `CardPhotoMapper` on the app's Coil loader
   (`di/ImageLoaderModule.kt`) maps it to its file; `CARD_ASPECT_RATIO`.
@@ -19,11 +20,12 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
 ## Behaviour
 
 - **In the card form** ([[add-card]], [[edit-card]]), under the note: a slot for the front and one for the back. An
-  empty slot says "Add front photo" / "Add back photo" and opens the system photo picker (images only, no storage
-  permission; the same `PicturePicker` as the scanner's "Scan from image", [[barcode-scanner]]). A slot with a photo
-  shows it in the card's proportions (ID-1, cropped to fill) with Replace and Remove icons ("Replace front photo",
-  "Remove front photo"). While a picked picture is copied in, the slot shows a progress indicator, and neither Save
-  nor another pick is possible. A picture that can't be copied (e.g. a cloud photo that won't download) says "The
+  empty slot says "Add front photo" / "Add back photo". With a camera app on the phone it opens a menu: "Take photo"
+  (the system camera app, below) or "Choose from gallery"; without one it opens the gallery at once. The gallery is the
+  system photo picker (images only, no storage permission; the same `PicturePicker` as the scanner's "Scan from
+  image", [[barcode-scanner]]). A slot with a photo shows it in the card's proportions (ID-1, cropped to fill) with
+  Replace and Remove icons ("Replace front photo", "Remove front photo"); Replace opens the same menu. While a picture
+  is copied in, the slot shows a progress indicator, and neither Save nor another photo is possible. A picture that can't be copied (e.g. a cloud photo that won't download) says "The
   photo couldn't be added. Try again."; the next pick clears it. Once saving has started, photos can't be changed.
 - **What is stored** (#88): not the picked file itself but a JPEG at most 2048 px on its long side (a smaller
   picture keeps its size), turned the way its EXIF orientation says, a transparent picture on white, and with no EXIF
@@ -37,6 +39,14 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   until the edit is saved, then the repository deletes it. A form closed without saving deletes the copies picked in
   it (`onCleared`, through `CardPhotos.discard`, since `viewModelScope` is already cancelled). A form closed while
   its save runs leaves them to the save, and a save that then fails deletes them.
+- **Taking a photo** opens the system camera app (`ACTION_IMAGE_CAPTURE` through `ActivityResultContracts.TakePicture`,
+  `ui/PhotoCamera.kt`, `rememberPhotoCamera`), not a camera screen of LoyScan's own. Because the manifest declares the
+  camera permission for the scanner, Android refuses that intent until the permission is granted, so "Take photo" asks
+  for it first and opens the camera once it is allowed ([[2026-11-03-card-photos-from-the-system-camera-app]]) (the target waiting on the dialog is saved over a rotation). A
+  denial says "LoyScan needs the camera to take a photo of your card."; one for good (told apart as the scanner does,
+  `cameraPermissionStatus`) says "Camera access is turned off for LoyScan. You can allow it in the app's settings." with
+  "Open settings". The next photo taken or picked clears either. Whether there is a camera app is read with
+  `resolveActivity`, which on Android 11+ sees it only through the manifest's `<queries>` ([[android-app]]).
 - **A photo taken with the camera** goes through a capture file: `startCapture(side)` makes `<uuid>.capture` in
   `files/card_photos/` (`CardPhotos.newCapture`) and returns its `content://<applicationId>.photos/…` Uri for the camera
   app to write. `onPhotoTaken(taken)` then copies it in exactly like a pick (re-encoded, #88) and deletes the capture,
@@ -84,7 +94,14 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   `aPickedPhoto_isRestoredAfterProcessDeath`. Camera captures: `aPhotoTaken_isImportedLikeAPick_andItsCaptureDeleted`,
   `aCameraThatTookNoPhoto_…`, `aPhotoTakenThatCantBeImported_…`, `aPhotoTaken_isImported_afterProcessDeathWhileTheCameraWasOpen`,
   `noCaptureStarts_…`, `aFormClosedWithoutSaving_deletesACaptureTheCameraNeverAnswered`. `CardFormScreenTest`: `addingAFrontPhoto_…`,
-  `editingACard_showsItsPhoto_whichCanBeReplacedOrRemoved`, `aPictureThatCantBeCopiedIn_saysSo`.
+  `editingACard_showsItsPhoto_whichCanBeReplacedOrRemoved`, `aPictureThatCantBeCopiedIn_saysSo`; the camera:
+  `withACameraApp_addingAPhoto_offersTheCameraOrTheGallery`, `withoutACameraApp_addingAPhoto_opensTheGalleryAtOnce`,
+  `takingAPhoto_opensTheCameraAppOnACapture_andShowsThePhotoTaken`, `replacingAPhoto_offersTheCameraToo`,
+  `aCameraDenied_saysWhyItIsNeeded_untilTheNextPhoto`, `aCameraDeniedForGood_offersTheSettings`.
+- `ui/PhotoCameraTest` (the real glue, a test `ActivityResultRegistry` answering the dialog and the camera app):
+  allowed → the camera app on the target; asked first, then opened; a denial, then one for good; a dialog answered
+  after a rotation still opens the camera; available only with an `IMAGE_CAPTURE` activity. Not checked on a device:
+  which camera apps answer, and a capture after the process died behind the camera app.
 - A missing file (#87): `DetailViewModelTest.aPhotoWhoseFileIsMissing_isLeftOffTheCard`,
   `CardFormViewModelTest.editingACardWhosePhotoFileIsMissing_startsWithThatSideEmpty_andSavingClearsItsName`,
   `CardFormScreenTest.editingACardWhosePhotoFileIsMissing_offersToAddThatPhoto`.
@@ -114,5 +131,4 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
 
 ## Not implemented
 
-Taking a photo with the camera, cropping to the card's ratio, and the rest of the backup rules (#71) are later parts of
-#10.
+Cropping to the card's ratio, and the rest of the backup rules (#71), are later parts of #10.

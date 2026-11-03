@@ -20,7 +20,9 @@ versionName `1.0` (versionCode 1). minSdk 29, target/compileSdk 36, Java/JVM 21 
 - `android.permission.INTERNET` — added in `c4d6bdc` for brand logos ([[coil-image-loading]]).
 - `MainActivity` has the default `standard` launch mode and takes `ACTION_SEND` for `image/*`: Share → LoyScan
   ([[add-card]], [[2026-11-03-share-in-standard-launch-mode]], #77, #83).
-- `android.permission.CAMERA` for the [[barcode-scanner]], asked for at runtime. `android.hardware.camera.any` is
+- `android.permission.CAMERA` for the [[barcode-scanner]], asked for at runtime. Declaring it also makes Android refuse
+  `ACTION_IMAGE_CAPTURE` until it is granted, so taking a card photo with the camera app asks for it too ([[card-photos]]).
+  A `<queries>` entry for `android.media.action.IMAGE_CAPTURE` lets the app see a camera app on Android 11+ (#10). `android.hardware.camera.any` is
   declared `required="false"`: cards can be entered by hand, so phones without a camera can install the app.
 - A `FileProvider` (`androidx.core.content.FileProvider`, authority `${applicationId}.photos`, not exported, per-Uri
   grants) hands the camera app a file in `files/card_photos/` to write a card photo into (`res/xml/card_photo_paths.xml`,

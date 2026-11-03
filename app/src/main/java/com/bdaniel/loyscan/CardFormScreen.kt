@@ -14,6 +14,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -29,6 +31,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -48,6 +51,8 @@ import com.bdaniel.loyscan.domain.cardnumber.CardNumberRule
 import com.bdaniel.loyscan.domain.cardnumber.Validation
 import com.bdaniel.loyscan.ui.CARD_ASPECT_RATIO
 import com.bdaniel.loyscan.ui.CardPhoto
+import com.bdaniel.loyscan.ui.PhotoCamera
+import com.bdaniel.loyscan.ui.rememberPhotoCamera
 import com.bdaniel.loyscan.ui.hiltImageLoader
 import com.bdaniel.loyscan.ui.scanner.PicturePicker
 import com.bdaniel.loyscan.ui.scanner.rememberPicturePicker
@@ -69,10 +74,18 @@ fun CardFormScreen(
     viewModel: CardFormViewModel = hiltViewModel(),
     /** Opens the system photo picker for a card photo (#10); a fake in tests. */
     photoPicker: @Composable (onPicked: (Uri?) -> Unit) -> PicturePicker = { rememberPicturePicker(it) },
+    /** Takes a card photo with the camera app (#10); a fake in tests. */
+    photoCamera: @Composable (onResult: (PhotoCamera.Result) -> Unit) -> PhotoCamera = { rememberPhotoCamera(it) },
 ) {
     val state by viewModel.state.collectAsState()
     val store = state.store
     var choosingStore by rememberSaveable { mutableStateOf(false) }
+    // Why the camera couldn't be opened for a photo, until the next photo is taken or picked.
+    var cameraProblem by rememberSaveable { mutableStateOf<PhotoCamera.Result?>(null) }
+    val camera = photoCamera { result ->
+        viewModel.onPhotoTaken(taken = result == PhotoCamera.Result.TAKEN)
+        if (result == PhotoCamera.Result.DENIED || result == PhotoCamera.Result.DENIED_PERMANENTLY) cameraProblem = result
+    }
 
     LaunchedEffect(state.savedCardId) {
         val id = state.savedCardId
@@ -168,7 +181,18 @@ fun CardFormScreen(
                         importing = state.importingPhoto == side,
                         // One picture at a time, and none once saving has started.
                         enabled = state.importingPhoto == null && !state.saving && state.savedCardId == null,
-                        onPick = picker::pick,
+                        onChoose = {
+                            cameraProblem = null
+                            picker.pick()
+                        },
+                        onTake = if (camera.available) {
+                            {
+                                cameraProblem = null
+                                viewModel.startCapture(side)?.let(camera::take)
+                            }
+                        } else {
+                            null
+                        },
                         onRemove = { viewModel.removePhoto(side) },
                         modifier = Modifier.weight(1f),
                     )
@@ -180,6 +204,22 @@ fun CardFormScreen(
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodyMedium,
                 )
+            }
+            when (cameraProblem) {
+                PhotoCamera.Result.DENIED -> Text(
+                    "LoyScan needs the camera to take a photo of your card.",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                PhotoCamera.Result.DENIED_PERMANENTLY -> Column {
+                    Text(
+                        "Camera access is turned off for LoyScan. You can allow it in the app's settings.",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    TextButton(onClick = camera::openSettings) { Text("Open settings") }
+                }
+                else -> Unit
             }
             if (state.saveFailed) {
                 Text(
@@ -213,7 +253,8 @@ internal val CardPhotoSide.photoDescription: String get() = "${sideName.replaceF
 
 /**
  * One side's photo (#10): the photo in the card's proportions with Replace and Remove, a progress indicator while a
- * picked picture is copied in, or a button to add one.
+ * picture is copied in, or a button to add one. Add and Replace offer [onTake] and [onChoose] in a menu; without a
+ * camera app ([onTake] `null`) they choose from the gallery at once.
  */
 @Composable
 private fun PhotoSlot(
@@ -221,11 +262,14 @@ private fun PhotoSlot(
     photo: String?,
     importing: Boolean,
     enabled: Boolean,
-    onPick: () -> Unit,
+    onChoose: () -> Unit,
+    onTake: (() -> Unit)?,
     onRemove: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val sideName = side.sideName
+    var choosing by remember { mutableStateOf(false) }
+    val onPick = { if (onTake == null) onChoose() else choosing = true }
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         when {
             importing -> Box(Modifier.fillMaxWidth().aspectRatio(CARD_ASPECT_RATIO), contentAlignment = Alignment.Center) {
@@ -253,6 +297,20 @@ private fun PhotoSlot(
             }
             else -> OutlinedButton(onClick = onPick, enabled = enabled, modifier = Modifier.fillMaxWidth()) {
                 Text("Add $sideName photo", textAlign = TextAlign.Center)
+            }
+        }
+        if (onTake != null) {
+            Box {
+                DropdownMenu(expanded = choosing, onDismissRequest = { choosing = false }) {
+                    DropdownMenuItem(text = { Text("Take photo") }, onClick = {
+                        choosing = false
+                        onTake()
+                    })
+                    DropdownMenuItem(text = { Text("Choose from gallery") }, onClick = {
+                        choosing = false
+                        onChoose()
+                    })
+                }
             }
         }
     }

@@ -24,11 +24,13 @@ import com.bdaniel.loyscan.domain.cardnumber.CardNumberRule
 import com.bdaniel.loyscan.domain.cardnumber.CheckDigitAlgorithm
 import com.bdaniel.loyscan.testing.FakeCardPhotos
 import com.bdaniel.loyscan.testing.FakeLoyaltyCardRepository
+import com.bdaniel.loyscan.testing.FakePhotoCamera
 import com.bdaniel.loyscan.testing.FakeStoreRepository
 import com.bdaniel.loyscan.testing.SOME_INSTANT
 import com.bdaniel.loyscan.testing.aLoyaltyCard
 import com.bdaniel.loyscan.testing.aStore
 import com.bdaniel.loyscan.testing.cardId
+import com.bdaniel.loyscan.ui.PhotoCamera
 import com.bdaniel.loyscan.ui.scanner.PicturePicker
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -340,7 +342,85 @@ class CardFormScreenTest {
         composeRule.onNodeWithText("Add front photo").assertExists()
     }
 
-    private fun setScreen(route: CardForm) {
+    @Test
+    fun withACameraApp_addingAPhoto_offersTheCameraOrTheGallery() { // #10
+        setScreen(CardForm("ruled"), FakePhotoCamera())
+
+        composeRule.onNodeWithText("Add front photo").performScrollTo().performClick()
+        composeRule.onNodeWithText("Take photo").assertIsDisplayed()
+        composeRule.onNodeWithText("Choose from gallery").performClick()
+
+        assertThat(photos.imported).containsExactly(PICKED)
+        composeRule.onNodeWithContentDescription("Front photo").assertExists()
+    }
+
+    @Test
+    fun withoutACameraApp_addingAPhoto_opensTheGalleryAtOnce() { // #10
+        setScreen(CardForm("ruled"), FakePhotoCamera(available = false))
+
+        composeRule.onNodeWithText("Add front photo").performScrollTo().performClick()
+
+        composeRule.onNodeWithText("Take photo").assertDoesNotExist()
+        assertThat(photos.imported).containsExactly(PICKED)
+    }
+
+    @Test
+    fun takingAPhoto_opensTheCameraAppOnACapture_andShowsThePhotoTaken() { // #10
+        val camera = FakePhotoCamera()
+        setScreen(CardForm("ruled"), camera)
+
+        composeRule.onNodeWithText("Add back photo").performScrollTo().performClick()
+        composeRule.onNodeWithText("Take photo").performClick()
+
+        assertThat(camera.taken).containsExactly(photos.captures.single().uri)
+        composeRule.onNodeWithContentDescription("Back photo").assertExists()
+        assertThat(photos.stored).containsExactly("photo-1")
+    }
+
+    @Test
+    fun replacingAPhoto_offersTheCameraToo() { // #10
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, number = "12345674", frontPhotoPath = "front"))
+        photos.stored += "front"
+        val camera = FakePhotoCamera()
+        setScreen(CardForm("ruled", cardId = cardId(1)), camera)
+
+        composeRule.onNodeWithContentDescription("Replace front photo").performScrollTo().performClick()
+        composeRule.onNodeWithText("Take photo").performClick()
+
+        assertThat(camera.taken).hasSize(1)
+        assertThat(photos.imported).containsExactly(photos.captures.single().uri)
+    }
+
+    @Test
+    fun aCameraDenied_saysWhyItIsNeeded_untilTheNextPhoto() { // #10
+        val camera = FakePhotoCamera().apply { answer = PhotoCamera.Result.DENIED }
+        setScreen(CardForm("ruled"), camera)
+
+        composeRule.onNodeWithText("Add front photo").performScrollTo().performClick()
+        composeRule.onNodeWithText("Take photo").performClick()
+        composeRule.onNodeWithText(CAMERA_NEEDED).performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Open settings").assertDoesNotExist()
+        assertThat(photos.stored).isEmpty()
+
+        composeRule.onNodeWithText("Add front photo").performScrollTo().performClick()
+        composeRule.onNodeWithText("Choose from gallery").performClick()
+        composeRule.onNodeWithText(CAMERA_NEEDED).assertDoesNotExist()
+    }
+
+    @Test
+    fun aCameraDeniedForGood_offersTheSettings() { // #10
+        val camera = FakePhotoCamera().apply { answer = PhotoCamera.Result.DENIED_PERMANENTLY }
+        setScreen(CardForm("ruled"), camera)
+
+        composeRule.onNodeWithText("Add front photo").performScrollTo().performClick()
+        composeRule.onNodeWithText("Take photo").performClick()
+        composeRule.onNodeWithText(CAMERA_TURNED_OFF).performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Open settings").performScrollTo().performClick()
+
+        assertThat(camera.settingsOpened).isEqualTo(1)
+    }
+
+    private fun setScreen(route: CardForm, camera: FakePhotoCamera = FakePhotoCamera(available = false)) {
         val viewModel = CardFormViewModel(
             SavedStateHandle(route = route),
             stores,
@@ -355,11 +435,14 @@ class CardFormScreenTest {
                 viewModel = viewModel,
                 // The system picker, answered at once with PICKED.
                 photoPicker = { onPicked -> PicturePicker { onPicked(PICKED) } },
+                photoCamera = { onResult -> camera.also { it.onResult = onResult } },
             )
         }
     }
 
     private companion object {
         val PICKED: Uri = Uri.parse("content://media/picker/0/1")
+        const val CAMERA_NEEDED = "LoyScan needs the camera to take a photo of your card."
+        const val CAMERA_TURNED_OFF = "Camera access is turned off for LoyScan. You can allow it in the app's settings."
     }
 }
