@@ -32,10 +32,30 @@ class ShareIntentTest {
     }
 
     @Test
-    fun aShareWhileLoyScanIsOnTop_reachesTheOpenScreen() { // singleTop: onNewIntent, not a second LoyScan
+    fun aShareWithNewTaskOnly_stacksALoyScanOfItsOwn() { // standard: an open screen stays beneath it (#83)
         val activity = packageManager.getActivityInfo(ComponentName(context, MainActivity::class.java), 0)
 
-        assertThat(activity.launchMode).isEqualTo(ActivityInfo.LAUNCH_SINGLE_TOP)
+        assertThat(activity.launchMode).isEqualTo(ActivityInfo.LAUNCH_MULTIPLE)
+    }
+
+    @Test
+    fun aShareForwardedToALoyScanOfItsOwn_isTheSameShare_inANewTask_withTheReadGrantPassedOn() { // #83
+        val started = mutableListOf<Intent>()
+
+        share().addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP).forwardToATaskOfItsOwn(context, start = started::add)
+
+        val forwarded = started.single()
+        assertThat(forwarded.component?.className).isEqualTo(MainActivity::class.java.name)
+        assertThat(forwarded.sharedPicture()).isEqualTo(Uri.parse(PICTURE))
+        assertThat(forwarded.flags).isEqualTo(
+            Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK or Intent.FLAG_ACTIVITY_NEW_DOCUMENT or
+                Intent.FLAG_GRANT_READ_URI_PERMISSION
+        )
+    }
+
+    @Test
+    fun aForwardedShareLoyScanHasNoGrantFor_isDropped_insteadOfCrashing() { // seen on a device: SecurityException
+        share().forwardToATaskOfItsOwn(context, start = { throw SecurityException("no permission to $PICTURE") })
     }
 
     @Test

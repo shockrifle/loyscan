@@ -1,6 +1,7 @@
 package com.bdaniel.loyscan
 
 import android.content.ContentResolver
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -31,6 +32,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.receiveAsFlow
+import timber.log.Timber
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @AndroidEntryPoint
@@ -43,7 +45,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         // A recreated activity (rotation, process death) has the share's intent again, but its flow is already open.
         if (savedInstanceState == null) intent.sharedPicture()?.let(sharedPictures::trySend)
-        addOnNewIntentListener { intent -> intent.sharedPicture()?.let(sharedPictures::trySend) }
+        // A share reaches this activity again only if its sender asked for SINGLE_TOP. Opening it here would replace
+        // what is open, e.g. a half-filled card form (#83), so it goes to a LoyScan of its own, as a chooser share does.
+        addOnNewIntentListener { intent -> if (intent.sharedPicture() != null) intent.forwardToATaskOfItsOwn(this) }
         enableEdgeToEdge()
         setContent {
             LoyScanTheme {
@@ -120,4 +124,23 @@ internal fun Intent.sharedPicture(): Uri? {
     if (flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY != 0) return null
     return IntentCompat.getParcelableExtra(this, Intent.EXTRA_STREAM, Uri::class.java)
         ?.takeIf { it.scheme == ContentResolver.SCHEME_CONTENT }
+}
+
+/**
+ * Starts the same share in a new LoyScan task, with the picture's read grant passed on. A share LoyScan was granted
+ * nothing for can't be passed on: `startActivity` grants an `ACTION_SEND`'s stream itself and throws a
+ * `SecurityException`, so that share is dropped and the open screen stays (seen on a device, #83).
+ */
+internal fun Intent.forwardToATaskOfItsOwn(context: Context, start: (Intent) -> Unit = context::startActivity) {
+    val forwarded = Intent(this)
+        .setClass(context, MainActivity::class.java)
+        .setFlags(
+            Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK or Intent.FLAG_ACTIVITY_NEW_DOCUMENT or
+                Intent.FLAG_GRANT_READ_URI_PERMISSION
+        )
+    try {
+        start(forwarded)
+    } catch (e: SecurityException) {
+        Timber.w(e, "A shared picture LoyScan has no grant for was dropped")
+    }
 }

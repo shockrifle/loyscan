@@ -18,8 +18,8 @@ versionName `1.0` (versionCode 1). minSdk 29, target/compileSdk 36, Java/JVM 21 
 ## Manifest facts
 
 - `android.permission.INTERNET` — added in `c4d6bdc` for brand logos ([[coil-image-loading]]).
-- `MainActivity` is `launchMode="singleTop"` and takes `ACTION_SEND` for `image/*`: Share → LoyScan ([[add-card]],
-  [[2026-11-03-share-into-the-sharing-apps-task]], #77).
+- `MainActivity` has the default `standard` launch mode and takes `ACTION_SEND` for `image/*`: Share → LoyScan
+  ([[add-card]], [[2026-11-03-share-in-standard-launch-mode]], #77, #83).
 - `android.permission.CAMERA` for the [[barcode-scanner]], asked for at runtime. `android.hardware.camera.any` is
   declared `required="false"`: cards can be entered by hand, so phones without a camera can install the app.
 - Native code: zxing-cpp ships `.so` files for `arm64-v8a`, `armeabi-v7a`, `x86` and `x86_64` ([[zxing-cpp]]).

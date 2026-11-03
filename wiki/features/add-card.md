@@ -121,9 +121,11 @@ with the picture's barcode (#77, below). Everything runs offline on the local da
 - The same form edits a card (`CardForm.cardId`, title "Edit card"): [[edit-card]].
 
 - **Share → LoyScan** (#77). LoyScan is in the system share sheet for one image (`ACTION_SEND`, `image/*`; not
-  `SEND_MULTIPLE`). On a device, every share through the system chooser started a new LoyScan task of its own, and
-  Back from it returned to the sharing app; a share that reached LoyScan's own task through `onNewIntent` would replace
-  its open screen, which a share sent through adb with `NEW_TASK` alone did, but no app checked does that ([[2026-11-03-share-into-the-sharing-apps-task]] → Device check). Only a
+  `SEND_MULTIPLE`). A share never replaces what LoyScan has open: `MainActivity` is `standard`, and a share that
+  reaches it through `onNewIntent` (a sender asking for `SINGLE_TOP`) is passed on to a new LoyScan task
+  ([[2026-11-03-share-in-standard-launch-mode]], #83). On a device, every share through the system chooser started a
+  new LoyScan task, and Back from it returned to the sharing app
+  ([[2026-11-03-share-into-the-sharing-apps-task]] → Device check). Only a
   `content://` URI is taken (a `file://` one could name the app's own files), and only the picture granted with the share is read, with the scanner's
   `PictureReader` ([[barcode-scanner]] → Scan from image): not copied, stored or sent. Steps:
   - `SharedPicture(uri)` opens over the card list, in place of anything open above it, and says "Reading the
@@ -143,12 +145,14 @@ with the picture's barcode (#77, below). Everything runs offline on the local da
     picker doesn't carry it.
   - Rotation and process death: the scan lives in the picker's route, and what the read found is kept in the
     `SharedPicture` entry's `SavedStateHandle`, so the picture isn't read again (a read still running at process death
-    is read again). `MainActivity` handles the intent only on a fresh `onCreate` and in `onNewIntent`, and ignores a
-    share reopened from recents, so a recreated activity doesn't start the flow again.
-  - Checked on a device (Android 15, 2026-11-03, #84, synthetic card pictures): a screenshot of an EAN-13 card
-    shared from Google Photos opened the picker with Auchan under "Suggested", then the form with the number and
-    "Scanned · EAN-13"; saving opened the card. A QR screenshot shared from the screenshot preview opened the form
-    with "Scanned · QR code" (no "Suggested": no rule reads its number). A picture without a barcode, shared from the
+    is read again). `MainActivity` opens the flow only on a fresh `onCreate`, and ignores a share reopened from
+    recents, so a recreated activity doesn't start the flow again.
+  - Checked on a device (Android 15, 2026-11-03, #84), with card pictures generated with ZXing core (a mock store
+    app layout, not a screenshot of a store's own app): an EAN-13 card shared from Google Photos opened the picker with
+    Auchan under "Suggested", then the form with the number and "Scanned · EAN-13"; saving opened the card. The same
+    from the screenshot preview (a system screenshot of the picture in Google Photos): "Suggested", the form, saved. A
+    QR picture shared from the screenshot preview opened the form with "Scanned · QR code" (no "Suggested": no rule
+    reads its number). A picture without a barcode, shared from the
     ASUS Gallery, said "No barcode was found in that picture…" with "Enter the number by hand".
 
 ## Tests
@@ -175,13 +179,14 @@ with the picture's barcode (#77, below). Everything runs offline on the local da
   `aSecondTapOnAddAnother_…`; the edit tests check an edit's card has `added = false`), `DetailScreenTest`
   (`aCardJustAdded_…`, `aCardOpenedOtherwise_…`, `theOffer_…`, incl. after Edit and during scan mode).
 
-- Share → LoyScan (#77): `ShareIntentTest` (the manifest's filter resolves one image and nothing else, `singleTop`,
-  which intents are a shared picture), `SharedPictureViewModelTest` (reading, each outcome, kept over process death),
+- Share → LoyScan (#77): `ShareIntentTest` (the manifest's filter resolves one image and nothing else, `standard`,
+  which intents are a shared picture, a share passed on to a new task, one without a grant dropped), `SharedPictureViewModelTest` (reading, each outcome, kept over process death),
   `SharedPictureScreenTest`, `StorePickerViewModelTest` and `StorePickerScreenTest` (`…SharedScan…`, `…Suggest…`:
   ranking, none without a scan or a reading rule, hidden while searching, above "Frequently added"),
   `AddCardDirectionsTest` (`aSharedPicture…`, `…ForASharedScan…`, `…TypedByHand…`), and
   `ShareToLoyScanTest`, end to end with `FakePictureReaderModule`: share → picker → form, back to the list, no barcode
-  → by hand, `onNewIntent`, recreating the activity.
+  → by hand, a share through `onNewIntent` keeps a half-filled form and starts a LoyScan of its own (#83), recreating
+  the activity.
 
 ## Not implemented
 

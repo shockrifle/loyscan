@@ -1,6 +1,6 @@
 # A share opens LoyScan through the chooser (`singleTop`)
 
-**Status:** Active · **Date:** 2026-11-03 · **Commits:** see `git log --grep "#77"`
+**Status:** Superseded by [[2026-11-03-share-in-standard-launch-mode]] (same day, #83) · **Date:** 2026-11-03 · **Commits:** see `git log --grep "#77"`
 
 ## Context
 

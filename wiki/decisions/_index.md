@@ -24,10 +24,11 @@ inferred.
 - [[2026-10-28-datastore-for-user-preferences]] — user preferences (the card list's sort) in one DataStore Preferences file behind `UserPreferencesRepository`; unknown values read as the default
 - [[2026-10-28-portrait-on-phones]] — on a phone every screen but the card is held in portrait; screens 600dp or wider rotate freely (#63)
 - [[2026-10-30-frequently-added-stores]] — "frequently added" is a curated catalogue flag; the country is the SIM's, then the network's, then the locale's; added to schema v2 in place
-- [[2026-11-03-share-into-the-sharing-apps-task]] — `MainActivity` is `singleTop`; on a device every chooser share started a new LoyScan task, so `onNewIntent` never ran and an open card form was kept (#77, #84)
+- [[2026-11-03-share-in-standard-launch-mode]] — `MainActivity` is `standard`; a share that reaches an open LoyScan (`onNewIntent`) is passed on to a new task, so a share never replaces an open card form (#83)
 - [[2026-10-22-store-suggestion-trigger]] — the card form offers other stores for a scan the picked store rejects, reads only by symbology, or has no rule for; exact format ranks first
 
 ## Superseded
 
 - [[2025-12-09-seed-db-from-sql-asset]] — demo data from a `.sql` asset in `Callback.onCreate`; superseded by
   [[2026-10-13-curated-store-catalogue]]
+- [[2026-11-03-share-into-the-sharing-apps-task]] — `MainActivity` was `singleTop` so a share could reach an open LoyScan; on a device chooser shares never did, and a `NEW_TASK` share dropped an open form (#77, #84); superseded by [[2026-11-03-share-in-standard-launch-mode]]

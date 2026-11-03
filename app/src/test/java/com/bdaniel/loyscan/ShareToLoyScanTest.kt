@@ -1,5 +1,6 @@
 package com.bdaniel.loyscan
 
+import android.app.Application
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.ui.test.hasText
@@ -7,6 +8,7 @@ import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -27,6 +29,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import javax.inject.Inject
 
@@ -103,16 +106,26 @@ class ShareToLoyScanTest {
     }
 
     @Test
-    fun aShareWhileLoyScanIsOpen_startsTheSameFlow() {
+    fun aShareReachingTheOpenLoyScan_keepsItsForm_andOpensInALoyScanOfItsOwn() { // #83
         pictureReader.result = PictureScan.Found(EAN_13_SCAN)
-        scenario = ActivityScenario.launch(MainActivity::class.java)
-        waitForText("My Cards")
-
-        scenario!!.onActivity { InstrumentationRegistry.getInstrumentation().callActivityOnNewIntent(it, share()) }
-
+        scenario = ActivityScenario.launch(share())
         waitForText("Choose store")
         composeRule.onNodeWithText("Test Store").performClick()
-        waitForText("Scanned · ${BarcodeFormat.EAN_13.displayName}")
+        waitForText("Label (optional)")
+        composeRule.onNodeWithText("Label (optional)").performTextInput("Half-filled")
+
+        // A sender's FLAG_ACTIVITY_SINGLE_TOP reaches the open activity even in standard mode.
+        scenario!!.onActivity { InstrumentationRegistry.getInstrumentation().callActivityOnNewIntent(it, share()) }
+
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("Half-filled").assertExists()
+        composeRule.onNodeWithText("Choose store").assertDoesNotExist()
+        val forwarded = shadowOf(ApplicationProvider.getApplicationContext<Application>()).nextStartedActivity
+        assertThat(forwarded.component?.className).isEqualTo(MainActivity::class.java.name)
+        assertThat(forwarded.sharedPicture()).isEqualTo(Uri.parse(PICTURE))
+        assertThat(forwarded.flags and SHARE_IN_A_TASK_OF_ITS_OWN).isEqualTo(SHARE_IN_A_TASK_OF_ITS_OWN)
+        assertThat(forwarded.flags and Intent.FLAG_ACTIVITY_SINGLE_TOP).isEqualTo(0)
+        assertThat(pictureReader.reads).hasSize(1)
     }
 
     @Test
@@ -139,6 +152,8 @@ class ShareToLoyScanTest {
 }
 
 private const val PICTURE = "content://media/picker/0/42"
+private const val SHARE_IN_A_TASK_OF_ITS_OWN =
+    Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK or Intent.FLAG_ACTIVITY_NEW_DOCUMENT
 private val EAN_13_SCAN = ScannedBarcode("5901234123457", BarcodeFormat.EAN_13)
 
 // waitUntil's 1 s default timed out on a slow CI runner (#56).

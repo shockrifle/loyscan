@@ -3,6 +3,8 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-03 · added: MainActivity back to standard launch mode, a share through onNewIntent passed on to a new task (a share LoyScan has no grant for is dropped, not a crash); singleTop decision superseded · decisions/2026-11-03-share-in-standard-launch-mode (new), decisions/2026-11-03-share-into-the-sharing-apps-task, decisions/_index, features/add-card, apps/android-app, workflows/tdd · #83
+- 2026-11-03 · updated: screenshot-preview share checked with an EAN-13 ("Suggested", saved); device-check pictures stated as generated, not store-app screenshots · features/add-card, features/barcode-scanner · review of the device checks
 - 2026-11-03 · added: device check of Share → LoyScan; every chooser share started a new LoyScan task (MULTIPLE_TASK | NEW_DOCUMENT), onNewIntent never ran, an open form was kept; an adb share with NEW_TASK alone went through onNewIntent and dropped the form (corrects the page's task model and title) · decisions/2026-11-03-share-into-the-sharing-apps-task, decisions/_index, features/add-card · #84, #83
 - 2026-11-03 · added: device check of reading a picture (EAN-13, Code 128, QR screenshots, 65 MP photo, no barcode); photo picker's "Done" bar · features/barcode-scanner · #76
 - 2026-11-03 · added: a fresh install got an old loyscan.db from Google cloud backup and crashed on launch · apps/android-app, runbooks/reset-local-database · #71, #12

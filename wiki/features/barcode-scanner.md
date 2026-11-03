@@ -88,7 +88,7 @@ after the store picker of [[add-card]]; a scan or "Enter manually" replaces it w
 
 Not covered by JVM tests: `ProcessCameraOpener`, `ZxingCppFrameReader.read`, `ZxingCppBitmapReader` and
 `decodePicture`, which need a camera, the native library or a real image decoder. Reading a picture, checked on a
-device (Android 15, 2026-11-03, #76, synthetic pictures made with ZXing core): 1080×2400 screenshots of an EAN-13, a
+device (Android 15, 2026-11-03, #76, pictures generated with ZXing core, not screenshots of a store's app): 1080×2400 screenshots of an EAN-13, a
 Code 128 and a QR card each opened the form with their number and format; a 5400×12000 (65 MP) JPEG of the EAN-13 card,
 scaled to 8 MP, read too; a picture without a barcode said so and kept the scanner open. The Android 15 photo picker
 (Google Photos tab) shows a "Done" bar even for this single-picture request, so picking takes a tap on the picture and

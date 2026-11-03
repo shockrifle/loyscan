@@ -24,15 +24,14 @@
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:launchMode="singleTop"
             android:theme="@style/Theme.LoyScan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <!-- Share -> LoyScan: one picture, read for a card's barcode (#77). singleTop: a share while LoyScan is on
-                 top of the task reaches the open activity (onNewIntent) instead of stacking a second one. -->
+            <!-- Share -> LoyScan: one picture, read for a card's barcode (#77). Standard launch mode: a share always
+                 gets a LoyScan of its own, so an open screen (a half-filled card form) stays beneath it (#83). -->
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
 
