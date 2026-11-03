@@ -99,8 +99,10 @@ still open.
 ## 6. Push
 
 Gates, all required: the reviewer's last round has no blocker or major findings (or I accepted the ones that
-remain), `./gradlew testDebugUnitTest koverVerify assembleDebug` passes, the working tree is clean, and every
-commit follows the "Public-safe" rule in `wiki/CLAUDE.md`.
+remain), the reviewer really ran on Sonnet at high effort
+(`python -I .claude/scripts/reviewer_model.py <agent id> --expect claude-sonnet-5-5 --effort high` exits 0; if not,
+stop and show me its output), `./gradlew testDebugUnitTest koverVerify assembleDebug` passes, the working tree is
+clean, and every commit follows the "Public-safe" rule in `wiki/CLAUDE.md`.
 
 Then `git fetch origin` again. If `origin/master` moved, `git pull --rebase`, rerun the tests, and tell me. Then
 `git push`. Watch the CI run for the pushed commit (`gh run watch`). If it fails, investigate and report; don't

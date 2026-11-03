@@ -40,7 +40,7 @@ wiki/
 ├── workflows/          # how things get done — build, run, change the DB schema, add deps
 ├── runbooks/           # what to do when something breaks — step-by-step, real commands
 ├── integrations/       # external systems we depend on (contract + quirks)
-├── scripts/            # notable scripts / CLIs (none yet)
+├── scripts/            # notable scripts / CLIs
 ├── decisions/          # YYYY-MM-DD-<slug>.md — one per decision
 ├── bugs/               # YYYY-MM-DD-<slug>.md — one postmortem per notable bug
 ├── tech-debt/          # one page per longer-lived owed work item

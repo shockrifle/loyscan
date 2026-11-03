@@ -37,9 +37,23 @@ Why it is set up this way:
   but every reviewer transcript since 2026-10-08 shows `claude-opus-5-5` as the responding model. An Opus
   reviewer is the same model as the main session. Sonnet is a different model and uses less of the plan's
   allowance, and high effort makes up some of the depth it lacks. If findings get noticeably shallower, use
-  `opus`. To check which model actually answered, look at the `"model"` field of the assistant messages in the
-  subagent's transcript (`~/.claude/projects/<project>/<session>/subagents/agent-<id>.jsonl`), not at what the
-  agent says about itself.
+  `opus`.
+- **Check the model from the API traffic, not from labels.** `/next-task` makes it a push gate. Run [[reviewer-model]]
+  (`python -I .claude/scripts/reviewer_model.py <agent id> --expect claude-sonnet-5-5 --effort high`). It compares
+  what each API request asked for (`params.model`, `params.output_config.effort`) with what answered
+  (`message.model`, per message id) in the subagent's transcript (`~/.claude/projects/<project>/<session>/subagents/agent-<id>.jsonl`).
+  Not proof of the model:
+  - what the agent says about itself;
+  - the `.meta.json` next to the transcript, whose `"model"` is the alias it was spawned with. The Fable-era
+    reviewers' meta says `fable`, while every request already asked for `claude-opus-5-5`: the fallback happens
+    before any request is sent;
+  - a text search for `claude-opus-5-5`. It is in every transcript even when Opus never answers: the `advisor` tool
+    in the tool list, and the `advisorModel` field on each response. Only an advisor call that ran counts.
+
+  Checked 2026-11-03 (corrected the same day: this said to read the `"model"` field). The camera-slice review of #10
+  ran on `claude-sonnet-5-5` at `high` on all 17 requests and responses, with no advisor call. The Fable-era
+  reviews of #87 and #65 ran on `claude-opus-5-5` at `medium`: the old command set no effort, so they got the default
+  *(inferred)*.
 - **The reviewer has the wiki rules but may challenge them.** The prompt tells it that a recorded decision is not
   proof that the code is right.
 - **Disagreement is resolved by evidence, then by the user.** Neither side simply obeys the other. This is the

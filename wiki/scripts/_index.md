@@ -2,5 +2,6 @@
 
 Notable scripts, CLIs and custom Gradle tasks: what each does, how to invoke it, inputs and outputs, and gotchas.
 
-_None yet._ The project uses only the stock Gradle wrapper tasks — see [[build-and-run]]. Add a page when a
-script or custom task is added.
+- [[reviewer-model]]: which model and effort a Claude Code subagent (the `/next-task` reviewer) really ran on.
+
+The build uses only the stock Gradle wrapper tasks ([[build-and-run]]).
