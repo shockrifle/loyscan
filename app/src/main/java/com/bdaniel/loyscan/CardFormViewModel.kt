@@ -267,7 +267,7 @@ class CardFormViewModel @Inject constructor(
         return !current.saving && current.savedCardId == null && current.importing == null
     }
 
-    /** Deletes the file of a capture the camera app never answered, e.g. when the form closes. */
+    /** Deletes the file of a capture the camera app never answered, before a new one replaces it. */
     private fun discardCapture() {
         savedStateHandle.get<String>(CAPTURE)?.let { photos.discard(listOf(it)) }
         clearCapture()
@@ -289,11 +289,11 @@ class CardFormViewModel @Inject constructor(
 
     /**
      * A form closed unsaved deletes the photos picked in it; one closed while saving leaves them to the save (#10). A
-     * capture the camera app never answered goes either way.
+     * capture the camera app hasn't answered stays: this also runs when the activity is destroyed behind the camera
+     * app, and the form restored from its saved state then imports it. One never answered is swept.
      */
     override fun onCleared() {
         cleared = true
-        discardCapture()
         val current = progress.value
         if (!current.saving && current.savedCardId == null) photos.discard(pickedNames())
     }

@@ -213,6 +213,7 @@ class FileCardPhotosTest {
         val imported = photos.import(first.uri)
 
         assertThat(first.name).isNotEqualTo(second.name)
+        assertThat(first.name).endsWith(".jpg") // #10 review: a camera app may go by the target's extension
         assertThat(File(first.uri.path!!)).isEqualTo(File(directory, first.name))
         assertThat(photos.file(imported).shown()).isEqualTo(Shown(40, 20, Color.RED, Color.GREEN, Color.BLUE))
     }

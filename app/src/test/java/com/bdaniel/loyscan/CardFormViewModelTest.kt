@@ -1264,18 +1264,27 @@ class CardFormViewModelTest {
     }
 
     @Test
-    fun aFormClosedWithoutSaving_deletesACaptureTheCameraNeverAnswered() = runTest { // #10
+    fun aPhotoTaken_isImported_whenTheFormWasClearedBehindTheCameraApp() = runTest { // #10 review
+        // The activity destroyed while the camera app is in front, its process alive ("Don't keep activities"):
+        // the form's ViewModel is cleared, but the form comes back from its saved state.
+        val handle = SavedStateHandle(route = CardForm("ruled"))
         val owner = ViewModelStore()
-        val viewModel = owner.keep { viewModel(CardForm("ruled")) }
-        viewModel.state.test {
+        val first = owner.keep { viewModel(handle) }
+        first.state.test {
             awaitLoaded()
-            viewModel.startCapture(CardPhotoSide.FRONT)
+            first.startCapture(CardPhotoSide.FRONT)
             cancelAndIgnoreRemainingEvents()
         }
-
         owner.clear()
 
-        assertThat(photos.stored).isEmpty()
+        val restored = viewModel(handle)
+        restored.state.test {
+            awaitLoaded()
+            restored.onPhotoTaken(taken = true)
+            assertThat(expectMostRecentItem().frontPhoto).isEqualTo("photo-1")
+        }
+
+        assertThat(photos.imported).containsExactly(photos.captures.single().uri)
     }
 
     @Test

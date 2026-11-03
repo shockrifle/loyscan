@@ -100,17 +100,18 @@ class FileCardPhotos(
         }
     }
 
-    /** A name that isn't a photo's has no file, rather than throwing: it comes from a row, which a screen shows (#87). */
     /**
-     * Next to the photos, so the sweep catches one a killed process leaves. Creates the directory on the caller's
-     * thread: the camera app's write needs it, and the Uri is needed at once to start the camera.
+     * Next to the photos, so the sweep catches one a killed process leaves. A `.jpg`, so the camera app is offered an
+     * `image/jpeg` target. Creates the directory on the caller's thread: the camera app's write needs it, and the Uri
+     * is needed at once to start the camera.
      */
     override fun newCapture(): PhotoCapture {
-        val name = "${UUID.randomUUID()}.capture"
+        val name = "${UUID.randomUUID()}.jpg"
         directory.mkdirs()
         return PhotoCapture(name, shareCapture(file(name)))
     }
 
+    /** A name that isn't a photo's has no file, rather than throwing: it comes from a row, which a screen shows (#87). */
     override suspend fun exists(name: String): Boolean =
         isPhotoName(name) && withContext(ioDispatcher) { file(name).isFile }
 

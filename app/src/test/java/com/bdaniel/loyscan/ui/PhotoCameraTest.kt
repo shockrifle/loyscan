@@ -2,6 +2,7 @@ package com.bdaniel.loyscan.ui
 
 import android.Manifest
 import android.app.Application
+import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Intent
 import android.content.IntentFilter
@@ -45,12 +46,16 @@ class PhotoCameraTest {
 
     /** Whether the camera app took a photo. */
     private var photoTaken = true
+
+    /** When set, there is no camera app after all: launching it throws this. */
+    private var noCameraApp: ActivityNotFoundException? = null
     private var pendingRequest: Int? = null
 
     private val registry = object : ActivityResultRegistry() {
         override fun <I, O> onLaunch(requestCode: Int, contract: ActivityResultContract<I, O>, input: I, options: ActivityOptionsCompat?) {
             launched += input
             if (input is Uri) {
+                noCameraApp?.let { throw it }
                 dispatchResult(requestCode, photoTaken)
                 return
             }
@@ -145,6 +150,17 @@ class PhotoCameraTest {
     }
 
     @Test
+    fun aCameraAppGoneSinceItWasFound_isNotTaken() { // #10 review: uninstalled or disabled meanwhile
+        grant()
+        noCameraApp = ActivityNotFoundException("no camera app")
+        setContent()
+
+        composeRule.runOnIdle { camera.take(TARGET) }
+
+        composeRule.runOnIdle { assertThat(results).containsExactly(Result.NOT_TAKEN) }
+    }
+
+    @Test
     fun withoutACameraApp_isNotAvailable() {
         setContent()
 
@@ -164,6 +180,6 @@ class PhotoCameraTest {
     }
 
     private companion object {
-        val TARGET: Uri = Uri.parse("content://com.bdaniel.loyscan.photos/card_photos/1.capture")
+        val TARGET: Uri = Uri.parse("content://com.bdaniel.loyscan.photos/card_photos/1.jpg")
     }
 }

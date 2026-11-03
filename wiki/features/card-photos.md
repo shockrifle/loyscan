@@ -47,12 +47,15 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   `cameraPermissionStatus`) says "Camera access is turned off for LoyScan. You can allow it in the app's settings." with
   "Open settings". The next photo taken or picked clears either. Whether there is a camera app is read with
   `resolveActivity`, which on Android 11+ sees it only through the manifest's `<queries>` ([[android-app]]).
-- **A photo taken with the camera** goes through a capture file: `startCapture(side)` makes `<uuid>.capture` in
+- **A photo taken with the camera** goes through a capture file: `startCapture(side)` makes `<uuid>.jpg` in
   `files/card_photos/` (`CardPhotos.newCapture`) and returns its `content://<applicationId>.photos/…` Uri for the camera
   app to write. `onPhotoTaken(taken)` then copies it in exactly like a pick (re-encoded, #88) and deletes the capture,
   whether the copy worked or not; a camera that took nothing deletes it too. The capture's name, Uri and side are in
   the `SavedStateHandle` (`capture`, `captureUri`, `captureSide`), since the process may die while the camera app is
-  in front. A form closed with a capture unanswered deletes it; one a killed process leaves is swept (Orphans). No
+  in front. The form's `onCleared` leaves an unanswered capture alone: it also runs when the activity is destroyed
+  behind the camera app while the process lives ("Don't keep activities"), and the restored form then imports it
+  (found in review, `aPhotoTaken_isImported_whenTheFormWasClearedBehindTheCameraApp`). One never answered is swept
+  (Orphans). The `.jpg` name gives the camera app an `image/jpeg` target. No
   capture starts while a photo is copied in or once saving has started (`startCapture` returns `null`).
 - **On the list** ([[card-list]]): the front photo is the card's tile, with the label on a dark scrim; a card with only
   a back photo, or a front photo that can't be loaded, keeps the initials.
@@ -93,7 +96,7 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   `aPictureThatCantBeCopiedIn_…`, `aCancelledPick_…`, `noPhotoCanBePickedOrRemoved_onceSavingHasStarted`,
   `aPickedPhoto_isRestoredAfterProcessDeath`. Camera captures: `aPhotoTaken_isImportedLikeAPick_andItsCaptureDeleted`,
   `aCameraThatTookNoPhoto_…`, `aPhotoTakenThatCantBeImported_…`, `aPhotoTaken_isImported_afterProcessDeathWhileTheCameraWasOpen`,
-  `noCaptureStarts_…`, `aFormClosedWithoutSaving_deletesACaptureTheCameraNeverAnswered`. `CardFormScreenTest`: `addingAFrontPhoto_…`,
+  `noCaptureStarts_…`, `aPhotoTaken_isImported_whenTheFormWasClearedBehindTheCameraApp`. `CardFormScreenTest`: `addingAFrontPhoto_…`,
   `editingACard_showsItsPhoto_whichCanBeReplacedOrRemoved`, `aPictureThatCantBeCopiedIn_saysSo`; the camera:
   `withACameraApp_addingAPhoto_offersTheCameraOrTheGallery`, `withoutACameraApp_addingAPhoto_opensTheGalleryAtOnce`,
   `takingAPhoto_opensTheCameraAppOnACapture_andShowsThePhotoTaken`, `replacingAPhoto_offersTheCameraToo`,

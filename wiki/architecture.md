@@ -70,7 +70,9 @@ Tests run on the JVM (`./gradlew testDebugUnitTest`, see [[build-and-run]]); sha
   replaces with `FakeCameraPermission` and a recording fake ([[barcode-scanner]] → Tests). A system picker is a
   `PicturePicker` parameter, and reading what it returns a `PictureReader` in the ViewModel (`FakePictureReader`). The
   card form makes one picker per photo side, so it takes a `photoPicker` factory; copying a picked picture in is
-  `CardPhotos` (`FakeCardPhotos`, [[card-photos]]).
+  `CardPhotos` (`FakeCardPhotos`, [[card-photos]]). The camera app that takes a card photo is a `photoCamera` factory
+  returning a `PhotoCamera` (`FakePhotoCamera`); the real `rememberPhotoCamera` is tested over a test
+  `ActivityResultRegistry` (`PhotoCameraTest`).
 - **Device facts behind a seam.** The user's country is a `fun interface UserCountry` (`data/device/UserCountry.kt`), so
   a ViewModel test passes a lambda (`StorePickerViewModel(repository) { "HU" }`) and only `DeviceUserCountry` reads
   the phone, tested on Robolectric's telephony shadow (`DeviceUserCountryTest`).

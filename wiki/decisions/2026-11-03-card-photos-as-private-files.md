@@ -35,7 +35,7 @@ by deleting its custom store, where `ON DELETE CASCADE` deletes the rows in SQLi
   deleted after, and one a killed process leaves is an orphan for the sweep below. A file that can't be decoded throws,
   so the form says the photo couldn't be added. (Changed 2026-11-03 for #88: this was a byte-for-byte copy.)
 - **A photo taken with the camera** (added 2026-11-03, the camera slice of #10) is written by the camera app into a
-  capture file in the same directory, `<uuid>.capture` (`CardPhotos.newCapture`), handed to it as a
+  capture file in the same directory, `<uuid>.jpg` (`CardPhotos.newCapture`), handed to it as a
   `content://<applicationId>.photos/…` Uri by `androidx.core`'s `FileProvider`, whose paths (`res/xml/card_photo_paths.xml`)
   cover only `card_photos/`. The capture is then imported like a pick and deleted. In the photo directory rather than
   `cache/`: the sweep below already deletes an old file no card names, so a capture a killed process leaves goes

@@ -41,6 +41,7 @@ class CardPhotosModuleTest {
 
         assertThat(capture.uri.scheme).isEqualTo(ContentResolver.SCHEME_CONTENT)
         assertThat(capture.uri.authority).isEqualTo("${context.packageName}.photos")
+        assertThat(context.contentResolver.getType(capture.uri)).isEqualTo("image/jpeg")
         assertThat(photos.file(capture.name).readBytes()).isEqualTo(byteArrayOf(1, 2, 3))
     }
 }
