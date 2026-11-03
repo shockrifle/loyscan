@@ -30,7 +30,7 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   it (`onCleared`, through `CardPhotos.discard`, since `viewModelScope` is already cancelled). A form closed while
   its save runs leaves them to the save, and a save that then fails deletes them.
 - **On the list** ([[card-list]]): the front photo is the card's tile, with the label on a dark scrim; a card with only
-  a back photo keeps the initials.
+  a back photo, or a front photo that can't be loaded, keeps the initials.
 - **On the card** ([[card-detail]]): under the note, the photos it has, front first; a tap shows one full screen
   on black (`PhotoViewer`, `PHOTO_VIEWER_TAG`), and a tap or Back closes it.
 - **Orphans:** a process killed with a form open (swiped from Recents) skips `onCleared`. On every database open
@@ -74,6 +74,7 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
 - `ui/CardPhotoTest`: the app's loader maps a `CardPhoto` to its file.
 - The list tile: `ListScreenTest.aCardWithAFrontPhoto_showsItOnItsTile_inPlaceOfTheInitials`,
   `aCardWithOnlyABackPhoto_showsTheInitialsOnItsTile`, `aTileWhoseFrontPhotoFileIsMissing_showsTheInitials`,
+  `aFrontPhotoThatCantBeLoaded_showsTheInitials`,
   `ListViewModelTest.aFrontPhotoWhoseFileIsMissing_isLeftOffTheTile` (#89). End to end:
   `AppNavigationTest.aCardsFrontPhoto_isLoadedOntoItsTile_byTheAppsImageLoader`.
 - `CardPhotoSweepCallbackTest` (on-disk database, closed and reopened), `DatabaseModuleTest.opening_sweepsAnOldPhotoNoCardNames`,

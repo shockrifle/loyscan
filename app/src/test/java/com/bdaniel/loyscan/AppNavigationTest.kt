@@ -29,12 +29,12 @@ import com.bdaniel.loyscan.testing.STORE_ID
 import com.bdaniel.loyscan.testing.aLoyaltyCardEntity
 import com.bdaniel.loyscan.testing.aStoreEntity
 import com.bdaniel.loyscan.testing.cardId
+import com.bdaniel.loyscan.testing.writeOnePixelPng
 import com.google.common.truth.Truth.assertThat
 import coil.ImageLoader
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
-import java.util.Base64
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
@@ -440,8 +440,7 @@ class AppNavigationTest {
         composeRule.waitUntil(WAIT_TIMEOUT_MS) { ShadowLooper.idleMainLooper(); (imageLoader.memoryCache?.size ?: 0) > 0 }
 
     /** A photo file where the app keeps card photos, named [name]: a real 1×1 PNG, so the card screen can show it. */
-    private fun storedPhoto(name: String) =
-        photos.file(name).apply { parentFile!!.mkdirs(); writeBytes(Base64.getDecoder().decode(ONE_PIXEL_PNG)) }
+    private fun storedPhoto(name: String) = photos.file(name).writeOnePixelPng()
 
     private val requestedOrientation get() = composeRule.activity.requestedOrientation
 
@@ -450,6 +449,3 @@ class AppNavigationTest {
 
 // waitUntil's 1 s default timed out on a slow CI runner (#56).
 private const val WAIT_TIMEOUT_MS = 10_000L
-
-/** A 1×1 PNG. */
-private const val ONE_PIXEL_PNG = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="

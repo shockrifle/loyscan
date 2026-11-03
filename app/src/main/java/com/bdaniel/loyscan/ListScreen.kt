@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -42,6 +44,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -67,6 +70,7 @@ import com.bdaniel.loyscan.domain.CardSort
 import com.bdaniel.loyscan.domain.LoyaltyCard
 import com.bdaniel.loyscan.ui.CARD_ASPECT_RATIO
 import com.bdaniel.loyscan.ui.CardPhoto
+import com.bdaniel.loyscan.ui.PHOTO_LABEL_SCRIM
 import com.bdaniel.loyscan.ui.hiltImageLoader
 import com.bdaniel.loyscan.ui.theme.icons.Icons
 import com.bdaniel.loyscan.ui.contrastingTextColor
@@ -338,7 +342,10 @@ fun SharedTransitionScope.CardItem(
     onLongClick: () -> Unit = {},
 ) {
     val cardColor = card.store.color.toBrandColorOrNull() ?: MaterialTheme.colorScheme.surfaceVariant
-    val photo = card.frontPhotoPath
+    // A photo that can't be loaded (a broken file) falls back to the initials, not a bare brand-colour box. While it
+    // loads, the brand colour shows: initials there would flash on every tile that has a photo.
+    var photoFailed by remember(card.frontPhotoPath) { mutableStateOf(false) }
+    val photo = card.frontPhotoPath?.takeUnless { photoFailed }
     // On a photo, the label sits on a dark scrim, so it is white whatever the photo's colours.
     val textColor = if (photo != null) Color.White else cardColor.contrastingTextColor()
     Card(
@@ -369,6 +376,7 @@ fun SharedTransitionScope.CardItem(
                         contentDescription = null, // The tile is described as a whole.
                         imageLoader = hiltImageLoader(),
                         contentScale = ContentScale.Crop,
+                        onError = { photoFailed = true },
                         modifier = Modifier.fillMaxSize().testTag(CARD_TILE_PHOTO_TAG),
                     )
                 }
@@ -392,12 +400,13 @@ fun SharedTransitionScope.CardItem(
                             )
                         }
                     }
+                    // On a photo, the scrim fades in above the label and is at full strength behind the text.
+                    if (photo != null) Spacer(Modifier.fillMaxWidth().height(16.dp).background(PHOTO_SCRIM_FADE))
                     Text(
                         text = card.label ?: card.store.name,
                         modifier = Modifier
                             .fillMaxWidth()
-                            // The scrim starts above the text, so it is already dark behind it.
-                            .then(if (photo != null) Modifier.background(PHOTO_SCRIM).padding(top = 16.dp) else Modifier)
+                            .then(if (photo != null) Modifier.background(PHOTO_LABEL_SCRIM) else Modifier)
                             .padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
                         style = MaterialTheme.typography.bodyMedium,
                         color = textColor,
@@ -421,5 +430,5 @@ fun SharedTransitionScope.CardItem(
     }
 }
 
-/** Darkens a photo from clear to 60% black behind the label, so white text reads on any photo. */
-private val PHOTO_SCRIM = Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.6f)))
+/** Fades a photo from clear into [PHOTO_LABEL_SCRIM] above the label, so the scrim has no hard edge. */
+private val PHOTO_SCRIM_FADE = Brush.verticalGradient(listOf(Color.Transparent, PHOTO_LABEL_SCRIM))

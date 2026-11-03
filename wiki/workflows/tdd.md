@@ -74,6 +74,10 @@ Shared helpers are in `testing/`:
   When you change an interface's contract, change the fake in the same commit. No mocking library.
 - **`FakeCardPhotos`** stands in for `CardPhotos` in ViewModel and screen tests: `stored` is the set of photo names
   that exist (imports are named `photo-1`, `photo-2`…), and `importFailure` / `importGate` make a copy fail or hold.
+  It only answers `exists`: the image loader still looks for the file in `files/card_photos/`. A screen test that needs
+  the photo to load writes one there with `File.writeOnePixelPng()` (`testing/PhotoFiles.kt`) and waits for it in the
+  app loader's memory cache, idling the main looper (`ListScreenTest.aCardWithAFrontPhoto_…`); a name with no file
+  there is a photo that fails to load (`aFrontPhotoThatCantBeLoaded_…`).
 - **`MainDispatcherRule`** for anything that uses `viewModelScope`. A timer in a ViewModel takes its duration as a
   constructor parameter (`ScannerViewModel(hintDelay)`): `advanceTimeBy` tests it in virtual time, and a screen test
   passes `Duration.ZERO`. A timeout around work on another thread fires at once under `runTest`, which jumps virtual

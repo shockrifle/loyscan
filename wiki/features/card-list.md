@@ -52,13 +52,16 @@ tiles, one per row in `loyalty_cards`, live-updating from Room. Sort, search and
   box (`contrastingTextColor()`, `ui/BrandColor.kt`; `BrandColorTest`). Tests: `ListScreenTest.aTile_…`,
   `aTileWithoutALabel_showsTheStoreName`.
 - **A card with a front photo** ([[card-photos]], #10) shows it as its tile, cropped to fill the box (`CARD_TILE_PHOTO_TAG`),
-  in place of the initials or logo; the label stays at the bottom left in white, on a gradient scrim from clear to 60% black
-  (`PHOTO_SCRIM`) that starts 16dp above it. The brand colour shows under the photo while it loads. The back photo is
-  only on the card screen. A front photo whose file is missing (a cloud restore, #87) is left off the card by
+  in place of the initials or logo; the label stays at the bottom left in white, on a 60% black band
+  (`PHOTO_LABEL_SCRIM`, `ui/CardPhoto.kt`) that a 16dp gradient fades into above it. Over a white photo that is 5.7:1, past
+  WCAG AA's 4.5:1 (`BrandColorTest.whiteText_onThePhotoLabelScrim_readsOnAWhitePhoto`); the first version's gradient ran
+  through the text and left it at about 2.4:1 (review of #10). The brand colour shows under the photo while it loads
+  (initials there would flash on every photo tile), and a photo the loader can't load, e.g. a broken file, falls back to
+  the initials (`onError`). The back photo is only on the card screen. A front photo whose file is missing (a cloud restore, #87) is left off the card by
   `ListViewModel` (`CardPhotos.withoutMissing`), so the tile shows the initials rather than an empty image (#89). Tile
   images, photo and logo, load through `hiltImageLoader()` ([[coil-image-loading]]). Tests:
   `ListScreenTest.aCardWithAFrontPhoto_showsItOnItsTile_inPlaceOfTheInitials`, `aCardWithOnlyABackPhoto_…`,
-  `aTileWhoseFrontPhotoFileIsMissing_showsTheInitials`, `ListViewModelTest.aFrontPhotoWhoseFileIsMissing_isLeftOffTheTile`,
+  `aTileWhoseFrontPhotoFileIsMissing_showsTheInitials`, `aFrontPhotoThatCantBeLoaded_showsTheInitials`, `ListViewModelTest.aFrontPhotoWhoseFileIsMissing_isLeftOffTheTile`,
   end to end `AppNavigationTest.aCardsFrontPhoto_isLoadedOntoItsTile_byTheAppsImageLoader` (only the app's loader can
   map a `CardPhoto` to its file, so the photo reaches its memory cache).
 - The colored box is the shared element `card/{id}` — [[card-transition]].
@@ -85,7 +88,7 @@ tiles, one per row in `loyalty_cards`, live-updating from Room. Sort, search and
     (`ListViewModelTest.deletingTheSelection_…`, `aFailedDelete_…`, `ListScreenTest.deletingTheSelection_…`,
     `AppNavigationTest.selectingCardsOnTheList_andDeletingThem_keepsTheOthers`). The cards' photo files are deleted
     with them ([[card-photos]]).
-- The Settings icon in the top bar is a no-op (`ListScreen.kt:139`, `/* TODO */`).
+- The Settings icon in the top bar is a no-op (`ListScreen.kt:143`, `/* TODO */`).
 - The "Add card" floating button → `directions.toAddCard()` → the store picker of [[add-card]]. The grid has 88dp of bottom content
   padding so the button never covers the last row (`ListScreenTest.theLastTile_isNotCoveredByTheAddButtonWhenScrolledToTheEnd`).
 

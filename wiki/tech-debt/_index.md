@@ -11,7 +11,6 @@ delete the page.
 ## Resolved
 
 - [[list-screen-bypasses-image-loader]] — list tiles load their photo and logo through the app's loader (#10)
-
 - [[gs1-128-drawn-as-code-128]] — scans keep their FNC1 (`GS1_128`); `hu-coop` stays plain Code 128, as Coop's own
   app draws it (#33)
 - [[shared-element-key-from-async-state]] — the detail key comes from the route, so the transition pairs before

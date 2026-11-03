@@ -52,6 +52,13 @@ import com.bdaniel.loyscan.testing.FakeUserPreferencesRepository
 import com.bdaniel.loyscan.testing.aLoyaltyCard
 import com.bdaniel.loyscan.testing.aStore
 import com.bdaniel.loyscan.testing.cardId
+import com.bdaniel.loyscan.testing.writeOnePixelPng
+import com.bdaniel.loyscan.di.CardPhotosModule
+import com.bdaniel.loyscan.di.ImageLoaderEntryPoint
+import dagger.hilt.android.EntryPointAccessors
+import androidx.compose.ui.test.onAllNodesWithText
+import org.robolectric.shadows.ShadowLooper
+import java.io.File
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.CompletableDeferred
 import org.junit.Rule
@@ -129,12 +136,28 @@ class ListScreenTest {
 
     @Test
     fun aCardWithAFrontPhoto_showsItOnItsTile_inPlaceOfTheInitials() { // #10
+        storedPhoto("front")
         setScreen(aLoyaltyCard(store = aStore(name = "Shell ClubSmart"), label = "Work car", frontPhotoPath = "front"), photos = FakeCardPhotos("front"))
+        // Loaded, so a failed load (which shows the initials) would have shown by now.
+        val loader = EntryPointAccessors.fromApplication(composeRule.activity, ImageLoaderEntryPoint::class.java).getImageLoader()
+        composeRule.waitUntil(timeoutMillis = 10_000) { ShadowLooper.idleMainLooper(); (loader.memoryCache?.size ?: 0) > 0 }
 
         composeRule.onNodeWithTag(CARD_TILE_PHOTO_TAG, useUnmergedTree = true).assertIsDisplayed()
         composeRule.onNodeWithText("SC").assertDoesNotExist()
         composeRule.onNodeWithText("Work car").assertIsDisplayed()
         composeRule.onNodeWithText("Work car").assertContentDescriptionEquals("Shell ClubSmart, Work car")
+    }
+
+    @Test
+    fun aFrontPhotoThatCantBeLoaded_showsTheInitials() { // review of #10: not a brand-colour box with no initials
+        // The fake says the photo exists, but the app's loader finds no file to decode.
+        setScreen(aLoyaltyCard(store = aStore(name = "Shell ClubSmart"), frontPhotoPath = "broken"), photos = FakeCardPhotos("broken"))
+
+        composeRule.waitUntil(timeoutMillis = 10_000) { // the 1 s default is too short on CI (#56)
+            ShadowLooper.idleMainLooper() // the loader's result comes on the main looper
+            composeRule.onAllNodesWithText("SC").fetchSemanticsNodes().isNotEmpty()
+        }
+        composeRule.onNodeWithTag(CARD_TILE_PHOTO_TAG, useUnmergedTree = true).assertDoesNotExist()
     }
 
     @Test
@@ -745,6 +768,10 @@ class ListScreenTest {
             }
         }
     }
+
+    /** A decodable photo [name] where the app's image loader looks for card photos. */
+    private fun storedPhoto(name: String) =
+        File(composeRule.activity.filesDir, CardPhotosModule.PHOTO_DIRECTORY).resolve(name).writeOnePixelPng()
 
     /** Two tiles share a row of the grid, so the first one is the one on the left. */
     private fun left(text: String) = composeRule.onNodeWithText(text).fetchSemanticsNode().boundsInRoot.left
