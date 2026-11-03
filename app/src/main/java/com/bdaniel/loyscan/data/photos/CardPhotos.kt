@@ -8,6 +8,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -60,19 +61,29 @@ class FileCardPhotos(
 
     constructor(directory: File, contentResolver: ContentResolver) : this(directory, contentResolver::openInputStream)
 
+    /**
+     * Copies the picture in as it is, then stores it re-encoded ([encodeCardPhoto]): smaller, the right way up and
+     * without its metadata (#88). The copy is read locally, so a cloud picture is downloaded once; it is deleted after,
+     * and one a killed process leaves behind is swept with the orphans.
+     */
     override suspend fun import(picture: Uri): String {
         val name = UUID.randomUUID().toString()
         val file = file(name)
+        val original = File(directory, "$name.original")
         try {
             withContext(ioDispatcher) {
                 directory.mkdirs()
                 val input = openPicture(picture) ?: throw FileNotFoundException("Can't open $picture")
-                input.use { from -> file.outputStream().use { from.copyTo(it) } }
+                input.use { from -> original.outputStream().use { from.copyTo(it) } }
+                ensureActive()
+                encodeCardPhoto(original, file)
             }
             return name
-        } catch (e: Throwable) { // cancelled too: a half-copied or unused file mustn't stay
+        } catch (e: Throwable) { // cancelled too: a half-written or unused file mustn't stay
             withContext(NonCancellable + ioDispatcher) { file.delete() }
             throw e
+        } finally {
+            withContext(NonCancellable + ioDispatcher) { original.delete() }
         }
     }
 

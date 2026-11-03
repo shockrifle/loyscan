@@ -6,6 +6,7 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
 **Entry points** (under `app/src/main/java/com/bdaniel/loyscan/`):
 - `data/photos/CardPhotos.kt`: `CardPhotos` (`import(uri)`, `delete(names)`), implemented by `FileCardPhotos` over
   `files/card_photos/` (`di/CardPhotosModule.kt`).
+- `data/photos/CardPhotoEncoding.kt`: `encodeCardPhoto`, how an imported picture is stored (#88).
 - `DetailScreen.kt`: the photos under the note, `PhotoViewer`.
 - `CardFormScreen.kt` (`PhotoSlot`), `CardFormViewModel.kt` (`onPhotoPicked`, `removePhoto`, `onCleared`): adding,
   replacing and removing photos while adding or editing a card.
@@ -23,6 +24,10 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   "Remove front photo"). While a picked picture is copied in, the slot shows a progress indicator, and neither Save
   nor another pick is possible. A picture that can't be copied (e.g. a cloud photo that won't download) says "The
   photo couldn't be added. Try again."; the next pick clears it. Once saving has started, photos can't be changed.
+- **What is stored** (#88): not the picked file itself but a JPEG at most 2048 px on its long side (a smaller
+  picture keeps its size), turned the way its EXIF orientation says, a transparent picture on white, and with no EXIF
+  (no location). A picked file that isn't a picture can't be added. Why: [[2026-11-03-card-photos-as-private-files]].
+  Orientation of a HEIF picture is read through the platform `ExifInterface` too; not checked on a device.
 - **What the form keeps.** A pick is copied in at once (the picker's read grant ends with the process). Its name goes
   into the `SavedStateHandle` (keys `frontPhoto` / `backPhoto`; `""` means removed), so it survives process death.
   Replacing or removing a photo picked in this form deletes that copy at once. The edited card's own photo stays
@@ -80,7 +85,11 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
 - `CardPhotoSweepCallbackTest` (on-disk database, closed and reopened), `DatabaseModuleTest.opening_sweepsAnOldPhotoNoCardNames`,
   `FileCardPhotosTest.deleteUnnamed_…`, `exists_…` (a name that isn't a photo name is `false`, not a throw, #87), `delete_skipsANameThatIsntAPhotoName_…`; `CardFormViewModelTest.aPickedPhotoWhoseFileIsGone_isNotSaved`.
 - `BackupRulesTest`: cloud backup excludes `card_photos/` on Android 12+ and 10–11; device transfer doesn't.
-- `data/photos/FileCardPhotosTest`: a picked picture is copied under a new name; an unreadable one, one that fails
+- `data/photos/FileCardPhotosTest` (native graphics, real pixels, #88): `import_dropsTheLocationAndTheOtherExif` (a
+  fixture JPEG with GPS, make and date tags), `import_scalesALargePictureDown_toItsLongSideLimit`,
+  `import_keepsTheSizeOfASmallerPicture`, `import_turnsThePictureTheWayItsExifOrientationSays` (all eight
+  orientations), `import_putsATransparentPictureOnWhite`, `import_ofAFileThatIsntAPicture_throws_andLeavesNoFile`.
+  Also: a picked picture is stored under a new name; an unreadable one, one that fails
   partway and a copy cancelled midway (a blocking stream through the `openPicture` lambda) leave no file;
   delete skips missing names, discard deletes in the background, a name can't leave the directory.
 - `RoomLoyaltyCardRepositoryTest`: `update_deletesAReplacedOrRemovedPhoto_andKeepsTheOthers`,

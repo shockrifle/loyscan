@@ -26,8 +26,14 @@ by deleting its custom store, where `ON DELETE CASCADE` deletes the rows in SQLi
 ## Decision
 - Photos are files in `files/card_photos/` (`CardPhotosModule.PHOTO_DIRECTORY`). The row stores the file's **name** (a
   UUID). `FileCardPhotos.file(name)` refuses anything that isn't a bare file name.
-- A picked picture is copied in on pick (`CardPhotos.import`), byte for byte. A copy that fails or is cancelled
-  leaves no file.
+- A picked picture is copied in on pick (`CardPhotos.import`). A copy that fails or is cancelled leaves no file.
+- **It is stored re-encoded, not byte for byte** (#88, `data/photos/CardPhotoEncoding.kt`, `encodeCardPhoto`): a JPEG
+  (quality 90) at most `MAX_PHOTO_SIDE` (2048 px) on its long side, never enlarged, turned the way its EXIF orientation
+  says, a transparent picture on white. A fresh encode carries no metadata, so the location and the rest of the EXIF
+  stay behind. The picked picture is first copied as it is to `<name>.original` next to the photo, and decoded from
+  there, so a cloud picture is downloaded once rather than once per pass (bounds, orientation, pixels); that copy is
+  deleted after, and one a killed process leaves is an orphan for the sweep below. A file that can't be decoded throws,
+  so the form says the photo couldn't be added. (Changed 2026-11-03 for #88: this was a byte-for-byte copy.)
 - **The repositories delete the files**, after the row is written:
   `LoyaltyCardDao.deleteReturningPhotos(ids)` / `updateReturningDroppedPhotos(edit)` and
   `StoreDao.deleteCustomReturningCardPhotos(id)` read the photo names and write the row in one `@Transaction`, and
@@ -39,6 +45,12 @@ by deleting its custom store, where `ON DELETE CASCADE` deletes the rows in SQLi
 - An edit (`LoyaltyCardEdit`) now writes the photo columns. Before #10 it left them alone ([[edit-card]]).
 
 ## Why
+- Re-encoding on import (#88): a card photo needs neither a 50 MP original nor where it was taken, and a smaller file
+  weighs less on device-to-device transfer and later on the opt-in backup's quota (#24). 2048 px keeps a card's small
+  print legible full screen (the issue's suggestion). Applying the orientation to the pixels means no viewer depends on
+  EXIF, which the JPEG no longer has. JPEG for every picture, PNG screenshots included: one format, and a photo-sized
+  PNG would be several times larger. `BitmapFactory`, not `ImageDecoder`, so the encode is tested on real pixels
+  (Robolectric's native graphics decodes with `BitmapFactory` on Windows, but not with `ImageDecoder`, [[tdd]]).
 - One choke point covers all three delete paths, including the cascade, and a test per path sits at the repository
   (`RoomLoyaltyCardRepositoryTest.delete_…`, `deleteAll_…`, `RoomStoreRepositoryTest.delete_…`).
 - The sweep rather than staging: the age alone tells an abandoned copy from one an open form holds, so a pick needs no
@@ -51,8 +63,8 @@ by deleting its custom store, where `ON DELETE CASCADE` deletes the rows in SQLi
 ## Consequences
 - An edit saved from a form that loaded the card before another form changed its photos writes the stale names
   back. Two forms editing one card at once would need two tasks. Not handled.
-- Copied pictures are full size and keep their metadata (EXIF location included). They stay private, and they
-  are **excluded from cloud backup** (`data_extraction_rules.xml`, `backup_rules.xml`): an Android auto-backup would
+- Until #88 copied pictures were full size and kept their metadata (EXIF location included); now they are at most
+  2048 px and carry none. They stay private, and they are **excluded from cloud backup** (`data_extraction_rules.xml`, `backup_rules.xml`): an Android auto-backup would
   otherwise send them, location and all, to the user's Google account unasked, and a few photos would pass its 25 MB
   quota, which stops the app's backup altogether, database included. Device-to-device transfer takes them on Android
   12+. On 10–11 the bare exclude leaves them behind for now: `requireFlags="deviceToDeviceTransfer"` includes would
