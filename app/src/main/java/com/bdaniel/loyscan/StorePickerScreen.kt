@@ -24,13 +24,14 @@ import com.bdaniel.loyscan.ui.theme.icons.Icons
 
 // Not store ids: catalogue ids are slugs and custom ones UUIDs.
 private const val OTHER_CARD_KEY = "other card"
+private const val SUGGESTED_KEY = "suggested"
 private const val FREQUENTLY_ADDED_KEY = "frequently added"
 private const val ALL_STORES_KEY = "all stores"
 
 /**
  * First step of adding a card: pick the store, searching by name or alias, or "Other card" for one that isn't listed.
- * While nothing is searched, the frequently added stores of the user's country come first (#6). A custom store has an
- * Edit button (#53).
+ * While nothing is searched, the frequently added stores of the user's country come first (#6), after the stores
+ * suggested for a shared picture's barcode (#77). A custom store has an Edit button (#53).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,6 +41,7 @@ fun StorePickerScreen(
 ) {
     val query by viewModel.query.collectAsState()
     val stores by viewModel.stores.collectAsState()
+    val suggested by viewModel.suggested.collectAsState()
     val frequentlyAdded by viewModel.frequentlyAdded.collectAsState()
 
     Scaffold(
@@ -70,12 +72,20 @@ fun StorePickerScreen(
                         modifier = Modifier.clickable(onClick = directions.toCustomStore),
                     )
                 }
+                // Each section's stores are also in the full list below, so their keys mustn't be the store id alone.
+                if (suggested.isNotEmpty()) {
+                    item(key = SUGGESTED_KEY) { SectionHeading("Suggested") }
+                    items(suggested, key = { "$SUGGESTED_KEY/${it.id}" }) { store ->
+                        StoreRow(store, onClick = { directions.toStore(store.id) })
+                    }
+                }
                 if (frequentlyAdded.isNotEmpty()) {
                     item(key = FREQUENTLY_ADDED_KEY) { SectionHeading("Frequently added") }
-                    // Each is also in the full list below, so its key mustn't be the store id alone.
                     items(frequentlyAdded, key = { "$FREQUENTLY_ADDED_KEY/${it.id}" }) { store ->
                         StoreRow(store, onClick = { directions.toStore(store.id) })
                     }
+                }
+                if (suggested.isNotEmpty() || frequentlyAdded.isNotEmpty()) {
                     item(key = ALL_STORES_KEY) { SectionHeading("All stores") }
                 }
             },

@@ -1,6 +1,9 @@
 package com.bdaniel.loyscan
 
 import app.cash.turbine.test
+import com.bdaniel.loyscan.domain.BarcodeFormat
+import com.bdaniel.loyscan.domain.cardnumber.CardNumberRule
+import com.bdaniel.loyscan.domain.cardnumber.CheckDigitAlgorithm
 import com.bdaniel.loyscan.testing.FakeStoreRepository
 import com.bdaniel.loyscan.testing.MainDispatcherRule
 import com.bdaniel.loyscan.testing.aStore
@@ -85,4 +88,71 @@ class StorePickerViewModelTest {
             assertThat(expectMostRecentItem()).isEmpty()
         }
     }
+
+    @Test
+    fun withASharedScan_suggested_areTheStoresWhoseRuleReadsIt_rankedAsTheCardFormRanksThem() = runTest { // #77
+        val zeta = aStore(id = "zeta", name = "Zeta", cardNumberRule = luhn8Rule(BarcodeFormat.CODE_128))
+        val alpha = aStore(id = "alpha", name = "Alpha", cardNumberRule = luhn8Rule(BarcodeFormat.CODE_128))
+        val gs1 = aStore(id = "gs1", name = "Gs1", cardNumberRule = luhn8Rule(BarcodeFormat.GS1_128))
+        val qr = aStore(id = "qr", name = "A Qr", cardNumberRule = luhn8Rule(BarcodeFormat.QR_CODE))
+        val otherStart = aStore(id = "other", name = "Other", cardNumberRule = luhn8Rule(BarcodeFormat.CODE_128, "9"))
+        val noRule = aStore(id = "none", name = "No Rule")
+        val stores = FakeStoreRepository(listOf(zeta, noRule, qr, otherStart, gs1, alpha))
+
+        val viewModel = StorePickerViewModel(stores, StorePicker("12345674", BarcodeFormat.CODE_128)) { "HU" }
+
+        viewModel.suggested.test {
+            assertThat(expectMostRecentItem()).containsExactly(alpha, zeta, gs1, qr).inOrder()
+        }
+    }
+
+    @Test
+    fun withoutASharedScan_nothingIsSuggested() = runTest { // #77
+        val store = aStore(id = "alpha", name = "Alpha", cardNumberRule = luhn8Rule(BarcodeFormat.CODE_128))
+
+        for (route in listOf(StorePicker(), StorePicker(manualEntry = true))) {
+            val viewModel = StorePickerViewModel(FakeStoreRepository(listOf(store)), route) { "HU" }
+
+            viewModel.suggested.test {
+                assertThat(expectMostRecentItem()).isEmpty()
+            }
+        }
+    }
+
+    @Test
+    fun aSharedScanNoRuleReads_suggestsNothing() = runTest { // #77
+        val store = aStore(id = "alpha", name = "Alpha", cardNumberRule = luhn8Rule(BarcodeFormat.CODE_128, "9"))
+
+        val viewModel = StorePickerViewModel(FakeStoreRepository(listOf(store)), StorePicker("12345674", BarcodeFormat.CODE_128)) { "HU" }
+
+        viewModel.suggested.test {
+            assertThat(expectMostRecentItem()).isEmpty()
+        }
+    }
+
+    @Test
+    fun aSearch_hidesTheSuggestions_andClearingItShowsThemAgain() = runTest { // #77
+        val store = aStore(id = "alpha", name = "Alpha", cardNumberRule = luhn8Rule(BarcodeFormat.CODE_128))
+        val viewModel = StorePickerViewModel(FakeStoreRepository(listOf(store)), StorePicker("12345674", BarcodeFormat.CODE_128)) { "HU" }
+
+        viewModel.suggested.test {
+            assertThat(expectMostRecentItem()).containsExactly(store)
+
+            viewModel.onQueryChange("alp")
+            assertThat(awaitItem()).isEmpty()
+
+            viewModel.onQueryChange("")
+            assertThat(awaitItem()).containsExactly(store)
+        }
+    }
 }
+
+/** Eight digits with a Luhn check digit in [format], optionally starting with one of [starts]. */
+internal fun luhn8Rule(format: BarcodeFormat, vararg starts: String) = CardNumberRule(
+    id = "luhn8",
+    format = format,
+    minLength = 8,
+    maxLength = 8,
+    checkDigit = CardNumberRule.CheckDigit(CheckDigitAlgorithm.LUHN, CardNumberRule.CheckDigit.Mode.VERIFY),
+    coreStartsWith = starts.toList(),
+)

@@ -3,6 +3,8 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-03 · added: the store picker of a shared picture suggests the stores whose rule reads its barcode ("Suggested", ranked by matchingScan, hidden while searching) · features/add-card · #77
+
 - 2026-11-03 · added: Share → LoyScan (shared picture read, then the picker with its barcode, the form without the scanner); singleTop decision; intent-launched test and FakePictureReaderModule; MainActivity line refs refreshed · features/add-card, apps/android-app, architecture, workflows/tdd, decisions/2026-11-03-share-into-the-sharing-apps-task, decisions/_index, index, glossary, features/barcode-scanner, features/card-transition, decisions/2025-12-12-brand-color-in-route, decisions/2026-10-28-portrait-on-phones, tech-debt/shared-element-key-from-async-state · #77
 
 - 2026-11-03 · updated: scan mode in portrait runs a 1D barcode down the long side, turned a quarter (removed "not rotated" note) · features/card-detail, integrations/zxing-core · #34

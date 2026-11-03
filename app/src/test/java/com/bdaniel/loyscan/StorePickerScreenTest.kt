@@ -10,6 +10,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.domain.Store
 import com.bdaniel.loyscan.testing.FakeStoreRepository
 import com.bdaniel.loyscan.testing.aStore
@@ -17,6 +18,7 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.annotation.Config
 
 @RunWith(AndroidJUnit4::class)
 class StorePickerScreenTest {
@@ -129,6 +131,62 @@ class StorePickerScreenTest {
     }
 
     @Test
+    @Config(qualifiers = "w411dp-h891dp") // the full list's row is below the default screen's fold
+    fun storesThatReadASharedScan_comeFirst_underSuggested_andStayInTheList() { // #77
+        val reads = aStore(id = "reads", name = "Reads It", cardNumberRule = luhn8Rule(BarcodeFormat.CODE_128))
+        setScreen(
+            aStore(id = "hu-tesco", name = "Tesco", frequentlyAdded = true),
+            reads,
+            route = StorePicker("12345674", BarcodeFormat.CODE_128),
+        )
+
+        composeRule.onNodeWithText("Suggested").assertIsDisplayed()
+        val rows = composeRule.onAllNodesWithText("Reads It")
+        rows.assertCountEquals(2)
+        assertThat(rows[0].fetchSemanticsNode().boundsInRoot.top)
+            .isLessThan(composeRule.onNodeWithText("Frequently added").fetchSemanticsNode().boundsInRoot.top)
+        assertThat(composeRule.onNodeWithText("Suggested").fetchSemanticsNode().boundsInRoot.top)
+            .isLessThan(rows[0].fetchSemanticsNode().boundsInRoot.top)
+        rows[0].performClick()
+
+        assertThat(picked).containsExactly("reads")
+    }
+
+    @Test
+    fun withASharedScanNoStoreReads_thereIsNoSuggestedHeading() { // #77
+        setScreen(aStore(id = "first", name = "First Store"), route = StorePicker("12345674", BarcodeFormat.CODE_128))
+
+        composeRule.onNodeWithText("Suggested").assertDoesNotExist()
+        composeRule.onNodeWithText("All stores").assertDoesNotExist()
+    }
+
+    @Test
+    fun suggestionsWithoutFrequentlyAddedStores_stillHeadTheRestAsAllStores() { // #77
+        setScreen(
+            aStore(id = "reads", name = "Reads It", cardNumberRule = luhn8Rule(BarcodeFormat.CODE_128)),
+            route = StorePicker("12345674", BarcodeFormat.CODE_128),
+            country = "AT",
+        )
+
+        composeRule.onNodeWithText("Suggested").assertIsDisplayed()
+        composeRule.onNodeWithText("Frequently added").assertDoesNotExist()
+        composeRule.onNodeWithText("All stores").assertIsDisplayed()
+    }
+
+    @Test
+    fun searching_hidesTheSuggestions() { // #77
+        setScreen(
+            aStore(id = "reads", name = "Reads It", cardNumberRule = luhn8Rule(BarcodeFormat.CODE_128)),
+            route = StorePicker("12345674", BarcodeFormat.CODE_128),
+        )
+
+        composeRule.onNodeWithTag(STORE_SEARCH_TAG).performTextInput("rea")
+
+        composeRule.onNodeWithText("Suggested").assertDoesNotExist()
+        composeRule.onAllNodesWithText("Reads It").assertCountEquals(1)
+    }
+
+    @Test
     fun back_goesBack() {
         setScreen()
 
@@ -137,8 +195,8 @@ class StorePickerScreenTest {
         assertThat(backs).isEqualTo(1)
     }
 
-    private fun setScreen(vararg stores: Store, country: String? = "HU") {
-        val viewModel = StorePickerViewModel(FakeStoreRepository(stores.toList())) { country }
+    private fun setScreen(vararg stores: Store, route: StorePicker = StorePicker(), country: String? = "HU") {
+        val viewModel = StorePickerViewModel(FakeStoreRepository(stores.toList()), route) { country }
         val directions = StorePickerDirections(
             toStore = { picked += it },
             toCustomStore = { customStores++ },

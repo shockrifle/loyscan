@@ -131,8 +131,15 @@ with the picture's barcode (#77, below). Everything runs offline on the local da
   - No barcode, or a picture that can't be opened, says so with "Enter the number by hand", which opens the picker
     with `manualEntry = true`. Back returns to the list.
   - From that picker, a store opens its card form directly, with the scan or empty (`addCardStep` in
-    `Navigation.kt`), not the scanner. "Other card" carries the scan on: the created store's form opens instead of its
-    scanner. Editing a custom store from that picker doesn't carry it.
+    `Navigation.kt`), not the scanner. While nothing is searched, the picker lists the stores whose card-number rule
+    reads the barcode under "Suggested", above "Frequently added", ranked as the card form ranks the stores it offers
+    (`matchingScan`: exact format, then the same symbology with or without the GS1 mark, then the rest, each by name;
+    stores without a rule never). Nothing is picked for the user, and they stay in the full list; with none, there is
+    no "Suggested" heading. The catalogue's loose rules (SuperShop: any 16 digits, Auchan: any valid EAN-13) show up as
+    false suggestions until their prefixes are confirmed (#52, #31). The form after a store is the usual one, so its
+    "It looks like a card from:" works as after a camera scan ([[2026-10-22-store-suggestion-trigger]]). "Other card"
+    carries the scan on: the created store's form opens instead of its scanner. Editing a custom store from that
+    picker doesn't carry it.
   - Rotation and process death: the scan lives in the picker's route, and what the read found is kept in the
     `SharedPicture` entry's `SavedStateHandle`, so the picture isn't read again (a read still running at process death
     is read again). `MainActivity` handles the intent only on a fresh `onCreate` and in `onNewIntent`, and ignores a
@@ -165,7 +172,9 @@ with the picture's barcode (#77, below). Everything runs offline on the local da
 
 - Share → LoyScan (#77): `ShareIntentTest` (the manifest's filter resolves one image and nothing else, `singleTop`,
   which intents are a shared picture), `SharedPictureViewModelTest` (reading, each outcome, kept over process death),
-  `SharedPictureScreenTest`, `AddCardDirectionsTest` (`aSharedPicture…`, `…ForASharedScan…`, `…TypedByHand…`), and
+  `SharedPictureScreenTest`, `StorePickerViewModelTest` and `StorePickerScreenTest` (`…SharedScan…`, `…Suggest…`:
+  ranking, none without a scan or a reading rule, hidden while searching, above "Frequently added"),
+  `AddCardDirectionsTest` (`aSharedPicture…`, `…ForASharedScan…`, `…TypedByHand…`), and
   `ShareToLoyScanTest`, end to end with `FakePictureReaderModule`: share → picker → form, back to the list, no barcode
   → by hand, `onNewIntent`, recreating the activity.
 
