@@ -47,6 +47,7 @@ Paths are under `app/src/test/java/com/bdaniel/loyscan/`, in the same package as
 | System pickers and reading what they return (`ui/scanner/`) | The picker's request and result go through a test `ActivityResultRegistry`, as for the permission; the reader runs with its decoder and native reader passed in as lambdas | Robolectric | `PicturePickerTest`, `ZxingCppPictureReaderTest` |
 | Where directions navigate | `TestNavHostController` with `ComposeNavigator` and `DialogNavigator`, a `NavHost` of the app's routes with empty screens; call the `*Directions()` factory and check the back stack | Robolectric | `AddCardDirectionsTest` |
 | App wiring / navigation | `@HiltAndroidTest` with `createAndroidComposeRule<MainActivity>()` and `InMemoryDatabaseModule`. Every `waitUntil` passes `WAIT_TIMEOUT_MS` (10 s), text waits through `waitForText`: the 1 s default timed out on a slow CI runner (#56). After a form's Save, wait for the form to close (`waitForTheCardFormToClose`) before waiting for text it also holds in its fields: otherwise Back can land on the form while the save runs, and leave it instead of the screen the test meant to leave (CI run 40681591473; before #64 the save then also opened the card over the list) | Robolectric + `HiltTestApplication` | `AppNavigationTest` |
+| App started by an intent (a share) | As above, but `createEmptyComposeRule()` and `ActivityScenario.launch(intent)`, closed after the test; `onNewIntent` through `InstrumentationRegistry.getInstrumentation().callActivityOnNewIntent`, rotation through `scenario.recreate()`. What the manifest declares is checked on Robolectric's package manager (`queryIntentActivities`) | Robolectric + `HiltTestApplication` | `ShareToLoyScanTest`, `ShareIntentTest` |
 
 Robolectric means `@RunWith(AndroidJUnit4::class)`. Keep end-to-end tests few, one per user flow; behaviour
 details belong in the per-layer tests.
@@ -76,6 +77,8 @@ Shared helpers are in `testing/`:
   use `runBlocking` for a test about real threads (`ZxingCppPictureReaderTest`, #79).
 - **`TemporaryPreferencesModule`** replaces `PreferencesModule` in every `@HiltAndroidTest`: a new preferences file per
   test, since DataStore throws when two stores open one file.
+- **`FakePictureReaderModule`** replaces `PictureReaderModule` in every `@HiltAndroidTest`: one `FakePictureReader`
+  that the test injects and sets.
 - **`InMemoryDatabaseModule`** replaces `DatabaseModule` in every `@HiltAndroidTest`: an empty database that the
   test injects and fills.
 

@@ -28,7 +28,7 @@ fun NavController.listDirections(list: NavBackStackEntry) = ListDirections(
     toCard = { id, color ->
         whileCurrent(list) { navigate(Detail(id, color)) }
     },
-    toAddCard = { whileCurrent(list) { navigate(StorePicker) } },
+    toAddCard = { whileCurrent(list) { navigate(StorePicker()) } },
     toEditCard = { id, storeId -> whileCurrent(list) { navigate(CardForm(storeId, cardId = id)) } },
 )
 
@@ -55,13 +55,21 @@ data class DetailDirections(
 fun NavController.detailDirections(card: NavBackStackEntry) = DetailDirections(
     toBack = { whileCurrent(card) { navigateUp() } },
     toEdit = { cardId, storeId -> whileCurrent(card) { navigate(CardForm(storeId, cardId = cardId)) } },
-    toAddCard = { whileCurrent(card) { navigate(StorePicker) } },
+    toAddCard = { whileCurrent(card) { navigate(StorePicker()) } },
 )
 
 
-/** First step of adding a card (#6): which store it is for. */
+/**
+ * First step of adding a card (#6): which store it is for. Started from a shared picture (#77), it holds what the
+ * picture gave: its barcode, [scannedContent] and [scannedFormat], or [manualEntry] when it gave none and the number is
+ * typed by hand. Either way the store's card form follows it, without the scanner.
+ */
 @Serializable
-object StorePicker
+data class StorePicker(
+    val scannedContent: String? = null,
+    val scannedFormat: BarcodeFormat? = null,
+    val manualEntry: Boolean = false,
+)
 
 @Immutable
 data class StorePickerDirections(
@@ -72,33 +80,56 @@ data class StorePickerDirections(
     val toBack: () -> Unit
 )
 
-/** Only while [picker], its own entry, is current: a second tap opens nothing (#66, #69). */
+/**
+ * A store opens its scanner, or for a shared picture its card form (#77). "Other card" carries the shared picture's
+ * barcode on to the new store. Only while [picker], its own entry, is current: a second tap opens nothing (#66, #69).
+ */
 fun NavController.storePickerDirections(picker: NavBackStackEntry) = StorePickerDirections(
-    toStore = { storeId -> whileCurrent(picker) { navigate(Scanner(storeId)) } },
-    toCustomStore = { whileCurrent(picker) { navigate(CustomStore()) } },
+    toStore = { storeId ->
+        whileCurrent(picker) {
+            val route = picker.toRoute<StorePicker>()
+            navigate(addCardStep(storeId, route.scannedContent, route.scannedFormat, route.manualEntry))
+        }
+    },
+    toCustomStore = {
+        whileCurrent(picker) {
+            val route = picker.toRoute<StorePicker>()
+            navigate(CustomStore(scannedContent = route.scannedContent, scannedFormat = route.scannedFormat, manualEntry = route.manualEntry))
+        }
+    },
     toEditStore = { storeId -> whileCurrent(picker) { navigate(CustomStore(storeId)) } },
     toBack = { whileCurrent(picker) { navigateUp() } }
 )
 
 
-/** "Other card": a store that isn't listed, created before its card is added. With [storeId], edits that custom store (#53). */
+/**
+ * "Other card": a store that isn't listed, created before its card is added. With [storeId], edits that custom store
+ * (#53). [scannedContent], [scannedFormat] and [manualEntry] are a shared picture's, as on [StorePicker] (#77).
+ */
 @Serializable
-data class CustomStore(val storeId: String? = null)
+data class CustomStore(
+    val storeId: String? = null,
+    val scannedContent: String? = null,
+    val scannedFormat: BarcodeFormat? = null,
+    val manualEntry: Boolean = false,
+)
 
 @Immutable
 data class CustomStoreDirections(
-    val toScanner: (storeId: String) -> Unit,
+    val onCreated: (storeId: String) -> Unit,
     val toBack: () -> Unit
 )
 
 /**
- * The created store's scanner replaces the form, so back returns to the picker, where the new store is listed. Only
- * while [form], the form's own entry, is current: a save or delete that ends after Back leaves the user there (#65).
+ * The created store's scanner, or for a shared picture its card form (#77), replaces the form, so back returns to the
+ * picker, where the new store is listed. Only while [form], the form's own entry, is current: a save or delete that
+ * ends after Back leaves the user there (#65).
  */
 fun NavController.customStoreDirections(form: NavBackStackEntry) = CustomStoreDirections(
-    toScanner = { storeId ->
+    onCreated = { storeId ->
         whileCurrent(form) {
-            navigate(Scanner(storeId)) {
+            val route = form.toRoute<CustomStore>()
+            navigate(addCardStep(storeId, route.scannedContent, route.scannedFormat, route.manualEntry)) {
                 popUpTo<CustomStore> { inclusive = true }
             }
         }
@@ -175,6 +206,60 @@ fun NavController.cardFormDirections(form: NavBackStackEntry) = CardFormDirectio
         }
     },
     toBack = { whileCurrent(form) { navigateUp() } }
+)
+
+
+/**
+ * After the store: its scanner, or the card form with a shared picture's barcode ([scannedContent], [scannedFormat])
+ * or, with [manualEntry], for a number typed by hand (#77).
+ */
+private fun addCardStep(storeId: String, scannedContent: String?, scannedFormat: BarcodeFormat?, manualEntry: Boolean): Any =
+    when {
+        scannedContent != null -> CardForm(storeId, scannedContent = scannedContent, scannedFormat = scannedFormat)
+        manualEntry -> CardForm(storeId)
+        else -> Scanner(storeId)
+    }
+
+
+/** A picture shared to LoyScan (#77), at the `content://` [uri] granted with the share, read before the store is picked. */
+@Serializable
+data class SharedPicture(val uri: String)
+
+@Immutable
+data class SharedPictureDirections(
+    val onScanned: (ScannedBarcode) -> Unit,
+    val toManualEntry: () -> Unit,
+    val toBack: () -> Unit,
+)
+
+/** Starts adding a card from a shared picture (#77) over the list, in place of whatever was open above it. */
+fun NavController.openSharedPicture(uri: String) {
+    navigate(SharedPicture(uri)) {
+        popUpTo<CardList>()
+    }
+}
+
+/**
+ * The store picker replaces the shared picture, holding its barcode, or without one for a number typed by hand, so back
+ * from the picker returns to the list. Only while [shared], its own entry, is current: a picture read after Back
+ * leaves the user on the list.
+ */
+fun NavController.sharedPictureDirections(shared: NavBackStackEntry) = SharedPictureDirections(
+    onScanned = { barcode ->
+        whileCurrent(shared) {
+            navigate(StorePicker(scannedContent = barcode.content, scannedFormat = barcode.format)) {
+                popUpTo<SharedPicture> { inclusive = true }
+            }
+        }
+    },
+    toManualEntry = {
+        whileCurrent(shared) {
+            navigate(StorePicker(manualEntry = true)) {
+                popUpTo<SharedPicture> { inclusive = true }
+            }
+        }
+    },
+    toBack = { whileCurrent(shared) { navigateUp() } },
 )
 
 

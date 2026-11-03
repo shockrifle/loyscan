@@ -77,7 +77,9 @@ Tests run on the JVM (`./gradlew testDebugUnitTest`, see [[build-and-run]]); sha
 - **The wired-up app** (`MainActivity`, Hilt, navigation) runs in `@HiltAndroidTest`s on Robolectric.
   `testing/TemporaryPreferencesModule` swaps `PreferencesModule` for a new preferences file per test, and
   `testing/InMemoryDatabaseModule` (`@TestInstallIn`) swaps `DatabaseModule` for an empty in-memory database
-  that the test injects and fills (`AppNavigationTest`).
+  that the test injects and fills (`AppNavigationTest`). `testing/FakePictureReaderModule` swaps the zxing-cpp
+  `PictureReader` for one injected `FakePictureReader`. An activity started by an intent (a share, #77) is launched
+  with `ActivityScenario.launch(intent)` under `createEmptyComposeRule()` (`ShareToLoyScanTest`).
 - Fixture builders (`aLoyaltyCard()`, `aStoreEntity()`, …) give every field a default; `cardId(n)` makes distinct UUID-shaped card ids.
 
 ### Build tooling
@@ -129,7 +131,7 @@ here exist; read them next to the code.
    navigation over `InMemoryDatabaseModule`, list → detail → back.
    Then `NavController.listDirections(entry).toCard` → `navigate(Detail(id, color))` (`Navigation.kt:23-33, 40-41`).
    `AppNavigation` maps `composable<Detail>` to `DetailScreen`, pulling `cardId` and `color` out of the route and
-   passing them as plain parameters (`MainActivity.kt:67-76`).
+   passing them as plain parameters (`MainActivity.kt:86-95`).
 8. **Detail ViewModel.** *Test first:* `DetailViewModelTest` with `SavedStateHandle(route = Detail(…))`. It
    checks `EMPTY` first, then the routed card. A missing card stays `EMPTY`, and a deleted card keeps the last
    value.

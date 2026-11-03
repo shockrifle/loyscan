@@ -41,6 +41,7 @@ class AddCardDirectionsTest {
                 composable<Scanner> {}
                 composable<CardForm> {}
                 composable<Detail> {}
+                composable<SharedPicture> {}
             }
         }
         composeRule.runOnIdle { navController.listDirections(navController.currentBackStackEntry!!).toAddCard() }
@@ -74,7 +75,7 @@ class AddCardDirectionsTest {
     @Test
     fun creatingACustomStore_replacesItsFormWithTheScannerForIt() {
         composeRule.runOnIdle { navController.storePickerDirections(navController.currentBackStackEntry!!).toCustomStore() }
-        composeRule.runOnIdle { navController.customStoreDirections(navController.currentBackStackEntry!!).toScanner("new-store") }
+        composeRule.runOnIdle { navController.customStoreDirections(navController.currentBackStackEntry!!).onCreated("new-store") }
 
         composeRule.runOnIdle {
             assertThat(navController.currentBackStackEntry!!.toRoute<Scanner>()).isEqualTo(Scanner("new-store"))
@@ -286,7 +287,7 @@ class AddCardDirectionsTest {
         val form = composeRule.runOnIdle { navController.customStoreDirections(navController.currentBackStackEntry!!) }
         composeRule.runOnIdle { form.toBack() }
 
-        composeRule.runOnIdle { form.toScanner("new-store") }
+        composeRule.runOnIdle { form.onCreated("new-store") }
 
         composeRule.runOnIdle {
             assertThat(currentIs<StorePicker>()).isTrue()
@@ -326,7 +327,7 @@ class AddCardDirectionsTest {
     @Test
     fun aSecondBackFromThePicker_staysOnTheList() { // #66: a double tap on the Back arrow
         composeRule.runOnIdle { navController.listDirections(navController.currentBackStackEntry!!).toCard("a-card", "#112233") }
-        composeRule.runOnIdle { navController.navigate(StorePicker) }
+        composeRule.runOnIdle { navController.navigate(StorePicker()) }
         val picker = composeRule.runOnIdle { navController.storePickerDirections(navController.currentBackStackEntry!!) }
         composeRule.runOnIdle { picker.toBack() }
 
@@ -460,5 +461,148 @@ class AddCardDirectionsTest {
         composeRule.runOnIdle { assertThat(currentIs<CardList>()).isTrue() }
     }
 
+    @Test
+    fun aSharedPicture_opensOverTheList_whateverWasOpen() { // #77
+        composeRule.runOnIdle { navController.storePickerDirections(navController.currentBackStackEntry!!).toStore("some-store") }
+
+        composeRule.runOnIdle { navController.openSharedPicture(SHARED_URI) }
+
+        composeRule.runOnIdle {
+            assertThat(navController.currentBackStackEntry!!.toRoute<SharedPicture>()).isEqualTo(SharedPicture(SHARED_URI))
+            assertThat(navController.previousBackStackEntry?.destination?.hasRoute(CardList::class)).isTrue()
+        }
+    }
+
+    @Test
+    fun aSharedPicturesScan_replacesItWithThePickerHoldingTheScan() { // #77
+        composeRule.runOnIdle { navController.openSharedPicture(SHARED_URI) }
+
+        composeRule.runOnIdle {
+            navController.sharedPictureDirections(navController.currentBackStackEntry!!)
+                .onScanned(ScannedBarcode("10ABC\u001D9799123456", BarcodeFormat.GS1_128, gs1 = true))
+        }
+
+        composeRule.runOnIdle {
+            assertThat(navController.currentBackStackEntry!!.toRoute<StorePicker>())
+                .isEqualTo(StorePicker(scannedContent = "10ABC\u001D9799123456", scannedFormat = BarcodeFormat.GS1_128))
+            assertThat(navController.previousBackStackEntry?.destination?.hasRoute(CardList::class)).isTrue()
+        }
+    }
+
+    @Test
+    fun aSharedPictureWithoutAScan_offersThePickerForANumberTypedByHand() { // #77
+        composeRule.runOnIdle { navController.openSharedPicture(SHARED_URI) }
+
+        composeRule.runOnIdle { navController.sharedPictureDirections(navController.currentBackStackEntry!!).toManualEntry() }
+
+        composeRule.runOnIdle {
+            assertThat(navController.currentBackStackEntry!!.toRoute<StorePicker>()).isEqualTo(StorePicker(manualEntry = true))
+            assertThat(navController.previousBackStackEntry?.destination?.hasRoute(CardList::class)).isTrue()
+        }
+    }
+
+    @Test
+    fun backFromASharedPicture_returnsToTheList() { // #77
+        composeRule.runOnIdle { navController.openSharedPicture(SHARED_URI) }
+
+        composeRule.runOnIdle { navController.sharedPictureDirections(navController.currentBackStackEntry!!).toBack() }
+
+        composeRule.runOnIdle { assertThat(currentIs<CardList>()).isTrue() }
+    }
+
+    @Test
+    fun aSharedPicturesScanReadAfterBack_leavesTheUserOnTheList() { // #77
+        composeRule.runOnIdle { navController.openSharedPicture(SHARED_URI) }
+        val shared = composeRule.runOnIdle { navController.sharedPictureDirections(navController.currentBackStackEntry!!) }
+        composeRule.runOnIdle { shared.toBack() }
+
+        composeRule.runOnIdle { shared.onScanned(ScannedBarcode("5901234123457", BarcodeFormat.EAN_13)) }
+
+        composeRule.runOnIdle { assertThat(currentIs<CardList>()).isTrue() }
+    }
+
+    @Test
+    fun pickingAStore_forASharedScan_opensTheFormWithTheScan_overThePicker() { // #77: no scanner
+        composeRule.runOnIdle { navController.openSharedPicture(SHARED_URI) }
+        composeRule.runOnIdle {
+            navController.sharedPictureDirections(navController.currentBackStackEntry!!)
+                .onScanned(ScannedBarcode("5901234123457", BarcodeFormat.EAN_13))
+        }
+
+        composeRule.runOnIdle { navController.storePickerDirections(navController.currentBackStackEntry!!).toStore("some-store") }
+
+        composeRule.runOnIdle {
+            assertThat(navController.currentBackStackEntry!!.toRoute<CardForm>())
+                .isEqualTo(CardForm("some-store", scannedContent = "5901234123457", scannedFormat = BarcodeFormat.EAN_13))
+            assertThat(navController.previousBackStackEntry?.destination?.hasRoute(StorePicker::class)).isTrue()
+        }
+    }
+
+    @Test
+    fun pickingAStore_forANumberTypedByHand_opensAnEmptyForm_overThePicker() { // #77
+        composeRule.runOnIdle { navController.openSharedPicture(SHARED_URI) }
+        composeRule.runOnIdle { navController.sharedPictureDirections(navController.currentBackStackEntry!!).toManualEntry() }
+
+        composeRule.runOnIdle { navController.storePickerDirections(navController.currentBackStackEntry!!).toStore("some-store") }
+
+        composeRule.runOnIdle {
+            assertThat(navController.currentBackStackEntry!!.toRoute<CardForm>()).isEqualTo(CardForm("some-store"))
+            assertThat(navController.previousBackStackEntry?.destination?.hasRoute(StorePicker::class)).isTrue()
+        }
+    }
+
+    @Test
+    fun aNewStoreForASharedScan_replacesItsFormWithTheCardFormHoldingTheScan() { // #77
+        composeRule.runOnIdle { navController.openSharedPicture(SHARED_URI) }
+        composeRule.runOnIdle {
+            navController.sharedPictureDirections(navController.currentBackStackEntry!!)
+                .onScanned(ScannedBarcode("5901234123457", BarcodeFormat.EAN_13))
+        }
+        composeRule.runOnIdle { navController.storePickerDirections(navController.currentBackStackEntry!!).toCustomStore() }
+        composeRule.runOnIdle {
+            assertThat(navController.currentBackStackEntry!!.toRoute<CustomStore>())
+                .isEqualTo(CustomStore(scannedContent = "5901234123457", scannedFormat = BarcodeFormat.EAN_13))
+        }
+
+        composeRule.runOnIdle { navController.customStoreDirections(navController.currentBackStackEntry!!).onCreated("new-store") }
+
+        composeRule.runOnIdle {
+            assertThat(navController.currentBackStackEntry!!.toRoute<CardForm>())
+                .isEqualTo(CardForm("new-store", scannedContent = "5901234123457", scannedFormat = BarcodeFormat.EAN_13))
+            assertThat(navController.previousBackStackEntry?.destination?.hasRoute(StorePicker::class)).isTrue()
+        }
+    }
+
+    @Test
+    fun aNewStoreForANumberTypedByHand_replacesItsFormWithAnEmptyCardForm() { // #77
+        composeRule.runOnIdle { navController.openSharedPicture(SHARED_URI) }
+        composeRule.runOnIdle { navController.sharedPictureDirections(navController.currentBackStackEntry!!).toManualEntry() }
+        composeRule.runOnIdle { navController.storePickerDirections(navController.currentBackStackEntry!!).toCustomStore() }
+
+        composeRule.runOnIdle { navController.customStoreDirections(navController.currentBackStackEntry!!).onCreated("new-store") }
+
+        composeRule.runOnIdle {
+            assertThat(navController.currentBackStackEntry!!.toRoute<CardForm>()).isEqualTo(CardForm("new-store"))
+            assertThat(navController.previousBackStackEntry?.destination?.hasRoute(StorePicker::class)).isTrue()
+        }
+    }
+
+    @Test
+    fun editingACustomStore_fromThePickerOfASharedScan_doesNotCarryTheScan() { // #77: the edit form only edits
+        composeRule.runOnIdle { navController.openSharedPicture(SHARED_URI) }
+        composeRule.runOnIdle {
+            navController.sharedPictureDirections(navController.currentBackStackEntry!!)
+                .onScanned(ScannedBarcode("5901234123457", BarcodeFormat.EAN_13))
+        }
+
+        composeRule.runOnIdle { navController.storePickerDirections(navController.currentBackStackEntry!!).toEditStore("custom-store") }
+
+        composeRule.runOnIdle {
+            assertThat(navController.currentBackStackEntry!!.toRoute<CustomStore>()).isEqualTo(CustomStore("custom-store"))
+        }
+    }
+
     private inline fun <reified T : Any> currentIs() = navController.currentBackStackEntry?.destination?.hasRoute(T::class) == true
 }
+
+private const val SHARED_URI = "content://media/picker/0/42"

@@ -215,7 +215,7 @@ class CustomStoreScreenTest {
 
     private fun setScreen(route: CustomStore = CustomStore()) {
         val viewModel = CustomStoreViewModel(SavedStateHandle(route = route), stores, cards, Clock.fixed(SOME_INSTANT, ZoneOffset.UTC))
-        val directions = CustomStoreDirections(toScanner = { scanned += it }, toBack = { backs++ })
+        val directions = CustomStoreDirections(onCreated = { scanned += it }, toBack = { backs++ })
         composeRule.setContent { CustomStoreScreen(directions = directions, viewModel = viewModel) }
     }
 }

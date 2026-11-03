@@ -2,7 +2,8 @@
 
 The list's "Add card" button starts adding a card: pick the store, scan its barcode (or enter the number by hand),
 check the number and give the card a label, then save it. The new card opens and offers to add another. Issue
-[#6](https://github.com/shockrifle/loyscan/issues/6), done 2026-10-30. Everything runs offline on the local database.
+[#6](https://github.com/shockrifle/loyscan/issues/6), done 2026-10-30. A picture shared to LoyScan starts the same flow
+with the picture's barcode (#77, below). Everything runs offline on the local database.
 
 **Entry points** (under `app/src/main/java/com/bdaniel/loyscan/`):
 - `StorePickerScreen.kt`, `StorePickerViewModel.kt`; the search field and list in `StoreList.kt` (`StoreSearchList`,
@@ -11,9 +12,13 @@ check the number and give the card a label, then save it. The new card opens and
 - `CustomStoreScreen.kt`, `CustomStoreViewModel.kt` ("Other card"); formats in `BarcodeFormat.forCustomStores`.
 - [[barcode-scanner]] (`ScannerScreen.kt`), unchanged except for where its directions lead.
 - `CardFormScreen.kt`, `CardFormViewModel.kt` (`CardFormState`).
-- Routes and directions in `Navigation.kt`: `StorePicker`, `CustomStore`, `Scanner(storeId)`,
+- Routes and directions in `Navigation.kt`: `StorePicker(scannedContent?, scannedFormat?, manualEntry)`,
+  `CustomStore(storeId?, scannedContent?, scannedFormat?, manualEntry)`, `Scanner(storeId)`,
   `CardForm(storeId, scannedContent?, scannedFormat?)`; `ListDirections.toAddCard` starts the flow. Saving uses
   `LoyaltyCardRepository.add`.
+- Share → LoyScan (#77): `Intent.sharedPicture()` and the share handling in `MainActivity.kt:42-46, 114-123`;
+  `SharedPictureScreen.kt`, `SharedPictureViewModel.kt`; route `SharedPicture(uri)`, `openSharedPicture` and
+  `sharedPictureDirections` in `Navigation.kt`.
 
 ## Behaviour
 
@@ -115,6 +120,25 @@ check the number and give the card a label, then save it. The new card opens and
   stays current when nothing observes it (#50; the pre-load gap was found in review).
 - The same form edits a card (`CardForm.cardId`, title "Edit card"): [[edit-card]].
 
+- **Share → LoyScan** (#77). LoyScan is in the system share sheet for one image (`ACTION_SEND`, `image/*`; not
+  `SEND_MULTIPLE`). The share opens over the sharing app, or reaches LoyScan through `onNewIntent` when it is on top
+  of that task ([[2026-11-03-share-into-the-sharing-apps-task]]). Only a `content://` URI is taken (a `file://` one
+  could name the app's own files), and only the picture granted with the share is read, with the scanner's
+  `PictureReader` ([[barcode-scanner]] → Scan from image): not copied, stored or sent. Steps:
+  - `SharedPicture(uri)` opens over the card list, in place of anything open above it, and says "Reading the
+    picture…". Its barcode replaces it with the store picker holding the scan (`StorePicker(scannedContent,
+    scannedFormat)`), so back from the picker returns to the list.
+  - No barcode, or a picture that can't be opened, says so with "Enter the number by hand", which opens the picker
+    with `manualEntry = true`. Back returns to the list.
+  - From that picker, a store opens its card form directly, with the scan or empty (`addCardStep` in
+    `Navigation.kt`), not the scanner. "Other card" carries the scan on: the created store's form opens instead of its
+    scanner. Editing a custom store from that picker doesn't carry it.
+  - Rotation and process death: the scan lives in the picker's route, and what the read found is kept in the
+    `SharedPicture` entry's `SavedStateHandle`, so the picture isn't read again (a read still running at process death
+    is read again). `MainActivity` handles the intent only on a fresh `onCreate` and in `onNewIntent`, and ignores a
+    share reopened from recents, so a recreated activity doesn't start the flow again.
+  - Not yet checked on a device (#77).
+
 ## Tests
 
 - `domain/StoreSearchTest`: matching (name, alias, case, accents) and order; stores whose rule reads a scan, incl. a
@@ -138,6 +162,12 @@ check the number and give the card a label, then save it. The new card opens and
 - "Add another": `AddCardDirectionsTest` (`savingTheForm_…_offeringToAddAnother`, `addAnotherOnTheNewCard_…`,
   `aSecondTapOnAddAnother_…`; the edit tests check an edit's card has `added = false`), `DetailScreenTest`
   (`aCardJustAdded_…`, `aCardOpenedOtherwise_…`, `theOffer_…`, incl. after Edit and during scan mode).
+
+- Share → LoyScan (#77): `ShareIntentTest` (the manifest's filter resolves one image and nothing else, `singleTop`,
+  which intents are a shared picture), `SharedPictureViewModelTest` (reading, each outcome, kept over process death),
+  `SharedPictureScreenTest`, `AddCardDirectionsTest` (`aSharedPicture…`, `…ForASharedScan…`, `…TypedByHand…`), and
+  `ShareToLoyScanTest`, end to end with `FakePictureReaderModule`: share → picker → form, back to the list, no barcode
+  → by hand, `onNewIntent`, recreating the activity.
 
 ## Not implemented
 

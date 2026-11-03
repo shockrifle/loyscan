@@ -20,7 +20,7 @@ On a phone (smallest width under 600dp) every screen but the card ([[card-detail
 the card screen follows the device's rotation. Screens 600dp or wider (tablets, unfolded foldables) are never locked.
 `ScreenOrientation(rotates)` in `app/src/main/java/com/bdaniel/loyscan/ui/ScreenEffects.kt` sets the activity's
 `requestedOrientation` (`SCREEN_ORIENTATION_PORTRAIT` or `UNSPECIFIED`); `AppNavigation` calls it once, with
-`rotates` true when the current back-stack entry is a `Detail` (`app/src/main/java/com/bdaniel/loyscan/MainActivity.kt:55`).
+`rotates` true when the current back-stack entry is a `Detail` (`app/src/main/java/com/bdaniel/loyscan/MainActivity.kt:74`).
 Until the entry is known, `rotates` is `null` and nothing is requested: `currentBackStackEntryAsState()` starts at
 `null`, and after a recreation the restored back stack arrives a frame later. Asking for portrait in that frame would
 turn a card held in landscape back to portrait, which recreates the activity again (found in review;

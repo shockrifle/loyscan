@@ -62,7 +62,7 @@ fun CustomStoreScreen(
     var confirmingDelete by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(state.createdStoreId) {
-        state.createdStoreId?.let(directions.toScanner)
+        state.createdStoreId?.let(directions.onCreated)
     }
     LaunchedEffect(state.saved, state.deletion) {
         if (state.saved || state.deletion == Deletion.DELETED) directions.toBack()
