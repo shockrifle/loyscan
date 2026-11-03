@@ -3,7 +3,9 @@ package com.bdaniel.loyscan.di
 import android.content.Context
 import androidx.room.Room
 import com.bdaniel.loyscan.data.local.db.AppDatabase
+import com.bdaniel.loyscan.data.local.db.CardPhotoSweepCallback
 import com.bdaniel.loyscan.data.local.db.CatalogueDatabaseCallback
+import com.bdaniel.loyscan.data.photos.FileCardPhotos
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -17,12 +19,13 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
+    fun provideAppDatabase(@ApplicationContext context: Context, photos: FileCardPhotos): AppDatabase {
         return Room.databaseBuilder(
                 context,
                 AppDatabase::class.java, "loyscan.db"
         )
                 .addCallback(CatalogueDatabaseCallback.fromAssets(context))
+                .addCallback(CardPhotoSweepCallback(photos))
                 .build()
     }
 

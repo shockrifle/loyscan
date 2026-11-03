@@ -15,8 +15,11 @@ by deleting its custom store, where `ON DELETE CASCADE` deletes the rows in SQLi
 - **What the row holds:** an absolute path, or a name relative to the photo directory. An absolute path breaks when the
   data directory differs, e.g. a restore into a work profile (`/data/user/10/…`).
 - **Who deletes the files:** each ViewModel after its delete, a sweep of unreferenced files, or the repositories.
-  ViewModels would miss the cascade, which only SQL sees. A sweep needs to know which files belong to forms still
+  ViewModels would miss the cascade, which only SQL sees. A sweep alone needs to know which files belong to forms still
   open, possibly in another task since a share opens its own ([[2026-11-03-share-in-standard-launch-mode]]).
+- **A form's copies when its process is killed** (swiped from Recents, a low-memory kill never returned to): no
+  `onCleared` runs. Added in review, 2026-11-03. Options: stage picks in a separate directory and move them on
+  save (suggested in review), or sweep files no card names once they are old enough that no open form still holds them.
 - **When a picked picture is copied:** on pick, or on save. The photo picker's read grant lasts only while the app's
   process lives, so a save after process death couldn't read a picture that was only remembered by its Uri.
 
@@ -30,11 +33,17 @@ by deleting its custom store, where `ON DELETE CASCADE` deletes the rows in SQLi
   `StoreDao.deleteCustomReturningCardPhotos(id)` read the photo names and write the row in one `@Transaction`, and
   `RoomLoyaltyCardRepository` / `RoomStoreRepository` then delete the files those calls return. `delete(id)` is
   `deleteAll(setOf(id))`, so a card has one delete path.
+- **A sweep catches what the rest misses:** `CardPhotoSweepCallback` runs on every database open and deletes photo
+  files no card names that were last written over a day ago. A save drops a picked name whose file is gone
+  (`CardPhotos.exists`), so a form restored after more than a day doesn't name a swept file.
 - An edit (`LoyaltyCardEdit`) now writes the photo columns. Before #10 it left them alone ([[edit-card]]).
 
 ## Why
 - One choke point covers all three delete paths, including the cascade, and a test per path sits at the repository
   (`RoomLoyaltyCardRepositoryTest.delete_…`, `deleteAll_…`, `RoomStoreRepositoryTest.delete_…`).
+- The sweep rather than staging: the age alone tells an abandoned copy from one an open form holds, so a pick needs no
+  second location or a move on save that could fail halfway (row written, file not moved). The day is a guess at how
+  long a form waits in Recents; a form older than that loses its unsaved photos, not the card's own.
 - Files go after the row: if the write fails, the card still has its photos. If a file delete fails, the file is left
   behind (logged), which is better than a card naming a missing file.
 
@@ -47,4 +56,5 @@ by deleting its custom store, where `ON DELETE CASCADE` deletes the rows in SQLi
   quota, which stops the app's backup altogether, database included. Device-to-device transfer takes them on Android
   12+; on 10–11 it follows the cloud rules and leaves them behind. (Corrected 2026-11-03 in review: this said only that
   they count toward device-to-device transfer, while cloud backup was still on with the template rules.)
-- A photo picked in a form that is then abandoned is the form's to delete ([[card-photos]]).
+- A photo picked in a form that is then closed is the form's to delete ([[card-photos]]); the sweep catches the
+  rest on the next start.

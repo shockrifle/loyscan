@@ -42,8 +42,9 @@ terms, with domain→entity mappers. Time comes from an injected `java.time.Cloc
 
 - `LoyScanApplication` is `@HiltAndroidApp` (`LoyScanApplication.kt:7`); `MainActivity` is `@AndroidEntryPoint`.
 - `DatabaseModule` provides the singleton `AppDatabase` (file `loyscan.db`, seeded on creation — see
-  [[store-catalogue]]) and unscoped DAO providers (`di/DatabaseModule.kt`). One `RoomDatabase.Callback`,
-  `CatalogueDatabaseCallback`, writes rows through the raw database on every open. There are no debug-only demo
+  [[store-catalogue]]) and unscoped DAO providers (`di/DatabaseModule.kt`). Two `RoomDatabase.Callback`s run
+  on every open through the raw database: `CatalogueDatabaseCallback` writes the catalogue rows, and
+  `CardPhotoSweepCallback` deletes old photo files no card names ([[card-photos]]). There are no debug-only demo
   cards any more ([[seed-data]], #55); `DatabaseModuleTest` checks a new database holds only the catalogue.
 - `PreferencesModule` provides the singleton preferences `DataStore` (file `datastore/user_preferences.preferences_pb`,
   pinned by `PreferencesModuleTest`) behind `UserPreferencesRepository` ([[2026-10-28-datastore-for-user-preferences]]).

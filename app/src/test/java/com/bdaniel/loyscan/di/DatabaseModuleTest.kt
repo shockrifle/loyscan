@@ -10,18 +10,33 @@ import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.time.Duration
 
-/** The app's database as the app builds it: a new one holds the catalogue and nothing else. */
+/** The app's database as the app builds it: a new one holds the catalogue and nothing else, and opening it sweeps photos. */
 @RunWith(AndroidJUnit4::class)
 class DatabaseModuleTest {
 
     private val context = ApplicationProvider.getApplicationContext<Context>()
-    private val db: AppDatabase = DatabaseModule.provideAppDatabase(context)
+    private val photos = CardPhotosModule.provideFileCardPhotos(context)
+    private val db: AppDatabase = DatabaseModule.provideAppDatabase(context, photos)
 
     @After
     fun tearDown() {
         db.close()
         context.deleteDatabase("loyscan.db")
+    }
+
+    @Test
+    fun opening_sweepsAnOldPhotoNoCardNames() = runTest { // #10: a form killed with the process left it
+        val orphan = photos.file("orphan").apply {
+            parentFile!!.mkdirs()
+            writeBytes(byteArrayOf(1))
+            setLastModified(System.currentTimeMillis() - Duration.ofDays(2).toMillis())
+        }
+
+        db.loyaltyCardDao().getAllWithStore().first()
+
+        assertThat(orphan.exists()).isFalse()
     }
 
     @Test

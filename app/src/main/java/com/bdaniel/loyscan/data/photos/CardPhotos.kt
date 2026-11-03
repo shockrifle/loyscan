@@ -12,6 +12,7 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
 import java.io.FileNotFoundException
+import java.time.Instant
 import java.util.UUID
 
 /**
@@ -31,6 +32,9 @@ interface CardPhotos {
 
     /** Deletes these photos in the background, for a caller whose own scope is ending (a form being closed). */
     fun discard(names: Collection<String>)
+
+    /** Whether the photo [name] is still there: an old one no card names is swept when the database opens. */
+    suspend fun exists(name: String): Boolean
 }
 
 /** [CardPhotos] as files in [directory] (`files/card_photos`), never in a shared folder. */
@@ -56,6 +60,8 @@ class FileCardPhotos(
         }
     }
 
+    override suspend fun exists(name: String): Boolean = withContext(ioDispatcher) { file(name).isFile }
+
     /** Outlives any screen: a discard runs to the end even after its caller is gone. */
     private val background = CoroutineScope(SupervisorJob() + ioDispatcher)
 
@@ -68,6 +74,13 @@ class FileCardPhotos(
             val file = file(name)
             if (file.exists() && !file.delete()) Timber.w("Couldn't delete the card photo $name")
         }
+    }
+
+    /** Deletes the photos not in [named] last written before [olderThan]. Blocking: for the database's open callback. */
+    fun deleteUnnamed(named: Set<String>, olderThan: Instant) {
+        directory.listFiles().orEmpty()
+            .filter { it.isFile && it.name !in named && it.lastModified() < olderThan.toEpochMilli() }
+            .forEach { if (!it.delete()) Timber.w("Couldn't delete the orphaned card photo ${it.name}") }
     }
 
     /** The file of the photo [name]. A name is a file name only, so it can't reach outside [directory]. */

@@ -31,6 +31,10 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   its save runs leaves them to the save, and a save that then fails deletes them.
 - **On the card** ([[card-detail]]): under the note, the photos it has, front first; a tap shows one full screen
   on black (`PhotoViewer`, `PHOTO_VIEWER_TAG`), and a tap or Back closes it.
+- **Orphans:** a process killed with a form open (swiped from Recents) skips `onCleared`. On every database open
+  `CardPhotoSweepCallback` (`data/local/db/`, added in `di/DatabaseModule.kt`) deletes photo files that no card names
+  and that are over a day old; newer ones may belong to a form still open or about to be restored. A save drops a
+  picked photo whose file has gone since ([[2026-11-03-card-photos-as-private-files]]).
 - **Backup:** `files/card_photos/` is excluded from cloud backup; device-to-device transfer takes it on Android 12+
   ([[android-app]], [[2026-11-03-card-photos-as-private-files]]).
 - Images load through `hiltImageLoader()`, never Coil's default ([[coil-image-loading]]).
@@ -56,6 +60,8 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   `aPickedPhoto_isRestoredAfterProcessDeath`. `CardFormScreenTest`: `addingAFrontPhoto_…`,
   `editingACard_showsItsPhoto_whichCanBeReplacedOrRemoved`, `aPictureThatCantBeCopiedIn_saysSo`.
 - `ui/CardPhotoTest`: the app's loader maps a `CardPhoto` to its file.
+- `CardPhotoSweepCallbackTest` (on-disk database, closed and reopened), `DatabaseModuleTest.opening_sweepsAnOldPhotoNoCardNames`,
+  `FileCardPhotosTest.deleteUnnamed_…`, `exists_…`; `CardFormViewModelTest.aPickedPhotoWhoseFileIsGone_isNotSaved`.
 - `BackupRulesTest`: cloud backup excludes `card_photos/` on Android 12+ and 10–11; device transfer doesn't.
 - `data/photos/FileCardPhotosTest`: a picked picture is copied under a new name, an unreadable one leaves no file,
   delete skips missing names, discard deletes in the background, a name can't leave the directory.
@@ -65,9 +71,6 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   `LoyaltyCardDaoTest.updateReturningDroppedPhotos_…`, `deleteReturningPhotos_…`.
 
 ## Not implemented
-
-- A form whose task is removed after process death never comes back to delete the copies picked in it. They stay
-  as orphan files: no sweep looks for files no card names.
 
 Taking a photo with the camera, cropping to the card's ratio, the front photo as the list tile, and the rest of the backup rules (#71) are
 later parts of #10.

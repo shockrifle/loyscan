@@ -265,10 +265,17 @@ class CardFormViewModel @Inject constructor(
             backPhotoPath = current.backPhoto,
             updatedAt = now,
         )
-        val card = original?.let { draft } ?: draft.copy(id = UUID.randomUUID().toString(), createdAt = now)
+        val drafted = original?.let { draft } ?: draft.copy(id = UUID.randomUUID().toString(), createdAt = now)
+        val picked = pickedNames()
         viewModelScope.launch {
             progress.value = try {
                 withContext(NonCancellable) {
+                    // A pick restored after process death may have been swept since, if it waited over a day.
+                    val gone = picked.filterNot { photos.exists(it) }.toSet()
+                    val card = drafted.copy(
+                        frontPhotoPath = drafted.frontPhotoPath?.takeIf { it !in gone },
+                        backPhotoPath = drafted.backPhotoPath?.takeIf { it !in gone },
+                    )
                     try {
                         if (original == null) cardRepository.add(card) else cardRepository.update(card)
                     } catch (e: Exception) {
@@ -277,7 +284,7 @@ class CardFormViewModel @Inject constructor(
                         throw e
                     }
                 }
-                Progress(savedCardId = card.id)
+                Progress(savedCardId = drafted.id)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) { // a failed insert mustn't crash the form (#49)

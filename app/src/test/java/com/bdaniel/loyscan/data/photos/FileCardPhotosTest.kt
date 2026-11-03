@@ -16,6 +16,8 @@ import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import java.io.File
 import java.io.FileNotFoundException
+import java.time.Duration
+import java.time.Instant
 
 /** Card photos as files (#10): a picked picture is copied into the photo directory, and deleted from there. */
 @RunWith(AndroidJUnit4::class)
@@ -73,6 +75,30 @@ class FileCardPhotosTest {
         advanceUntilIdle()
 
         assertThat(directory.list()).asList().containsExactly(kept)
+    }
+
+    @Test
+    fun exists_saysWhetherThePhotosFileIsThere() = runTest {
+        val imported = photos.import(Uri.fromFile(temporaryFolder.newFile("picked.jpg")))
+
+        assertThat(photos.exists(imported)).isTrue()
+        assertThat(photos.exists("never-stored")).isFalse()
+    }
+
+    @Test
+    fun deleteUnnamed_deletesOnlyOldPhotosNotNamed() {
+        val now = Instant.parse("2026-05-05T05:05:05Z")
+        fun photo(name: String, age: Duration) =
+            photos.file(name).apply { parentFile!!.mkdirs(); writeBytes(byteArrayOf(1)); setLastModified((now - age).toEpochMilli()) }
+        val named = photo("named", Duration.ofDays(9))
+        val old = photo("old", Duration.ofDays(9))
+        val recent = photo("recent", Duration.ofMinutes(1))
+
+        photos.deleteUnnamed(setOf("named"), olderThan = now - Duration.ofDays(1))
+
+        assertThat(named.exists()).isTrue()
+        assertThat(old.exists()).isFalse()
+        assertThat(recent.exists()).isTrue()
     }
 
     @Test

@@ -32,4 +32,6 @@ class FakeCardPhotos(vararg stored: String) : CardPhotos {
     override fun discard(names: Collection<String>) {
         stored -= names.toSet()
     }
+
+    override suspend fun exists(name: String) = name in stored
 }

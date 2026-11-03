@@ -1101,6 +1101,24 @@ class CardFormViewModelTest {
     }
 
     @Test
+    fun aPickedPhotoWhoseFileIsGone_isNotSaved() = runTest { // #10: swept while the form waited after process death
+        val viewModel = viewModel(CardForm("ruled"))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.onNumberChange("12345674")
+            viewModel.onPhotoPicked(CardPhotoSide.FRONT, PICKED)
+            viewModel.onPhotoPicked(CardPhotoSide.BACK, PICKED)
+            photos.stored -= "photo-1"
+            viewModel.save()
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        assertThat(cards.cards.value.single().frontPhotoPath).isNull()
+        assertThat(cards.cards.value.single().backPhotoPath).isEqualTo("photo-2")
+    }
+
+    @Test
     fun aPickedPhoto_isRestoredAfterProcessDeath() = runTest { // #10
         val handle = SavedStateHandle(route = CardForm("ruled"))
         val first = viewModel(handle)
