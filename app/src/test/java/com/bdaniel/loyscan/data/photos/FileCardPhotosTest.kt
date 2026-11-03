@@ -6,6 +6,8 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertThrows
 import org.junit.Rule
@@ -56,6 +58,19 @@ class FileCardPhotosTest {
         val deleted = photos.import(Uri.fromFile(picked))
 
         photos.delete(listOf(deleted, "never-stored"))
+
+        assertThat(directory.list()).asList().containsExactly(kept)
+    }
+
+    @Test
+    fun discard_deletesThosePhotosInTheBackground() = runTest {
+        val background = FileCardPhotos(directory, ApplicationProvider.getApplicationContext<Context>().contentResolver, StandardTestDispatcher(testScheduler))
+        val picked = temporaryFolder.newFile("picked.jpg")
+        val kept = photos.import(Uri.fromFile(picked))
+        val discarded = photos.import(Uri.fromFile(picked))
+
+        background.discard(listOf(discarded))
+        advanceUntilIdle()
 
         assertThat(directory.list()).asList().containsExactly(kept)
     }

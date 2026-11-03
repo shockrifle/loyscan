@@ -8,7 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
 
-/** Opens a picture picker; the scanner reads a barcode from what is picked (#76). A fake in tests. */
+/** Opens a picture picker: the scanner reads a barcode from what is picked (#76), the card form keeps it as a card photo (#10). A fake in tests. */
 @Stable
 fun interface PicturePicker {
     fun pick()

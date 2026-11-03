@@ -1,5 +1,6 @@
 package com.bdaniel.loyscan
 
+import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModelStore
 import androidx.navigation.testing.invoke
@@ -13,6 +14,7 @@ import com.bdaniel.loyscan.domain.LoyaltyCard
 import com.bdaniel.loyscan.domain.cardnumber.CardNumberRule
 import com.bdaniel.loyscan.domain.cardnumber.CheckDigitAlgorithm
 import com.bdaniel.loyscan.domain.cardnumber.Validation
+import com.bdaniel.loyscan.testing.FakeCardPhotos
 import com.bdaniel.loyscan.testing.FakeLoyaltyCardRepository
 import com.bdaniel.loyscan.testing.FakeStoreRepository
 import com.bdaniel.loyscan.testing.MainDispatcherRule
@@ -31,6 +33,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.io.FileNotFoundException
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
@@ -59,6 +62,7 @@ class CardFormViewModelTest {
     private val eanStore = aStore(id = "ean", name = "Ean Store", defaultBarcodeFormat = BarcodeFormat.EAN_13)
     private val stores = FakeStoreRepository(listOf(store, plainStore, nineStore, gs1Store, qrStore, eanStore))
     private val cards = FakeLoyaltyCardRepository()
+    private val photos = FakeCardPhotos()
 
     @Test
     fun typedForm_startsEmpty_andCantBeSaved() = runTest {
@@ -288,7 +292,7 @@ class CardFormViewModelTest {
         }
         val viewModel = CardFormViewModel(
             SavedStateHandle(route = CardForm("plain", scannedContent = "0109501101530003\u001D10ABC", scannedFormat = BarcodeFormat.GS1_128)),
-            lateStores, cards, Clock.fixed(NOW, ZoneOffset.UTC),
+            lateStores, cards, Clock.fixed(NOW, ZoneOffset.UTC), photos,
         )
 
         viewModel.onNumberChange("(01)09501101530003(10)ABD")
@@ -856,6 +860,262 @@ class CardFormViewModelTest {
     }
 
     @Test
+    fun aPickedFrontPhoto_isShown_andSavedWithTheNewCard() = runTest { // #10
+        val viewModel = viewModel(CardForm("ruled"))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.onNumberChange("12345674")
+            viewModel.onPhotoPicked(CardPhotoSide.FRONT, PICKED)
+            assertThat(expectMostRecentItem().frontPhoto).isEqualTo("photo-1")
+
+            viewModel.save()
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        assertThat(photos.imported).containsExactly(PICKED)
+        assertThat(cards.cards.value.single().frontPhotoPath).isEqualTo("photo-1")
+        assertThat(cards.cards.value.single().backPhotoPath).isNull()
+    }
+
+    @Test
+    fun editingACard_startsWithItsPhotos_andAPickedBackPhotoReplacesItsOwnOnSave() = runTest { // #10
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, number = "12345674", frontPhotoPath = "front", backPhotoPath = "back"))
+        photos.stored += setOf("front", "back")
+        val viewModel = viewModel(CardForm("ruled", cardId = cardId(1)))
+
+        viewModel.state.test {
+            val state = awaitLoaded()
+            assertThat(state.frontPhoto).isEqualTo("front")
+            assertThat(state.backPhoto).isEqualTo("back")
+
+            viewModel.onPhotoPicked(CardPhotoSide.BACK, PICKED)
+            viewModel.save()
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        assertThat(cards.cards.value.single().frontPhotoPath).isEqualTo("front")
+        assertThat(cards.cards.value.single().backPhotoPath).isEqualTo("photo-1")
+        // The card's own back photo is the repository's to delete, once the edit is saved.
+        assertThat(photos.stored).containsExactly("front", "back", "photo-1")
+    }
+
+    @Test
+    fun removingACardsPhoto_savesTheCardWithoutIt() = runTest { // #10
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, number = "12345674", frontPhotoPath = "front"))
+        val viewModel = viewModel(CardForm("ruled", cardId = cardId(1)))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.removePhoto(CardPhotoSide.FRONT)
+            assertThat(expectMostRecentItem().frontPhoto).isNull()
+            viewModel.save()
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        assertThat(cards.cards.value.single().frontPhotoPath).isNull()
+    }
+
+    @Test
+    fun aPhotoPickedInTheForm_isDeleted_whenAnotherReplacesIt_orItIsRemoved() = runTest { // #10
+        val viewModel = viewModel(CardForm("ruled"))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.onPhotoPicked(CardPhotoSide.FRONT, PICKED)
+            viewModel.onPhotoPicked(CardPhotoSide.FRONT, PICKED)
+            viewModel.onPhotoPicked(CardPhotoSide.BACK, PICKED)
+            viewModel.removePhoto(CardPhotoSide.BACK)
+            assertThat(expectMostRecentItem().frontPhoto).isEqualTo("photo-2")
+        }
+
+        assertThat(photos.stored).containsExactly("photo-2")
+    }
+
+    @Test
+    fun aFormClosedWithoutSaving_deletesThePhotosPickedInIt_butNotTheCardsOwn() = runTest { // #10
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, number = "12345674", frontPhotoPath = "front"))
+        photos.stored += "front"
+        val owner = ViewModelStore()
+        val viewModel = owner.keep { viewModel(CardForm("ruled", cardId = cardId(1))) }
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.onPhotoPicked(CardPhotoSide.FRONT, PICKED)
+            viewModel.onPhotoPicked(CardPhotoSide.BACK, PICKED)
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        owner.clear()
+
+        assertThat(photos.stored).containsExactly("front")
+    }
+
+    @Test
+    fun aSavedForm_keepsItsPhotos_whenItCloses() = runTest { // #10
+        val owner = ViewModelStore()
+        val viewModel = owner.keep { viewModel(CardForm("ruled")) }
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.onNumberChange("12345674")
+            viewModel.onPhotoPicked(CardPhotoSide.FRONT, PICKED)
+            viewModel.save()
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        owner.clear()
+
+        assertThat(photos.stored).containsExactly("photo-1")
+    }
+
+    @Test
+    fun aSaveStillRunningWhenTheFormCloses_keepsItsPhoto() = runTest { // #10, #64
+        val gate = CompletableDeferred<Unit>()
+        cards.addGate = gate
+        val owner = ViewModelStore()
+        val viewModel = owner.keep { viewModel(CardForm("ruled")) }
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.onNumberChange("12345674")
+            viewModel.onPhotoPicked(CardPhotoSide.FRONT, PICKED)
+            viewModel.save()
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        owner.clear()
+        gate.complete(Unit)
+
+        assertThat(photos.stored).containsExactly("photo-1")
+    }
+
+    @Test
+    fun aSaveThatFailsAfterTheFormClosed_deletesItsPhoto() = runTest { // #10, #64
+        val gate = CompletableDeferred<Unit>()
+        cards.addGate = gate
+        cards.addFailure = IllegalStateException("disk full")
+        val owner = ViewModelStore()
+        val viewModel = owner.keep { viewModel(CardForm("ruled")) }
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.onNumberChange("12345674")
+            viewModel.onPhotoPicked(CardPhotoSide.FRONT, PICKED)
+            viewModel.save()
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        owner.clear()
+        gate.complete(Unit)
+
+        assertThat(photos.stored).isEmpty()
+    }
+
+    @Test
+    fun aFailedSave_keepsThePhotos_soTheFormCanTryAgain() = runTest { // #10, #49
+        cards.addFailure = IllegalStateException("disk full")
+        val viewModel = viewModel(CardForm("ruled"))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.onNumberChange("12345674")
+            viewModel.onPhotoPicked(CardPhotoSide.FRONT, PICKED)
+            viewModel.save()
+            val failed = expectMostRecentItem()
+            assertThat(failed.saveFailed).isTrue()
+            assertThat(failed.frontPhoto).isEqualTo("photo-1")
+        }
+        assertThat(photos.stored).containsExactly("photo-1")
+    }
+
+    @Test
+    fun whileAPhotoIsCopiedIn_theCardCantBeSaved_norAnotherPhotoPicked() = runTest { // #10
+        val gate = CompletableDeferred<Unit>()
+        photos.importGate = gate
+        val viewModel = viewModel(CardForm("ruled"))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.onNumberChange("12345674")
+            viewModel.onPhotoPicked(CardPhotoSide.FRONT, PICKED)
+            viewModel.onPhotoPicked(CardPhotoSide.BACK, PICKED)
+            val importing = expectMostRecentItem()
+            assertThat(importing.importingPhoto).isEqualTo(CardPhotoSide.FRONT)
+            assertThat(importing.canSave).isFalse()
+
+            gate.complete(Unit)
+            val done = expectMostRecentItem()
+            assertThat(done.importingPhoto).isNull()
+            assertThat(done.canSave).isTrue()
+            assertThat(done.backPhoto).isNull()
+        }
+        assertThat(photos.imported).hasSize(1)
+    }
+
+    @Test
+    fun aPictureThatCantBeCopiedIn_saysSo_andTheNextPickClearsIt() = runTest { // #10
+        photos.importFailure = FileNotFoundException("gone")
+        val viewModel = viewModel(CardForm("ruled"))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.onPhotoPicked(CardPhotoSide.FRONT, PICKED)
+            val failed = expectMostRecentItem()
+            assertThat(failed.photoFailed).isTrue()
+            assertThat(failed.frontPhoto).isNull()
+
+            photos.importFailure = null
+            viewModel.onPhotoPicked(CardPhotoSide.FRONT, PICKED)
+            val picked = expectMostRecentItem()
+            assertThat(picked.photoFailed).isFalse()
+            assertThat(picked.frontPhoto).isEqualTo("photo-1")
+        }
+    }
+
+    @Test
+    fun aCancelledPick_changesNothing() = runTest { // #10
+        val viewModel = viewModel(CardForm("ruled"))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.onPhotoPicked(CardPhotoSide.FRONT, null)
+            expectNoEvents()
+        }
+        assertThat(photos.imported).isEmpty()
+    }
+
+    @Test
+    fun noPhotoCanBePickedOrRemoved_onceSavingHasStarted() = runTest { // #10: the saved card would lose it
+        cards.addGate = CompletableDeferred()
+        val viewModel = viewModel(CardForm("ruled"))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.onNumberChange("12345674")
+            viewModel.onPhotoPicked(CardPhotoSide.FRONT, PICKED)
+            viewModel.save()
+            viewModel.onPhotoPicked(CardPhotoSide.BACK, PICKED)
+            viewModel.removePhoto(CardPhotoSide.FRONT)
+            assertThat(expectMostRecentItem().frontPhoto).isEqualTo("photo-1")
+            cancelAndIgnoreRemainingEvents()
+        }
+        assertThat(photos.imported).hasSize(1)
+        assertThat(photos.stored).containsExactly("photo-1")
+    }
+
+    @Test
+    fun aPickedPhoto_isRestoredAfterProcessDeath() = runTest { // #10
+        val handle = SavedStateHandle(route = CardForm("ruled"))
+        val first = viewModel(handle)
+        first.state.test {
+            awaitLoaded()
+            first.onPhotoPicked(CardPhotoSide.BACK, PICKED)
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        viewModel(handle).state.test {
+            assertThat(awaitLoaded().backPhoto).isEqualTo("photo-1")
+        }
+    }
+
+    @Test
     fun addingACard_isNotEditing() = runTest {
         viewModel(CardForm("ruled")).state.test {
             assertThat(awaitLoaded().editing).isFalse()
@@ -865,7 +1125,7 @@ class CardFormViewModelTest {
     private fun viewModel(route: CardForm) = viewModel(SavedStateHandle(route = route))
 
     private fun viewModel(handle: SavedStateHandle) =
-        CardFormViewModel(handle, stores, cards, Clock.fixed(NOW, ZoneOffset.UTC))
+        CardFormViewModel(handle, stores, cards, Clock.fixed(NOW, ZoneOffset.UTC), photos)
 
     /** The first state with the store loaded. */
     private suspend fun ReceiveTurbine<CardFormState>.awaitLoaded(): CardFormState {
@@ -876,5 +1136,6 @@ class CardFormViewModelTest {
 
     private companion object {
         val NOW: Instant = Instant.parse("2026-05-05T05:05:05Z")
+        val PICKED: Uri = Uri.parse("content://media/picker/0/1")
     }
 }

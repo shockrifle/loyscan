@@ -1,5 +1,6 @@
 package com.bdaniel.loyscan
 
+import android.net.Uri
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
@@ -21,16 +22,19 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.domain.cardnumber.CardNumberRule
 import com.bdaniel.loyscan.domain.cardnumber.CheckDigitAlgorithm
+import com.bdaniel.loyscan.testing.FakeCardPhotos
 import com.bdaniel.loyscan.testing.FakeLoyaltyCardRepository
 import com.bdaniel.loyscan.testing.FakeStoreRepository
 import com.bdaniel.loyscan.testing.SOME_INSTANT
 import com.bdaniel.loyscan.testing.aLoyaltyCard
 import com.bdaniel.loyscan.testing.aStore
 import com.bdaniel.loyscan.testing.cardId
+import com.bdaniel.loyscan.ui.scanner.PicturePicker
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.io.FileNotFoundException
 import java.time.Clock
 import java.time.ZoneOffset
 
@@ -53,6 +57,7 @@ class CardFormScreenTest {
     // The same rule, but the number must start with 9.
     private val nineStore = aStore(id = "nine", name = "Nine Store", cardNumberRule = rule.copy(coreStartsWith = listOf("9")))
     private val cards = FakeLoyaltyCardRepository()
+    private val photos = FakeCardPhotos()
     private val stores = FakeStoreRepository(
         listOf(
             store,
@@ -285,14 +290,66 @@ class CardFormScreenTest {
         composeRule.onNodeWithTag(CARD_NUMBER_TAG).assertDoesNotExist()
     }
 
+    @Test
+    fun addingAFrontPhoto_picksAPicture_showsIt_andSavesItWithTheCard() { // #10
+        setScreen(CardForm("ruled"))
+        composeRule.onNodeWithTag(CARD_NUMBER_TAG).performTextInput("12345674")
+
+        composeRule.onNodeWithText("Add front photo").performScrollTo().performClick()
+
+        composeRule.onNodeWithContentDescription("Front photo").assertExists()
+        composeRule.onNodeWithText("Add front photo").assertDoesNotExist()
+        composeRule.onNodeWithText("Add back photo").assertExists()
+        composeRule.onNodeWithText("Save").performScrollTo().performClick()
+        composeRule.waitForIdle()
+        assertThat(cards.cards.value.single().frontPhotoPath).isEqualTo("photo-1")
+    }
+
+    @Test
+    fun editingACard_showsItsPhoto_whichCanBeReplacedOrRemoved() { // #10
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, number = "12345674", backPhotoPath = "back"))
+        setScreen(CardForm("ruled", cardId = cardId(1)))
+        composeRule.onNodeWithContentDescription("Back photo").assertExists()
+
+        composeRule.onNodeWithContentDescription("Replace back photo").performScrollTo().performClick()
+        assertThat(photos.imported).containsExactly(PICKED)
+
+        composeRule.onNodeWithContentDescription("Remove back photo").performScrollTo().performClick()
+        composeRule.onNodeWithContentDescription("Back photo").assertDoesNotExist()
+        composeRule.onNodeWithText("Add back photo").assertExists()
+    }
+
+    @Test
+    fun aPictureThatCantBeCopiedIn_saysSo() { // #10
+        photos.importFailure = FileNotFoundException("gone")
+        setScreen(CardForm("ruled"))
+
+        composeRule.onNodeWithText("Add front photo").performScrollTo().performClick()
+
+        composeRule.onNodeWithText("The photo couldn't be added. Try again.").assertExists()
+        composeRule.onNodeWithText("Add front photo").assertExists()
+    }
+
     private fun setScreen(route: CardForm) {
         val viewModel = CardFormViewModel(
             SavedStateHandle(route = route),
             stores,
             cards,
             Clock.fixed(SOME_INSTANT, ZoneOffset.UTC),
+            photos,
         )
         val directions = CardFormDirections(toCard = { id, color -> opened += id to color }, toBack = { backs++ })
-        composeRule.setContent { CardFormScreen(directions = directions, viewModel = viewModel) }
+        composeRule.setContent {
+            CardFormScreen(
+                directions = directions,
+                viewModel = viewModel,
+                // The system picker, answered at once with PICKED.
+                photoPicker = { onPicked -> PicturePicker { onPicked(PICKED) } },
+            )
+        }
+    }
+
+    private companion object {
+        val PICKED: Uri = Uri.parse("content://media/picker/0/1")
     }
 }

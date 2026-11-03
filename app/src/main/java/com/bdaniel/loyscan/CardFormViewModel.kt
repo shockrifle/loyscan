@@ -1,10 +1,12 @@
 package com.bdaniel.loyscan
 
+import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.bdaniel.loyscan.CardFormState.NumberCheck
+import com.bdaniel.loyscan.data.photos.CardPhotos
 import com.bdaniel.loyscan.data.repository.LoyaltyCardRepository
 import com.bdaniel.loyscan.data.repository.StoreRepository
 import com.bdaniel.loyscan.domain.BarcodeFormat
@@ -24,12 +26,16 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.time.Clock
 import java.util.UUID
 import javax.inject.Inject
+
+/** Which side of the physical card a photo shows (#10). */
+enum class CardPhotoSide { FRONT, BACK }
 
 /** What the card form shows, derived from its inputs. */
 data class CardFormState(
@@ -68,9 +74,17 @@ data class CardFormState(
     val storeGone: Boolean = false,
     /** While editing, every store but this one, by name: the card can be moved to any of them (#8). */
     val otherStores: List<Store> = emptyList(),
+    /** The front photo's name (#10): the edited card's, or one picked in this form; `null` for none. */
+    val frontPhoto: String? = null,
+    val backPhoto: String? = null,
+    /** The side whose picked picture is being copied in; the card can't be saved until it is. */
+    val importingPhoto: CardPhotoSide? = null,
+    /** The last picked picture couldn't be copied in. */
+    val photoFailed: Boolean = false,
 ) {
-    /** Anything but an empty number can be saved, an invalid one "anyway". */
-    val canSave: Boolean get() = store != null && check != NumberCheck.Empty && !saving && savedCardId == null
+    /** Anything but an empty number can be saved, an invalid one "anyway"; not while a photo is being copied in. */
+    val canSave: Boolean
+        get() = store != null && check != NumberCheck.Empty && !saving && savedCardId == null && importingPhoto == null
 
     sealed interface NumberCheck {
         data object Empty : NumberCheck
@@ -90,7 +104,7 @@ data class CardFormState(
 }
 
 /**
- * Last step of adding a card: the label, number and note (#9) for the routed store, the number from a scan or typed. The
+ * Last step of adding a card: the label, number, note (#9) and photos (#10) for the routed store, the number from a scan or typed. The
  * store can be switched to one whose rule reads the scan; the scan, label and note stay. With [CardForm.cardId] it edits that card (#8): the form
  * starts as the card, a scanned card as its untouched scan, and the card can be moved to any other store.
  */
@@ -100,6 +114,7 @@ class CardFormViewModel @Inject constructor(
     storeRepository: StoreRepository,
     private val cardRepository: LoyaltyCardRepository,
     private val clock: Clock,
+    private val photos: CardPhotos,
 ) : ViewModel() {
 
     private val route = savedStateHandle.toRoute<CardForm>()
@@ -122,6 +137,19 @@ class CardFormViewModel @Inject constructor(
     /** `null` until the number is changed: the untouched scan, the edited card's typed number, or nothing typed. */
     private val typedNumber = savedStateHandle.getStateFlow<String?>(TYPED_NUMBER, null)
 
+    /**
+     * Per side, `null` until the photo is changed: the edited card's, or none. Then the name of a photo picked in this
+     * form, which this form deletes if it isn't saved, or [REMOVED].
+     */
+    private val pickedPhotos = combine(
+        savedStateHandle.getStateFlow<String?>(FRONT_PHOTO, null),
+        savedStateHandle.getStateFlow<String?>(BACK_PHOTO, null),
+        ::PickedPhotos,
+    )
+
+    /** The form's ViewModel is gone (the form closed); a save still running then deletes its photos if it fails. */
+    private var cleared = false
+
     private val progress = MutableStateFlow(Progress())
 
     /**
@@ -130,9 +158,9 @@ class CardFormViewModel @Inject constructor(
      * store has loaded.
      */
     val state: StateFlow<CardFormState> =
-        combine(storeId, storeRepository.getAll(), original, combine(label, note, typedNumber, ::Triple), progress) {
-                id, stores, original, (label, note, typed), progress ->
-            formState(id, stores, original, label, note, typed, progress)
+        combine(storeId, storeRepository.getAll(), original, combine(label, note, typedNumber, pickedPhotos, ::Inputs), progress) {
+                id, stores, original, inputs, progress ->
+            formState(id, stores, original, inputs, progress)
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.Eagerly,
@@ -166,6 +194,53 @@ class CardFormViewModel @Inject constructor(
         savedStateHandle[STORE_ID] = storeId
     }
 
+    /**
+     * Copies the picture picked for [side] in (#10); `null` is a cancelled pick. A photo picked earlier in this form for
+     * that side is deleted; the edited card's own goes when the edit is saved. One picture at a time, and none once
+     * saving has started.
+     */
+    fun onPhotoPicked(side: CardPhotoSide, picture: Uri?) {
+        val current = progress.value
+        if (picture == null || current.saving || current.savedCardId != null || current.importing != null) return
+        progress.value = current.copy(importing = side, photoFailed = false)
+        viewModelScope.launch {
+            val name = try {
+                photos.import(picture)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) { // e.g. a cloud picture that can't be downloaded
+                Timber.e(e, "Couldn't copy the picked photo in")
+                progress.update { it.copy(importing = null, photoFailed = true) }
+                return@launch
+            }
+            val replaced = picked(side)
+            savedStateHandle[side.key] = name
+            progress.update { it.copy(importing = null) }
+            replaced?.let { photos.discard(listOf(it)) }
+        }
+    }
+
+    /** Removes [side]'s photo (#10), as [onPhotoPicked] replaces it. Not once saving has started. */
+    fun removePhoto(side: CardPhotoSide) {
+        val current = progress.value
+        if (current.saving || current.savedCardId != null || current.importing != null) return
+        val replaced = picked(side)
+        savedStateHandle[side.key] = REMOVED
+        replaced?.let { photos.discard(listOf(it)) }
+    }
+
+    /** A form closed unsaved deletes the photos picked in it; one closed while saving leaves them to the save (#10). */
+    override fun onCleared() {
+        cleared = true
+        val current = progress.value
+        if (!current.saving && current.savedCardId == null) photos.discard(pickedNames())
+    }
+
+    /** The name of the photo picked in this form for [side], if there is one. */
+    private fun picked(side: CardPhotoSide): String? = savedStateHandle.get<String>(side.key)?.takeIf { it != REMOVED }
+
+    private fun pickedNames(): List<String> = CardPhotoSide.entries.mapNotNull(::picked)
+
     /** Drops the scan, for a number typed from the card instead. */
     fun typeNumberInstead() {
         savedStateHandle[TYPED_NUMBER] = ""
@@ -186,13 +261,21 @@ class CardFormViewModel @Inject constructor(
         val draft = draft(store, original, typedNumber.value).copy(
             label = current.label.trim().ifEmpty { null },
             note = current.note.trim().ifEmpty { null },
+            frontPhotoPath = current.frontPhoto,
+            backPhotoPath = current.backPhoto,
             updatedAt = now,
         )
         val card = original?.let { draft } ?: draft.copy(id = UUID.randomUUID().toString(), createdAt = now)
         viewModelScope.launch {
             progress.value = try {
                 withContext(NonCancellable) {
-                    if (original == null) cardRepository.add(card) else cardRepository.update(card)
+                    try {
+                        if (original == null) cardRepository.add(card) else cardRepository.update(card)
+                    } catch (e: Exception) {
+                        // Nothing is left to save the photos picked in the closed form, so they go (#10).
+                        if (cleared) photos.discard(pickedNames())
+                        throw e
+                    }
                 }
                 Progress(savedCardId = card.id)
             } catch (e: CancellationException) {
@@ -230,14 +313,13 @@ class CardFormViewModel @Inject constructor(
         storeId: String,
         stores: List<Store>,
         original: LoyaltyCard?,
-        changedLabel: String?,
-        changedNote: String?,
-        changedNumber: String?,
+        inputs: Inputs,
         progress: Progress,
     ): CardFormState {
         val editing = route.cardId != null
-        val label = changedLabel ?: original?.label.orEmpty()
-        val note = changedNote ?: original?.note.orEmpty()
+        val label = inputs.label ?: original?.label.orEmpty()
+        val note = inputs.note ?: original?.note.orEmpty()
+        val changedNumber = inputs.typedNumber
         val typed = typedOrNull(original, changedNumber)
         val store = stores.firstOrNull { it.id == storeId }
         // Nothing to show until the store has loaded, and the edited card (which may be gone). The stores have loaded
@@ -284,7 +366,18 @@ class CardFormViewModel @Inject constructor(
             editing = editing,
             // Adding a card offers none: back returns to the picker.
             otherStores = if (editing) stores.filter { it.id != store.id }.search("") else emptyList(),
+            frontPhoto = inputs.photos.front.photo(original?.frontPhotoPath),
+            backPhoto = inputs.photos.back.photo(original?.backPhotoPath),
+            importingPhoto = progress.importing,
+            photoFailed = progress.photoFailed,
         )
+    }
+
+    /** A side's photo: the card's own until it is changed, then the picked one or none. */
+    private fun String?.photo(cards: String?): String? = when (this) {
+        null -> cards
+        REMOVED -> null
+        else -> this
     }
 
     /**
@@ -310,12 +403,26 @@ class CardFormViewModel @Inject constructor(
         val saving: Boolean = false,
         val saveFailed: Boolean = false,
         val savedCardId: String? = null,
+        val importing: CardPhotoSide? = null,
+        val photoFailed: Boolean = false,
     )
+
+    /** What the user changed, each `null` until changed. */
+    private data class Inputs(val label: String?, val note: String?, val typedNumber: String?, val photos: PickedPhotos)
+
+    private data class PickedPhotos(val front: String?, val back: String?)
+
+    private val CardPhotoSide.key get() = if (this == CardPhotoSide.FRONT) FRONT_PHOTO else BACK_PHOTO
 
     private companion object {
         const val STORE_ID = "chosenStoreId"
         const val LABEL = "label"
         const val NOTE = "note"
         const val TYPED_NUMBER = "typedNumber"
+        const val FRONT_PHOTO = "frontPhoto"
+        const val BACK_PHOTO = "backPhoto"
+
+        /** A side's photo was removed in this form. Never a photo's name, which is a UUID. */
+        const val REMOVED = ""
     }
 }

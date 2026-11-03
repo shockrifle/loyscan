@@ -1,18 +1,24 @@
 package com.bdaniel.loyscan
 
+import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -27,15 +33,24 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import coil.compose.AsyncImage
 import com.bdaniel.loyscan.CardFormState.NumberCheck
 import com.bdaniel.loyscan.domain.cardnumber.CardNumberRule
 import com.bdaniel.loyscan.domain.cardnumber.Validation
+import com.bdaniel.loyscan.ui.CARD_ASPECT_RATIO
+import com.bdaniel.loyscan.ui.CardPhoto
+import com.bdaniel.loyscan.ui.hiltImageLoader
+import com.bdaniel.loyscan.ui.scanner.PicturePicker
+import com.bdaniel.loyscan.ui.scanner.rememberPicturePicker
 import com.bdaniel.loyscan.ui.theme.icons.Icons
 
 const val CARD_NUMBER_TAG = "cardNumber"
@@ -52,6 +67,8 @@ const val CARD_NOTE_TAG = "cardNote"
 fun CardFormScreen(
     directions: CardFormDirections,
     viewModel: CardFormViewModel = hiltViewModel(),
+    /** Opens the system photo picker for a card photo (#10); a fake in tests. */
+    photoPicker: @Composable (onPicked: (Uri?) -> Unit) -> PicturePicker = { rememberPicturePicker(it) },
 ) {
     val state by viewModel.state.collectAsState()
     val store = state.store
@@ -142,6 +159,28 @@ fun CardFormScreen(
                 minLines = 2,
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
             )
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                CardPhotoSide.entries.forEach { side ->
+                    val picker = photoPicker { viewModel.onPhotoPicked(side, it) }
+                    PhotoSlot(
+                        side = side,
+                        photo = if (side == CardPhotoSide.FRONT) state.frontPhoto else state.backPhoto,
+                        importing = state.importingPhoto == side,
+                        // One picture at a time, and none once saving has started.
+                        enabled = state.importingPhoto == null && !state.saving && state.savedCardId == null,
+                        onPick = picker::pick,
+                        onRemove = { viewModel.removePhoto(side) },
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            }
+            if (state.photoFailed) {
+                Text(
+                    "The photo couldn't be added. Try again.",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
             if (state.saveFailed) {
                 Text(
                     "The card couldn't be saved. Try again.",
@@ -162,6 +201,53 @@ fun CardFormScreen(
                 },
                 onDismiss = { choosingStore = false },
             )
+        }
+    }
+}
+
+/**
+ * One side's photo (#10): the photo in the card's proportions with Replace and Remove, a progress indicator while a
+ * picked picture is copied in, or a button to add one.
+ */
+@Composable
+private fun PhotoSlot(
+    side: CardPhotoSide,
+    photo: String?,
+    importing: Boolean,
+    enabled: Boolean,
+    onPick: () -> Unit,
+    onRemove: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val sideName = if (side == CardPhotoSide.FRONT) "front" else "back"
+    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        when {
+            importing -> Box(Modifier.fillMaxWidth().aspectRatio(CARD_ASPECT_RATIO), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+            photo != null -> {
+                AsyncImage(
+                    model = CardPhoto(photo),
+                    contentDescription = "${sideName.replaceFirstChar { it.uppercase() }} photo",
+                    imageLoader = hiltImageLoader(),
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(CARD_ASPECT_RATIO)
+                        .clip(RoundedCornerShape(8.dp)),
+                )
+                Row {
+                    IconButton(onClick = onPick, enabled = enabled) {
+                        Icon(Icons.Default.Edit, contentDescription = "Replace $sideName photo")
+                    }
+                    IconButton(onClick = onRemove, enabled = enabled) {
+                        Icon(Icons.Default.Delete, contentDescription = "Remove $sideName photo")
+                    }
+                }
+            }
+            else -> OutlinedButton(onClick = onPick, enabled = enabled, modifier = Modifier.fillMaxWidth()) {
+                Text("Add $sideName photo", textAlign = TextAlign.Center)
+            }
         }
     }
 }

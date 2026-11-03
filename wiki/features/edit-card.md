@@ -1,7 +1,7 @@
 # Edit card
 
 The detail screen's Edit icon, or Edit on the list with one card selected ([[card-list]] → Multi-select), opens the card form ([[add-card]]) for that card: its label and number, checked live
-against the store's rule as when adding it, its note (#9), and its store, which "Change store" replaces with any other. Saving writes
+against the store's rule as when adding it, its note (#9), its photos ([[card-photos]], #10), and its store, which "Change store" replaces with any other. Saving writes
 the edit and opens the card again. Issue [#8](https://github.com/shockrifle/loyscan/issues/8): editing the label,
 number and store of one card. Deleting a card is on [[card-detail]].
 

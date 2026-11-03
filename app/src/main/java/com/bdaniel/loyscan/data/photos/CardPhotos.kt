@@ -3,8 +3,11 @@ package com.bdaniel.loyscan.data.photos
 import android.content.ContentResolver
 import android.net.Uri
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
@@ -25,6 +28,9 @@ interface CardPhotos {
 
     /** Deletes these photos. A name without a file is skipped. */
     suspend fun delete(names: Collection<String>)
+
+    /** Deletes these photos in the background, for a caller whose own scope is ending (a form being closed). */
+    fun discard(names: Collection<String>)
 }
 
 /** [CardPhotos] as files in [directory] (`files/card_photos`), never in a shared folder. */
@@ -48,6 +54,13 @@ class FileCardPhotos(
             withContext(NonCancellable + ioDispatcher) { file.delete() }
             throw e
         }
+    }
+
+    /** Outlives any screen: a discard runs to the end even after its caller is gone. */
+    private val background = CoroutineScope(SupervisorJob() + ioDispatcher)
+
+    override fun discard(names: Collection<String>) {
+        if (names.isNotEmpty()) background.launch { delete(names) }
     }
 
     override suspend fun delete(names: Collection<String>) = withContext(ioDispatcher) {

@@ -4,6 +4,8 @@ import android.content.Context
 import coil.EventListener
 import coil.ImageLoader
 import coil.decode.SvgDecoder
+import com.bdaniel.loyscan.data.photos.FileCardPhotos
+import com.bdaniel.loyscan.ui.CardPhotoMapper
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.EntryPoint
@@ -20,11 +22,13 @@ object ImageLoaderModule {
     @Provides
     @Singleton
     fun provideImageLoader(
-        @ApplicationContext context: Context
+        @ApplicationContext context: Context,
+        photos: FileCardPhotos,
     ): ImageLoader {
         return ImageLoader.Builder(context)
             .components {
                 add(SvgDecoder.Factory())
+                add(CardPhotoMapper(photos))
             }
             .eventListener(object : EventListener {
                 override fun onError(request: coil.request.ImageRequest, result: coil.request.ErrorResult) {
