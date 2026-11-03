@@ -205,6 +205,12 @@ fun CardFormScreen(
     }
 }
 
+/** "front" or "back", for a photo's texts (#10). */
+internal val CardPhotoSide.sideName: String get() = if (this == CardPhotoSide.FRONT) "front" else "back"
+
+/** A photo's content description: "Front photo", "Back photo". */
+internal val CardPhotoSide.photoDescription: String get() = "${sideName.replaceFirstChar { it.uppercase() }} photo"
+
 /**
  * One side's photo (#10): the photo in the card's proportions with Replace and Remove, a progress indicator while a
  * picked picture is copied in, or a button to add one.
@@ -219,7 +225,7 @@ private fun PhotoSlot(
     onRemove: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val sideName = if (side == CardPhotoSide.FRONT) "front" else "back"
+    val sideName = side.sideName
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         when {
             importing -> Box(Modifier.fillMaxWidth().aspectRatio(CARD_ASPECT_RATIO), contentAlignment = Alignment.Center) {
@@ -228,7 +234,7 @@ private fun PhotoSlot(
             photo != null -> {
                 AsyncImage(
                     model = CardPhoto(photo),
-                    contentDescription = "${sideName.replaceFirstChar { it.uppercase() }} photo",
+                    contentDescription = side.photoDescription,
                     imageLoader = hiltImageLoader(),
                     contentScale = ContentScale.Crop,
                     modifier = Modifier

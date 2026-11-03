@@ -54,6 +54,10 @@ UUID string.
   place at the top; scan mode doesn't show it. Tests: `DetailScreenTest.showsTheCardsNote_underTheNumber`,
   `aCardWithoutANote_showsNone`, `scanMode_showsNoNote`; end to end
   `AppNavigationTest.aNoteWrittenInTheCardForm_isShownOnTheCard_andKeptByTheNextEdit`.
+- **Photos** (#10): under the note, the card's front and back photos, each half the card's width in the card's
+  proportions (a single photo keeps that size). A tap ("Show full screen") lays `PhotoViewer` over the whole screen:
+  the photo whole on black. A tap or Back closes it, and it stays open through a rotation (`rememberSaveable`). Scan
+  mode doesn't show them ([[card-photos]]).
 - The card's content scrolls vertically when it doesn't fit.
 - **Rotation:** the only screen that turns with a phone; every other screen is held in portrait on a phone
   ([[2026-10-28-portrait-on-phones]], `AppNavigationTest.onAPhone_onlyTheCardRotates`).

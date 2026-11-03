@@ -6,6 +6,7 @@ import android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_FULL
 import android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -22,6 +23,7 @@ import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.bdaniel.loyscan.data.local.db.AppDatabase
+import com.bdaniel.loyscan.data.photos.FileCardPhotos
 import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.testing.STORE_ID
 import com.bdaniel.loyscan.testing.aLoyaltyCardEntity
@@ -31,6 +33,7 @@ import com.google.common.truth.Truth.assertThat
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
+import java.util.Base64
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
@@ -39,6 +42,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 import javax.inject.Inject
+import org.robolectric.shadows.ShadowLooper
 
 /**
  * Smoke test of the wired-up app: `MainActivity` with real Hilt, navigation, ViewModels and Room (in memory, see
@@ -58,6 +62,9 @@ class AppNavigationTest {
 
     @Inject
     lateinit var db: AppDatabase
+
+    @Inject
+    lateinit var photos: FileCardPhotos
 
     @Before
     fun setUp() {
@@ -271,6 +278,36 @@ class AppNavigationTest {
     }
 
     @Test
+    fun aCardsPhoto_isShownOnTheCard() { // #10
+        storedPhoto("front")
+        runBlocking { db.loyaltyCardDao().insert(aLoyaltyCardEntity(id = cardId(2), label = "Photo card", frontPhotoPath = "front")) }
+        waitForText("Photo card")
+
+        composeRule.onNodeWithText("Photo card").performClick()
+
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) {
+            composeRule.onAllNodes(hasContentDescription("Front photo")).fetchSemanticsNodes().isNotEmpty()
+        }
+    }
+
+    @Test
+    fun deletingACardFromTheList_deletesItsPhotoFiles() { // #10
+        // From the list, which doesn't load the photo: Windows can't delete a file the card screen's loader is reading.
+        val photo = storedPhoto("front")
+        runBlocking { db.loyaltyCardDao().insert(aLoyaltyCardEntity(id = cardId(2), label = "Photo card", frontPhotoPath = "front")) }
+        waitForText("Photo card")
+
+        composeRule.onNodeWithText("Photo card").performTouchInput { longClick() }
+        waitForText("1 selected")
+        composeRule.onNodeWithContentDescription("Delete").performClick()
+        composeRule.onNode(hasText("Delete") and hasAnyAncestor(isDialog())).performClick()
+
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) { composeRule.onAllNodes(hasText("Photo card")).fetchSemanticsNodes().isEmpty() }
+        // The file goes once the repository resumes after the rows' delete, on the main looper.
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) { ShadowLooper.idleMainLooper(); !photo.exists() }
+    }
+
+    @Test
     fun selectingCardsOnTheList_andDeletingThem_keepsTheOthers() { // #7: multi-select
         runBlocking {
             db.loyaltyCardDao().insert(aLoyaltyCardEntity(id = cardId(2), label = "Silver card"))
@@ -383,6 +420,10 @@ class AppNavigationTest {
     private fun waitForText(text: String) =
         composeRule.waitUntil(WAIT_TIMEOUT_MS) { composeRule.onAllNodes(hasText(text)).fetchSemanticsNodes().isNotEmpty() }
 
+    /** A photo file where the app keeps card photos, named [name]: a real 1×1 PNG, so the card screen can show it. */
+    private fun storedPhoto(name: String) =
+        photos.file(name).apply { parentFile!!.mkdirs(); writeBytes(Base64.getDecoder().decode(ONE_PIXEL_PNG)) }
+
     private val requestedOrientation get() = composeRule.activity.requestedOrientation
 
     private val brightness get() = composeRule.activity.window.attributes.screenBrightness
@@ -390,3 +431,6 @@ class AppNavigationTest {
 
 // waitUntil's 1 s default timed out on a slow CI runner (#56).
 private const val WAIT_TIMEOUT_MS = 10_000L
+
+/** A 1×1 PNG. */
+private const val ONE_PIXEL_PNG = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="

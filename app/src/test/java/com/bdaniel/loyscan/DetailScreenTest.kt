@@ -121,6 +121,61 @@ class DetailScreenTest {
     }
 
     @Test
+    fun aCardWithPhotos_showsThemUnderTheNumber() { // #10
+        setScreen(card = card.copy(frontPhotoPath = "front", backPhotoPath = "back"))
+
+        val front = composeRule.onNodeWithContentDescription("Front photo").performScrollTo()
+        composeRule.onNodeWithContentDescription("Back photo").assertExists()
+        assertThat(front.getUnclippedBoundsInRoot().top)
+            .isAtLeast(composeRule.onNodeWithText("0042").getUnclippedBoundsInRoot().bottom)
+    }
+
+    @Test
+    fun aCardWithOnlyABackPhoto_showsOnlyThat() { // #10
+        setScreen(card = card.copy(backPhotoPath = "back"))
+
+        composeRule.onNodeWithContentDescription("Back photo").assertExists()
+        composeRule.onNodeWithContentDescription("Front photo").assertDoesNotExist()
+    }
+
+    @Test
+    fun aCardWithoutPhotos_showsNone() { // #10
+        setScreen()
+
+        composeRule.onNodeWithText("0042").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Front photo").assertDoesNotExist()
+        composeRule.onNodeWithContentDescription("Back photo").assertDoesNotExist()
+    }
+
+    @Test
+    fun tappingAPhoto_showsItFullScreen_andATapOrBackClosesIt() { // #10
+        setScreen(card = card.copy(frontPhotoPath = "front", backPhotoPath = "back"))
+        val inViewer = hasAnyAncestor(hasTestTag(PHOTO_VIEWER_TAG))
+
+        composeRule.onNodeWithContentDescription("Back photo").performScrollTo().performClick()
+        composeRule.onNode(hasContentDescription("Back photo") and inViewer, useUnmergedTree = true).assertIsDisplayed()
+        composeRule.onNodeWithTag(PHOTO_VIEWER_TAG).performClick()
+        composeRule.onNodeWithTag(PHOTO_VIEWER_TAG).assertDoesNotExist()
+
+        composeRule.onNodeWithContentDescription("Front photo").performScrollTo().performClick()
+        composeRule.onNode(hasContentDescription("Front photo") and inViewer, useUnmergedTree = true).assertIsDisplayed()
+        composeRule.runOnUiThread { composeRule.activity.onBackPressedDispatcher.onBackPressed() }
+        composeRule.onNodeWithTag(PHOTO_VIEWER_TAG).assertDoesNotExist()
+        composeRule.onNodeWithText("0042").assertExists()
+    }
+
+    @Test
+    fun theOpenPhoto_staysOpenWhenThePhoneTurns() { // #10: the card screen rotates
+        val restorationTester = StateRestorationTester(composeRule)
+        setScreen(card = card.copy(frontPhotoPath = "front"), restorationTester = restorationTester)
+        composeRule.onNodeWithContentDescription("Front photo").performScrollTo().performClick()
+
+        restorationTester.emulateSavedInstanceStateRestore()
+
+        composeRule.onNodeWithTag(PHOTO_VIEWER_TAG).assertIsDisplayed()
+    }
+
+    @Test
     fun scanMode_showsNoNote() { // #9: barcode and number only
         setScreen(card = card.copy(note = "PIN hint: birthday"))
         composeRule.onNodeWithContentDescription("Barcode").performTouchInput { doubleClick() }

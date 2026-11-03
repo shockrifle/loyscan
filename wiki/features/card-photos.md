@@ -6,6 +6,7 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
 **Entry points** (under `app/src/main/java/com/bdaniel/loyscan/`):
 - `data/photos/CardPhotos.kt`: `CardPhotos` (`import(uri)`, `delete(names)`), implemented by `FileCardPhotos` over
   `files/card_photos/` (`di/CardPhotosModule.kt`).
+- `DetailScreen.kt`: the photos under the note, `PhotoViewer`.
 - `CardFormScreen.kt` (`PhotoSlot`), `CardFormViewModel.kt` (`onPhotoPicked`, `removePhoto`, `onCleared`): adding,
   replacing and removing photos while adding or editing a card.
 - `ui/CardPhoto.kt`: `CardPhoto(name)`, the image model; `CardPhotoMapper` on the app's Coil loader
@@ -28,6 +29,8 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   until the edit is saved, then the repository deletes it. A form closed without saving deletes the copies picked in
   it (`onCleared`, through `CardPhotos.discard`, since `viewModelScope` is already cancelled). A form closed while
   its save runs leaves them to the save, and a save that then fails deletes them.
+- **On the card** ([[card-detail]]): under the note, the photos it has, front first; a tap shows one full screen
+  on black (`PhotoViewer`, `PHOTO_VIEWER_TAG`), and a tap or Back closes it.
 - Images load through `hiltImageLoader()`, never Coil's default ([[coil-image-loading]]).
 - **Files are deleted on every path:**
   - replacing or removing a photo in an edit ([[edit-card]]);
@@ -39,6 +42,10 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
 
 ## Tests
 
+- `DetailScreenTest`: `aCardWithPhotos_showsThemUnderTheNumber`, `aCardWithOnlyABackPhoto_showsOnlyThat`,
+  `aCardWithoutPhotos_showsNone`, `tappingAPhoto_showsItFullScreen_andATapOrBackClosesIt`,
+  `theOpenPhoto_staysOpenWhenThePhoneTurns`. End to end: `AppNavigationTest.aCardsPhoto_isShownOnTheCard`,
+  `deletingACardFromTheList_deletesItsPhotoFiles`.
 - `CardFormViewModelTest`: `aPickedFrontPhoto_…`, `editingACard_startsWithItsPhotos_…`, `removingACardsPhoto_…`,
   `aPhotoPickedInTheForm_isDeleted_whenAnotherReplacesIt_orItIsRemoved`, `aFormClosedWithoutSaving_…`,
   `aSavedForm_keepsItsPhotos_…`, `aSaveStillRunningWhenTheFormCloses_keepsItsPhoto`,

@@ -14,6 +14,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -47,8 +50,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
@@ -58,6 +63,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.bdaniel.loyscan.domain.LoyaltyCard
+import com.bdaniel.loyscan.ui.CARD_ASPECT_RATIO
+import com.bdaniel.loyscan.ui.CardPhoto
 import com.bdaniel.loyscan.ui.FullBrightness
 import com.bdaniel.loyscan.ui.KeepScreenOn
 import com.bdaniel.loyscan.ui.barcode.Barcode
@@ -69,6 +77,8 @@ import com.bdaniel.loyscan.ui.contrastingTextColor
 import com.bdaniel.loyscan.ui.toBrandColorOrNull
 import com.bdaniel.loyscan.ui.theme.icons.Icons
 import kotlinx.coroutines.launch
+
+const val PHOTO_VIEWER_TAG = "photoViewer"
 
 
 @OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3Api::class)
@@ -95,6 +105,8 @@ fun SharedTransitionScope.DetailScreen(
         BarcodeEncoder.encode(card.barcodeContent, card.barcodeFormat)
     }
     var scanMode by rememberSaveable { mutableStateOf(false) }
+    /** The side whose photo is shown full screen (#10), kept through a rotation. */
+    var openPhoto by rememberSaveable { mutableStateOf<CardPhotoSide?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
     // A card just added offers another once (#6). Kept until the snackbar ends, so turning the phone shows it again,
     // and gone after that or after Edit, so it isn't made again on return from the picker or the form. Scan mode
@@ -223,12 +235,39 @@ fun SharedTransitionScope.DetailScreen(
                                     .testTag(CARD_NOTE_TAG),
                             )
                         }
+                        // Last: the photos are for the user, the barcode and number are for the till (#10).
+                        val photos = CardPhotoSide.entries.mapNotNull { side -> card.photo(side)?.let { side to it } }
+                        if (photos.isNotEmpty()) {
+                            Row(
+                                modifier = Modifier.padding(top = 16.dp).fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            ) {
+                                photos.forEach { (side, name) ->
+                                    AsyncImage(
+                                        model = CardPhoto(name),
+                                        contentDescription = side.photoDescription,
+                                        imageLoader = hiltImageLoader(),
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .aspectRatio(CARD_ASPECT_RATIO)
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .clickable(onClickLabel = "Show full screen") { openPhoto = side },
+                                    )
+                                }
+                                // A single photo keeps the size it has next to the other.
+                                if (photos.size == 1) Spacer(Modifier.weight(1f))
+                            }
+                        }
                     }
                 }
             }
         }
         if (scanMode && barcode != null) {
             ScanMode(barcode, card.displayNumber, onExit = { scanMode = false })
+        }
+        openPhoto?.let { side ->
+            card.photo(side)?.let { PhotoViewer(it, side.photoDescription, onExit = { openPhoto = null }) }
         }
         if (confirmingDelete && deletion != Deletion.DELETED) {
             ConfirmDelete(
@@ -296,6 +335,31 @@ private fun ScanMode(barcode: EncodedBarcode, number: String, onExit: () -> Unit
                 modifier = Modifier.padding(top = 24.dp),
             )
         }
+    }
+}
+
+private fun LoyaltyCard.photo(side: CardPhotoSide): String? =
+    if (side == CardPhotoSide.FRONT) frontPhotoPath else backPhotoPath
+
+/** One of the card's photos (#10), whole, on black over the whole screen. A tap or back closes it. */
+@Composable
+private fun PhotoViewer(photo: String, description: String, onExit: () -> Unit) {
+    BackHandler(onBack = onExit)
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black)
+            .clickable(onClickLabel = "Close full screen", onClick = onExit)
+            .testTag(PHOTO_VIEWER_TAG)
+            .padding(16.dp),
+    ) {
+        AsyncImage(
+            model = CardPhoto(photo),
+            contentDescription = description,
+            imageLoader = hiltImageLoader(),
+            contentScale = ContentScale.Fit,
+            modifier = Modifier.fillMaxSize(),
+        )
     }
 }
 
