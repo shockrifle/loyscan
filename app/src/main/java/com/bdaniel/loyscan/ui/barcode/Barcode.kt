@@ -19,9 +19,10 @@ import kotlin.math.floor
 import kotlin.math.min
 
 /**
- * Draws [barcode] in black, as large as fits: linear barcodes fill the width and the height, 2D ones keep square
- * modules. Modules are a whole number of pixels when there is room, so every bar has the same width. The caller
- * puts it on white, with a margin, whatever the theme: scanners need dark on light and a quiet zone.
+ * Draws [barcode] in black, as large as fits: linear barcodes fill the width and the height, and run along the long
+ * side, turned a quarter in an area taller than wide (#34); 2D ones keep square modules and are never turned. Modules
+ * are a whole number of pixels when there is room, so every bar has the same width. The caller puts it on white, with
+ * a margin, whatever the theme: scanners need dark on light and a quiet zone.
  */
 @Composable
 fun Barcode(barcode: EncodedBarcode, modifier: Modifier = Modifier) {
@@ -36,7 +37,15 @@ fun Barcode(barcode: EncodedBarcode, modifier: Modifier = Modifier) {
 }
 
 /** The dark runs of [barcode] laid out in [size], see [Barcode]. Adjacent dark modules in a row are one rect. */
-internal fun barcodeRects(barcode: EncodedBarcode, size: Size): List<Rect> {
+internal fun barcodeRects(barcode: EncodedBarcode, size: Size): List<Rect> =
+    if (barcode.isLinear && size.height > size.width) {
+        // Laid out across the swapped size and mirrored over the diagonal: the start at the top, bars full width.
+        rectsAcross(barcode, Size(size.height, size.width)).map { Rect(it.top, it.left, it.bottom, it.right) }
+    } else {
+        rectsAcross(barcode, size)
+    }
+
+private fun rectsAcross(barcode: EncodedBarcode, size: Size): List<Rect> {
     val rows = if (barcode.isLinear) 1 else barcode.height
     val moduleWidth = snap(size.width / barcode.width)
         .let { if (barcode.isLinear) it else min(it, snap(size.height / rows)) }

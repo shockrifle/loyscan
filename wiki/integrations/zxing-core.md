@@ -15,7 +15,8 @@ Java, no Android or network code. Only its writers are used, in `BarcodeEncoder`
   says which one worked.
 - Encoding is at size 0×0: ZXing then returns the smallest matrix, one pixel per module, and a single row for 1D
   formats. The screen scales it (`barcodeRects`): whole-pixel modules when there's room, so all bars of one width
-  match; 1D barcodes are stretched to the full height, 2D ones keep square modules.
+  match; 1D barcodes are stretched to the full height (in an area taller than wide they run down its height instead,
+  turned a quarter: scan mode in portrait, [[card-detail]], #34), 2D ones keep square modules and are never turned.
 - **No charset hint unless needed.** With `EncodeHintType.CHARACTER_SET` set, ZXing prepends an ECI header to Aztec,
   PDF417 and byte-mode QR codes, even for ASCII; the card's own barcode has none, and a till may pass it on as a
   prefix or reject the code. ZXing's own reader strips it, so a read-back test can't see it. `BarcodeEncoder` passes

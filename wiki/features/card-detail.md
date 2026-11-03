@@ -64,10 +64,14 @@ UUID string.
   `ScreenEffectsTest`, `DetailScreenTest`, `AppNavigationTest.detailsFullBrightness_isRestoredOnBack`.
 - **Scan mode:** a double-tap on the barcode (or the accessibility action "Show full screen") lays `ScanMode` over
   the whole screen, status bar included: white, the barcode as large as fits inside 24dp padding with the number
-  below it in black (no note) (1D: full width, 200dp high; 2D: square modules, height-bound in landscape so the number keeps
-  its room). It keeps the screen on (`KeepScreenOn()`, `FLAG_KEEP_SCREEN_ON`, same
+  below it in black (no note). 2D: square modules, height-bound in landscape so the number keeps its room. 1D in
+  landscape: full width, 200dp high. 1D in portrait (the overlay taller than wide, `BoxWithConstraints`), #34: the full
+  width and all the height the number leaves, and `barcodeRects` runs the barcode down that long side, turned a quarter
+  with its start at the top, whole-pixel modules and its quiet zone; the number stays horizontal under it. Tests:
+  `DetailScreenTest.scanMode_inPortrait_runsA1dBarcodeAlongTheLongSide`, `scanMode_inLandscape_drawsA1dBarcodeAcrossTheWidth`,
+  `scanMode_inPortrait_keepsA2dBarcodeSquare`, `BarcodeLayoutTest.linear_inATallArea_…`. It keeps the screen on (`KeepScreenOn()`, `FLAG_KEEP_SCREEN_ON`, same
   resumed-only rule as the brightness). A tap anywhere or back closes it. Its open state survives rotation
-  (`rememberSaveable`). 1D barcodes are not rotated to the long side.
+  (`rememberSaveable`).
 - Back arrow → `directions.toBack()` → `navigateUp()`. The Edit icon opens the card form for this card
   (`directions.toEdit(cardId, storeId)`, [[edit-card]]); it is disabled until the card has loaded.
 - **Delete** (#8): the top bar's Delete icon asks "Delete this card?" ("It is removed from this phone for good.").

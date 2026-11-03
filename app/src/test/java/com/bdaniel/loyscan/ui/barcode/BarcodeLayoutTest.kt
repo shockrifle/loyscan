@@ -28,6 +28,34 @@ class BarcodeLayoutTest {
     }
 
     @Test
+    fun linear_inATallArea_runsDownTheLongSide_withWholePixelModules_centred() { // #34
+        // Turned a quarter: 6 modules down 100 px, 16 px each, 2 px left over at the top and bottom; bars full width.
+        val rects = barcodeRects(barcode(BarcodeFormat.CODE_128, ".##..#"), Size(40f, 100f))
+
+        assertThat(rects).containsExactly(
+            Rect(left = 0f, top = 18f, right = 40f, bottom = 50f),
+            Rect(left = 0f, top = 82f, right = 40f, bottom = 98f),
+        ).inOrder()
+    }
+
+    @Test
+    fun linear_inATallArea_keepsItsQuietZone() { // #34
+        val barcode = EncodedBarcode(BarcodeFormat.CODE_128, BitMatrix(2, 1).apply { set(0, 0); set(1, 0) })
+
+        // 2 dark modules plus 11 light ones each side: 24 modules down 240 px, 10 px each.
+        val rects = barcodeRects(barcode, Size(40f, 240f))
+
+        assertThat(rects).containsExactly(Rect(left = 0f, top = 110f, right = 40f, bottom = 130f))
+    }
+
+    @Test
+    fun twoDimensional_inATallArea_isNotTurned() { // #34
+        val rects = barcodeRects(barcode(BarcodeFormat.QR_CODE, "#.", ".."), Size(20f, 100f))
+
+        assertThat(rects).containsExactly(Rect(left = 0f, top = 40f, right = 10f, bottom = 50f))
+    }
+
+    @Test
     fun twoDimensional_modulesAreSquare_sizedByTheTighterSide_centred() {
         // 3x2 modules in 100x40 px: 20 px squares (height-bound), centred horizontally.
         val rects = barcodeRects(barcode(BarcodeFormat.QR_CODE, "#.#", ".##"), Size(100f, 40f))
@@ -41,11 +69,11 @@ class BarcodeLayoutTest {
 
     @Test
     fun lessThanAPixelPerModule_stillFitsTheBarcode() {
-        val rects = barcodeRects(barcode(BarcodeFormat.CODE_128, "#...#"), Size(2.5f, 10f))
+        val rects = barcodeRects(barcode(BarcodeFormat.CODE_128, "#...#"), Size(2.5f, 1f))
 
         assertThat(rects).containsExactly(
-            Rect(left = 0f, top = 0f, right = 0.5f, bottom = 10f),
-            Rect(left = 2f, top = 0f, right = 2.5f, bottom = 10f),
+            Rect(left = 0f, top = 0f, right = 0.5f, bottom = 1f),
+            Rect(left = 2f, top = 0f, right = 2.5f, bottom = 1f),
         ).inOrder()
     }
 }

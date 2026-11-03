@@ -12,6 +12,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -261,31 +262,40 @@ private fun ConfirmDelete(failed: Boolean, deleting: Boolean, onConfirm: () -> U
 }
 
 /**
- * The barcode alone, as large as the screen allows, black on white, with the screen kept on. A tap or back closes
- * it.
+ * The barcode alone, as large as the screen allows, black on white, with the screen kept on. In portrait a 1D barcode
+ * takes all the height the number leaves, and [Barcode] runs it down the long side (#34). A tap or back closes it.
  */
 @Composable
 private fun ScanMode(barcode: EncodedBarcode, number: String, onExit: () -> Unit) {
     KeepScreenOn()
     BackHandler(onBack = onExit)
-    Column(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
             .clickable(onClickLabel = "Close full screen", onClick = onExit)
             .testTag("scanMode")
             .padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        // Weighted, so it is measured after the number and gets only the height left (landscape).
-        Barcode(barcode, Modifier.weight(1f, fill = false).barcodeSize(barcode, linearHeight = 200.dp))
-        Text(
-            text = number,
-            color = Color.Black,
-            style = MaterialTheme.typography.headlineLarge,
-            modifier = Modifier.padding(top = 24.dp),
-        )
+        val alongTheHeight = barcode.isLinear && maxHeight > maxWidth
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            // Weighted, so it is measured after the number and gets only the height left (landscape).
+            Barcode(
+                barcode,
+                if (alongTheHeight) Modifier.weight(1f).fillMaxWidth()
+                else Modifier.weight(1f, fill = false).barcodeSize(barcode, linearHeight = 200.dp),
+            )
+            Text(
+                text = number,
+                color = Color.Black,
+                style = MaterialTheme.typography.headlineLarge,
+                modifier = Modifier.padding(top = 24.dp),
+            )
+        }
     }
 }
 

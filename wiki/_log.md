@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-03 · updated: scan mode in portrait runs a 1D barcode down the long side, turned a quarter (removed "not rotated" note) · features/card-detail, integrations/zxing-core · #34
 - 2026-11-02 · corrected: picture opened with openTypedAssetFileDescriptor("image/*") and a stream fallback, as ImageDecoder's content source does · integrations/zxing-cpp · review of #79
 - 2026-11-02 · corrected: an abandoned picture read cancels the provider's download through a CancellationSignal (was: "can't be cancelled") · integrations/zxing-cpp · review of #79
 - 2026-11-02 · added: opening a picked picture times out after 30 s as Unreadable, the late picture recycled; virtual-time timeouts vs real threads in tests · integrations/zxing-cpp, features/barcode-scanner, workflows/tdd · #79

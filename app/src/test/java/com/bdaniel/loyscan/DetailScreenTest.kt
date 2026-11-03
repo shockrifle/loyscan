@@ -15,12 +15,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.height
+import androidx.compose.ui.unit.width
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -240,6 +244,48 @@ class DetailScreenTest {
         // Unmerged: the clickable scan-mode surface merges its children into one node.
         composeRule.onNode(hasText("0042") and hasAnyAncestor(hasTestTag("scanMode")), useUnmergedTree = true)
             .assertIsDisplayed()
+    }
+
+    private val scanModeBarcode get() = composeRule.onNode(
+        hasContentDescription("Barcode") and hasAnyAncestor(hasTestTag("scanMode")),
+        useUnmergedTree = true,
+    )
+
+    @Test
+    fun scanMode_inPortrait_runsA1dBarcodeAlongTheLongSide() { // #34
+        setScreen() // a Code 128 card
+        composeRule.onNodeWithContentDescription("Barcode").performTouchInput { doubleClick() }
+
+        val bounds = scanModeBarcode.getBoundsInRoot()
+
+        // The full width inside the padding, and the height the number leaves: far more than the 200dp it had.
+        assertThat(bounds.width.value).isWithin(1f).of(411f - 48f)
+        assertThat(bounds.height.value).isGreaterThan(600f)
+        composeRule.onNode(hasText("0042") and hasAnyAncestor(hasTestTag("scanMode")), useUnmergedTree = true)
+            .assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = "w891dp-h411dp")
+    fun scanMode_inLandscape_drawsA1dBarcodeAcrossTheWidth() { // #34: the long side already is the width
+        setScreen()
+        composeRule.onNodeWithContentDescription("Barcode").performScrollTo().performTouchInput { doubleClick() }
+
+        val bounds = scanModeBarcode.getBoundsInRoot()
+
+        assertThat(bounds.width.value).isWithin(1f).of(891f - 48f)
+        assertThat(bounds.height.value).isAtMost(200f)
+    }
+
+    @Test
+    fun scanMode_inPortrait_keepsA2dBarcodeSquare() { // #34
+        setScreen(card = aLoyaltyCard(store = aStore(defaultBarcodeFormat = BarcodeFormat.QR_CODE), number = "0042"))
+        composeRule.onNodeWithContentDescription("Barcode").performTouchInput { doubleClick() }
+
+        val bounds = scanModeBarcode.getBoundsInRoot()
+
+        assertThat(bounds.width.value).isWithin(1f).of(411f - 48f)
+        assertThat(bounds.height.value).isWithin(1f).of(bounds.width.value)
     }
 
     @Test
