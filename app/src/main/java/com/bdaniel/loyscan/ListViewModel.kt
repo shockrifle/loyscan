@@ -3,6 +3,8 @@ package com.bdaniel.loyscan
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bdaniel.loyscan.data.photos.CardPhotos
+import com.bdaniel.loyscan.data.photos.withoutMissing
 import com.bdaniel.loyscan.data.repository.LoyaltyCardRepository
 import com.bdaniel.loyscan.data.repository.UserPreferencesRepository
 import com.bdaniel.loyscan.domain.CardSort
@@ -17,6 +19,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -27,6 +30,7 @@ import javax.inject.Inject
 
 /**
  * The user's cards in the chosen sort order (#7), narrowed by a search, and the ones selected to be deleted or edited.
+ * A card's photos whose files are missing are left off it, as on the card screen.
  * The sort is a stored preference; the query and the selection live in the saved state, so they survive process death
  * but not a restart.
  */
@@ -35,6 +39,7 @@ class ListViewModel @Inject constructor(
     private val loyaltyCardRepository: LoyaltyCardRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
     private val savedStateHandle: SavedStateHandle,
+    private val photos: CardPhotos,
 ) : ViewModel() {
 
     val query: StateFlow<String> = savedStateHandle.getStateFlow(QUERY, "")
@@ -48,8 +53,11 @@ class ListViewModel @Inject constructor(
     /** `null` until the cards and the sort have loaded, so an empty result is told apart from not knowing yet. */
     val cards: StateFlow<List<LoyaltyCard>?> =
         combine(
-            // With no card left (the last one deleted), an old search would hide the empty state and the next card.
-            loyaltyCardRepository.getAllWithStore().onEach { if (it.isEmpty()) savedStateHandle[QUERY] = "" },
+            loyaltyCardRepository.getAllWithStore()
+                // With no card left (the last one deleted), an old search would hide the empty state and the next card.
+                .onEach { if (it.isEmpty()) savedStateHandle[QUERY] = "" }
+                // A front photo whose file is missing is no tile photo, not an empty image (#89).
+                .map { cards -> cards.map { photos.withoutMissing(it) } },
             userPreferencesRepository.cardSort,
             query,
         ) { cards, sort, query ->

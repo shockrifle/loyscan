@@ -48,6 +48,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
@@ -56,6 +57,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.text.TextAutoSize
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -63,6 +65,9 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.bdaniel.loyscan.domain.CardSort
 import com.bdaniel.loyscan.domain.LoyaltyCard
+import com.bdaniel.loyscan.ui.CARD_ASPECT_RATIO
+import com.bdaniel.loyscan.ui.CardPhoto
+import com.bdaniel.loyscan.ui.hiltImageLoader
 import com.bdaniel.loyscan.ui.theme.icons.Icons
 import com.bdaniel.loyscan.ui.contrastingTextColor
 import com.bdaniel.loyscan.ui.toBrandColorOrNull
@@ -317,6 +322,7 @@ private fun SortMenu(sort: CardSort, onSortChange: (CardSort) -> Unit) {
 
 const val CARD_SEARCH_TAG = "cardSearch"
 const val CARD_TILE_TAG = "cardTile"
+const val CARD_TILE_PHOTO_TAG = "cardTilePhoto"
 
 /** The shared-element key that pairs a card's tile with its detail screen ([DetailScreen]). */
 fun cardTransitionKey(cardId: String) = "card/$cardId"
@@ -332,7 +338,9 @@ fun SharedTransitionScope.CardItem(
     onLongClick: () -> Unit = {},
 ) {
     val cardColor = card.store.color.toBrandColorOrNull() ?: MaterialTheme.colorScheme.surfaceVariant
-    val textColor = cardColor.contrastingTextColor()
+    val photo = card.frontPhotoPath
+    // On a photo, the label sits on a dark scrim, so it is white whatever the photo's colours.
+    val textColor = if (photo != null) Color.White else cardColor.contrastingTextColor()
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -341,11 +349,11 @@ fun SharedTransitionScope.CardItem(
         border = if (selected) BorderStroke(3.dp, MaterialTheme.colorScheme.primary) else null,
     ) {
         Box {
-            Column(
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(cardColor)
-                    .aspectRatio(ID1_CARD_ASPECT_RATIO)
+                    .aspectRatio(CARD_ASPECT_RATIO)
                     .testTag(CARD_TILE_TAG)
                     // TalkBack reads a merged node's description in place of its text: the store, then the label.
                     .semantics { contentDescription = listOfNotNull(card.store.name, card.label).joinToString(", ") }
@@ -354,33 +362,49 @@ fun SharedTransitionScope.CardItem(
                         animatedVisibilityScope = animatedVisibilityScope
                     ),
             ) {
-                // The initials take the room the label leaves, shrinking to fit it at large font scales.
-                Box(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 8.dp), contentAlignment = Alignment.Center) {
-                    if (!card.store.logo.isNullOrBlank()) {
-                        AsyncImage(
-                            model = card.store.logo,
-                            contentDescription = null, // The tile is described as a whole.
-                            modifier = Modifier
-                                .fillMaxSize(0.6f)
-                        )
-                    } else {
-                        Text(
-                            text = card.store.initials,
-                            style = MaterialTheme.typography.headlineLarge,
-                            color = textColor,
-                            maxLines = 1,
-                            autoSize = TextAutoSize.StepBased(maxFontSize = MaterialTheme.typography.headlineLarge.fontSize),
-                        )
-                    }
+                // The front photo, when the card has one, is the tile: our answer to not bundling store logos (#10).
+                if (photo != null) {
+                    AsyncImage(
+                        model = CardPhoto(photo),
+                        contentDescription = null, // The tile is described as a whole.
+                        imageLoader = hiltImageLoader(),
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize().testTag(CARD_TILE_PHOTO_TAG),
+                    )
                 }
-                Text(
-                    text = card.label ?: card.store.name,
-                    modifier = Modifier.padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = textColor,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                Column(Modifier.fillMaxSize()) {
+                    // The initials take the room the label leaves, shrinking to fit it at large font scales.
+                    Box(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 8.dp), contentAlignment = Alignment.Center) {
+                        when {
+                            photo != null -> Unit // the photo shows the card itself
+                            !card.store.logo.isNullOrBlank() -> AsyncImage(
+                                model = card.store.logo,
+                                contentDescription = null, // The tile is described as a whole.
+                                imageLoader = hiltImageLoader(),
+                                modifier = Modifier.fillMaxSize(0.6f),
+                            )
+                            else -> Text(
+                                text = card.store.initials,
+                                style = MaterialTheme.typography.headlineLarge,
+                                color = textColor,
+                                maxLines = 1,
+                                autoSize = TextAutoSize.StepBased(maxFontSize = MaterialTheme.typography.headlineLarge.fontSize),
+                            )
+                        }
+                    }
+                    Text(
+                        text = card.label ?: card.store.name,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            // The scrim starts above the text, so it is already dark behind it.
+                            .then(if (photo != null) Modifier.background(PHOTO_SCRIM).padding(top = 16.dp) else Modifier)
+                            .padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = textColor,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
             }
             if (selected) {
                 Icon(
@@ -397,5 +421,5 @@ fun SharedTransitionScope.CardItem(
     }
 }
 
-/** Width to height of an ID-1 (bank) card, 85.60 × 53.98 mm. */
-private const val ID1_CARD_ASPECT_RATIO = 85.60f / 53.98f
+/** Darkens a photo from clear to 60% black behind the label, so white text reads on any photo. */
+private val PHOTO_SCRIM = Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.6f)))

@@ -46,6 +46,7 @@ import androidx.compose.ui.test.performTouchInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.bdaniel.loyscan.domain.CardSort
 import com.bdaniel.loyscan.domain.LoyaltyCard
+import com.bdaniel.loyscan.testing.FakeCardPhotos
 import com.bdaniel.loyscan.testing.FakeLoyaltyCardRepository
 import com.bdaniel.loyscan.testing.FakeUserPreferencesRepository
 import com.bdaniel.loyscan.testing.aLoyaltyCard
@@ -71,7 +72,7 @@ class ListScreenTest {
     @Test
     fun clickingACard_navigatesToItWithItsStoreColor() {
         val card = aLoyaltyCard(id = cardId(5), store = aStore(name = "Test Store", color = "#AA0000"))
-        val viewModel = ListViewModel(FakeLoyaltyCardRepository(listOf(card)), FakeUserPreferencesRepository(), SavedStateHandle())
+        val viewModel = ListViewModel(FakeLoyaltyCardRepository(listOf(card)), FakeUserPreferencesRepository(), SavedStateHandle(), FakeCardPhotos())
         var navigatedTo: Pair<String, String>? = null
         val directions = ListDirections(toCard = { id, color -> navigatedTo = id to color; true }, toAddCard = {}, toEditCard = { _, _ -> })
 
@@ -127,6 +128,32 @@ class ListScreenTest {
     }
 
     @Test
+    fun aCardWithAFrontPhoto_showsItOnItsTile_inPlaceOfTheInitials() { // #10
+        setScreen(aLoyaltyCard(store = aStore(name = "Shell ClubSmart"), label = "Work car", frontPhotoPath = "front"), photos = FakeCardPhotos("front"))
+
+        composeRule.onNodeWithTag(CARD_TILE_PHOTO_TAG, useUnmergedTree = true).assertIsDisplayed()
+        composeRule.onNodeWithText("SC").assertDoesNotExist()
+        composeRule.onNodeWithText("Work car").assertIsDisplayed()
+        composeRule.onNodeWithText("Work car").assertContentDescriptionEquals("Shell ClubSmart, Work car")
+    }
+
+    @Test
+    fun aCardWithOnlyABackPhoto_showsTheInitialsOnItsTile() { // #10: the back is the card screen's
+        setScreen(aLoyaltyCard(store = aStore(name = "Shell ClubSmart"), backPhotoPath = "back"), photos = FakeCardPhotos("back"))
+
+        composeRule.onNodeWithTag(CARD_TILE_PHOTO_TAG, useUnmergedTree = true).assertDoesNotExist()
+        composeRule.onNodeWithText("SC").assertIsDisplayed()
+    }
+
+    @Test
+    fun aTileWhoseFrontPhotoFileIsMissing_showsTheInitials() { // #89: not an empty image
+        setScreen(aLoyaltyCard(store = aStore(name = "Shell ClubSmart"), frontPhotoPath = "lost"), photos = FakeCardPhotos())
+
+        composeRule.onNodeWithTag(CARD_TILE_PHOTO_TAG, useUnmergedTree = true).assertDoesNotExist()
+        composeRule.onNodeWithText("SC").assertIsDisplayed()
+    }
+
+    @Test
     fun aTileWithoutALabel_showsTheStoreName() {
         setScreen(aLoyaltyCard(store = aStore(name = "Shell ClubSmart"), label = null))
 
@@ -177,7 +204,7 @@ class ListScreenTest {
     @Test
     fun deletingTheLastCard_duringASearch_showsTheEmptyState() { // review of #7
         val repository = FakeLoyaltyCardRepository(listOf(aLoyaltyCard(store = aStore(name = "Berry"))))
-        setScreen(viewModel = ListViewModel(repository, FakeUserPreferencesRepository(), SavedStateHandle()))
+        setScreen(viewModel = ListViewModel(repository, FakeUserPreferencesRepository(), SavedStateHandle(), FakeCardPhotos()))
         composeRule.onNodeWithTag(CARD_SEARCH_TAG).performTextInput("berry")
 
         repository.cards.value = emptyList()
@@ -189,7 +216,7 @@ class ListScreenTest {
     fun theEmptyState_waitsForTheCardsToLoad() {
         val repository = FakeLoyaltyCardRepository(emptyList())
         repository.loadGate = CompletableDeferred()
-        setScreen(viewModel = ListViewModel(repository, FakeUserPreferencesRepository(), SavedStateHandle()))
+        setScreen(viewModel = ListViewModel(repository, FakeUserPreferencesRepository(), SavedStateHandle(), FakeCardPhotos()))
 
         composeRule.onNodeWithText("No cards yet").assertDoesNotExist()
         repository.loadGate!!.complete(Unit)
@@ -244,7 +271,7 @@ class ListScreenTest {
         val repository = FakeLoyaltyCardRepository(listOf(aLoyaltyCard(store = aStore(name = "Berry"))))
         repository.loadGate = CompletableDeferred()
         // The query comes back with the saved state at once; the cards come from Room later.
-        val viewModel = ListViewModel(repository, FakeUserPreferencesRepository(), SavedStateHandle(mapOf("query" to "berry")))
+        val viewModel = ListViewModel(repository, FakeUserPreferencesRepository(), SavedStateHandle(mapOf("query" to "berry")), FakeCardPhotos())
         composeRule.setContent {
             SharedTransitionLayout {
                 AnimatedVisibility(visible = true) {
@@ -352,7 +379,7 @@ class ListScreenTest {
         val repository = FakeLoyaltyCardRepository(
             listOf(aLoyaltyCard(id = cardId(1), store = aStore(name = "Apple")), aLoyaltyCard(id = cardId(2), store = aStore(name = "Berry")), aLoyaltyCard(id = cardId(3), store = aStore(name = "Cherry")))
         )
-        setScreen(viewModel = ListViewModel(repository, FakeUserPreferencesRepository(), SavedStateHandle()))
+        setScreen(viewModel = ListViewModel(repository, FakeUserPreferencesRepository(), SavedStateHandle(), FakeCardPhotos()))
         composeRule.onNodeWithText("Apple").performTouchInput { longClick() }
         composeRule.onNodeWithText("Cherry").performClick()
 
@@ -381,7 +408,7 @@ class ListScreenTest {
     @Test
     fun cancellingTheDelete_keepsTheCardsAndTheSelection() {
         val repository = FakeLoyaltyCardRepository(listOf(aLoyaltyCard(store = aStore(name = "Apple"))))
-        setScreen(viewModel = ListViewModel(repository, FakeUserPreferencesRepository(), SavedStateHandle()))
+        setScreen(viewModel = ListViewModel(repository, FakeUserPreferencesRepository(), SavedStateHandle(), FakeCardPhotos()))
         composeRule.onNodeWithText("Apple").performTouchInput { longClick() }
         composeRule.onNodeWithContentDescription("Delete").performClick()
 
@@ -396,7 +423,7 @@ class ListScreenTest {
     fun aFailedDelete_saysSo_andDeleteTriesAgain() {
         val repository = FakeLoyaltyCardRepository(listOf(aLoyaltyCard(store = aStore(name = "Apple"))))
         repository.deleteFailure = IllegalStateException("disk I/O error")
-        setScreen(viewModel = ListViewModel(repository, FakeUserPreferencesRepository(), SavedStateHandle()))
+        setScreen(viewModel = ListViewModel(repository, FakeUserPreferencesRepository(), SavedStateHandle(), FakeCardPhotos()))
         composeRule.onNodeWithText("Apple").performTouchInput { longClick() }
         composeRule.onNodeWithContentDescription("Delete").performClick()
 
@@ -426,7 +453,7 @@ class ListScreenTest {
         val restorationTester = StateRestorationTester(composeRule)
         val repository = FakeLoyaltyCardRepository(listOf(aLoyaltyCard(id = cardId(1), store = aStore(name = "Apple")), aLoyaltyCard(id = cardId(2), store = aStore(name = "Berry"))))
         val handle = SavedStateHandle()
-        var viewModel = ListViewModel(repository, FakeUserPreferencesRepository(), handle)
+        var viewModel = ListViewModel(repository, FakeUserPreferencesRepository(), handle, FakeCardPhotos())
         restorationTester.setContent {
             SharedTransitionLayout {
                 AnimatedVisibility(visible = true) {
@@ -440,7 +467,7 @@ class ListScreenTest {
 
         // A new process: a new ViewModel on the saved state, whose cards load only later.
         repository.loadGate = CompletableDeferred()
-        viewModel = ListViewModel(repository, FakeUserPreferencesRepository(), SavedStateHandle(handle.keys().associateWith { handle.get<Any>(it) }))
+        viewModel = ListViewModel(repository, FakeUserPreferencesRepository(), SavedStateHandle(handle.keys().associateWith { handle.get<Any>(it) }), FakeCardPhotos())
         restorationTester.emulateSavedInstanceStateRestore()
         composeRule.onNodeWithText("2 selected").assertIsDisplayed()
         repository.loadGate!!.complete(Unit)
@@ -452,7 +479,7 @@ class ListScreenTest {
     fun whileTheCardsAreDeleting_theDialogCantBeCancelled() { // review of #7: Cancel didn't stop the write
         val repository = FakeLoyaltyCardRepository(listOf(aLoyaltyCard(store = aStore(name = "Apple"))))
         repository.deleteGate = CompletableDeferred()
-        setScreen(viewModel = ListViewModel(repository, FakeUserPreferencesRepository(), SavedStateHandle()))
+        setScreen(viewModel = ListViewModel(repository, FakeUserPreferencesRepository(), SavedStateHandle(), FakeCardPhotos()))
         composeRule.onNodeWithText("Apple").performTouchInput { longClick() }
         composeRule.onNodeWithContentDescription("Delete").performClick()
 
@@ -465,7 +492,7 @@ class ListScreenTest {
     fun aFailureLeftWhenTheSelectionEnded_isNotShownByTheNextDelete() { // review of #7
         val repository = FakeLoyaltyCardRepository(listOf(aLoyaltyCard(id = cardId(1), store = aStore(name = "Apple")), aLoyaltyCard(id = cardId(2), store = aStore(name = "Berry"))))
         repository.deleteFailure = IllegalStateException("disk I/O error")
-        setScreen(viewModel = ListViewModel(repository, FakeUserPreferencesRepository(), SavedStateHandle()))
+        setScreen(viewModel = ListViewModel(repository, FakeUserPreferencesRepository(), SavedStateHandle(), FakeCardPhotos()))
         composeRule.onNodeWithText("Apple").performTouchInput { longClick() }
         composeRule.onNodeWithContentDescription("Delete").performClick()
         composeRule.onNode(hasText("Delete") and hasAnyAncestor(isDialog())).performClick()
@@ -603,7 +630,7 @@ class ListScreenTest {
     @Test
     fun theList_survivesProcessDeath_withNoCardOpened() { // #61: the opened tile is saved state
         val restorationTester = StateRestorationTester(composeRule)
-        val viewModel = ListViewModel(FakeLoyaltyCardRepository(cardsByUse()), FakeUserPreferencesRepository(), SavedStateHandle())
+        val viewModel = ListViewModel(FakeLoyaltyCardRepository(cardsByUse()), FakeUserPreferencesRepository(), SavedStateHandle(), FakeCardPhotos())
         restorationTester.setContent {
             SharedTransitionLayout {
                 AnimatedVisibility(visible = true) {
@@ -675,7 +702,7 @@ class ListScreenTest {
         density: MutableState<Density?> = mutableStateOf(null),
     ): MutableState<Boolean> {
         val showList = mutableStateOf(true)
-        val viewModel = ListViewModel(repository, FakeUserPreferencesRepository(CardSort.MOST_USED), SavedStateHandle())
+        val viewModel = ListViewModel(repository, FakeUserPreferencesRepository(CardSort.MOST_USED), SavedStateHandle(), FakeCardPhotos())
         // Opens a card only from the shown list, as the app's directions do (#69).
         val directions = ListDirections(toCard = { _, _ -> showList.value.also { showList.value = false } }, toAddCard = {}, toEditCard = { _, _ -> })
         val setContent: (@Composable () -> Unit) -> Unit = restorationTester?.let { it::setContent } ?: composeRule::setContent
@@ -704,7 +731,8 @@ class ListScreenTest {
         vararg cards: LoyaltyCard,
         directions: ListDirections = ListDirections(toCard = { _, _ -> true }, toAddCard = {}, toEditCard = { _, _ -> }),
         preferences: FakeUserPreferencesRepository = FakeUserPreferencesRepository(),
-        viewModel: ListViewModel = ListViewModel(FakeLoyaltyCardRepository(cards.toList()), preferences, SavedStateHandle()),
+        photos: FakeCardPhotos = FakeCardPhotos(),
+        viewModel: ListViewModel = ListViewModel(FakeLoyaltyCardRepository(cards.toList()), preferences, SavedStateHandle(), photos),
         fontScale: Float = 1f,
     ) {
         composeRule.setContent {

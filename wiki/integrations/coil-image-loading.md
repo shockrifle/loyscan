@@ -17,7 +17,8 @@ This requires `android.permission.INTERNET`.
 
 - **Coil 2 package names** (`coil.*`, not `coil3.*`). Upgrading to Coil 3 changes the artifact group
   (`io.coil-kt.coil3`) and packages, and needs an explicit network-fetcher artifact.
-- `AsyncImage` **without** `imageLoader =` silently uses Coil's own default singleton, which has no SVG support
-  and no logging. The list screen does this today: [[list-screen-bypasses-image-loader]].
+- `AsyncImage` **without** `imageLoader =` silently uses Coil's own default singleton, which has no SVG support,
+  no logging and no `CardPhotoMapper`, so a card photo fails on it. The list tiles did this until #10
+  ([[list-screen-bypasses-image-loader]], resolved); every `AsyncImage` now passes `hiltImageLoader()`.
 - No placeholder or error drawable is set, so a logo that can't load (e.g. offline) shows an empty box. The former
   demo stores used `picsum.photos` placeholders ([[seed-data]], removed in #55).

@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-03 · updated: a card's front photo is its list tile, label on a scrim, through the app's image loader; a missing front photo shows the initials; list-screen-bypasses-image-loader resolved; photo-delete e2e test waits for the load; ListScreen/ListViewModel line refs refreshed · features/card-list, features/card-photos, integrations/coil-image-loading, tech-debt/list-screen-bypasses-image-loader, tech-debt/_index, workflows/tdd, architecture, features/card-transition, tech-debt/shared-element-key-from-async-state · #10 (list tile), #89
 - 2026-11-03 · updated: CardPhotos.delete skips a name that isn't a photo name, so clearing one doesn't fail the save or delete · features/card-photos · second review of #87
 - 2026-11-03 · updated: CardPhotos.exists answers false for a name that isn't a photo name instead of throwing; missing-photo screen test renamed to what it checks · features/card-photos · review of #87
 - 2026-11-03 · updated: a card photo whose file is missing (cloud restore) is shown as none on the card screen and in the form, and a saved edit clears its name · features/card-photos, features/card-detail, features/edit-card, decisions/2026-11-03-card-photos-as-private-files, architecture · #87

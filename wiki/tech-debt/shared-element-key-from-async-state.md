@@ -4,7 +4,7 @@
 `app/src/main/java/com/bdaniel/loyscan/DetailScreen.kt:152-156`
 
 **Resolved:** `DetailScreen` takes `cardId` from the route, as it takes `color` (`MainActivity.kt:90-99`), and
-keys its `Scaffold` with `cardTransitionKey(cardId)`, the helper the list tile uses too (`ListScreen.kt:322`).
+keys its `Scaffold` with `cardTransitionKey(cardId)`, the helper the list tile uses too (`ListScreen.kt:328`).
 The regression test, `DetailScreenTest.aTileOpeningTheCard_growsIntoTheScreen_beforeTheCardHasLoaded`, confirmed
 the suspicion on Robolectric, not on a device: with the old key and a card not loaded yet, the detail screen didn't
 pair with the tile and filled the screen on its first frame (411dp wide, not the tile's 80dp).

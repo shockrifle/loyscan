@@ -30,6 +30,7 @@ import com.bdaniel.loyscan.testing.aLoyaltyCardEntity
 import com.bdaniel.loyscan.testing.aStoreEntity
 import com.bdaniel.loyscan.testing.cardId
 import com.google.common.truth.Truth.assertThat
+import coil.ImageLoader
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
@@ -65,6 +66,9 @@ class AppNavigationTest {
 
     @Inject
     lateinit var photos: FileCardPhotos
+
+    @Inject
+    lateinit var imageLoader: ImageLoader
 
     @Before
     fun setUp() {
@@ -291,11 +295,22 @@ class AppNavigationTest {
     }
 
     @Test
+    fun aCardsFrontPhoto_isLoadedOntoItsTile_byTheAppsImageLoader() { // #10
+        storedPhoto("front")
+        runBlocking { db.loyaltyCardDao().insert(aLoyaltyCardEntity(id = cardId(2), label = "Photo card", frontPhotoPath = "front")) }
+
+        // Only the app's loader can map a card photo to its file; Coil's default one would fail it and cache nothing.
+        waitForThePhotoToLoad()
+        composeRule.onNodeWithTag(CARD_TILE_PHOTO_TAG, useUnmergedTree = true).assertIsDisplayed()
+    }
+
+    @Test
     fun deletingACardFromTheList_deletesItsPhotoFiles() { // #10
-        // From the list, which doesn't load the photo: Windows can't delete a file the card screen's loader is reading.
         val photo = storedPhoto("front")
         runBlocking { db.loyaltyCardDao().insert(aLoyaltyCardEntity(id = cardId(2), label = "Photo card", frontPhotoPath = "front")) }
         waitForText("Photo card")
+        // Windows can't delete a file the loader is still reading: the tile's load has to be done first.
+        waitForThePhotoToLoad()
 
         composeRule.onNodeWithText("Photo card").performTouchInput { longClick() }
         waitForText("1 selected")
@@ -419,6 +434,10 @@ class AppNavigationTest {
 
     private fun waitForText(text: String) =
         composeRule.waitUntil(WAIT_TIMEOUT_MS) { composeRule.onAllNodes(hasText(text)).fetchSemanticsNodes().isNotEmpty() }
+
+    /** Waits until the app's image loader has decoded a photo and closed its file. Its result comes on the main looper. */
+    private fun waitForThePhotoToLoad() =
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) { ShadowLooper.idleMainLooper(); (imageLoader.memoryCache?.size ?: 0) > 0 }
 
     /** A photo file where the app keeps card photos, named [name]: a real 1×1 PNG, so the card screen can show it. */
     private fun storedPhoto(name: String) =

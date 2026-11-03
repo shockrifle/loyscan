@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModelStore
 import app.cash.turbine.test
 import com.bdaniel.loyscan.domain.CardSort
+import com.bdaniel.loyscan.testing.FakeCardPhotos
 import com.bdaniel.loyscan.testing.FakeLoyaltyCardRepository
 import com.bdaniel.loyscan.testing.FakeUserPreferencesRepository
 import com.bdaniel.loyscan.testing.MainDispatcherRule
@@ -26,13 +27,14 @@ class ListViewModelTest {
 
     private val repository = FakeLoyaltyCardRepository()
     private val preferences = FakeUserPreferencesRepository()
+    private val photos = FakeCardPhotos()
 
     private val apple = aLoyaltyCard(id = cardId(1), store = aStore(id = "apple", name = "Apple"), useCount = 1)
     private val berry = aLoyaltyCard(id = cardId(2), store = aStore(id = "berry", name = "Berry"), useCount = 5)
     private val cherry = aLoyaltyCard(id = cardId(3), store = aStore(id = "cherry", name = "Cherry"), label = "Apple pie", useCount = 3)
 
     private fun viewModel(savedStateHandle: SavedStateHandle = SavedStateHandle()) =
-        ListViewModel(repository, preferences, savedStateHandle)
+        ListViewModel(repository, preferences, savedStateHandle, photos)
 
     @Test
     fun cards_followTheRepository() = runTest {
@@ -307,6 +309,16 @@ class ListViewModelTest {
 
         assertThat(repository.cards.value).containsExactly(berry)
         assertThat(viewModel.deletion.value).isEqualTo(Deletion.NONE)
+    }
+
+    @Test
+    fun aFrontPhotoWhoseFileIsMissing_isLeftOffTheTile() = runTest { // #89: a cloud restore brings the row, not the file
+        photos.stored += "front"
+        repository.cards.value = listOf(apple.copy(frontPhotoPath = "front"), berry.copy(frontPhotoPath = "lost"))
+
+        viewModel().cards.test {
+            assertThat(awaitItem()!!.map { it.frontPhotoPath }).containsExactly("front", null).inOrder()
+        }
     }
 
     @Test

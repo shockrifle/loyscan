@@ -29,6 +29,8 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   until the edit is saved, then the repository deletes it. A form closed without saving deletes the copies picked in
   it (`onCleared`, through `CardPhotos.discard`, since `viewModelScope` is already cancelled). A form closed while
   its save runs leaves them to the save, and a save that then fails deletes them.
+- **On the list** ([[card-list]]): the front photo is the card's tile, with the label on a dark scrim; a card with only
+  a back photo keeps the initials.
 - **On the card** ([[card-detail]]): under the note, the photos it has, front first; a tap shows one full screen
   on black (`PhotoViewer`, `PHOTO_VIEWER_TAG`), and a tap or Back closes it.
 - **Orphans:** a process killed with a form open (swiped from Recents) skips `onCleared`. On every database open
@@ -37,8 +39,9 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   picked photo whose file has gone since, and keeps the card's own photo for that side ([[2026-11-03-card-photos-as-private-files]]).
 - **A photo whose file is missing** (a cloud restore brings back the database but not the photos, see Backup) is
   treated as no photo (#87). `CardPhotos.withoutMissing(card)` (`data/photos/CardPhotos.kt`) drops such a name from
-  the card `DetailViewModel` shows and from the card `CardFormViewModel` edits. So the card screen shows no thumbnail
-  or viewer for it, and the form shows that side as "Add … photo". Saving the edit writes the side as `null`, which
+  the card `DetailViewModel` shows, from the cards `ListViewModel` lists, and from the card `CardFormViewModel` edits. So
+  the card screen shows no thumbnail or viewer for it, the tile shows the initials (#89), and the form shows that side
+  as "Add … photo". Saving the edit writes the side as `null`, which
   clears the name; until then the row keeps it.
 - **Backup:** `files/card_photos/` is excluded from cloud backup; device-to-device transfer takes it on Android 12+
   ([[android-app]], [[2026-11-03-card-photos-as-private-files]]).
@@ -69,6 +72,10 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   `CardFormViewModelTest.editingACardWhosePhotoFileIsMissing_startsWithThatSideEmpty_andSavingClearsItsName`,
   `CardFormScreenTest.editingACardWhosePhotoFileIsMissing_offersToAddThatPhoto`.
 - `ui/CardPhotoTest`: the app's loader maps a `CardPhoto` to its file.
+- The list tile: `ListScreenTest.aCardWithAFrontPhoto_showsItOnItsTile_inPlaceOfTheInitials`,
+  `aCardWithOnlyABackPhoto_showsTheInitialsOnItsTile`, `aTileWhoseFrontPhotoFileIsMissing_showsTheInitials`,
+  `ListViewModelTest.aFrontPhotoWhoseFileIsMissing_isLeftOffTheTile` (#89). End to end:
+  `AppNavigationTest.aCardsFrontPhoto_isLoadedOntoItsTile_byTheAppsImageLoader`.
 - `CardPhotoSweepCallbackTest` (on-disk database, closed and reopened), `DatabaseModuleTest.opening_sweepsAnOldPhotoNoCardNames`,
   `FileCardPhotosTest.deleteUnnamed_…`, `exists_…` (a name that isn't a photo name is `false`, not a throw, #87), `delete_skipsANameThatIsntAPhotoName_…`; `CardFormViewModelTest.aPickedPhotoWhoseFileIsGone_isNotSaved`.
 - `BackupRulesTest`: cloud backup excludes `card_photos/` on Android 12+ and 10–11; device transfer doesn't.
@@ -82,5 +89,5 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
 
 ## Not implemented
 
-Taking a photo with the camera, cropping to the card's ratio, the front photo as the list tile, and the rest of the backup rules (#71) are
-later parts of #10.
+Taking a photo with the camera, cropping to the card's ratio, and the rest of the backup rules (#71) are later parts of
+#10.

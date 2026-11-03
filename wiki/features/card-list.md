@@ -11,7 +11,7 @@ tiles, one per row in `loyalty_cards`, live-updating from Room. Sort, search and
 ## Behavior
 
 - Data: `ListViewModel.cards` ← `LoyaltyCardRepository.getAllWithStore()` (each card with its store), sorted by the
-  stored choice, then narrowed by the query (`ListViewModel.kt:48-61`). Initial value `null` (not loaded): the grid is
+  stored choice, then narrowed by the query (`ListViewModel.kt:52-68`). Initial value `null` (not loaded): the grid is
   briefly empty on cold start, and "No card matches" waits for the load, since a query restored after process death
   is there at once (`ListScreenTest.aRestoredSearch_doesNotSayNothingMatches_beforeTheCardsHaveLoaded`). The SQL has no `ORDER BY`; ordering is done in Kotlin (`CardSort`), so it ignores
   case and accents the way search does.
@@ -51,6 +51,16 @@ tiles, one per row in `loyalty_cards`, live-updating from Room. Sort, search and
   node's description in place of its text (`ListScreenTest.aTile_isReadOutAsTheStoreName_andTheLabel`). Text is black or white, whichever has the higher WCAG contrast ratio with the
   box (`contrastingTextColor()`, `ui/BrandColor.kt`; `BrandColorTest`). Tests: `ListScreenTest.aTile_…`,
   `aTileWithoutALabel_showsTheStoreName`.
+- **A card with a front photo** ([[card-photos]], #10) shows it as its tile, cropped to fill the box (`CARD_TILE_PHOTO_TAG`),
+  in place of the initials or logo; the label stays at the bottom left in white, on a gradient scrim from clear to 60% black
+  (`PHOTO_SCRIM`) that starts 16dp above it. The brand colour shows under the photo while it loads. The back photo is
+  only on the card screen. A front photo whose file is missing (a cloud restore, #87) is left off the card by
+  `ListViewModel` (`CardPhotos.withoutMissing`), so the tile shows the initials rather than an empty image (#89). Tile
+  images, photo and logo, load through `hiltImageLoader()` ([[coil-image-loading]]). Tests:
+  `ListScreenTest.aCardWithAFrontPhoto_showsItOnItsTile_inPlaceOfTheInitials`, `aCardWithOnlyABackPhoto_…`,
+  `aTileWhoseFrontPhotoFileIsMissing_showsTheInitials`, `ListViewModelTest.aFrontPhotoWhoseFileIsMissing_isLeftOffTheTile`,
+  end to end `AppNavigationTest.aCardsFrontPhoto_isLoadedOntoItsTile_byTheAppsImageLoader` (only the app's loader can
+  map a `CardPhoto` to its file, so the photo reaches its memory cache).
 - The colored box is the shared element `card/{id}` — [[card-transition]].
 - Tap → `directions.toCard(card.id, card.store.color)` → [[card-detail]], unless cards are selected.
 - **Multi-select.** A long press on a tile selects it (TalkBack offers it as "Select"). While any card is selected, the
@@ -75,12 +85,11 @@ tiles, one per row in `loyalty_cards`, live-updating from Room. Sort, search and
     (`ListViewModelTest.deletingTheSelection_…`, `aFailedDelete_…`, `ListScreenTest.deletingTheSelection_…`,
     `AppNavigationTest.selectingCardsOnTheList_andDeletingThem_keepsTheOthers`). The cards' photo files are deleted
     with them ([[card-photos]]).
-- The Settings icon in the top bar is a no-op (`ListScreen.kt:134`, `/* TODO */`).
+- The Settings icon in the top bar is a no-op (`ListScreen.kt:139`, `/* TODO */`).
 - The "Add card" floating button → `directions.toAddCard()` → the store picker of [[add-card]]. The grid has 88dp of bottom content
   padding so the button never covers the last row (`ListScreenTest.theLastTile_isNotCoveredByTheAddButtonWhenScrolledToTheEnd`).
 
 ## Known issues
 
-- Tile logos use Coil's default loader, not the app's — no SVG, no error logging:
-  [[list-screen-bypasses-image-loader]]. No store has a logo today, so no tile loads one; it matters once tiles show
-  card photos (#7, #10).
+None recorded. (Tile images used Coil's default loader until #10's photo tiles: [[list-screen-bypasses-image-loader]],
+resolved.)
