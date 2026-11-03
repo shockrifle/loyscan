@@ -108,6 +108,17 @@ class FileCardPhotosTest {
     }
 
     @Test
+    fun delete_skipsANameThatIsntAPhotoName_andDeletesTheRest() = runTest { // #87 review: an edit drops such a name
+        val picked = temporaryFolder.newFile("picked.jpg")
+        val deleted = photos.import(Uri.fromFile(picked))
+
+        photos.delete(listOf("../loyscan.db", deleted))
+
+        assertThat(directory.list()).asList().isEmpty()
+        assertThat(picked.exists()).isTrue()
+    }
+
+    @Test
     fun discard_deletesThosePhotosInTheBackground() = runTest {
         val background = FileCardPhotos(directory, { null }, StandardTestDispatcher(testScheduler))
         val picked = temporaryFolder.newFile("picked.jpg")

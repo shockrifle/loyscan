@@ -29,7 +29,7 @@ interface CardPhotos {
      */
     suspend fun import(picture: Uri): String
 
-    /** Deletes these photos. A name without a file is skipped. */
+    /** Deletes these photos. A name without a file, or one that isn't a photo's name, is skipped. */
     suspend fun delete(names: Collection<String>)
 
     /** Deletes these photos in the background, for a caller whose own scope is ending (a form being closed). */
@@ -88,7 +88,7 @@ class FileCardPhotos(
     }
 
     override suspend fun delete(names: Collection<String>) = withContext(ioDispatcher) {
-        names.forEach { name ->
+        names.filter(::isPhotoName).forEach { name ->
             val file = file(name)
             if (file.exists() && !file.delete()) Timber.w("Couldn't delete the card photo $name")
         }

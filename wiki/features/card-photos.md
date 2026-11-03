@@ -70,7 +70,7 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   `CardFormScreenTest.editingACardWhosePhotoFileIsMissing_offersToAddThatPhoto`.
 - `ui/CardPhotoTest`: the app's loader maps a `CardPhoto` to its file.
 - `CardPhotoSweepCallbackTest` (on-disk database, closed and reopened), `DatabaseModuleTest.opening_sweepsAnOldPhotoNoCardNames`,
-  `FileCardPhotosTest.deleteUnnamed_…`, `exists_…` (a name that isn't a photo name is `false`, not a throw, #87); `CardFormViewModelTest.aPickedPhotoWhoseFileIsGone_isNotSaved`.
+  `FileCardPhotosTest.deleteUnnamed_…`, `exists_…` (a name that isn't a photo name is `false`, not a throw, #87), `delete_skipsANameThatIsntAPhotoName_…`; `CardFormViewModelTest.aPickedPhotoWhoseFileIsGone_isNotSaved`.
 - `BackupRulesTest`: cloud backup excludes `card_photos/` on Android 12+ and 10–11; device transfer doesn't.
 - `data/photos/FileCardPhotosTest`: a picked picture is copied under a new name; an unreadable one, one that fails
   partway and a copy cancelled midway (a blocking stream through the `openPicture` lambda) leave no file;

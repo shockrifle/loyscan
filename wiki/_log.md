@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-03 · updated: CardPhotos.delete skips a name that isn't a photo name, so clearing one doesn't fail the save or delete · features/card-photos · second review of #87
 - 2026-11-03 · updated: CardPhotos.exists answers false for a name that isn't a photo name instead of throwing; missing-photo screen test renamed to what it checks · features/card-photos · review of #87
 - 2026-11-03 · updated: a card photo whose file is missing (cloud restore) is shown as none on the card screen and in the form, and a saved edit clears its name · features/card-photos, features/card-detail, features/edit-card, decisions/2026-11-03-card-photos-as-private-files, architecture · #87
 - 2026-11-03 · updated: a save whose pick was swept keeps the card's own photo; the 10–11 transfer gap recorded as #71's rules (requireFlags), not the platform's; a cloud restore's photo-less rows noted · decisions/2026-11-03-card-photos-as-private-files, features/card-photos, apps/android-app · second review of #10
