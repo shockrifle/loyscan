@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-03 · updated: card photos excluded from cloud backup (both rule files); the photo decision's backup consequence corrected · decisions/2026-11-03-card-photos-as-private-files, features/card-photos, apps/android-app · review of #10
 - 2026-11-03 · updated: the card screen shows its photos under the note, a tap opens one full screen; tdd notes that Windows can't delete a file the image loader holds open · features/card-detail, features/card-photos, workflows/tdd · #10
 - 2026-11-03 · updated: the card form adds, replaces and removes front/back photos from the photo picker; a form closed unsaved deletes its copies; CardPhoto loads through the app's Coil loader · features/card-photos, features/edit-card, workflows/tdd, architecture · #10
 - 2026-11-03 · added: card photos stored as private files by name; the repositories delete a card's photo files on update, delete, multi-select delete and custom-store delete · features/card-photos (new), decisions/2026-11-03-card-photos-as-private-files (new), decisions/_index, features/_index, index, architecture, workflows/tdd, features/card-detail, features/card-list, features/edit-card, features/edit-store · #10

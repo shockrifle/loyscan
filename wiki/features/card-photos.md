@@ -31,6 +31,8 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   its save runs leaves them to the save, and a save that then fails deletes them.
 - **On the card** ([[card-detail]]): under the note, the photos it has, front first; a tap shows one full screen
   on black (`PhotoViewer`, `PHOTO_VIEWER_TAG`), and a tap or Back closes it.
+- **Backup:** `files/card_photos/` is excluded from cloud backup; device-to-device transfer takes it on Android 12+
+  ([[android-app]], [[2026-11-03-card-photos-as-private-files]]).
 - Images load through `hiltImageLoader()`, never Coil's default ([[coil-image-loading]]).
 - **Files are deleted on every path:**
   - replacing or removing a photo in an edit ([[edit-card]]);
@@ -54,6 +56,7 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   `aPickedPhoto_isRestoredAfterProcessDeath`. `CardFormScreenTest`: `addingAFrontPhoto_…`,
   `editingACard_showsItsPhoto_whichCanBeReplacedOrRemoved`, `aPictureThatCantBeCopiedIn_saysSo`.
 - `ui/CardPhotoTest`: the app's loader maps a `CardPhoto` to its file.
+- `BackupRulesTest`: cloud backup excludes `card_photos/` on Android 12+ and 10–11; device transfer doesn't.
 - `data/photos/FileCardPhotosTest`: a picked picture is copied under a new name, an unreadable one leaves no file,
   delete skips missing names, discard deletes in the background, a name can't leave the directory.
 - `RoomLoyaltyCardRepositoryTest`: `update_deletesAReplacedOrRemovedPhoto_andKeepsTheOthers`,
@@ -66,5 +69,5 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
 - A form whose task is removed after process death never comes back to delete the copies picked in it. They stay
   as orphan files: no sweep looks for files no card names.
 
-Taking a photo with the camera, cropping to the card's ratio, the front photo as the list tile, and backup (#71) are
+Taking a photo with the camera, cropping to the card's ratio, the front photo as the list tile, and the rest of the backup rules (#71) are
 later parts of #10.

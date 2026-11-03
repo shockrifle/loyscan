@@ -41,6 +41,10 @@ by deleting its custom store, where `ON DELETE CASCADE` deletes the rows in SQLi
 ## Consequences
 - An edit saved from a form that loaded the card before another form changed its photos writes the stale names
   back. Two forms editing one card at once would need two tasks. Not handled.
-- Copied pictures are full size and keep their metadata (EXIF location included). They stay private, but they count
-  toward device-to-device transfer.
+- Copied pictures are full size and keep their metadata (EXIF location included). They stay private, and they
+  are **excluded from cloud backup** (`data_extraction_rules.xml`, `backup_rules.xml`): an Android auto-backup would
+  otherwise send them, location and all, to the user's Google account unasked, and a few photos would pass its 25 MB
+  quota, which stops the app's backup altogether, database included. Device-to-device transfer takes them on Android
+  12+; on 10–11 it follows the cloud rules and leaves them behind. (Corrected 2026-11-03 in review: this said only that
+  they count toward device-to-device transfer, while cloud backup was still on with the template rules.)
 - A photo picked in a form that is then abandoned is the form's to delete ([[card-photos]]).

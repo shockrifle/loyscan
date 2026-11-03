@@ -1,13 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?><!--
-   Sample backup rules file; uncomment and customize as necessary.
+   What Android 10 and 11 back up; Android 12+ reads data_extraction_rules.xml instead.
    See https://developer.android.com/guide/topics/data/autobackup
-   for details.
-   Note: This file is ignored for devices older than API 31
-   See https://developer.android.com/about/versions/12/backup-restore
+   Card photos (#10) stay out of cloud backup. On these versions device-to-device transfer follows the same rules, so it
+   doesn't take them either. The rest of the backup rules are #71.
 -->
 <full-backup-content>
-    <!--
-   <include domain="sharedpref" path="."/>
-   <exclude domain="sharedpref" path="device.xml"/>
--->
+    <exclude domain="file" path="card_photos/" />
 </full-backup-content>
