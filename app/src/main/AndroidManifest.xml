@@ -40,6 +40,16 @@
                 <data android:mimeType="image/*" />
             </intent-filter>
         </activity>
+        <!-- Hands the camera app the file to write a card photo into (#10). -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.photos"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/card_photo_paths" />
+        </provider>
     </application>
 
 </manifest>

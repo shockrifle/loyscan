@@ -1172,6 +1172,113 @@ class CardFormViewModelTest {
     }
 
     @Test
+    fun aPhotoTaken_isImportedLikeAPick_andItsCaptureDeleted() = runTest { // #10
+        val viewModel = viewModel(CardForm("ruled"))
+
+        viewModel.state.test {
+            awaitLoaded()
+            val target = viewModel.startCapture(CardPhotoSide.FRONT)
+            viewModel.onPhotoTaken(taken = true)
+            assertThat(expectMostRecentItem().frontPhoto).isEqualTo("photo-1")
+            assertThat(target).isEqualTo(photos.captures.single().uri)
+        }
+
+        assertThat(photos.imported).containsExactly(photos.captures.single().uri)
+        assertThat(photos.stored).containsExactly("photo-1")
+    }
+
+    @Test
+    fun aCameraThatTookNoPhoto_deletesItsCapture_andKeepsThePhoto() = runTest { // #10: Back in the camera app
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, number = "12345674", frontPhotoPath = "front"))
+        photos.stored += "front"
+        val viewModel = viewModel(CardForm("ruled", cardId = cardId(1)))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.startCapture(CardPhotoSide.FRONT)
+            viewModel.onPhotoTaken(taken = false)
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        assertThat(viewModel.state.value.frontPhoto).isEqualTo("front")
+        assertThat(photos.imported).isEmpty()
+        assertThat(photos.stored).containsExactly("front")
+    }
+
+    @Test
+    fun aPhotoTakenThatCantBeImported_saysSo_andItsCaptureIsDeleted() = runTest { // #10
+        photos.importFailure = FileNotFoundException("the camera app wrote nothing")
+        val viewModel = viewModel(CardForm("ruled"))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.startCapture(CardPhotoSide.BACK)
+            viewModel.onPhotoTaken(taken = true)
+            val state = expectMostRecentItem()
+            assertThat(state.photoFailed).isTrue()
+            assertThat(state.backPhoto).isNull()
+        }
+
+        assertThat(photos.stored).isEmpty()
+    }
+
+    @Test
+    fun aPhotoTaken_isImported_afterProcessDeathWhileTheCameraWasOpen() = runTest { // #10: the camera app is in front
+        val handle = SavedStateHandle(route = CardForm("ruled"))
+        val first = viewModel(handle)
+        first.state.test {
+            awaitLoaded()
+            first.startCapture(CardPhotoSide.BACK)
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        val restored = viewModel(handle)
+        restored.state.test {
+            awaitLoaded()
+            restored.onPhotoTaken(taken = true)
+            assertThat(expectMostRecentItem().backPhoto).isEqualTo("photo-1")
+        }
+
+        assertThat(photos.stored).containsExactly("photo-1")
+    }
+
+    @Test
+    fun noCaptureStarts_whileAPhotoIsCopiedIn_orOnceSavingHasStarted() = runTest { // #10
+        val gate = CompletableDeferred<Unit>()
+        photos.importGate = gate
+        val viewModel = viewModel(CardForm("ruled"))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.onNumberChange("12345674")
+            viewModel.onPhotoPicked(CardPhotoSide.FRONT, PICKED)
+            assertThat(viewModel.startCapture(CardPhotoSide.BACK)).isNull()
+            gate.complete(Unit)
+            expectMostRecentItem()
+            viewModel.save()
+            assertThat(viewModel.startCapture(CardPhotoSide.BACK)).isNull()
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        assertThat(photos.captures).isEmpty()
+    }
+
+    @Test
+    fun aFormClosedWithoutSaving_deletesACaptureTheCameraNeverAnswered() = runTest { // #10
+        val owner = ViewModelStore()
+        val viewModel = owner.keep { viewModel(CardForm("ruled")) }
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.startCapture(CardPhotoSide.FRONT)
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        owner.clear()
+
+        assertThat(photos.stored).isEmpty()
+    }
+
+    @Test
     fun addingACard_isNotEditing() = runTest {
         viewModel(CardForm("ruled")).state.test {
             assertThat(awaitLoaded().editing).isFalse()

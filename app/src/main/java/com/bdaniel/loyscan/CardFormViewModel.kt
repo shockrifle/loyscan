@@ -206,9 +206,41 @@ class CardFormViewModel @Inject constructor(
      * saving has started.
      */
     fun onPhotoPicked(side: CardPhotoSide, picture: Uri?) {
-        val current = progress.value
-        if (picture == null || current.saving || current.savedCardId != null || current.importing != null) return
-        progress.value = current.copy(importing = side, photoFailed = false)
+        if (picture != null) import(side, picture)
+    }
+
+    /**
+     * A file for the camera app to write [side]'s photo into (#10), or `null` while no photo can be added: one is being
+     * copied in, or saving has started. Kept in the saved state, since this process may die while the camera app is
+     * in front.
+     */
+    fun startCapture(side: CardPhotoSide): Uri? {
+        if (!canChangePhotos()) return null
+        discardCapture()
+        val capture = photos.newCapture()
+        savedStateHandle[CAPTURE] = capture.name
+        savedStateHandle[CAPTURE_URI] = capture.uri
+        savedStateHandle[CAPTURE_SIDE] = side.name
+        return capture.uri
+    }
+
+    /** The camera app is done with [startCapture]'s file: a photo [taken] is copied in like a pick, and the file deleted. */
+    fun onPhotoTaken(taken: Boolean) {
+        val name = savedStateHandle.get<String>(CAPTURE) ?: return
+        val uri = savedStateHandle.get<Uri>(CAPTURE_URI)
+        val side = savedStateHandle.get<String>(CAPTURE_SIDE)?.let(CardPhotoSide::valueOf)
+        clearCapture()
+        val importing = taken && uri != null && side != null && import(side, uri) { photos.discard(listOf(name)) }
+        if (!importing) photos.discard(listOf(name))
+    }
+
+    /**
+     * Copies [picture] in as [side]'s photo; then [afterwards] runs, however the copy ended. A photo picked earlier in this
+     * form for that side is deleted. Returns `false`, without copying, while no photo can be added.
+     */
+    private fun import(side: CardPhotoSide, picture: Uri, afterwards: () -> Unit = {}): Boolean {
+        if (!canChangePhotos()) return false
+        progress.value = progress.value.copy(importing = side, photoFailed = false)
         viewModelScope.launch {
             val name = try {
                 photos.import(picture)
@@ -218,26 +250,50 @@ class CardFormViewModel @Inject constructor(
                 Timber.e(e, "Couldn't copy the picked photo in")
                 progress.update { it.copy(importing = null, photoFailed = true) }
                 return@launch
+            } finally {
+                afterwards()
             }
             val replaced = picked(side)
             savedStateHandle[side.key] = name
             progress.update { it.copy(importing = null) }
             replaced?.let { photos.discard(listOf(it)) }
         }
+        return true
+    }
+
+    /** One picture at a time, and none once saving has started. */
+    private fun canChangePhotos(): Boolean {
+        val current = progress.value
+        return !current.saving && current.savedCardId == null && current.importing == null
+    }
+
+    /** Deletes the file of a capture the camera app never answered, e.g. when the form closes. */
+    private fun discardCapture() {
+        savedStateHandle.get<String>(CAPTURE)?.let { photos.discard(listOf(it)) }
+        clearCapture()
+    }
+
+    private fun clearCapture() {
+        savedStateHandle.remove<String>(CAPTURE)
+        savedStateHandle.remove<Uri>(CAPTURE_URI)
+        savedStateHandle.remove<String>(CAPTURE_SIDE)
     }
 
     /** Removes [side]'s photo (#10), as [onPhotoPicked] replaces it. Not once saving has started. */
     fun removePhoto(side: CardPhotoSide) {
-        val current = progress.value
-        if (current.saving || current.savedCardId != null || current.importing != null) return
+        if (!canChangePhotos()) return
         val replaced = picked(side)
         savedStateHandle[side.key] = REMOVED
         replaced?.let { photos.discard(listOf(it)) }
     }
 
-    /** A form closed unsaved deletes the photos picked in it; one closed while saving leaves them to the save (#10). */
+    /**
+     * A form closed unsaved deletes the photos picked in it; one closed while saving leaves them to the save (#10). A
+     * capture the camera app never answered goes either way.
+     */
     override fun onCleared() {
         cleared = true
+        discardCapture()
         val current = progress.value
         if (!current.saving && current.savedCardId == null) photos.discard(pickedNames())
     }
@@ -436,6 +492,11 @@ class CardFormViewModel @Inject constructor(
         const val TYPED_NUMBER = "typedNumber"
         const val FRONT_PHOTO = "frontPhoto"
         const val BACK_PHOTO = "backPhoto"
+
+        /** The file handed to the camera app (#10), until it answers: its name, its Uri and the side it is for. */
+        const val CAPTURE = "capture"
+        const val CAPTURE_URI = "captureUri"
+        const val CAPTURE_SIDE = "captureSide"
 
         /** A side's photo was removed in this form. Never a photo's name, which is a UUID. */
         const val REMOVED = ""

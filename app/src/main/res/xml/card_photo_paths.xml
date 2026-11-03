@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- What the FileProvider can hand out: the card photo directory, for the camera app to write a capture into (#10).
+     Only a Uri the app grants is reachable, one capture at a time. -->
+<paths>
+    <files-path name="card_photos" path="card_photos/" />
+</paths>

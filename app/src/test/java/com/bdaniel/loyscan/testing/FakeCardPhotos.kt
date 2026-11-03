@@ -2,9 +2,13 @@ package com.bdaniel.loyscan.testing
 
 import android.net.Uri
 import com.bdaniel.loyscan.data.photos.CardPhotos
+import com.bdaniel.loyscan.data.photos.PhotoCapture
 import kotlinx.coroutines.CompletableDeferred
 
-/** In-memory [CardPhotos]: [stored] holds the names of the photos that exist. Imports are named `photo-1`, `photo-2`… */
+/**
+ * In-memory [CardPhotos]: [stored] holds the names of the photos that exist. Imports are named `photo-1`, `photo-2`…,
+ * captures `capture-1`, `capture-2`… (stored too: the file exists for the camera app to write).
+ */
 class FakeCardPhotos(vararg stored: String) : CardPhotos {
 
     val stored = stored.toMutableSet()
@@ -34,4 +38,12 @@ class FakeCardPhotos(vararg stored: String) : CardPhotos {
     }
 
     override suspend fun exists(name: String) = name in stored
+
+    /** The captures made so far, in order. */
+    val captures = mutableListOf<PhotoCapture>()
+
+    override fun newCapture(): PhotoCapture {
+        val name = "capture-${captures.size + 1}"
+        return PhotoCapture(name, Uri.parse("content://photos.test/$name")).also { captures += it; stored += name }
+    }
 }

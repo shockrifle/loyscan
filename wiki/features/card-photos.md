@@ -4,12 +4,13 @@ A card can carry photos of the physical card, front and back (#10). They are cop
 deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private-files]].
 
 **Entry points** (under `app/src/main/java/com/bdaniel/loyscan/`):
-- `data/photos/CardPhotos.kt`: `CardPhotos` (`import(uri)`, `delete(names)`), implemented by `FileCardPhotos` over
-  `files/card_photos/` (`di/CardPhotosModule.kt`).
+- `data/photos/CardPhotos.kt`: `CardPhotos` (`import(uri)`, `delete(names)`, `newCapture()`), implemented by
+  `FileCardPhotos` over `files/card_photos/` (`di/CardPhotosModule.kt`, which hands a capture to the camera app through
+  the app's `FileProvider`).
 - `data/photos/CardPhotoEncoding.kt`: `encodeCardPhoto`, how an imported picture is stored (#88).
 - `DetailScreen.kt`: the photos under the note, `PhotoViewer`.
-- `CardFormScreen.kt` (`PhotoSlot`), `CardFormViewModel.kt` (`onPhotoPicked`, `removePhoto`, `onCleared`): adding,
-  replacing and removing photos while adding or editing a card.
+- `CardFormScreen.kt` (`PhotoSlot`), `CardFormViewModel.kt` (`onPhotoPicked`, `startCapture`, `onPhotoTaken`,
+  `removePhoto`, `onCleared`): adding, replacing and removing photos while adding or editing a card.
 - `ui/CardPhoto.kt`: `CardPhoto(name)`, the image model; `CardPhotoMapper` on the app's Coil loader
   (`di/ImageLoaderModule.kt`) maps it to its file; `CARD_ASPECT_RATIO`.
 - `data/repository/RoomLoyaltyCardRepository.kt` (`update`, `delete`, `deleteAll`) and
@@ -36,6 +37,13 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   until the edit is saved, then the repository deletes it. A form closed without saving deletes the copies picked in
   it (`onCleared`, through `CardPhotos.discard`, since `viewModelScope` is already cancelled). A form closed while
   its save runs leaves them to the save, and a save that then fails deletes them.
+- **A photo taken with the camera** goes through a capture file: `startCapture(side)` makes `<uuid>.capture` in
+  `files/card_photos/` (`CardPhotos.newCapture`) and returns its `content://<applicationId>.photos/…` Uri for the camera
+  app to write. `onPhotoTaken(taken)` then copies it in exactly like a pick (re-encoded, #88) and deletes the capture,
+  whether the copy worked or not; a camera that took nothing deletes it too. The capture's name, Uri and side are in
+  the `SavedStateHandle` (`capture`, `captureUri`, `captureSide`), since the process may die while the camera app is
+  in front. A form closed with a capture unanswered deletes it; one a killed process leaves is swept (Orphans). No
+  capture starts while a photo is copied in or once saving has started (`startCapture` returns `null`).
 - **On the list** ([[card-list]]): the front photo is the card's tile, with the label on a dark scrim; a card with only
   a back photo, or a front photo that can't be loaded, keeps the initials.
 - **On the card** ([[card-detail]]): under the note, the photos it has, front first; a tap shows one full screen
@@ -73,7 +81,9 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   `aSavedForm_keepsItsPhotos_…`, `aSaveStillRunningWhenTheFormCloses_keepsItsPhoto`,
   `aSaveThatFailsAfterTheFormClosed_deletesItsPhoto`, `aFailedSave_keepsThePhotos_…`, `whileAPhotoIsCopiedIn_…`,
   `aPictureThatCantBeCopiedIn_…`, `aCancelledPick_…`, `noPhotoCanBePickedOrRemoved_onceSavingHasStarted`,
-  `aPickedPhoto_isRestoredAfterProcessDeath`. `CardFormScreenTest`: `addingAFrontPhoto_…`,
+  `aPickedPhoto_isRestoredAfterProcessDeath`. Camera captures: `aPhotoTaken_isImportedLikeAPick_andItsCaptureDeleted`,
+  `aCameraThatTookNoPhoto_…`, `aPhotoTakenThatCantBeImported_…`, `aPhotoTaken_isImported_afterProcessDeathWhileTheCameraWasOpen`,
+  `noCaptureStarts_…`, `aFormClosedWithoutSaving_deletesACaptureTheCameraNeverAnswered`. `CardFormScreenTest`: `addingAFrontPhoto_…`,
   `editingACard_showsItsPhoto_whichCanBeReplacedOrRemoved`, `aPictureThatCantBeCopiedIn_saysSo`.
 - A missing file (#87): `DetailViewModelTest.aPhotoWhoseFileIsMissing_isLeftOffTheCard`,
   `CardFormViewModelTest.editingACardWhosePhotoFileIsMissing_startsWithThatSideEmpty_andSavingClearsItsName`,
@@ -92,6 +102,8 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   `import_keepsTheSizeOfASmallerPicture`, `import_turnsThePictureTheWayItsExifOrientationSays` (all eight
   orientations), `import_onAndroid10_turnsAPngOrWebpTheWayItsExifOrientationSays` (`@Config(sdk = [29])`, #92),
   `import_putsATransparentPictureOnWhite`, `import_ofAFileThatIsntAPicture_throws_andLeavesNoFile`.
+  `newCapture_isAFileInThePhotoDirectory_…`, `aCapture_isDeletedByItsName`; through the real `FileProvider`:
+  `di/CardPhotosModuleTest` (the write runs on CI only, see [[tdd]]).
   Also: a picked picture is stored under a new name; an unreadable one, one that fails
   partway and a copy cancelled midway (a blocking stream through the `openPicture` lambda) leave no file;
   delete skips missing names, discard deletes in the background, a name can't leave the directory.

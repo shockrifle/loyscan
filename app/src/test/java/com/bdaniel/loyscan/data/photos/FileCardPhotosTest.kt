@@ -205,6 +205,29 @@ class FileCardPhotosTest {
     }
 
     @Test
+    fun newCapture_isAFileInThePhotoDirectory_underANewName_thatImportsLikeAPick() = runTest { // #10: the camera app writes it
+        val first = photos.newCapture()
+        val second = photos.newCapture()
+        aPicture(40, 20).copyTo(File(first.uri.path!!))
+
+        val imported = photos.import(first.uri)
+
+        assertThat(first.name).isNotEqualTo(second.name)
+        assertThat(File(first.uri.path!!)).isEqualTo(File(directory, first.name))
+        assertThat(photos.file(imported).shown()).isEqualTo(Shown(40, 20, Color.RED, Color.GREEN, Color.BLUE))
+    }
+
+    @Test
+    fun aCapture_isDeletedByItsName() = runTest { // #10: once imported, or when the camera app took none
+        val capture = photos.newCapture()
+        aPicture(4, 4).copyTo(File(capture.uri.path!!))
+
+        photos.delete(listOf(capture.name))
+
+        assertThat(directory.listFiles().orEmpty()).isEmpty()
+    }
+
+    @Test
     fun delete_removesThosePhotos_andSkipsNamesWithoutAFile() = runTest {
         val picked = aPicture(4, 4)
         val kept = photos.import(Uri.fromFile(picked))

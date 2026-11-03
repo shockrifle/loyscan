@@ -39,7 +39,16 @@ interface CardPhotos {
 
     /** Whether the photo [name] is still there: an old one no card names is swept when the database opens. */
     suspend fun exists(name: String): Boolean
+
+    /**
+     * A new file for the camera app to write a photo into (#10), to [import] like a pick. It is deleted by its name
+     * once imported, or when the camera app took none; one a killed process leaves is swept with the orphans.
+     */
+    fun newCapture(): PhotoCapture
 }
+
+/** A file the camera app writes a new photo into: [uri] is what the camera app is given, [name] deletes it. */
+data class PhotoCapture(val name: String, val uri: Uri)
 
 /**
  * [card] without the photos whose files are missing, e.g. after a cloud restore, which brings back the database but not
@@ -52,15 +61,18 @@ suspend fun CardPhotos.withoutMissing(card: LoyaltyCard): LoyaltyCard = card.cop
 
 /**
  * [CardPhotos] as files in [directory] (`files/card_photos`), never in a shared folder. [openPicture] opens a picked
- * picture; tests pass a stream that blocks or fails partway.
+ * picture; tests pass a stream that blocks or fails partway. [shareCapture] gives the camera app a capture's file: the
+ * app's `FileProvider`, a plain file Uri in tests.
  */
 class FileCardPhotos(
     private val directory: File,
     private val openPicture: (Uri) -> InputStream?,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val shareCapture: (File) -> Uri = Uri::fromFile,
 ) : CardPhotos {
 
-    constructor(directory: File, contentResolver: ContentResolver) : this(directory, contentResolver::openInputStream)
+    constructor(directory: File, contentResolver: ContentResolver, shareCapture: (File) -> Uri = Uri::fromFile) :
+        this(directory, contentResolver::openInputStream, shareCapture = shareCapture)
 
     /**
      * Copies the picture in as it is, then stores it re-encoded ([encodeCardPhoto]): smaller, the right way up and
@@ -89,6 +101,16 @@ class FileCardPhotos(
     }
 
     /** A name that isn't a photo's has no file, rather than throwing: it comes from a row, which a screen shows (#87). */
+    /**
+     * Next to the photos, so the sweep catches one a killed process leaves. Creates the directory on the caller's
+     * thread: the camera app's write needs it, and the Uri is needed at once to start the camera.
+     */
+    override fun newCapture(): PhotoCapture {
+        val name = "${UUID.randomUUID()}.capture"
+        directory.mkdirs()
+        return PhotoCapture(name, shareCapture(file(name)))
+    }
+
     override suspend fun exists(name: String): Boolean =
         isPhotoName(name) && withContext(ioDispatcher) { file(name).isFile }
 
