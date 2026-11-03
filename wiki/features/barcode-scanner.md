@@ -8,7 +8,7 @@ after the store picker of [[add-card]]; a scan or "Enter manually" replaces it w
 **Entry points** (under `app/src/main/java/com/bdaniel/loyscan/`):
 - `ScannerScreen.kt:51`, `ScannerScreen`; state in `ScannerViewModel.kt`.
 - Route `Scanner(storeId)`, `ScannerDirections` and `scannerDirections()` in `Navigation.kt:142-172`; registered in
-  `MainActivity.kt:102-104`.
+  `MainActivity.kt:106-108`.
 - `ui/scanner/`: `CameraPermission.kt` (permission state), `CameraScanner.kt` (CameraX, `ScanAnalyzer`),
   `ZxingCppFrameReader.kt` and `ZxingCppFormats.kt` (decoding), `PicturePicker.kt` and `PictureReader.kt` (reading a
   picture, #76).

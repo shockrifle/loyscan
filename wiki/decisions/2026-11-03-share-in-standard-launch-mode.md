@@ -4,8 +4,9 @@
 [[2026-11-03-share-into-the-sharing-apps-task]]
 
 `MainActivity` is back to the default `standard` launch mode, and a share that still reaches an open LoyScan through
-`onNewIntent` is passed on to a new LoyScan task. A share never replaces what LoyScan has open, so a half-filled card
-form survives every share (#83).
+`onNewIntent` is passed on to a new LoyScan task. A share sent through the chooser, or with `NEW_TASK` and/or
+`SINGLE_TOP`, doesn't replace what LoyScan has open, so a half-filled card form survives it (#83). A sender using
+`CLEAR_TOP` or `CLEAR_TASK` would still reset LoyScan's task (Consequences).
 
 ## Context
 
@@ -44,7 +45,13 @@ LoyScan activity on LoyScan's own task, and Back from its flow returns to the fo
 
 - Seen on a device (2026-11-03, adb): a `NEW_TASK` share over a half-filled form stacked a second LoyScan in the same
   task; Back twice returned to the form, input intact. A `NEW_TASK | SINGLE_TOP` share reached `onNewIntent` and the
-  form stayed.
+  form stayed. That adb share carries no read grant, so on the device it took the drop path below. A forward with a
+  real grant (the new task reading the picture) has run only in Robolectric, whose `startActivity` doesn't check
+  grants. It is not checked on a device: no app seen sends a share with `SINGLE_TOP`.
+- By Android's task rules, a sender using `NEW_TASK | CLEAR_TOP` would finish and recreate the `standard`
+  `MainActivity` in LoyScan's task, and `CLEAR_TASK` would clear the task. Both lose an open form, and neither goes
+  through `onNewIntent`, so the forward can't catch them. No sender seen does this, and `singleTop` had the same
+  exposure *(inferred; not seen on a device)*.
 - Passing on a share LoyScan holds no grant for throws: `startActivity` grants an `ACTION_SEND`'s `EXTRA_STREAM` itself
   (`Intent.migrateExtraStreamToClipData`), whatever flags are set. The first version crashed on such a share and took
   the form with it (seen on a device with the adb share). Now the `SecurityException` is caught and logged, and that

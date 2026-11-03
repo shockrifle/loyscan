@@ -16,7 +16,7 @@ with the picture's barcode (#77, below). Everything runs offline on the local da
   `CustomStore(storeId?, scannedContent?, scannedFormat?, manualEntry)`, `Scanner(storeId)`,
   `CardForm(storeId, scannedContent?, scannedFormat?)`; `ListDirections.toAddCard` starts the flow. Saving uses
   `LoyaltyCardRepository.add`.
-- Share → LoyScan (#77): `Intent.sharedPicture()` and the share handling in `MainActivity.kt:42-46, 114-123`;
+- Share → LoyScan (#77): `Intent.sharedPicture()` and the share handling in `MainActivity.kt:44-50, 118-146` (incl. `forwardToATaskOfItsOwn`);
   `SharedPictureScreen.kt`, `SharedPictureViewModel.kt`; route `SharedPicture(uri)`, `openSharedPicture` and
   `sharedPictureDirections` in `Navigation.kt`.
 
@@ -121,7 +121,8 @@ with the picture's barcode (#77, below). Everything runs offline on the local da
 - The same form edits a card (`CardForm.cardId`, title "Edit card"): [[edit-card]].
 
 - **Share → LoyScan** (#77). LoyScan is in the system share sheet for one image (`ACTION_SEND`, `image/*`; not
-  `SEND_MULTIPLE`). A share never replaces what LoyScan has open: `MainActivity` is `standard`, and a share that
+  `SEND_MULTIPLE`). A share through the chooser, or sent with `NEW_TASK` and/or `SINGLE_TOP`, doesn't replace what
+  LoyScan has open (`CLEAR_TOP` or `CLEAR_TASK` still would): `MainActivity` is `standard`, and a share that
   reaches it through `onNewIntent` (a sender asking for `SINGLE_TOP`) is passed on to a new LoyScan task
   ([[2026-11-03-share-in-standard-launch-mode]], #83). On a device, every share through the system chooser started a
   new LoyScan task, and Back from it returned to the sharing app

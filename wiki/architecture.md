@@ -131,7 +131,7 @@ here exist; read them next to the code.
    navigation over `InMemoryDatabaseModule`, list → detail → back.
    Then `NavController.listDirections(entry).toCard` → `navigate(Detail(id, color))` (`Navigation.kt:23-33, 40-41`).
    `AppNavigation` maps `composable<Detail>` to `DetailScreen`, pulling `cardId` and `color` out of the route and
-   passing them as plain parameters (`MainActivity.kt:86-95`).
+   passing them as plain parameters (`MainActivity.kt:90-99`).
 8. **Detail ViewModel.** *Test first:* `DetailViewModelTest` with `SavedStateHandle(route = Detail(…))`. It
    checks `EMPTY` first, then the routed card. A missing card stays `EMPTY`, and a deleted card keeps the last
    value.
