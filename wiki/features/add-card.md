@@ -121,9 +121,9 @@ with the picture's barcode (#77, below). Everything runs offline on the local da
 - The same form edits a card (`CardForm.cardId`, title "Edit card"): [[edit-card]].
 
 - **Share → LoyScan** (#77). LoyScan is in the system share sheet for one image (`ACTION_SEND`, `image/*`; not
-  `SEND_MULTIPLE`). The share opens over the sharing app, or reaches LoyScan through `onNewIntent` when it is on top
-  of that task ([[2026-11-03-share-into-the-sharing-apps-task]]). Only a `content://` URI is taken (a `file://` one
-  could name the app's own files), and only the picture granted with the share is read, with the scanner's
+  `SEND_MULTIPLE`). The share opens over the sharing app, or, when sent with `NEW_TASK`, reaches LoyScan's own task
+  through `onNewIntent`, replacing its open screen ([[2026-11-03-share-into-the-sharing-apps-task]]). Only a
+  `content://` URI is taken (a `file://` one could name the app's own files), and only the picture granted with the share is read, with the scanner's
   `PictureReader` ([[barcode-scanner]] → Scan from image): not copied, stored or sent. Steps:
   - `SharedPicture(uri)` opens over the card list, in place of anything open above it, and says "Reading the
     picture…". Its barcode replaces it with the store picker holding the scan (`StorePicker(scannedContent,

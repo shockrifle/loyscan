@@ -3,10 +3,9 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-03 · corrected: a chooser share lands in the sharing app's task, so onNewIntent runs only for a share sent with NEW_TASK, which brings LoyScan's own task forward and drops its open screen · decisions/2026-11-03-share-into-the-sharing-apps-task · review of #77
 - 2026-11-03 · added: the store picker of a shared picture suggests the stores whose rule reads its barcode ("Suggested", ranked by matchingScan, hidden while searching) · features/add-card · #77
-
 - 2026-11-03 · added: Share → LoyScan (shared picture read, then the picker with its barcode, the form without the scanner); singleTop decision; intent-launched test and FakePictureReaderModule; MainActivity line refs refreshed · features/add-card, apps/android-app, architecture, workflows/tdd, decisions/2026-11-03-share-into-the-sharing-apps-task, decisions/_index, index, glossary, features/barcode-scanner, features/card-transition, decisions/2025-12-12-brand-color-in-route, decisions/2026-10-28-portrait-on-phones, tech-debt/shared-element-key-from-async-state · #77
-
 - 2026-11-03 · updated: scan mode in portrait runs a 1D barcode down the long side, turned a quarter (removed "not rotated" note) · features/card-detail, integrations/zxing-core · #34
 - 2026-11-02 · corrected: picture opened with openTypedAssetFileDescriptor("image/*") and a stream fallback, as ImageDecoder's content source does · integrations/zxing-cpp · review of #79
 - 2026-11-02 · corrected: an abandoned picture read cancels the provider's download through a CancellationSignal (was: "can't be cancelled") · integrations/zxing-cpp · review of #79
