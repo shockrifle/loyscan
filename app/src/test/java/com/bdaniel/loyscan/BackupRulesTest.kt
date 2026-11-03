@@ -10,8 +10,8 @@ import org.junit.runner.RunWith
 import org.xmlpull.v1.XmlPullParser
 
 /**
- * Card photos (#10) stay out of cloud backup: full-size pictures with their location don't go to the user's Google
- * account unasked, and don't use up its 25 MB quota. The rest of the backup rules are #71.
+ * Card photos (#10) stay out of cloud backup: pictures of the user's cards don't go to their Google account unasked,
+ * and don't use up its 25 MB quota. The rest of the backup rules are #71.
  */
 @RunWith(AndroidJUnit4::class)
 class BackupRulesTest {

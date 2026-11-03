@@ -25,8 +25,9 @@ import java.util.UUID
 interface CardPhotos {
 
     /**
-     * Copies [picture] (e.g. what the photo picker returned) into the app's storage, and returns the new photo's name.
-     * Throws if it can't be read; nothing is left behind then, or when the copy is cancelled.
+     * Stores a re-encoded copy of [picture] (e.g. what the photo picker returned) in the app's storage: downscaled,
+     * upright and without its metadata (#88). Returns the new photo's name. Throws if it can't be read or isn't a
+     * picture that can be decoded; nothing is left behind then, or when the import is cancelled.
      */
     suspend fun import(picture: Uri): String
 

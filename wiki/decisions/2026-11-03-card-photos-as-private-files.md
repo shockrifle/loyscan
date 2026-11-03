@@ -65,8 +65,10 @@ by deleting its custom store, where `ON DELETE CASCADE` deletes the rows in SQLi
   back. Two forms editing one card at once would need two tasks. Not handled.
 - Until #88 copied pictures were full size and kept their metadata (EXIF location included); now they are at most
   2048 px and carry none. They stay private, and they are **excluded from cloud backup** (`data_extraction_rules.xml`, `backup_rules.xml`): an Android auto-backup would
-  otherwise send them, location and all, to the user's Google account unasked, and a few photos would pass its 25 MB
-  quota, which stops the app's backup altogether, database included. Device-to-device transfer takes them on Android
+  otherwise send pictures of the user's cards to their Google account unasked (cloud backup becomes opt-in with #24),
+  and they would pass its 25 MB quota, which stops the app's backup altogether, database included. Even at about 1 MB
+  each since #88, two photos a card pass it at a dozen cards. (Updated 2026-11-03 in the review of #88: this said the
+  backup would send their location and that a few full-size photos would pass the quota.) Device-to-device transfer takes them on Android
   12+. On 10–11 the bare exclude leaves them behind for now: `requireFlags="deviceToDeviceTransfer"` includes would
   carry them, and they are #71's, with the rest of the rules (corrected in the second review: this said the platform
   forces it). (Corrected 2026-11-03 in review: this said only that
