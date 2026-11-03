@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-03 · updated: FileCardPhotos takes its picture opener as a lambda; tests for a copy cancelled midway or failing partway · features/card-photos, workflows/tdd · review of #10
 - 2026-11-03 · updated: orphaned card photos swept on database open (over a day old, no card names them); a save drops a swept pick; the photo decision records sweep over staging · decisions/2026-11-03-card-photos-as-private-files, features/card-photos, architecture, workflows/tdd · review of #10
 - 2026-11-03 · updated: card photos excluded from cloud backup (both rule files); the photo decision's backup consequence corrected · decisions/2026-11-03-card-photos-as-private-files, features/card-photos, apps/android-app · review of #10
 - 2026-11-03 · updated: the card screen shows its photos under the note, a tap opens one full screen; tdd notes that Windows can't delete a file the image loader holds open · features/card-detail, features/card-photos, workflows/tdd · #10

@@ -63,7 +63,8 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
 - `CardPhotoSweepCallbackTest` (on-disk database, closed and reopened), `DatabaseModuleTest.opening_sweepsAnOldPhotoNoCardNames`,
   `FileCardPhotosTest.deleteUnnamed_…`, `exists_…`; `CardFormViewModelTest.aPickedPhotoWhoseFileIsGone_isNotSaved`.
 - `BackupRulesTest`: cloud backup excludes `card_photos/` on Android 12+ and 10–11; device transfer doesn't.
-- `data/photos/FileCardPhotosTest`: a picked picture is copied under a new name, an unreadable one leaves no file,
+- `data/photos/FileCardPhotosTest`: a picked picture is copied under a new name; an unreadable one, one that fails
+  partway and a copy cancelled midway (a blocking stream through the `openPicture` lambda) leave no file;
   delete skips missing names, discard deletes in the background, a name can't leave the directory.
 - `RoomLoyaltyCardRepositoryTest`: `update_deletesAReplacedOrRemovedPhoto_andKeepsTheOthers`,
   `update_keepingThePhotos_deletesNone`, `delete_deletesTheCardsPhotos`, `deleteAll_deletesThoseCardsPhotos_only`.

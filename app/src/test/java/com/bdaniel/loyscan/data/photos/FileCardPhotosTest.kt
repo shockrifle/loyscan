@@ -5,6 +5,8 @@ import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -16,8 +18,11 @@ import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import java.io.File
 import java.io.FileNotFoundException
+import java.io.IOException
+import java.io.InputStream
 import java.time.Duration
 import java.time.Instant
+import java.util.concurrent.CountDownLatch
 
 /** Card photos as files (#10): a picked picture is copied into the photo directory, and deleted from there. */
 @RunWith(AndroidJUnit4::class)
@@ -54,6 +59,44 @@ class FileCardPhotosTest {
     }
 
     @Test
+    fun import_cancelledWhileCopying_leavesNoFile() = runBlocking { // e.g. Back while a cloud picture downloads
+        val reading = CountDownLatch(1)
+        val release = CountDownLatch(1)
+        val slow = object : InputStream() {
+            private var sent = false
+
+            override fun read(): Int {
+                if (sent) return release.await().let { -1 }
+                sent = true
+                reading.countDown()
+                return 1
+            }
+        }
+        val copying = FileCardPhotos(directory, { slow })
+        val job = launch(Dispatchers.Default) { copying.import(PICKED) }
+        reading.await()
+
+        job.cancel()
+        release.countDown()
+        job.join()
+
+        assertThat(directory.listFiles().orEmpty()).isEmpty()
+    }
+
+    @Test
+    fun import_ofAPictureThatFailsPartway_throws_andLeavesNoFile() = runTest {
+        val failing = object : InputStream() {
+            private var sent = false
+
+            override fun read(): Int = if (sent) throw IOException("connection lost") else 1.also { sent = true }
+        }
+
+        assertThrows(IOException::class.java) { runBlocking { FileCardPhotos(directory, { failing }).import(PICKED) } }
+
+        assertThat(directory.listFiles().orEmpty()).isEmpty()
+    }
+
+    @Test
     fun delete_removesThosePhotos_andSkipsNamesWithoutAFile() = runTest {
         val picked = temporaryFolder.newFile("picked.jpg")
         val kept = photos.import(Uri.fromFile(picked))
@@ -66,7 +109,7 @@ class FileCardPhotosTest {
 
     @Test
     fun discard_deletesThosePhotosInTheBackground() = runTest {
-        val background = FileCardPhotos(directory, ApplicationProvider.getApplicationContext<Context>().contentResolver, StandardTestDispatcher(testScheduler))
+        val background = FileCardPhotos(directory, { null }, StandardTestDispatcher(testScheduler))
         val picked = temporaryFolder.newFile("picked.jpg")
         val kept = photos.import(Uri.fromFile(picked))
         val discarded = photos.import(Uri.fromFile(picked))
@@ -104,5 +147,9 @@ class FileCardPhotosTest {
     @Test
     fun file_refusesANameThatLeavesThePhotoDirectory() {
         assertThrows(IllegalArgumentException::class.java) { photos.file("../loyscan.db") }
+    }
+
+    private companion object {
+        val PICKED: Uri = Uri.parse("content://media/picker/0/1")
     }
 }

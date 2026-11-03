@@ -12,6 +12,7 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
 import java.io.FileNotFoundException
+import java.io.InputStream
 import java.time.Instant
 import java.util.UUID
 
@@ -37,12 +38,17 @@ interface CardPhotos {
     suspend fun exists(name: String): Boolean
 }
 
-/** [CardPhotos] as files in [directory] (`files/card_photos`), never in a shared folder. */
+/**
+ * [CardPhotos] as files in [directory] (`files/card_photos`), never in a shared folder. [openPicture] opens a picked
+ * picture; tests pass a stream that blocks or fails partway.
+ */
 class FileCardPhotos(
     private val directory: File,
-    private val contentResolver: ContentResolver,
+    private val openPicture: (Uri) -> InputStream?,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : CardPhotos {
+
+    constructor(directory: File, contentResolver: ContentResolver) : this(directory, contentResolver::openInputStream)
 
     override suspend fun import(picture: Uri): String {
         val name = UUID.randomUUID().toString()
@@ -50,7 +56,7 @@ class FileCardPhotos(
         try {
             withContext(ioDispatcher) {
                 directory.mkdirs()
-                val input = contentResolver.openInputStream(picture) ?: throw FileNotFoundException("Can't open $picture")
+                val input = openPicture(picture) ?: throw FileNotFoundException("Can't open $picture")
                 input.use { from -> file.outputStream().use { from.copyTo(it) } }
             }
             return name
