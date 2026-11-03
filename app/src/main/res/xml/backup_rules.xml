@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?><!--
    What Android 10 and 11 back up; Android 12+ reads data_extraction_rules.xml instead.
    See https://developer.android.com/guide/topics/data/autobackup
-   Card photos (#10) stay out of cloud backup. On these versions device-to-device transfer follows the same rules, so it
-   doesn't take them either. The rest of the backup rules are #71.
+   Card photos (#10) stay out of cloud backup. A bare exclude applies to device-to-device transfer too, so these
+   versions don't transfer them yet: that needs includes with requireFlags="deviceToDeviceTransfer", which make the
+   file include-only. Both belong to the rest of the backup rules, #71.
 -->
 <full-backup-content>
     <exclude domain="file" path="card_photos/" />

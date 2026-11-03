@@ -34,7 +34,7 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
 - **Orphans:** a process killed with a form open (swiped from Recents) skips `onCleared`. On every database open
   `CardPhotoSweepCallback` (`data/local/db/`, added in `di/DatabaseModule.kt`) deletes photo files that no card names
   and that are over a day old; newer ones may belong to a form still open or about to be restored. A save drops a
-  picked photo whose file has gone since ([[2026-11-03-card-photos-as-private-files]]).
+  picked photo whose file has gone since, and keeps the card's own photo for that side ([[2026-11-03-card-photos-as-private-files]]).
 - **Backup:** `files/card_photos/` is excluded from cloud backup; device-to-device transfer takes it on Android 12+
   ([[android-app]], [[2026-11-03-card-photos-as-private-files]]).
 - Images load through `hiltImageLoader()`, never Coil's default ([[coil-image-loading]]).

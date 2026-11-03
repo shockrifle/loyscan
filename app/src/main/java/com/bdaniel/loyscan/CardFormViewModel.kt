@@ -270,11 +270,13 @@ class CardFormViewModel @Inject constructor(
         viewModelScope.launch {
             progress.value = try {
                 withContext(NonCancellable) {
-                    // A pick restored after process death may have been swept since, if it waited over a day.
+                    // A pick restored after process death may have been swept since, if it waited over a day: that side
+                    // stays as the card had it, so the edit doesn't delete the card's own photo.
                     val gone = picked.filterNot { photos.exists(it) }.toSet()
+                    fun unlessGone(photo: String?, cards: String?) = if (photo in gone) cards else photo
                     val card = drafted.copy(
-                        frontPhotoPath = drafted.frontPhotoPath?.takeIf { it !in gone },
-                        backPhotoPath = drafted.backPhotoPath?.takeIf { it !in gone },
+                        frontPhotoPath = unlessGone(drafted.frontPhotoPath, original?.frontPhotoPath),
+                        backPhotoPath = unlessGone(drafted.backPhotoPath, original?.backPhotoPath),
                     )
                     try {
                         if (original == null) cardRepository.add(card) else cardRepository.update(card)

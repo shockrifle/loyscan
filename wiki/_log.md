@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-03 · updated: a save whose pick was swept keeps the card's own photo; the 10–11 transfer gap recorded as #71's rules (requireFlags), not the platform's; a cloud restore's photo-less rows noted · decisions/2026-11-03-card-photos-as-private-files, features/card-photos, apps/android-app · second review of #10
 - 2026-11-03 · updated: path:line refs into DetailScreen, ImageLoaderModule, LoyaltyCardDao, LoyaltyCardMapper and RoomLoyaltyCardRepository refreshed after #10 shifted them (empty-brand-color-crash's DetailScreen ref was already stale) · architecture, features/card-detail, features/card-transition, tech-debt/shared-element-key-from-async-state, tech-debt/empty-brand-color-crash, decisions/2025-12-12-singleton-image-loader, faq, integrations/coil-image-loading, glossary · review of #10
 - 2026-11-03 · updated: FileCardPhotos takes its picture opener as a lambda; tests for a copy cancelled midway or failing partway · features/card-photos, workflows/tdd · review of #10
 - 2026-11-03 · updated: orphaned card photos swept on database open (over a day old, no card names them); a save drops a swept pick; the photo decision records sweep over staging · decisions/2026-11-03-card-photos-as-private-files, features/card-photos, architecture, workflows/tdd · review of #10

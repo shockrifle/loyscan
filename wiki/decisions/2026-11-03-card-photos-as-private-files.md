@@ -43,7 +43,8 @@ by deleting its custom store, where `ON DELETE CASCADE` deletes the rows in SQLi
   (`RoomLoyaltyCardRepositoryTest.delete_…`, `deleteAll_…`, `RoomStoreRepositoryTest.delete_…`).
 - The sweep rather than staging: the age alone tells an abandoned copy from one an open form holds, so a pick needs no
   second location or a move on save that could fail halfway (row written, file not moved). The day is a guess at how
-  long a form waits in Recents; a form older than that loses its unsaved photos, not the card's own.
+  long a form waits in Recents; a form older than that loses its unsaved photos. On that side the save keeps the card's own photo, so the
+  edit doesn't delete it (`anEditWhosePickedPhotoIsGone_keepsTheCardsOwnPhoto`, found in the second review).
 - Files go after the row: if the write fails, the card still has its photos. If a file delete fails, the file is left
   behind (logged), which is better than a card naming a missing file.
 
@@ -54,7 +55,11 @@ by deleting its custom store, where `ON DELETE CASCADE` deletes the rows in SQLi
   are **excluded from cloud backup** (`data_extraction_rules.xml`, `backup_rules.xml`): an Android auto-backup would
   otherwise send them, location and all, to the user's Google account unasked, and a few photos would pass its 25 MB
   quota, which stops the app's backup altogether, database included. Device-to-device transfer takes them on Android
-  12+; on 10–11 it follows the cloud rules and leaves them behind. (Corrected 2026-11-03 in review: this said only that
+  12+. On 10–11 the bare exclude leaves them behind for now: `requireFlags="deviceToDeviceTransfer"` includes would
+  carry them, and they are #71's, with the rest of the rules (corrected in the second review: this said the platform
+  forces it). (Corrected 2026-11-03 in review: this said only that
   they count toward device-to-device transfer, while cloud backup was still on with the template rules.)
 - A photo picked in a form that is then closed is the form's to delete ([[card-photos]]); the sweep catches the
   rest on the next start.
+- Cloud backup still holds `loyscan.db` (#71), but no longer the photos. So a cloud restore brings back rows that name
+  photo files it didn't restore, and nothing clears such a name: the card shows an empty photo.

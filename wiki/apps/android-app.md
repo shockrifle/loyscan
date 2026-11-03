@@ -24,8 +24,9 @@ versionName `1.0` (versionCode 1). minSdk 29, target/compileSdk 36, Java/JVM 21 
   declared `required="false"`: cards can be entered by hand, so phones without a camera can install the app.
 - Native code: zxing-cpp ships `.so` files for `arm64-v8a`, `armeabi-v7a`, `x86` and `x86_64` ([[zxing-cpp]]).
 - `allowBackup="true"`. `data_extraction_rules.xml` (Android 12+) and `backup_rules.xml` (10–11) exclude only
-  `files/card_photos/` from cloud backup ([[card-photos]], #10, `BackupRulesTest`). On 10–11 that also keeps the photos
-  out of device-to-device transfer, which follows the same rules there. Everything else, `loyscan.db` included, is
+  `files/card_photos/` from cloud backup ([[card-photos]], #10, `BackupRulesTest`). On 10–11 the bare exclude also keeps
+  the photos out of device-to-device transfer. Transferring them there needs `<include requireFlags="deviceToDeviceTransfer">`
+  rules, which make the file include-only; that is #71's to write. Everything else, `loyscan.db` included, is
   still in Android auto-backup and restored on install (#71). Seen 2026-11-03: a fresh
   `installDebug` got a `loyscan.db` restored from the Google account's backup at install (`BackupManagerService:
   restoreAtInstall`), written by an older debug build with the same `version = 2` but another schema, and the app

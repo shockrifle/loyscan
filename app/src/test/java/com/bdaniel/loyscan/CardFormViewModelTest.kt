@@ -1119,6 +1119,23 @@ class CardFormViewModelTest {
     }
 
     @Test
+    fun anEditWhosePickedPhotoIsGone_keepsTheCardsOwnPhoto() = runTest { // #10 review: not delete it
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, number = "12345674", frontPhotoPath = "front"))
+        photos.stored += "front"
+        val viewModel = viewModel(CardForm("ruled", cardId = cardId(1)))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.onPhotoPicked(CardPhotoSide.FRONT, PICKED)
+            photos.stored -= "photo-1"
+            viewModel.save()
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        assertThat(cards.cards.value.single().frontPhotoPath).isEqualTo("front")
+    }
+
+    @Test
     fun aPickedPhoto_isRestoredAfterProcessDeath() = runTest { // #10
         val handle = SavedStateHandle(route = CardForm("ruled"))
         val first = viewModel(handle)
