@@ -86,6 +86,9 @@ dependencies {
     // JSON (card-number rules)
     implementation(libs.kotlinx.serialization.json)
 
+    // Card photos' EXIF orientation (PNG and WebP too on API 29, which the platform reader skips)
+    implementation(libs.androidx.exifinterface)
+
     // Barcode drawing (encoding only; pure Java, offline)
     implementation(libs.zxing.core)
 

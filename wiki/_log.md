@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-03 · updated: a card photo's EXIF orientation is read with androidx's ExifInterface, so a PNG or WebP is stored upright on Android 10 too; photo fixtures in PNG/WebP, a test on @Config(sdk = [29]) · features/card-photos, workflows/tdd · #92
 - 2026-11-03 · updated: the cloud-backup exclusion's reasons restated now that photos carry no location and are about 1 MB · decisions/2026-11-03-card-photos-as-private-files · review of #88
 - 2026-11-03 · updated: an imported card photo is stored re-encoded (JPEG, at most 2048 px, EXIF orientation applied, no metadata, transparency on white), no longer byte for byte; native-graphics photo tests, BitmapFactory vs ImageDecoder on Windows · decisions/2026-11-03-card-photos-as-private-files, features/card-photos, workflows/tdd · #88
 - 2026-11-03 · updated: a photo tile's label sits on a solid 60% scrim (the gradient left white text at 2.4:1 on a white photo); a front photo that can't be loaded shows the initials; writeOnePixelPng test helper; list-screen-bypasses-image-loader gets its SHA; ListScreen line refs refreshed · features/card-list, features/card-photos, features/card-transition, workflows/tdd, tech-debt/list-screen-bypasses-image-loader, tech-debt/_index, tech-debt/shared-element-key-from-async-state · review of #10 (list tile)

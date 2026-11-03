@@ -6,7 +6,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Matrix
 import android.graphics.Paint
-import android.media.ExifInterface
+import androidx.exifinterface.media.ExifInterface
 import java.io.File
 import java.io.IOException
 import kotlin.math.max
@@ -67,7 +67,10 @@ private fun sampleSize(longSide: Int, maxSide: Int): Int {
     return sample
 }
 
-/** The picture's EXIF orientation; normal when it has none, or its EXIF can't be read. */
+/**
+ * The picture's EXIF orientation; normal when it has none, or its EXIF can't be read. Through androidx's ExifInterface:
+ * the platform's reads a PNG's or WebP's EXIF only from API 30 (#92).
+ */
 private fun exifOrientation(picture: File): Int = try {
     picture.inputStream().use { ExifInterface(it) }.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
 } catch (e: IOException) {

@@ -27,7 +27,9 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
 - **What is stored** (#88): not the picked file itself but a JPEG at most 2048 px on its long side (a smaller
   picture keeps its size), turned the way its EXIF orientation says, a transparent picture on white, and with no EXIF
   (no location). A picked file that isn't a picture can't be added. Why: [[2026-11-03-card-photos-as-private-files]].
-  Orientation of a HEIF picture is read through the platform `ExifInterface` too; not checked on a device.
+  The orientation is read with androidx's `ExifInterface` (`androidx.exifinterface`), not the platform's, which reads
+  a PNG's or WebP's EXIF only from API 30: on Android 10 such a picture was stored unrotated (#92). Orientation of a
+  HEIF picture is read through it too; not checked on a device (#93).
 - **What the form keeps.** A pick is copied in at once (the picker's read grant ends with the process). Its name goes
   into the `SavedStateHandle` (keys `frontPhoto` / `backPhoto`; `""` means removed), so it survives process death.
   Replacing or removing a photo picked in this form deletes that copy at once. The edited card's own photo stays
@@ -88,7 +90,8 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
 - `data/photos/FileCardPhotosTest` (native graphics, real pixels, #88): `import_dropsTheLocationAndTheOtherExif` (a
   fixture JPEG with GPS, make and date tags), `import_scalesALargePictureDown_toItsLongSideLimit`,
   `import_keepsTheSizeOfASmallerPicture`, `import_turnsThePictureTheWayItsExifOrientationSays` (all eight
-  orientations), `import_putsATransparentPictureOnWhite`, `import_ofAFileThatIsntAPicture_throws_andLeavesNoFile`.
+  orientations), `import_onAndroid10_turnsAPngOrWebpTheWayItsExifOrientationSays` (`@Config(sdk = [29])`, #92),
+  `import_putsATransparentPictureOnWhite`, `import_ofAFileThatIsntAPicture_throws_andLeavesNoFile`.
   Also: a picked picture is stored under a new name; an unreadable one, one that fails
   partway and a copy cancelled midway (a blocking stream through the `openPicture` lambda) leave no file;
   delete skips missing names, discard deletes in the background, a name can't leave the directory.

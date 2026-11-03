@@ -6,8 +6,8 @@ import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import android.media.ExifInterface
 import android.net.Uri
+import androidx.exifinterface.media.ExifInterface
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.common.truth.Truth.assertThat
@@ -22,6 +22,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
+import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import java.io.File
 import java.io.FileNotFoundException
@@ -118,6 +119,21 @@ class FileCardPhotosTest {
         }
 
         assertThat(imported).isEqualTo(shown)
+    }
+
+    @Test
+    @Config(sdk = [29]) // #92: the platform ExifInterface reads a PNG's or WebP's EXIF only from API 30
+    fun import_onAndroid10_turnsAPngOrWebpTheWayItsExifOrientationSays() = runTest {
+        val rotated = Shown(20, 40, Color.BLUE, Color.RED, Color.YELLOW) // aPicture(40, 20) turned 90° clockwise
+
+        val imported = listOf(Bitmap.CompressFormat.PNG to "png", @Suppress("DEPRECATION") Bitmap.CompressFormat.WEBP to "webp")
+            .associate { (format, extension) ->
+                val picked = aPicture(40, 20, "rotated.$extension", format)
+                    .withExif(ExifInterface.TAG_ORIENTATION to ExifInterface.ORIENTATION_ROTATE_90.toString())
+                extension to photos.file(photos.import(Uri.fromFile(picked))).shown()
+            }
+
+        assertThat(imported).isEqualTo(mapOf("png" to rotated, "webp" to rotated))
     }
 
     @Test
@@ -258,8 +274,16 @@ class FileCardPhotosTest {
         assertThrows(IllegalArgumentException::class.java) { photos.file("../loyscan.db") }
     }
 
-    /** A [width]×[height] JPEG at full quality: red top left, green top right, blue bottom left, yellow bottom right. */
-    private fun aPicture(width: Int, height: Int, name: String = "picked.jpg"): File {
+    /**
+     * A [width]×[height] picture at full quality, a JPEG unless [format] says otherwise: red top left, green top right,
+     * blue bottom left, yellow bottom right.
+     */
+    private fun aPicture(
+        width: Int,
+        height: Int,
+        name: String = "picked.jpg",
+        format: Bitmap.CompressFormat = Bitmap.CompressFormat.JPEG,
+    ): File {
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
         val (middle, centre) = width / 2f to height / 2f
@@ -270,10 +294,11 @@ class FileCardPhotosTest {
         quarter(0f, centre, middle, height.toFloat(), Color.BLUE)
         quarter(middle, centre, width.toFloat(), height.toFloat(), Color.YELLOW)
         return temporaryFolder.newFile(name).apply {
-            outputStream().use { bitmap.compress(Bitmap.CompressFormat.JPEG, 100, it) }
+            outputStream().use { bitmap.compress(format, 100, it) }
         }
     }
 
+    /** Writes EXIF [tags] into this JPEG, PNG or WebP, through androidx's ExifInterface: the platform's can't on API 29. */
     private fun File.withExif(vararg tags: Pair<String, String>): File = apply {
         val exif = ExifInterface(path)
         tags.forEach { (tag, value) -> exif.setAttribute(tag, value) }
