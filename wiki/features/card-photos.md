@@ -36,9 +36,12 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
 - **What the form keeps.** A pick is copied in at once (the picker's read grant ends with the process). Its name goes
   into the `SavedStateHandle` (keys `frontPhoto` / `backPhoto`; `""` means removed), so it survives process death.
   Replacing or removing a photo picked in this form deletes that copy at once. The edited card's own photo stays
-  until the edit is saved, then the repository deletes it. A form closed without saving deletes the copies picked in
-  it (`onCleared`, through `CardPhotos.discard`, since `viewModelScope` is already cancelled). A form closed while
-  its save runs leaves them to the save, and a save that then fails deletes them.
+  until the edit is saved, then the repository deletes it. A form closed without saving leaves the copies picked in
+  it to the orphan sweep (Orphans): `onCleared` deletes nothing, because it also runs when the activity is destroyed
+  with the form still on the back stack and its process alive ("Don't keep activities", a background kill), and the
+  form restored from the same saved state still names those copies, so their files must survive (#95; the unanswered
+  capture, below, has the same reason). A form closed while its save runs leaves them to the save, and a save that
+  then fails deletes them (`onCleared` sets `cleared`, which that save reads).
 - **Taking a photo** opens the system camera app (`ACTION_IMAGE_CAPTURE` through `ActivityResultContracts.TakePicture`,
   `ui/PhotoCamera.kt`, `rememberPhotoCamera`), not a camera screen of LoyScan's own. Because the manifest declares the
   camera permission for the scanner, Android refuses that intent until the permission is granted, so "Take photo" asks

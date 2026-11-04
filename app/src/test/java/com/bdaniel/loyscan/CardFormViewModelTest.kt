@@ -954,7 +954,10 @@ class CardFormViewModelTest {
     }
 
     @Test
-    fun aFormClosedWithoutSaving_deletesThePhotosPickedInIt_butNotTheCardsOwn() = runTest { // #10
+    fun aFormClosedWithoutSaving_leavesItsPicksToTheSweep_andKeepsTheCardsOwn() = runTest { // #10, #95
+        // onCleared can't tell a real close from the activity being destroyed with the form still on the
+        // back stack (both clear the ViewModel), so it deletes no picked photo: an abandoned pick is left
+        // to the orphan sweep (#95). The card's own photo must never be deleted here either.
         cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, number = "12345674", frontPhotoPath = "front"))
         photos.stored += "front"
         val owner = ViewModelStore()
@@ -968,7 +971,33 @@ class CardFormViewModelTest {
 
         owner.clear()
 
-        assertThat(photos.stored).containsExactly("front")
+        assertThat(photos.stored).containsExactly("front", "photo-1", "photo-2")
+    }
+
+    @Test
+    fun aFormClearedWithoutClosing_keepsItsPicks_soTheRestoredFormStillSavesThem() = runTest { // #95
+        // The activity destroyed with the form still on the back stack, its process alive ("Don't keep
+        // activities", or a background kill): the ViewModel is cleared, but the form comes back from the
+        // same saved state still naming the picks, so their files must survive.
+        val handle = SavedStateHandle(route = CardForm("ruled"))
+        val owner = ViewModelStore()
+        val first = owner.keep { viewModel(handle) }
+        first.state.test {
+            awaitLoaded()
+            first.onPhotoPicked(CardPhotoSide.FRONT, PICKED)
+            first.onPhotoPicked(CardPhotoSide.BACK, PICKED)
+            cancelAndIgnoreRemainingEvents()
+        }
+        owner.clear()
+
+        val restored = viewModel(handle)
+        restored.state.test {
+            val state = awaitLoaded()
+            assertThat(state.frontPhoto).isEqualTo("photo-1")
+            assertThat(state.backPhoto).isEqualTo("photo-2")
+        }
+
+        assertThat(photos.stored).containsExactly("photo-1", "photo-2")
     }
 
     @Test

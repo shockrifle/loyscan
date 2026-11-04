@@ -288,14 +288,13 @@ class CardFormViewModel @Inject constructor(
     }
 
     /**
-     * A form closed unsaved deletes the photos picked in it; one closed while saving leaves them to the save (#10). A
-     * capture the camera app hasn't answered stays: this also runs when the activity is destroyed behind the camera
-     * app, and the form restored from its saved state then imports it. One never answered is swept.
+     * Deletes no photo: this also runs when the activity is destroyed with the form still on the back stack and its
+     * process alive ("Don't keep activities", a background kill), and the form restored from the same saved state still
+     * names the photos picked in it, so their files must survive (#95). A pick abandoned by a real close, like an
+     * unanswered capture, is left to the orphan sweep. [cleared] lets a save still running delete its picks if it fails.
      */
     override fun onCleared() {
         cleared = true
-        val current = progress.value
-        if (!current.saving && current.savedCardId == null) photos.discard(pickedNames())
     }
 
     /** The name of the photo picked in this form for [side], if there is one. */
