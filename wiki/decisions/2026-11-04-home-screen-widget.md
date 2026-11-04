@@ -1,6 +1,6 @@
 # Home-screen widget: Glance, an intent extra, and a first slice
 
-**Status:** Active · **Date:** 2026-11-04 · **Issue:** [#11](https://github.com/shockrifle/loyscan/issues/11) · **Commits:** _this commit_
+**Status:** Active · **Date:** 2026-11-04 · **Issue:** [#11](https://github.com/shockrifle/loyscan/issues/11) (open: slice) · **Commits:** 61e9d13 + this commit
 
 The home-screen widget ([[card-widget]]), and the three choices that shaped its first slice.
 
@@ -33,12 +33,18 @@ intent `MainActivity` reads, not through URI deep links (the share flow, [[add-c
 
 ## Consequences
 
-- The irreducible Glance/AppWidget glue — `CardWidget`'s `provideGlance` wiring and `CardWidgetReceiver` — runs
-  only on a real home screen and is excluded from coverage, like the theme and icons. All logic (`toWidgetTiles`,
-  the colour helpers, the intent, the navigation) is tested.
-- A widget tap opens the card over whatever is on screen, and counts a use (#4). It does **not** forward to a new
-  task the way a share does (#83): a share is content arriving; a widget tap is the user choosing a card.
-- **Follow-ups (not built):** front-photo tiles, and an empty-state message when there are no cards.
+- The irreducible Glance/AppWidget glue lives in the `com.bdaniel.loyscan.widget.glance` package (`CardWidget`'s
+  `provideGlance` wiring, `CardWidgetReceiver`, `GlanceCardWidgetRefresher`), runs only on a real home screen, and is
+  excluded from coverage by package, like the theme and icons. All logic (`toWidgetTiles`, the colour helpers, the
+  live-update trigger, the intent, the navigation) stays in `com.bdaniel.loyscan.widget` and is tested.
+- **Staying in step with the cards** needs an explicit trigger, because Glance renders a snapshot and stops
+  following a `Flow` once its session ends. `CardWidgetUpdater` observes the tiles and calls `updateAll` on a
+  change; it is started from the Application, guarded so it stays off the database when no widget is placed.
+- **A warm tap opens the card without discarding a half-filled form** (the #83 concern, decided for the widget):
+  `openCard` pushes the card over whatever is open instead of popping to the list, and `SINGLE_TOP` lands the tap in
+  the running task. The exact task behaviour of a `standard` activity launched from a widget can't be proven on
+  Robolectric, so it is an on-device check and **#11 stays open** (`Refs`, not `Fixes`) until confirmed.
 - `glance-testing`'s unit API matches a tile's click by component, not by intent extras, so the "right card is
   opened" guarantee rests on `CardWidgetTilesTest` (cardId↔tile) plus the intent/navigation tests, not on the
-  content test.
+  content test — another on-device check.
+- **Follow-ups (not built):** front-photo tiles, and an empty-state message when there are no cards.

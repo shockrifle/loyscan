@@ -222,12 +222,14 @@ private fun addCardStep(storeId: String, scannedContent: String?, scannedFormat:
 
 
 /**
- * Opens the card [cardId] (its store colour [color]) from the home-screen widget (#11), over the list, so Back returns
- * to the list. Opening a card is a use at a till, as tapping it in the list is (#4), so the open counts one.
+ * Opens the card [cardId] (its store colour [color]) from the home-screen widget (#11). It pushes the card over
+ * whatever is open rather than popping back to the list, so a half-filled add/edit form the user was on survives a
+ * widget tap and Back returns to it (#83's concern, decided for the widget in #11). `launchSingleTop` keeps a second
+ * tap on the same card from stacking a duplicate. Opening a card is a use at a till, as tapping it in the list is (#4).
  */
 fun NavController.openCard(cardId: String, color: String) {
     navigate(Detail(cardId, color)) {
-        popUpTo<CardList>()
+        launchSingleTop = true
     }
 }
 

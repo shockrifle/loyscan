@@ -3,9 +3,11 @@ package com.bdaniel.loyscan
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import android.content.Intent
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import com.bdaniel.loyscan.data.local.db.AppDatabase
 import com.bdaniel.loyscan.testing.CARD_ID
 import com.bdaniel.loyscan.testing.aLoyaltyCardEntity
@@ -64,6 +66,18 @@ class WidgetTapOpensCardTest {
         scenario = ActivityScenario.launch(intent)
 
         waitForText("Test Store") // the detail top bar is the store name — it is not shown on the list tile
+        composeRule.onNodeWithText("My loyalty card").assertExists()
+    }
+
+    @Test
+    fun aWarmOpenCardIntent_opensTheCard_whileTheAppIsAlreadyRunning() {
+        scenario = ActivityScenario.launch(Intent(ApplicationProvider.getApplicationContext(), MainActivity::class.java))
+        waitForText("My Cards") // the app opens on the card list
+
+        val intent = openCardIntent(ApplicationProvider.getApplicationContext(), CARD_ID, "#336699")
+        scenario!!.onActivity { InstrumentationRegistry.getInstrumentation().callActivityOnNewIntent(it, intent) }
+
+        waitForText("Test Store")
         composeRule.onNodeWithText("My loyalty card").assertExists()
     }
 

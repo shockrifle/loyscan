@@ -1,4 +1,4 @@
-package com.bdaniel.loyscan.widget
+package com.bdaniel.loyscan.widget.glance
 
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver

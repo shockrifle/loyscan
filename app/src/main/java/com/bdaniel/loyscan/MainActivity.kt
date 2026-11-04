@@ -141,9 +141,14 @@ data class OpenCard(val cardId: String, val color: String)
 internal const val EXTRA_OPEN_CARD_ID = "com.bdaniel.loyscan.extra.OPEN_CARD_ID"
 internal const val EXTRA_OPEN_CARD_COLOR = "com.bdaniel.loyscan.extra.OPEN_CARD_COLOR"
 
-/** The intent a widget tile fires to open the card [cardId] (its store [color]) in LoyScan (#11). */
+/**
+ * The intent a widget tile fires to open the card [cardId] (its store [color]) in LoyScan (#11). `SINGLE_TOP` so a tap
+ * while the app is running reaches the one `MainActivity` through [onCreate]'s `addOnNewIntentListener` instead of
+ * stacking a second instance; `MainActivity` is the only activity, so it is always at the top of its task.
+ */
 internal fun openCardIntent(context: Context, cardId: String, color: String): Intent =
     Intent(context, MainActivity::class.java)
+        .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
         .putExtra(EXTRA_OPEN_CARD_ID, cardId)
         .putExtra(EXTRA_OPEN_CARD_COLOR, color)
 

@@ -29,6 +29,9 @@ class CardWidgetContentTest {
 
         onNode(hasText("Tesco")).assertExists()
         onNode(hasText("Aldi")).assertExists()
+        // One clickable tile per card. That a tile opens its own card (a start-activity intent carrying that card's
+        // id) is checked on a device: the Glance unit API matches a start-activity action by component and
+        // ActionParameters, not by the intent extras the tile uses, so it can't assert the id here (#11 field check).
         onAllNodes(hasClickAction()).assertCountEquals(2)
     }
 
