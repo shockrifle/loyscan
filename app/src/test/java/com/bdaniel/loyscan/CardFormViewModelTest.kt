@@ -995,9 +995,15 @@ class CardFormViewModelTest {
             val state = awaitLoaded()
             assertThat(state.frontPhoto).isEqualTo("photo-1")
             assertThat(state.backPhoto).isEqualTo("photo-2")
+            restored.onNumberChange("12345674")
+            restored.save()
+            assertThat(expectMostRecentItem().savedCardId).isNotNull()
         }
 
         assertThat(photos.stored).containsExactly("photo-1", "photo-2")
+        val saved = cards.cards.value.single()
+        assertThat(saved.frontPhotoPath).isEqualTo("photo-1")
+        assertThat(saved.backPhotoPath).isEqualTo("photo-2")
     }
 
     @Test
@@ -1038,12 +1044,16 @@ class CardFormViewModelTest {
     }
 
     @Test
-    fun aSaveThatFailsAfterTheFormClosed_deletesItsPhoto() = runTest { // #10, #64
+    fun aSaveThatFailsAfterTheFormClosed_leavesItsPickToTheSweep_notLostFromARestoredForm() = runTest { // #10, #64, #95
+        // A save runs NonCancellable even after the form is cleared. It can't tell a real close from an activity
+        // destroyed with the form still on the back stack, so a save that then fails deletes no pick: the restored
+        // form still names it, so its file must survive, and an abandoned one is left to the orphan sweep (#95).
         val gate = CompletableDeferred<Unit>()
         cards.addGate = gate
         cards.addFailure = IllegalStateException("disk full")
+        val handle = SavedStateHandle(route = CardForm("ruled"))
         val owner = ViewModelStore()
-        val viewModel = owner.keep { viewModel(CardForm("ruled")) }
+        val viewModel = owner.keep { viewModel(handle) }
         viewModel.state.test {
             awaitLoaded()
             viewModel.onNumberChange("12345674")
@@ -1055,7 +1065,11 @@ class CardFormViewModelTest {
         owner.clear()
         gate.complete(Unit)
 
-        assertThat(photos.stored).isEmpty()
+        val restored = viewModel(handle)
+        restored.state.test {
+            assertThat(awaitLoaded().frontPhoto).isEqualTo("photo-1")
+        }
+        assertThat(photos.stored).contains("photo-1")
     }
 
     @Test

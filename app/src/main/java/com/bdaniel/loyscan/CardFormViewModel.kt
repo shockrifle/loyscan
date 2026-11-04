@@ -153,9 +153,6 @@ class CardFormViewModel @Inject constructor(
         ::PickedPhotos,
     )
 
-    /** The form's ViewModel is gone (the form closed); a save still running then deletes its photos if it fails. */
-    private var cleared = false
-
     private val progress = MutableStateFlow(Progress())
 
     /**
@@ -288,14 +285,13 @@ class CardFormViewModel @Inject constructor(
     }
 
     /**
-     * Deletes no photo: this also runs when the activity is destroyed with the form still on the back stack and its
-     * process alive ("Don't keep activities", a background kill), and the form restored from the same saved state still
-     * names the photos picked in it, so their files must survive (#95). A pick abandoned by a real close, like an
-     * unanswered capture, is left to the orphan sweep. [cleared] lets a save still running delete its picks if it fails.
+     * Deliberately deletes nothing (#95). onCleared also runs when the activity is destroyed with the form still on the
+     * back stack and its process alive ("Don't keep activities", a background kill), and the form restored from the same
+     * saved state still names the photos picked in it, so their files must survive. It can't tell that from a real close,
+     * so an abandoned pick, like an unanswered camera capture, is left to the orphan sweep — including one a save leaves
+     * when it fails after the form closed, which for the same reason no longer deletes its picks either.
      */
-    override fun onCleared() {
-        cleared = true
-    }
+    override fun onCleared() = Unit
 
     /** The name of the photo picked in this form for [side], if there is one. */
     private fun picked(side: CardPhotoSide): String? = savedStateHandle.get<String>(side.key)?.takeIf { it != REMOVED }
@@ -339,13 +335,7 @@ class CardFormViewModel @Inject constructor(
                         frontPhotoPath = unlessGone(drafted.frontPhotoPath, original?.frontPhotoPath),
                         backPhotoPath = unlessGone(drafted.backPhotoPath, original?.backPhotoPath),
                     )
-                    try {
-                        if (original == null) cardRepository.add(card) else cardRepository.update(card)
-                    } catch (e: Exception) {
-                        // Nothing is left to save the photos picked in the closed form, so they go (#10).
-                        if (cleared) photos.discard(pickedNames())
-                        throw e
-                    }
+                    if (original == null) cardRepository.add(card) else cardRepository.update(card)
                 }
                 Progress(savedCardId = drafted.id)
             } catch (e: CancellationException) {

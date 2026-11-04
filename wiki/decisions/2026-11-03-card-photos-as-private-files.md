@@ -80,8 +80,13 @@ by deleting its custom store, where `ON DELETE CASCADE` deletes the rows in SQLi
   carry them, and they are #71's, with the rest of the rules (corrected in the second review: this said the platform
   forces it). (Corrected 2026-11-03 in review: this said only that
   they count toward device-to-device transfer, while cloud backup was still on with the template rules.)
-- A photo picked in a form that is then closed is the form's to delete ([[card-photos]]); the sweep catches the
-  rest on the next start.
+- A photo picked in a form that is then abandoned is left to the orphan sweep: the form's `onCleared` deletes no pick,
+  because it can't tell a real close from the activity being destroyed with the form still on the back stack, which the
+  restored form must survive ([[card-photos]], #95). So an abandoned pick — and a pick a failed save leaves after the
+  form closed — lingers until the next database open after it is a day old, rather than going at once on Back. The files
+  are small (at most ~1 MB each since #88) and private, so the latency is accepted; deleting on a real back-stack pop
+  would need a signal from the UI layer the ViewModel doesn't have. (Changed 2026-11-04 for #95: `onCleared` and the
+  failed-save path used to delete the picks at once, which lost them when the clear was an activity destroy, not a close.)
 - Cloud backup still holds `loyscan.db` (#71), but no longer the photos. So a cloud restore brings back rows that name
   photo files it didn't restore. Since #87 such a photo is shown as none, on the card screen and in the form, and a
   saved edit clears its name ([[card-photos]]). (Updated 2026-11-03: this said nothing clears the name and the card

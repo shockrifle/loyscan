@@ -40,8 +40,8 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   it to the orphan sweep (Orphans): `onCleared` deletes nothing, because it also runs when the activity is destroyed
   with the form still on the back stack and its process alive ("Don't keep activities", a background kill), and the
   form restored from the same saved state still names those copies, so their files must survive (#95; the unanswered
-  capture, below, has the same reason). A form closed while its save runs leaves them to the save, and a save that
-  then fails deletes them (`onCleared` sets `cleared`, which that save reads).
+  capture, below, has the same reason). A form closed while its save runs leaves them to the save; if that save then
+  fails it keeps the picks too (for the same reason — the clear may be an activity destroy), and they go to the sweep.
 - **Taking a photo** opens the system camera app (`ACTION_IMAGE_CAPTURE` through `ActivityResultContracts.TakePicture`,
   `ui/PhotoCamera.kt`, `rememberPhotoCamera`), not a camera screen of LoyScan's own. Because the manifest declares the
   camera permission for the scanner, Android refuses that intent until the permission is granted, so "Take photo" asks
@@ -93,9 +93,9 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   `theOpenPhoto_staysOpenWhenThePhoneTurns`. End to end: `AppNavigationTest.aCardsPhoto_isShownOnTheCard`,
   `deletingACardFromTheList_deletesItsPhotoFiles`.
 - `CardFormViewModelTest`: `aPickedFrontPhoto_…`, `editingACard_startsWithItsPhotos_…`, `removingACardsPhoto_…`,
-  `aPhotoPickedInTheForm_isDeleted_whenAnotherReplacesIt_orItIsRemoved`, `aFormClosedWithoutSaving_…`,
-  `aSavedForm_keepsItsPhotos_…`, `aSaveStillRunningWhenTheFormCloses_keepsItsPhoto`,
-  `aSaveThatFailsAfterTheFormClosed_deletesItsPhoto`, `aFailedSave_keepsThePhotos_…`, `whileAPhotoIsCopiedIn_…`,
+  `aPhotoPickedInTheForm_isDeleted_whenAnotherReplacesIt_orItIsRemoved`, `aFormClosedWithoutSaving_leavesItsPicksToTheSweep_…`,
+  `aFormClearedWithoutClosing_keepsItsPicks_…` (#95), `aSavedForm_keepsItsPhotos_…`, `aSaveStillRunningWhenTheFormCloses_keepsItsPhoto`,
+  `aSaveThatFailsAfterTheFormClosed_leavesItsPickToTheSweep_…` (#95), `aFailedSave_keepsThePhotos_…`, `whileAPhotoIsCopiedIn_…`,
   `aPictureThatCantBeCopiedIn_…`, `aCancelledPick_…`, `noPhotoCanBePickedOrRemoved_onceSavingHasStarted`,
   `aPickedPhoto_isRestoredAfterProcessDeath`. Camera captures: `aPhotoTaken_isImportedLikeAPick_andItsCaptureDeleted`,
   `aCameraThatTookNoPhoto_…`, `aPhotoTakenThatCantBeImported_…`, `aPhotoTaken_isImported_afterProcessDeathWhileTheCameraWasOpen`,

@@ -34,7 +34,7 @@ interface CardPhotos {
     /** Deletes these photos. A name without a file, or one that isn't a photo's name, is skipped. */
     suspend fun delete(names: Collection<String>)
 
-    /** Deletes these photos in the background, for a caller whose own scope is ending (a form being closed). */
+    /** Deletes these photos in the background, so the caller needn't wait: a photo replaced or removed, or a capture the camera app never answered. */
     fun discard(names: Collection<String>)
 
     /** Whether the photo [name] is still there: an old one no card names is swept when the database opens. */
