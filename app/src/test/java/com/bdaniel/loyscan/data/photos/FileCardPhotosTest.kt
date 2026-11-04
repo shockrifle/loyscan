@@ -205,6 +205,138 @@ class FileCardPhotosTest {
     }
 
     @Test
+    fun stage_storesTheRawPickedBytes_inThePhotoDirectory_underANewName() = runTest { // #10: for the crop screen to show
+        val picked = aPicture(40, 20)
+
+        val first = photos.stage(Uri.fromFile(picked))
+        val second = photos.stage(Uri.fromFile(picked))
+
+        assertThat(first).isNotEqualTo(second)
+        assertThat(photos.file(first).parentFile).isEqualTo(directory)
+        assertThat(photos.file(first).readBytes()).isEqualTo(picked.readBytes()) // as it is, so the crop screen reads its EXIF
+        assertThat(picked.exists()).isTrue()
+    }
+
+    @Test
+    fun stage_ofAFileThatIsntAPicture_throws_andLeavesNoFile() = runTest { // the crop screen only shows a real picture
+        val picked = temporaryFolder.newFile("picked.jpg").apply { writeBytes(byteArrayOf(1, 2, 3)) }
+
+        assertThrows(IOException::class.java) { runBlocking { photos.stage(Uri.fromFile(picked)) } }
+
+        assertThat(directory.listFiles().orEmpty()).isEmpty()
+    }
+
+    @Test
+    fun stage_ofAPictureThatCantBeRead_throws_andLeavesNoFile() = runTest {
+        val missing = Uri.fromFile(File(temporaryFolder.root, "gone.jpg"))
+
+        assertThrows(FileNotFoundException::class.java) { runBlocking { photos.stage(missing) } }
+
+        assertThat(directory.listFiles().orEmpty()).isEmpty()
+    }
+
+    @Test
+    fun stage_cancelledWhileCopying_leavesNoFile() = runBlocking {
+        val reading = CountDownLatch(1)
+        val release = CountDownLatch(1)
+        val slow = object : InputStream() {
+            private var sent = false
+
+            override fun read(): Int {
+                if (sent) return release.await().let { -1 }
+                sent = true
+                reading.countDown()
+                return 1
+            }
+        }
+        val copying = FileCardPhotos(directory, { slow })
+        val job = launch(Dispatchers.Default) { copying.stage(PICKED) }
+        reading.await()
+
+        job.cancel()
+        release.countDown()
+        job.join()
+
+        assertThat(directory.listFiles().orEmpty()).isEmpty()
+    }
+
+    @Test
+    fun stage_ofAPictureThatFailsPartway_throws_andLeavesNoFile() = runTest {
+        val failing = object : InputStream() {
+            private var sent = false
+
+            override fun read(): Int = if (sent) throw IOException("connection lost") else 1.also { sent = true }
+        }
+
+        assertThrows(IOException::class.java) { runBlocking { FileCardPhotos(directory, { failing }).stage(PICKED) } }
+
+        assertThat(directory.listFiles().orEmpty()).isEmpty()
+    }
+
+    @Test
+    fun crop_storesOnlyTheFramedPartOfTheUprightPicture_andDeletesTheStagedSource() = runTest { // #10
+        val picked = aPicture(40, 20)
+        suspend fun cropped(crop: PhotoCrop) = photos.crop(photos.stage(Uri.fromFile(picked)), crop)
+
+        val topLeft = cropped(PhotoCrop(0f, 0f, 0.5f, 0.5f))
+        val rightHalf = cropped(PhotoCrop(0.5f, 0f, 1f, 1f))
+        val bottomRight = cropped(PhotoCrop(0.5f, 0.5f, 1f, 1f))
+
+        assertThat(photos.file(topLeft).shown()).isEqualTo(Shown(20, 10, Color.RED, Color.RED, Color.RED))
+        assertThat(photos.file(rightHalf).shown()).isEqualTo(Shown(20, 20, Color.GREEN, Color.GREEN, Color.YELLOW))
+        assertThat(photos.file(bottomRight).shown()).isEqualTo(Shown(20, 10, Color.YELLOW, Color.YELLOW, Color.YELLOW))
+        assertThat(directory.list()).asList().containsExactly(topLeft, rightHalf, bottomRight) // no staged files left
+    }
+
+    @Test
+    fun crop_isInTheUprightPicture_evenWhenTheSourceIsRotated() = runTest { // #10: the user frames the picture upright
+        val rotated = aPicture(40, 20, "rotated.jpg")
+            .withExif(ExifInterface.TAG_ORIENTATION to ExifInterface.ORIENTATION_ROTATE_90.toString())
+
+        val topLeft = photos.crop(photos.stage(Uri.fromFile(rotated)), PhotoCrop(0f, 0f, 0.5f, 0.5f))
+
+        // Upright the picture is 20×40, blue top-left (see import_turnsThePicture…); its top-left quarter is all blue.
+        assertThat(photos.file(topLeft).shown()).isEqualTo(Shown(10, 20, Color.BLUE, Color.BLUE, Color.BLUE))
+    }
+
+    @Test
+    fun crop_whole_storesTheUprightDownscaledPicture_withoutExif() = runTest { // #88 behaviours through the crop path
+        val picked = aPicture(40, 20).withExif(
+            ExifInterface.TAG_GPS_LATITUDE to "47/1,29/1,0/1",
+            ExifInterface.TAG_GPS_LATITUDE_REF to "N",
+            ExifInterface.TAG_MAKE to "Example",
+        )
+
+        val imported = photos.file(photos.crop(photos.stage(Uri.fromFile(picked)), PhotoCrop.WHOLE))
+
+        assertThat(imported.shown()).isEqualTo(Shown(40, 20, Color.RED, Color.GREEN, Color.BLUE))
+        val exif = ExifInterface(imported.path)
+        assertThat(exif.getAttribute(ExifInterface.TAG_GPS_LATITUDE)).isNull()
+        assertThat(exif.getAttribute(ExifInterface.TAG_MAKE)).isNull()
+    }
+
+    @Test
+    fun crop_ofANonPictureStagedFile_throws_andLeavesNoFile() = runTest { // a corrupt capture the camera app wrote
+        val capture = photos.newCapture()
+        File(capture.uri.path!!).writeBytes(byteArrayOf(1, 2, 3))
+
+        assertThrows(IOException::class.java) { runBlocking { photos.crop(capture.name, PhotoCrop.WHOLE) } }
+
+        assertThat(directory.listFiles().orEmpty()).isEmpty() // the staged capture goes too
+    }
+
+    @Test
+    fun crop_ofAStagedCapture_storesIt_andDeletesTheCapture() = runTest { // #10: a captured photo is a staged file already
+        val capture = photos.newCapture()
+        aPicture(40, 20).copyTo(File(capture.uri.path!!))
+
+        val cropped = photos.crop(capture.name, PhotoCrop.WHOLE)
+
+        assertThat(photos.file(cropped).shown()).isEqualTo(Shown(40, 20, Color.RED, Color.GREEN, Color.BLUE))
+        assertThat(directory.list()).asList().containsExactly(cropped)
+    }
+
+    @Test
     fun newCapture_isAFileInThePhotoDirectory_underANewName_thatImportsLikeAPick() = runTest { // #10: the camera app writes it
         val first = photos.newCapture()
         val second = photos.newCapture()

@@ -3,6 +3,7 @@ package com.bdaniel.loyscan.testing
 import android.net.Uri
 import com.bdaniel.loyscan.data.photos.CardPhotos
 import com.bdaniel.loyscan.data.photos.PhotoCapture
+import com.bdaniel.loyscan.data.photos.PhotoCrop
 import kotlinx.coroutines.CompletableDeferred
 
 /**
@@ -27,6 +28,25 @@ class FakeCardPhotos(vararg stored: String) : CardPhotos {
         importFailure?.let { throw it }
         imported += picture
         return "photo-${imported.size}".also { stored += it }
+    }
+
+    /** The pictures staged so far, in order; a staged file is named `staged-1`, `staged-2`… and exists. */
+    val staged = mutableListOf<Uri>()
+
+    override suspend fun stage(picture: Uri): String {
+        importGate?.await()
+        importFailure?.let { throw it }
+        staged += picture
+        return "staged-${staged.size}".also { stored += it }
+    }
+
+    /** The crops made so far, in order: the staged name and the frame it was cropped to. */
+    val cropped = mutableListOf<Pair<String, PhotoCrop>>()
+
+    override suspend fun crop(name: String, crop: PhotoCrop): String {
+        cropped += name to crop
+        stored -= name
+        return "photo-${cropped.size}".also { stored += it }
     }
 
     override suspend fun delete(names: Collection<String>) {

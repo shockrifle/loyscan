@@ -20,12 +20,30 @@ internal const val MAX_PHOTO_SIDE = 2048
 private const val PHOTO_JPEG_QUALITY = 90
 
 /**
- * Writes the picture in [source] to [target] as a JPEG at most [maxSide] pixels on its long side, never enlarged, and
- * turned the way its EXIF orientation says (#88). The JPEG is encoded afresh, so none of the picture's metadata (its
- * location included) comes along. A transparent picture is put on white, since a JPEG has none and would show it black.
- * Throws an [IOException] if [source] isn't a picture that can be decoded.
+ * A sub-rectangle of a picture to keep, as fractions of its upright width and height (#10): `(0, 0)` is the top left,
+ * `(1, 1)` the bottom right. [WHOLE] keeps all of it. The crop screen ([com.bdaniel.loyscan.ui.PhotoCropScreen]) makes
+ * one from the user's pan and zoom; it is in the upright picture, the way its EXIF orientation shows it, so
+ * [encodeCardPhoto] turns the picture before it crops.
  */
-internal fun encodeCardPhoto(source: File, target: File, maxSide: Int = MAX_PHOTO_SIDE) {
+data class PhotoCrop(val left: Float, val top: Float, val right: Float, val bottom: Float) {
+    init {
+        require(left in 0f..right && right <= 1f) { "left..right must be within 0..1: $left..$right" }
+        require(top in 0f..bottom && bottom <= 1f) { "top..bottom must be within 0..1: $top..$bottom" }
+        require(right > left && bottom > top) { "the crop must have an area: $left..$right, $top..$bottom" }
+    }
+
+    companion object {
+        val WHOLE = PhotoCrop(0f, 0f, 1f, 1f)
+    }
+}
+
+/**
+ * Writes the picture in [source] to [target] as a JPEG at most [maxSide] pixels on its long side, never enlarged,
+ * turned the way its EXIF orientation says and cropped to [crop] (#88, #10). The JPEG is encoded afresh, so none of the
+ * picture's metadata (its location included) comes along. A transparent picture is put on white, since a JPEG has none
+ * and would show it black. Throws an [IOException] if [source] isn't a picture that can be decoded.
+ */
+internal fun encodeCardPhoto(source: File, target: File, crop: PhotoCrop = PhotoCrop.WHOLE, maxSide: Int = MAX_PHOTO_SIDE) {
     // From a stream closed here: under Robolectric on Windows, decodeFile left the file open, so it couldn't be deleted.
     fun decode(options: BitmapFactory.Options) = source.inputStream().use { BitmapFactory.decodeStream(it, null, options) }
     val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }.also(::decode)
@@ -38,11 +56,17 @@ internal fun encodeCardPhoto(source: File, target: File, maxSide: Int = MAX_PHOT
         val orientation = exifOrientation(source)
         val turned = orientation in TURNED_ORIENTATIONS
         val (shownWidth, shownHeight) = if (turned) decoded.height to decoded.width else decoded.width to decoded.height
-        val scale = min(1f, maxSide.toFloat() / max(shownWidth, shownHeight))
-        val width = max(1, (shownWidth * scale).roundToInt())
-        val height = max(1, (shownHeight * scale).roundToInt())
+        // The kept region, in the upright picture's pixels. The frame is cropped after the picture is turned upright.
+        val cropLeft = crop.left * shownWidth
+        val cropTop = crop.top * shownHeight
+        val cropWidth = (crop.right - crop.left) * shownWidth
+        val cropHeight = (crop.bottom - crop.top) * shownHeight
+        val scale = min(1f, maxSide.toFloat() / max(cropWidth, cropHeight))
+        val width = max(1, (cropWidth * scale).roundToInt())
+        val height = max(1, (cropHeight * scale).roundToInt())
         val transform = orientationMatrix(orientation, decoded.width.toFloat(), decoded.height.toFloat()).apply {
-            postScale(width.toFloat() / shownWidth, height.toFloat() / shownHeight)
+            postTranslate(-cropLeft, -cropTop)
+            postScale(width.toFloat() / cropWidth, height.toFloat() / cropHeight)
         }
         val photo = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         try {
@@ -58,6 +82,13 @@ internal fun encodeCardPhoto(source: File, target: File, maxSide: Int = MAX_PHOT
     } finally {
         decoded.recycle()
     }
+}
+
+/** Whether [file] holds a picture that can be decoded: its bounds read to a positive size. For a staged pick (#10). */
+internal fun isPicture(file: File): Boolean {
+    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+    file.inputStream().use { BitmapFactory.decodeStream(it, null, bounds) }
+    return bounds.outWidth > 0 && bounds.outHeight > 0
 }
 
 /** The largest power of two to divide [longSide] by that still leaves at least [maxSide]: BitmapFactory's `inSampleSize`. */

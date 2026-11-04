@@ -14,6 +14,7 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
 import java.io.FileNotFoundException
+import java.io.IOException
 import java.io.InputStream
 import java.time.Instant
 import java.util.UUID
@@ -30,6 +31,22 @@ interface CardPhotos {
      * picture that can be decoded; nothing is left behind then, or when the import is cancelled.
      */
     suspend fun import(picture: Uri): String
+
+    /**
+     * Copies [picture] (e.g. what the photo picker returned) into the app's storage as it is, for the crop screen to
+     * show and [crop] to store (#10). Returns the staged file's name, a valid photo name so the app's loader can show
+     * it; it survives process death, since the picker's read grant ends with the process. A captured photo is written
+     * straight into a [newCapture] file, which is a staged file already, so it isn't staged again. Throws if [picture]
+     * can't be read or isn't a picture that can be decoded; nothing is left behind then, or when the copy is cancelled.
+     */
+    suspend fun stage(picture: Uri): String
+
+    /**
+     * Stores the staged photo [name] (from [stage] or a [newCapture] the camera app answered) re-encoded and cropped to
+     * [crop] (#10, #88): a JPEG, downscaled, upright and without its metadata. Returns the new photo's name and deletes
+     * the staged file. Throws if it can't be decoded or encoded; nothing is left behind then, the staged file included.
+     */
+    suspend fun crop(name: String, crop: PhotoCrop): String
 
     /** Deletes these photos. A name without a file, or one that isn't a photo's name, is skipped. */
     suspend fun delete(names: Collection<String>)
@@ -97,6 +114,49 @@ class FileCardPhotos(
             throw e
         } finally {
             withContext(NonCancellable + ioDispatcher) { original.delete() }
+        }
+    }
+
+    /**
+     * Copies the picture in as it is (#10). The copy is read locally, so a cloud picture is downloaded once; a half-
+     * written one left by a failure, a cancel or a killed process is deleted, or swept with the orphans. A file that
+     * isn't a picture is refused here, so the crop screen only ever shows one that can be shown ([encodeCardPhoto]).
+     */
+    override suspend fun stage(picture: Uri): String {
+        val name = UUID.randomUUID().toString()
+        val file = file(name)
+        try {
+            withContext(ioDispatcher) {
+                directory.mkdirs()
+                val input = openPicture(picture) ?: throw FileNotFoundException("Can't open $picture")
+                input.use { from -> file.outputStream().use { from.copyTo(it) } }
+                ensureActive()
+                if (!isPicture(file)) throw IOException("Not a picture: $picture")
+            }
+            return name
+        } catch (e: Throwable) { // cancelled too: a half-written or unused file mustn't stay
+            withContext(NonCancellable + ioDispatcher) { file.delete() }
+            throw e
+        }
+    }
+
+    /**
+     * Stores the staged photo re-encoded and cropped ([encodeCardPhoto]): smaller, the right way up, without its
+     * metadata (#88) and framed to the card (#10). The staged file goes once the photo is written; a half-written final
+     * left by a failure is deleted, and the staged file with it.
+     */
+    override suspend fun crop(name: String, crop: PhotoCrop): String {
+        val staged = file(name)
+        val cropped = UUID.randomUUID().toString()
+        val file = file(cropped)
+        try {
+            withContext(ioDispatcher) { encodeCardPhoto(staged, file, crop) }
+            return cropped
+        } catch (e: Throwable) {
+            withContext(NonCancellable + ioDispatcher) { file.delete() }
+            throw e
+        } finally {
+            withContext(NonCancellable + ioDispatcher) { staged.delete() }
         }
     }
 
