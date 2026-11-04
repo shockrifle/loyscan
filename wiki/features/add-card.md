@@ -114,8 +114,10 @@ with the picture's barcode (#77, below). Everything runs offline on the local da
   (`CardFormState.storeGone`). Tests: `CardFormViewModelTest.aStoreRemovedWhileTheFormIsOpen_…`,
   `CardFormScreenTest.aStoreRemovedWhileTheFormIsOpen_…`. The store picker sits below the form on the back stack, so
   today only a stale route reaches this.
-- Front and back photos of the card can be taken with the camera app or added from the photo picker ([[card-photos]], #10).
-- Label, note, typed number, picked photos and a switched store are kept in the `SavedStateHandle`, so they survive process death.
+- Front and back photos of the card can be taken with the camera app or added from the photo picker, then framed to the
+  card's ratio in a crop screen ([[card-photos]], #10).
+- Label, note, typed number, picked photos, a photo waiting in the crop screen and a switched store are kept in the
+  `SavedStateHandle`, so they survive process death.
 - `onNumberChange` (the read-only guard) and `save` read `state.value`, so both refuse until the store has loaded:
   the initial state is editable, and the stores come from Room after construction. `state` is started `Eagerly` so it
   stays current when nothing observes it (#50; the pre-load gap was found in review).

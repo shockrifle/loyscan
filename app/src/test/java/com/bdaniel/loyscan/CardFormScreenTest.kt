@@ -18,7 +18,11 @@ import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.testing.invoke
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.bdaniel.loyscan.data.photos.PhotoCrop
+import com.bdaniel.loyscan.di.CardPhotosModule
+import com.bdaniel.loyscan.di.ImageLoaderEntryPoint
 import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.domain.cardnumber.CardNumberRule
 import com.bdaniel.loyscan.domain.cardnumber.CheckDigitAlgorithm
@@ -30,12 +34,16 @@ import com.bdaniel.loyscan.testing.SOME_INSTANT
 import com.bdaniel.loyscan.testing.aLoyaltyCard
 import com.bdaniel.loyscan.testing.aStore
 import com.bdaniel.loyscan.testing.cardId
+import com.bdaniel.loyscan.testing.writeOnePixelPng
 import com.bdaniel.loyscan.ui.PhotoCamera
 import com.bdaniel.loyscan.ui.scanner.PicturePicker
 import com.google.common.truth.Truth.assertThat
+import dagger.hilt.android.EntryPointAccessors
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.shadows.ShadowLooper
+import java.io.File
 import java.io.FileNotFoundException
 import java.time.Clock
 import java.time.ZoneOffset
@@ -298,6 +306,8 @@ class CardFormScreenTest {
         composeRule.onNodeWithTag(CARD_NUMBER_TAG).performTextInput("12345674")
 
         composeRule.onNodeWithText("Add front photo").performScrollTo().performClick()
+        // The gallery picks a picture; the crop screen opens on it, and framing it stores the photo.
+        composeRule.onNodeWithText("Crop").performClick()
 
         composeRule.onNodeWithContentDescription("Front photo").assertExists()
         composeRule.onNodeWithText("Add front photo").assertDoesNotExist()
@@ -305,6 +315,34 @@ class CardFormScreenTest {
         composeRule.onNodeWithText("Save").performScrollTo().performClick()
         composeRule.waitForIdle()
         assertThat(cards.cards.value.single().frontPhotoPath).isEqualTo("photo-1")
+    }
+
+    @Test
+    fun theCropScreen_framesAPhoto_toTheCardRatio() { // #10: the crop screen shows the picture and stores the framed part
+        // A real staged file, so the crop screen's picture loads and Crop computes a frame of it.
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        File(context.filesDir, CardPhotosModule.PHOTO_DIRECTORY).resolve("staged-1").writeOnePixelPng()
+        setScreen(CardForm("ruled"))
+
+        composeRule.onNodeWithText("Add front photo").performScrollTo().performClick()
+        val loader = EntryPointAccessors.fromApplication(context, ImageLoaderEntryPoint::class.java).getImageLoader()
+        composeRule.waitUntil(timeoutMillis = 10_000) { ShadowLooper.idleMainLooper(); (loader.memoryCache?.size ?: 0) > 0 }
+        composeRule.onNodeWithText("Crop").performClick()
+
+        composeRule.onNodeWithContentDescription("Front photo").assertExists()
+        assertThat(photos.cropped.single().first).isEqualTo("staged-1")
+    }
+
+    @Test
+    fun theCropScreen_canBeCancelled_withoutAddingAPhoto() { // #10
+        setScreen(CardForm("ruled"))
+
+        composeRule.onNodeWithText("Add front photo").performScrollTo().performClick()
+        composeRule.onNodeWithText("Cancel").performClick()
+
+        composeRule.onNodeWithText("Add front photo").assertExists()
+        composeRule.onNodeWithContentDescription("Front photo").assertDoesNotExist()
+        assertThat(photos.stored).isEmpty()
     }
 
     @Test
@@ -324,7 +362,10 @@ class CardFormScreenTest {
         composeRule.onNodeWithContentDescription("Back photo").assertExists()
 
         composeRule.onNodeWithContentDescription("Replace back photo").performScrollTo().performClick()
-        assertThat(photos.imported).containsExactly(PICKED)
+        // The gallery picks a replacement; the crop screen opens on it, and framing it replaces the photo.
+        composeRule.onNodeWithText("Crop").performClick()
+        assertThat(photos.staged).containsExactly(PICKED)
+        composeRule.onNodeWithContentDescription("Back photo").assertExists()
 
         composeRule.onNodeWithContentDescription("Remove back photo").performScrollTo().performClick()
         composeRule.onNodeWithContentDescription("Back photo").assertDoesNotExist()
@@ -349,8 +390,9 @@ class CardFormScreenTest {
         composeRule.onNodeWithText("Add front photo").performScrollTo().performClick()
         composeRule.onNodeWithText("Take photo").assertIsDisplayed()
         composeRule.onNodeWithText("Choose from gallery").performClick()
+        composeRule.onNodeWithText("Use whole photo").performClick()
 
-        assertThat(photos.imported).containsExactly(PICKED)
+        assertThat(photos.staged).containsExactly(PICKED)
         composeRule.onNodeWithContentDescription("Front photo").assertExists()
     }
 
@@ -361,7 +403,7 @@ class CardFormScreenTest {
         composeRule.onNodeWithText("Add front photo").performScrollTo().performClick()
 
         composeRule.onNodeWithText("Take photo").assertDoesNotExist()
-        assertThat(photos.imported).containsExactly(PICKED)
+        assertThat(photos.staged).containsExactly(PICKED) // the gallery opened at once and staged the pick for the crop screen
     }
 
     @Test
@@ -371,6 +413,8 @@ class CardFormScreenTest {
 
         composeRule.onNodeWithText("Add back photo").performScrollTo().performClick()
         composeRule.onNodeWithText("Take photo").performClick()
+        // The camera app takes a photo; the crop screen opens on it, and framing it stores the photo.
+        composeRule.onNodeWithText("Use whole photo").performClick()
 
         assertThat(camera.taken).containsExactly(photos.captures.single().uri)
         composeRule.onNodeWithContentDescription("Back photo").assertExists()
@@ -386,9 +430,10 @@ class CardFormScreenTest {
 
         composeRule.onNodeWithContentDescription("Replace front photo").performScrollTo().performClick()
         composeRule.onNodeWithText("Take photo").performClick()
+        composeRule.onNodeWithText("Use whole photo").performClick()
 
         assertThat(camera.taken).hasSize(1)
-        assertThat(photos.imported).containsExactly(photos.captures.single().uri)
+        assertThat(photos.cropped).containsExactly(photos.captures.single().name to PhotoCrop.WHOLE)
     }
 
     @Test

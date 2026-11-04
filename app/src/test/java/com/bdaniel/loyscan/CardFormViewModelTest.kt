@@ -8,6 +8,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.cash.turbine.ReceiveTurbine
 import app.cash.turbine.test
 import com.bdaniel.loyscan.CardFormState.NumberCheck
+import com.bdaniel.loyscan.data.photos.PhotoCrop
 import com.bdaniel.loyscan.data.repository.StoreRepository
 import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.domain.LoyaltyCard
@@ -866,14 +867,15 @@ class CardFormViewModelTest {
         viewModel.state.test {
             awaitLoaded()
             viewModel.onNumberChange("12345674")
-            viewModel.onPhotoPicked(CardPhotoSide.FRONT, PICKED)
-            assertThat(expectMostRecentItem().frontPhoto).isEqualTo("photo-1")
+            viewModel.pickAndCrop(CardPhotoSide.FRONT)
+            assertThat(viewModel.state.value.frontPhoto).isEqualTo("photo-1")
 
             viewModel.save()
             cancelAndIgnoreRemainingEvents()
         }
 
-        assertThat(photos.imported).containsExactly(PICKED)
+        assertThat(photos.staged).containsExactly(PICKED)
+        assertThat(photos.cropped).containsExactly("staged-1" to PhotoCrop.WHOLE)
         assertThat(cards.cards.value.single().frontPhotoPath).isEqualTo("photo-1")
         assertThat(cards.cards.value.single().backPhotoPath).isNull()
     }
@@ -889,7 +891,7 @@ class CardFormViewModelTest {
             assertThat(state.frontPhoto).isEqualTo("front")
             assertThat(state.backPhoto).isEqualTo("back")
 
-            viewModel.onPhotoPicked(CardPhotoSide.BACK, PICKED)
+            viewModel.pickAndCrop(CardPhotoSide.BACK)
             viewModel.save()
             cancelAndIgnoreRemainingEvents()
         }
@@ -943,9 +945,9 @@ class CardFormViewModelTest {
 
         viewModel.state.test {
             awaitLoaded()
-            viewModel.onPhotoPicked(CardPhotoSide.FRONT, PICKED)
-            viewModel.onPhotoPicked(CardPhotoSide.FRONT, PICKED)
-            viewModel.onPhotoPicked(CardPhotoSide.BACK, PICKED)
+            viewModel.pickAndCrop(CardPhotoSide.FRONT)
+            viewModel.pickAndCrop(CardPhotoSide.FRONT)
+            viewModel.pickAndCrop(CardPhotoSide.BACK)
             viewModel.removePhoto(CardPhotoSide.BACK)
             assertThat(expectMostRecentItem().frontPhoto).isEqualTo("photo-2")
         }
@@ -964,8 +966,8 @@ class CardFormViewModelTest {
         val viewModel = owner.keep { viewModel(CardForm("ruled", cardId = cardId(1))) }
         viewModel.state.test {
             awaitLoaded()
-            viewModel.onPhotoPicked(CardPhotoSide.FRONT, PICKED)
-            viewModel.onPhotoPicked(CardPhotoSide.BACK, PICKED)
+            viewModel.pickAndCrop(CardPhotoSide.FRONT)
+            viewModel.pickAndCrop(CardPhotoSide.BACK)
             cancelAndIgnoreRemainingEvents()
         }
 
@@ -984,8 +986,8 @@ class CardFormViewModelTest {
         val first = owner.keep { viewModel(handle) }
         first.state.test {
             awaitLoaded()
-            first.onPhotoPicked(CardPhotoSide.FRONT, PICKED)
-            first.onPhotoPicked(CardPhotoSide.BACK, PICKED)
+            first.pickAndCrop(CardPhotoSide.FRONT)
+            first.pickAndCrop(CardPhotoSide.BACK)
             cancelAndIgnoreRemainingEvents()
         }
         owner.clear()
@@ -1013,7 +1015,7 @@ class CardFormViewModelTest {
         viewModel.state.test {
             awaitLoaded()
             viewModel.onNumberChange("12345674")
-            viewModel.onPhotoPicked(CardPhotoSide.FRONT, PICKED)
+            viewModel.pickAndCrop(CardPhotoSide.FRONT)
             viewModel.save()
             cancelAndIgnoreRemainingEvents()
         }
@@ -1032,7 +1034,7 @@ class CardFormViewModelTest {
         viewModel.state.test {
             awaitLoaded()
             viewModel.onNumberChange("12345674")
-            viewModel.onPhotoPicked(CardPhotoSide.FRONT, PICKED)
+            viewModel.pickAndCrop(CardPhotoSide.FRONT)
             viewModel.save()
             cancelAndIgnoreRemainingEvents()
         }
@@ -1057,7 +1059,7 @@ class CardFormViewModelTest {
         viewModel.state.test {
             awaitLoaded()
             viewModel.onNumberChange("12345674")
-            viewModel.onPhotoPicked(CardPhotoSide.FRONT, PICKED)
+            viewModel.pickAndCrop(CardPhotoSide.FRONT)
             viewModel.save()
             cancelAndIgnoreRemainingEvents()
         }
@@ -1080,12 +1082,12 @@ class CardFormViewModelTest {
         viewModel.state.test {
             awaitLoaded()
             viewModel.onNumberChange("12345674")
-            viewModel.onPhotoPicked(CardPhotoSide.FRONT, PICKED)
+            viewModel.pickAndCrop(CardPhotoSide.FRONT)
             viewModel.save()
-            val failed = expectMostRecentItem()
-            assertThat(failed.saveFailed).isTrue()
-            assertThat(failed.frontPhoto).isEqualTo("photo-1")
+            cancelAndIgnoreRemainingEvents()
         }
+        assertThat(viewModel.state.value.saveFailed).isTrue()
+        assertThat(viewModel.state.value.frontPhoto).isEqualTo("photo-1")
         assertThat(photos.stored).containsExactly("photo-1")
     }
 
@@ -1099,18 +1101,20 @@ class CardFormViewModelTest {
             awaitLoaded()
             viewModel.onNumberChange("12345674")
             viewModel.onPhotoPicked(CardPhotoSide.FRONT, PICKED)
-            viewModel.onPhotoPicked(CardPhotoSide.BACK, PICKED)
+            viewModel.onPhotoPicked(CardPhotoSide.BACK, PICKED) // ignored while the first is copied in
             val importing = expectMostRecentItem()
             assertThat(importing.importingPhoto).isEqualTo(CardPhotoSide.FRONT)
             assertThat(importing.canSave).isFalse()
 
             gate.complete(Unit)
-            val done = expectMostRecentItem()
-            assertThat(done.importingPhoto).isNull()
-            assertThat(done.canSave).isTrue()
-            assertThat(done.backPhoto).isNull()
+            val cropping = expectMostRecentItem()
+            assertThat(cropping.importingPhoto).isNull()
+            // The copy done, the photo opens in the crop screen; it still can't be saved until it is framed.
+            assertThat(cropping.cropping).isEqualTo(CardFormState.Cropping("staged-1", CardPhotoSide.FRONT))
+            assertThat(cropping.canSave).isFalse()
+            assertThat(cropping.backPhoto).isNull()
         }
-        assertThat(photos.imported).hasSize(1)
+        assertThat(photos.staged).hasSize(1)
     }
 
     @Test
@@ -1126,7 +1130,7 @@ class CardFormViewModelTest {
             assertThat(failed.frontPhoto).isNull()
 
             photos.importFailure = null
-            viewModel.onPhotoPicked(CardPhotoSide.FRONT, PICKED)
+            viewModel.pickAndCrop(CardPhotoSide.FRONT)
             val picked = expectMostRecentItem()
             assertThat(picked.photoFailed).isFalse()
             assertThat(picked.frontPhoto).isEqualTo("photo-1")
@@ -1142,7 +1146,7 @@ class CardFormViewModelTest {
             viewModel.onPhotoPicked(CardPhotoSide.FRONT, null)
             expectNoEvents()
         }
-        assertThat(photos.imported).isEmpty()
+        assertThat(photos.staged).isEmpty()
     }
 
     @Test
@@ -1153,14 +1157,14 @@ class CardFormViewModelTest {
         viewModel.state.test {
             awaitLoaded()
             viewModel.onNumberChange("12345674")
-            viewModel.onPhotoPicked(CardPhotoSide.FRONT, PICKED)
+            viewModel.pickAndCrop(CardPhotoSide.FRONT)
             viewModel.save()
-            viewModel.onPhotoPicked(CardPhotoSide.BACK, PICKED)
+            viewModel.onPhotoPicked(CardPhotoSide.BACK, PICKED) // ignored once saving has started
             viewModel.removePhoto(CardPhotoSide.FRONT)
-            assertThat(expectMostRecentItem().frontPhoto).isEqualTo("photo-1")
+            assertThat(viewModel.state.value.frontPhoto).isEqualTo("photo-1")
             cancelAndIgnoreRemainingEvents()
         }
-        assertThat(photos.imported).hasSize(1)
+        assertThat(photos.staged).hasSize(1)
         assertThat(photos.stored).containsExactly("photo-1")
     }
 
@@ -1171,8 +1175,8 @@ class CardFormViewModelTest {
         viewModel.state.test {
             awaitLoaded()
             viewModel.onNumberChange("12345674")
-            viewModel.onPhotoPicked(CardPhotoSide.FRONT, PICKED)
-            viewModel.onPhotoPicked(CardPhotoSide.BACK, PICKED)
+            viewModel.pickAndCrop(CardPhotoSide.FRONT)
+            viewModel.pickAndCrop(CardPhotoSide.BACK)
             photos.stored -= "photo-1"
             viewModel.save()
             cancelAndIgnoreRemainingEvents()
@@ -1190,7 +1194,7 @@ class CardFormViewModelTest {
 
         viewModel.state.test {
             awaitLoaded()
-            viewModel.onPhotoPicked(CardPhotoSide.FRONT, PICKED)
+            viewModel.pickAndCrop(CardPhotoSide.FRONT)
             photos.stored -= "photo-1"
             viewModel.save()
             cancelAndIgnoreRemainingEvents()
@@ -1205,7 +1209,7 @@ class CardFormViewModelTest {
         val first = viewModel(handle)
         first.state.test {
             awaitLoaded()
-            first.onPhotoPicked(CardPhotoSide.BACK, PICKED)
+            first.pickAndCrop(CardPhotoSide.BACK)
             cancelAndIgnoreRemainingEvents()
         }
 
@@ -1215,18 +1219,57 @@ class CardFormViewModelTest {
     }
 
     @Test
-    fun aPhotoTaken_isImportedLikeAPick_andItsCaptureDeleted() = runTest { // #10
+    fun aPhotoStagedForTheCropScreen_isRestoredAfterProcessDeath() = runTest { // #10: the staged file is on disk, as a capture is
+        val handle = SavedStateHandle(route = CardForm("ruled"))
+        val first = viewModel(handle)
+        first.state.test {
+            awaitLoaded()
+            first.onPhotoPicked(CardPhotoSide.BACK, PICKED) // staged, crop screen open, not yet framed
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        val restored = viewModel(handle)
+        restored.state.test {
+            assertThat(awaitLoaded().cropping).isEqualTo(CardFormState.Cropping("staged-1", CardPhotoSide.BACK))
+            restored.confirmCrop(PhotoCrop.WHOLE)
+            assertThat(expectMostRecentItem().backPhoto).isEqualTo("photo-1")
+        }
+        assertThat(photos.stored).containsExactly("photo-1") // the staged file framed and stored
+    }
+
+    @Test
+    fun cancellingTheCropScreen_dropsTheStagedPhoto_andAddsNone() = runTest { // #10
+        val viewModel = viewModel(CardForm("ruled"))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.onPhotoPicked(CardPhotoSide.FRONT, PICKED)
+            assertThat(viewModel.state.value.cropping).isEqualTo(CardFormState.Cropping("staged-1", CardPhotoSide.FRONT))
+
+            viewModel.cancelCrop()
+            assertThat(viewModel.state.value.cropping).isNull()
+            assertThat(viewModel.state.value.frontPhoto).isNull()
+            cancelAndIgnoreRemainingEvents()
+        }
+        assertThat(photos.stored).isEmpty() // the staged file is dropped
+    }
+
+    @Test
+    fun aPhotoTaken_opensTheCropScreen_andIsStoredFramed_itsCaptureTheStagedSource() = runTest { // #10
         val viewModel = viewModel(CardForm("ruled"))
 
         viewModel.state.test {
             awaitLoaded()
             val target = viewModel.startCapture(CardPhotoSide.FRONT)
             viewModel.onPhotoTaken(taken = true)
+            // The capture file the camera app wrote is the crop screen's staged source.
+            assertThat(expectMostRecentItem().cropping).isEqualTo(CardFormState.Cropping(photos.captures.single().name, CardPhotoSide.FRONT))
+            viewModel.confirmCrop(PhotoCrop.WHOLE)
             assertThat(expectMostRecentItem().frontPhoto).isEqualTo("photo-1")
             assertThat(target).isEqualTo(photos.captures.single().uri)
         }
 
-        assertThat(photos.imported).containsExactly(photos.captures.single().uri)
+        assertThat(photos.cropped).containsExactly(photos.captures.single().name to PhotoCrop.WHOLE)
         assertThat(photos.stored).containsExactly("photo-1")
     }
 
@@ -1244,19 +1287,21 @@ class CardFormViewModelTest {
         }
 
         assertThat(viewModel.state.value.frontPhoto).isEqualTo("front")
-        assertThat(photos.imported).isEmpty()
+        assertThat(viewModel.state.value.cropping).isNull()
+        assertThat(photos.cropped).isEmpty()
         assertThat(photos.stored).containsExactly("front")
     }
 
     @Test
-    fun aPhotoTakenThatCantBeImported_saysSo_andItsCaptureIsDeleted() = runTest { // #10
-        photos.importFailure = FileNotFoundException("the camera app wrote nothing")
+    fun aPhotoTakenThatCantBeStored_saysSo_andItsCaptureIsDeleted() = runTest { // #10
+        photos.cropFailure = FileNotFoundException("the camera app wrote nothing")
         val viewModel = viewModel(CardForm("ruled"))
 
         viewModel.state.test {
             awaitLoaded()
             viewModel.startCapture(CardPhotoSide.BACK)
             viewModel.onPhotoTaken(taken = true)
+            viewModel.confirmCrop(PhotoCrop.WHOLE)
             val state = expectMostRecentItem()
             assertThat(state.photoFailed).isTrue()
             assertThat(state.backPhoto).isNull()
@@ -1266,7 +1311,7 @@ class CardFormViewModelTest {
     }
 
     @Test
-    fun aPhotoTaken_isImported_afterProcessDeathWhileTheCameraWasOpen() = runTest { // #10: the camera app is in front
+    fun aPhotoTaken_opensTheCropScreen_afterProcessDeathWhileTheCameraWasOpen() = runTest { // #10: the camera app is in front
         val handle = SavedStateHandle(route = CardForm("ruled"))
         val first = viewModel(handle)
         first.state.test {
@@ -1279,6 +1324,7 @@ class CardFormViewModelTest {
         restored.state.test {
             awaitLoaded()
             restored.onPhotoTaken(taken = true)
+            restored.confirmCrop(PhotoCrop.WHOLE)
             assertThat(expectMostRecentItem().backPhoto).isEqualTo("photo-1")
         }
 
@@ -1286,7 +1332,7 @@ class CardFormViewModelTest {
     }
 
     @Test
-    fun noCaptureStarts_whileAPhotoIsCopiedIn_orOnceSavingHasStarted() = runTest { // #10
+    fun noCaptureStarts_whileAPhotoIsCopiedIn_whileItIsCropped_orOnceSavingHasStarted() = runTest { // #10
         val gate = CompletableDeferred<Unit>()
         photos.importGate = gate
         val viewModel = viewModel(CardForm("ruled"))
@@ -1295,11 +1341,12 @@ class CardFormViewModelTest {
             awaitLoaded()
             viewModel.onNumberChange("12345674")
             viewModel.onPhotoPicked(CardPhotoSide.FRONT, PICKED)
-            assertThat(viewModel.startCapture(CardPhotoSide.BACK)).isNull()
+            assertThat(viewModel.startCapture(CardPhotoSide.BACK)).isNull() // while the pick is copied in
             gate.complete(Unit)
-            expectMostRecentItem()
+            assertThat(viewModel.startCapture(CardPhotoSide.BACK)).isNull() // while the crop screen is open
+            viewModel.confirmCrop(PhotoCrop.WHOLE)
             viewModel.save()
-            assertThat(viewModel.startCapture(CardPhotoSide.BACK)).isNull()
+            assertThat(viewModel.startCapture(CardPhotoSide.BACK)).isNull() // once saving has started
             cancelAndIgnoreRemainingEvents()
         }
 
@@ -1307,7 +1354,7 @@ class CardFormViewModelTest {
     }
 
     @Test
-    fun aPhotoTaken_isImported_whenTheFormWasClearedBehindTheCameraApp() = runTest { // #10 review
+    fun aPhotoTaken_opensTheCropScreen_whenTheFormWasClearedBehindTheCameraApp() = runTest { // #10 review
         // The activity destroyed while the camera app is in front, its process alive ("Don't keep activities"):
         // the form's ViewModel is cleared, but the form comes back from its saved state.
         val handle = SavedStateHandle(route = CardForm("ruled"))
@@ -1324,10 +1371,11 @@ class CardFormViewModelTest {
         restored.state.test {
             awaitLoaded()
             restored.onPhotoTaken(taken = true)
+            restored.confirmCrop(PhotoCrop.WHOLE)
             assertThat(expectMostRecentItem().frontPhoto).isEqualTo("photo-1")
         }
 
-        assertThat(photos.imported).containsExactly(photos.captures.single().uri)
+        assertThat(photos.cropped).containsExactly(photos.captures.single().name to PhotoCrop.WHOLE)
     }
 
     @Test
@@ -1335,6 +1383,12 @@ class CardFormViewModelTest {
         viewModel(CardForm("ruled")).state.test {
             assertThat(awaitLoaded().editing).isFalse()
         }
+    }
+
+    /** Picks a photo and frames it in the crop screen (#10). Synchronous under the unconfined test dispatcher. */
+    private fun CardFormViewModel.pickAndCrop(side: CardPhotoSide, picture: Uri = PICKED, crop: PhotoCrop = PhotoCrop.WHOLE) {
+        onPhotoPicked(side, picture)
+        confirmCrop(crop)
     }
 
     private fun viewModel(route: CardForm) = viewModel(SavedStateHandle(route = route))

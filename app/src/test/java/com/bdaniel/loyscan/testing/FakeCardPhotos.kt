@@ -14,24 +14,14 @@ class FakeCardPhotos(vararg stored: String) : CardPhotos {
 
     val stored = stored.toMutableSet()
 
-    /** The pictures imported so far, in order. */
-    val imported = mutableListOf<Uri>()
-
-    /** When set, [import] throws it instead of copying, as an unreadable picture does. */
-    var importFailure: Exception? = null
-
-    /** When set, [import] suspends until it completes, as a copy in progress does. */
-    var importGate: CompletableDeferred<Unit>? = null
-
-    override suspend fun import(picture: Uri): String {
-        importGate?.await()
-        importFailure?.let { throw it }
-        imported += picture
-        return "photo-${imported.size}".also { stored += it }
-    }
-
     /** The pictures staged so far, in order; a staged file is named `staged-1`, `staged-2`… and exists. */
     val staged = mutableListOf<Uri>()
+
+    /** When set, [stage] throws it instead of copying, as an unreadable picture does. */
+    var importFailure: Exception? = null
+
+    /** When set, [stage] suspends until it completes, as a copy in progress does. */
+    var importGate: CompletableDeferred<Unit>? = null
 
     override suspend fun stage(picture: Uri): String {
         importGate?.await()
@@ -43,9 +33,13 @@ class FakeCardPhotos(vararg stored: String) : CardPhotos {
     /** The crops made so far, in order: the staged name and the frame it was cropped to. */
     val cropped = mutableListOf<Pair<String, PhotoCrop>>()
 
+    /** When set, [crop] throws it and deletes the staged source, as a picture that can't be encoded does. */
+    var cropFailure: Exception? = null
+
     override suspend fun crop(name: String, crop: PhotoCrop): String {
         cropped += name to crop
-        stored -= name
+        stored -= name // the staged source goes, however the crop ends
+        cropFailure?.let { throw it }
         return "photo-${cropped.size}".also { stored += it }
     }
 

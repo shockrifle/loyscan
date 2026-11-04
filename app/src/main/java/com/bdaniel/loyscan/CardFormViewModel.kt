@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.bdaniel.loyscan.CardFormState.NumberCheck
 import com.bdaniel.loyscan.data.photos.CardPhotos
+import com.bdaniel.loyscan.data.photos.PhotoCrop
 import com.bdaniel.loyscan.data.photos.withoutMissing
 import com.bdaniel.loyscan.data.repository.LoyaltyCardRepository
 import com.bdaniel.loyscan.data.repository.StoreRepository
@@ -79,14 +80,20 @@ data class CardFormState(
     /** The front photo's name (#10): the edited card's, or one picked in this form; `null` for none. */
     val frontPhoto: String? = null,
     val backPhoto: String? = null,
-    /** The side whose picked picture is being copied in; the card can't be saved until it is. */
+    /** The side whose picked picture is being copied in or cropped; the card can't be saved until it is. */
     val importingPhoto: CardPhotoSide? = null,
-    /** The last picked picture couldn't be copied in. */
+    /** The last picked or taken picture couldn't be copied in or cropped. */
     val photoFailed: Boolean = false,
+    /** The photo being framed in the crop screen (#10), or `null` when no crop screen is open. */
+    val cropping: Cropping? = null,
 ) {
-    /** Anything but an empty number can be saved, an invalid one "anyway"; not while a photo is being copied in. */
+    /** A photo staged for a side, waiting to be framed in the crop screen (#10). */
+    data class Cropping(val photo: String, val side: CardPhotoSide)
+
+    /** Anything but an empty number can be saved, an invalid one "anyway"; not while a photo is being copied in or cropped. */
     val canSave: Boolean
-        get() = store != null && check != NumberCheck.Empty && !saving && savedCardId == null && importingPhoto == null
+        get() = store != null && check != NumberCheck.Empty && !saving && savedCardId == null &&
+            importingPhoto == null && cropping == null
 
     sealed interface NumberCheck {
         data object Empty : NumberCheck
@@ -153,6 +160,18 @@ class CardFormViewModel @Inject constructor(
         ::PickedPhotos,
     )
 
+    /**
+     * The photo staged for the crop screen and the side it is for (#10), kept in the saved state so the crop screen
+     * survives process death (the staged file is on disk, as a capture is), `null` when no crop screen is open.
+     */
+    private val croppingPhoto = combine(
+        savedStateHandle.getStateFlow<String?>(CROP_PHOTO, null),
+        savedStateHandle.getStateFlow<String?>(CROP_SIDE, null),
+    ) { photo, side ->
+        // Both keys are written together, but each getStateFlow emits on its own: build a Cropping only once both are set.
+        if (photo != null && side != null) CardFormState.Cropping(photo, CardPhotoSide.valueOf(side)) else null
+    }
+
     private val progress = MutableStateFlow(Progress())
 
     /**
@@ -161,7 +180,7 @@ class CardFormViewModel @Inject constructor(
      * store has loaded.
      */
     val state: StateFlow<CardFormState> =
-        combine(storeId, storeRepository.getAll(), original, combine(label, note, typedNumber, pickedPhotos, ::Inputs), progress) {
+        combine(storeId, storeRepository.getAll(), original, combine(label, note, typedNumber, pickedPhotos, croppingPhoto, ::Inputs), progress) {
                 id, stores, original, inputs, progress ->
             formState(id, stores, original, inputs, progress)
         }.stateIn(
@@ -198,12 +217,11 @@ class CardFormViewModel @Inject constructor(
     }
 
     /**
-     * Copies the picture picked for [side] in (#10); `null` is a cancelled pick. A photo picked earlier in this form for
-     * that side is deleted; the edited card's own goes when the edit is saved. One picture at a time, and none once
-     * saving has started.
+     * Stages the picture picked for [side] and opens the crop screen on it (#10); `null` is a cancelled pick. One
+     * picture at a time, and none while a photo is being copied in or cropped, or once saving has started.
      */
     fun onPhotoPicked(side: CardPhotoSide, picture: Uri?) {
-        if (picture != null) import(side, picture)
+        if (picture != null) stageForCrop(side, picture)
     }
 
     /**
@@ -221,47 +239,90 @@ class CardFormViewModel @Inject constructor(
         return capture.uri
     }
 
-    /** The camera app is done with [startCapture]'s file: a photo [taken] is copied in like a pick, and the file deleted. */
+    /**
+     * The camera app is done with [startCapture]'s file (#10): a photo [taken] is a staged file already (the camera app
+     * wrote it), so the crop screen opens on it; otherwise its file is deleted.
+     */
     fun onPhotoTaken(taken: Boolean) {
         val name = savedStateHandle.get<String>(CAPTURE) ?: return
-        val uri = savedStateHandle.get<Uri>(CAPTURE_URI)
         val side = savedStateHandle.get<String>(CAPTURE_SIDE)?.let(CardPhotoSide::valueOf)
         clearCapture()
-        val importing = taken && uri != null && side != null && import(side, uri) { photos.discard(listOf(name)) }
-        if (!importing) photos.discard(listOf(name))
+        if (taken && side != null) openCrop(name, side) else photos.discard(listOf(name))
     }
 
     /**
-     * Copies [picture] in as [side]'s photo; then [afterwards] runs, however the copy ended. A photo picked earlier in this
-     * form for that side is deleted. Returns `false`, without copying, while no photo can be added.
+     * Copies [picture] in as it is and opens the crop screen on the staged file (#10). Returns without staging while no
+     * photo can be added. A copy that fails (e.g. a cloud picture that can't be downloaded) or isn't a picture says so.
      */
-    private fun import(side: CardPhotoSide, picture: Uri, afterwards: () -> Unit = {}): Boolean {
-        if (!canChangePhotos()) return false
+    private fun stageForCrop(side: CardPhotoSide, picture: Uri) {
+        if (!canChangePhotos()) return
         progress.value = progress.value.copy(importing = side, photoFailed = false)
         viewModelScope.launch {
             val name = try {
-                photos.import(picture)
+                photos.stage(picture)
             } catch (e: CancellationException) {
                 throw e
-            } catch (e: Exception) { // e.g. a cloud picture that can't be downloaded
+            } catch (e: Exception) {
                 Timber.e(e, "Couldn't copy the picked photo in")
                 progress.update { it.copy(importing = null, photoFailed = true) }
                 return@launch
-            } finally {
-                afterwards()
+            }
+            progress.update { it.copy(importing = null) }
+            openCrop(name, side)
+        }
+    }
+
+    /** Opens the crop screen on the staged photo [name] for [side] (#10): kept in the saved state, so it survives process death. */
+    private fun openCrop(name: String, side: CardPhotoSide) {
+        savedStateHandle[CROP_SIDE] = side.name
+        savedStateHandle[CROP_PHOTO] = name
+    }
+
+    /**
+     * Stores the photo framed in the crop screen (#10): the staged picture re-encoded, cropped to [crop]
+     * ([com.bdaniel.loyscan.data.photos.PhotoCrop.WHOLE] keeps it all). A photo picked earlier in this form for that
+     * side is deleted; the edited card's own goes when the edit is saved. A crop that fails says so.
+     */
+    fun confirmCrop(crop: PhotoCrop) {
+        val name = savedStateHandle.get<String>(CROP_PHOTO) ?: return
+        val side = savedStateHandle.get<String>(CROP_SIDE)?.let(CardPhotoSide::valueOf) ?: return
+        clearCropping()
+        progress.value = progress.value.copy(importing = side, photoFailed = false)
+        viewModelScope.launch {
+            val cropped = try {
+                photos.crop(name, crop)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.e(e, "Couldn't crop the photo")
+                progress.update { it.copy(importing = null, photoFailed = true) }
+                return@launch
             }
             val replaced = picked(side)
-            savedStateHandle[side.key] = name
+            savedStateHandle[side.key] = cropped
             progress.update { it.copy(importing = null) }
             replaced?.let { photos.discard(listOf(it)) }
         }
-        return true
     }
 
-    /** One picture at a time, and none once saving has started. */
+    /** Closes the crop screen without keeping the photo (#10): the staged file is deleted. */
+    fun cancelCrop() {
+        val name = savedStateHandle.get<String>(CROP_PHOTO)
+        clearCropping()
+        name?.let { photos.discard(listOf(it)) }
+    }
+
+    // Set to null, not removed: a removed key doesn't notify its getStateFlow, so the crop screen would linger in state.
+    private fun clearCropping() {
+        savedStateHandle[CROP_PHOTO] = null
+        savedStateHandle[CROP_SIDE] = null
+    }
+
+    /** One picture at a time, and none while one is being cropped or once saving has started. */
     private fun canChangePhotos(): Boolean {
         val current = progress.value
-        return !current.saving && current.savedCardId == null && current.importing == null
+        return !current.saving && current.savedCardId == null && current.importing == null &&
+            savedStateHandle.get<String>(CROP_PHOTO) == null
     }
 
     /** Deletes the file of a capture the camera app never answered, before a new one replaces it. */
@@ -288,8 +349,9 @@ class CardFormViewModel @Inject constructor(
      * Deliberately deletes nothing (#95). onCleared also runs when the activity is destroyed with the form still on the
      * back stack and its process alive ("Don't keep activities", a background kill), and the form restored from the same
      * saved state still names the photos picked in it, so their files must survive. It can't tell that from a real close,
-     * so an abandoned pick, like an unanswered camera capture, is left to the orphan sweep — including one a save leaves
-     * when it fails after the form closed, which for the same reason no longer deletes its picks either.
+     * so an abandoned pick, like an unanswered camera capture or a photo staged for the crop screen but not yet framed,
+     * is left to the orphan sweep — including one a save leaves when it fails after the form closed, which for the same
+     * reason no longer deletes its picks either.
      */
     override fun onCleared() = Unit
 
@@ -385,7 +447,10 @@ class CardFormViewModel @Inject constructor(
         // Nothing to show until the store has loaded, and the edited card (which may be gone). The stores have loaded
         // here, so a missing store is gone, e.g. a custom store deleted (#51).
         if (store == null || editing && original == null) {
-            return CardFormState(label = label, note = note, number = typed.orEmpty(), editing = editing, storeGone = store == null)
+            return CardFormState(
+                label = label, note = note, number = typed.orEmpty(), editing = editing, storeGone = store == null,
+                cropping = inputs.cropping,
+            )
         }
         val draft = draft(store, original, changedNumber)
         val scannedFormat = draft.scannedFormat
@@ -430,6 +495,7 @@ class CardFormViewModel @Inject constructor(
             backPhoto = inputs.photos.back.photo(original?.backPhotoPath),
             importingPhoto = progress.importing,
             photoFailed = progress.photoFailed,
+            cropping = inputs.cropping,
         )
     }
 
@@ -468,7 +534,13 @@ class CardFormViewModel @Inject constructor(
     )
 
     /** What the user changed, each `null` until changed. */
-    private data class Inputs(val label: String?, val note: String?, val typedNumber: String?, val photos: PickedPhotos)
+    private data class Inputs(
+        val label: String?,
+        val note: String?,
+        val typedNumber: String?,
+        val photos: PickedPhotos,
+        val cropping: CardFormState.Cropping?,
+    )
 
     private data class PickedPhotos(val front: String?, val back: String?)
 
@@ -486,6 +558,10 @@ class CardFormViewModel @Inject constructor(
         const val CAPTURE = "capture"
         const val CAPTURE_URI = "captureUri"
         const val CAPTURE_SIDE = "captureSide"
+
+        /** The photo staged for the crop screen (#10), until it is framed or dropped: its name and the side it is for. */
+        const val CROP_PHOTO = "cropPhoto"
+        const val CROP_SIDE = "cropSide"
 
         /** A side's photo was removed in this form. Never a photo's name, which is a UUID. */
         const val REMOVED = ""

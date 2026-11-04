@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -52,6 +53,7 @@ import com.bdaniel.loyscan.domain.cardnumber.Validation
 import com.bdaniel.loyscan.ui.CARD_ASPECT_RATIO
 import com.bdaniel.loyscan.ui.CardPhoto
 import com.bdaniel.loyscan.ui.PhotoCamera
+import com.bdaniel.loyscan.ui.PhotoCropScreen
 import com.bdaniel.loyscan.ui.rememberPhotoCamera
 import com.bdaniel.loyscan.ui.hiltImageLoader
 import com.bdaniel.loyscan.ui.scanner.PicturePicker
@@ -92,6 +94,7 @@ fun CardFormScreen(
         if (id != null && store != null) directions.toCard(id, store.color)
     }
 
+    Box(Modifier.fillMaxSize()) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -240,6 +243,15 @@ fun CardFormScreen(
                     choosingStore = false
                 },
                 onDismiss = { choosingStore = false },
+            )
+        }
+    }
+        state.cropping?.let { cropping ->
+            PhotoCropScreen(
+                photo = cropping.photo,
+                description = cropping.side.photoDescription,
+                onConfirm = viewModel::confirmCrop,
+                onCancel = viewModel::cancelCrop,
             )
         }
     }

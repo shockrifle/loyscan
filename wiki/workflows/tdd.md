@@ -74,9 +74,12 @@ Shared helpers are in `testing/`:
   survive is a switch on the fake: `FakeLoyaltyCardRepository.addFailure` makes `add` throw, and `loadGate` holds back `getAllWithStore` until it completes (`addGate`, `updateGate` and `deleteGate` hold a write the same way, on both repository fakes). To clear a ViewModel, as leaving its screen does, create it with `ViewModelStore().keep { … }` (`testing/ViewModelStores.kt`) and call `clear()` on the store (`CardFormViewModelTest`, #64).
   When you change an interface's contract, change the fake in the same commit. No mocking library.
 - **`FakeCardPhotos`** stands in for `CardPhotos` in ViewModel and screen tests: `stored` is the set of photo names
-  that exist (imports are named `photo-1`, `photo-2`…), and `importFailure` / `importGate` make a copy fail or hold.
-  `newCapture` names captures `capture-1`… with a `content://photos.test/…` Uri, lists them in `captures` and adds them
-  to `stored`.
+  that exist. `stage` names staged files `staged-1`, `staged-2`… (listed in `staged`), `crop` names the framed photo
+  `photo-1`, `photo-2`… (the pairs in `cropped`) and drops the staged one; `importFailure` / `importGate` make a copy
+  fail or hold, `cropFailure` makes the crop fail. `newCapture` names captures `capture-1`… with a
+  `content://photos.test/…` Uri, lists them in `captures` and adds them to `stored`. Because a pick stages then crops
+  asynchronously, a crop-flow test asserts on `viewModel.state.value` after driving both steps (a `getStateFlow` reads
+  back even before Turbine delivers the item), rather than on a Turbine item.
   It only answers `exists`: the image loader still looks for the file in `files/card_photos/`. A screen test that needs
   the photo to load writes one there with `File.writeOnePixelPng()` (`testing/PhotoFiles.kt`) and waits for it in the
   app loader's memory cache, idling the main looper (`ListScreenTest.aCardWithAFrontPhoto_…`); a name with no file

@@ -48,22 +48,12 @@ class FileCardPhotosTest {
         FileCardPhotos(directory, ApplicationProvider.getApplicationContext<Context>().contentResolver)
     }
 
-    @Test
-    fun import_storesThePictureInThePhotoDirectory_underANewName() = runTest {
-        val picked = aPicture(40, 20)
-
-        val first = photos.import(Uri.fromFile(picked))
-        val second = photos.import(Uri.fromFile(picked))
-
-        assertThat(first).isNotEqualTo(second)
-        assertThat(photos.file(first).parentFile).isEqualTo(directory)
-        assertThat(directory.list()).asList().containsExactly(first, second)
-        assertThat(photos.file(first).shown()).isEqualTo(Shown(40, 20, Color.RED, Color.GREEN, Color.BLUE))
-        assertThat(picked.exists()).isTrue()
-    }
+    // A stored photo is re-encoded through the crop path (stage then crop WHOLE), the way the form stores a pick; the
+    // framed crop is covered by crop_storesOnlyTheFramedPartOfTheUprightPicture below.
+    private suspend fun importWhole(picture: Uri) = photos.crop(photos.stage(picture), PhotoCrop.WHOLE)
 
     @Test
-    fun import_dropsTheLocationAndTheOtherExif() = runTest { // #88
+    fun stored_dropsTheLocationAndTheOtherExif() = runTest { // #88
         val picked = aPicture(40, 20).withExif(
             ExifInterface.TAG_GPS_LATITUDE to "47/1,29/1,0/1",
             ExifInterface.TAG_GPS_LATITUDE_REF to "N",
@@ -73,8 +63,9 @@ class FileCardPhotosTest {
             ExifInterface.TAG_DATETIME to "2026:05:05 05:05:05",
         )
 
-        val imported = photos.file(photos.import(Uri.fromFile(picked)))
+        val imported = photos.file(importWhole(Uri.fromFile(picked)))
 
+        assertThat(imported.shown()).isEqualTo(Shown(40, 20, Color.RED, Color.GREEN, Color.BLUE))
         val exif = ExifInterface(imported.path)
         assertThat(exif.getAttribute(ExifInterface.TAG_GPS_LATITUDE)).isNull()
         assertThat(exif.getAttribute(ExifInterface.TAG_GPS_LONGITUDE)).isNull()
@@ -83,23 +74,23 @@ class FileCardPhotosTest {
     }
 
     @Test
-    fun import_scalesALargePictureDown_toItsLongSideLimit() = runTest { // #88
-        val wide = photos.import(Uri.fromFile(aPicture(5000, 2500, "wide.jpg")))
-        val tall = photos.import(Uri.fromFile(aPicture(1000, 3000, "tall.jpg")))
+    fun stored_scalesALargePictureDown_toItsLongSideLimit() = runTest { // #88
+        val wide = importWhole(Uri.fromFile(aPicture(5000, 2500, "wide.jpg")))
+        val tall = importWhole(Uri.fromFile(aPicture(1000, 3000, "tall.jpg")))
 
         assertThat(photos.file(wide).size()).isEqualTo(MAX_PHOTO_SIDE to MAX_PHOTO_SIDE / 2)
         assertThat(photos.file(tall).size()).isEqualTo(683 to MAX_PHOTO_SIDE)
     }
 
     @Test
-    fun import_keepsTheSizeOfASmallerPicture() = runTest { // #88: not enlarged
-        val imported = photos.import(Uri.fromFile(aPicture(300, 200)))
+    fun stored_keepsTheSizeOfASmallerPicture() = runTest { // #88: not enlarged
+        val imported = importWhole(Uri.fromFile(aPicture(300, 200)))
 
         assertThat(photos.file(imported).size()).isEqualTo(300 to 200)
     }
 
     @Test
-    fun import_turnsThePictureTheWayItsExifOrientationSays() = runTest { // #88
+    fun stored_turnsThePictureTheWayItsExifOrientationSays() = runTest { // #88
         // Each orientation of aPicture(40, 20) as it is shown.
         val shown = mapOf(
             ExifInterface.ORIENTATION_NORMAL to Shown(40, 20, Color.RED, Color.GREEN, Color.BLUE),
@@ -115,7 +106,7 @@ class FileCardPhotosTest {
         val imported = shown.mapValues { (orientation, _) ->
             val picked = aPicture(40, 20, "oriented-$orientation.jpg")
                 .withExif(ExifInterface.TAG_ORIENTATION to orientation.toString())
-            photos.file(photos.import(Uri.fromFile(picked))).shown()
+            photos.file(importWhole(Uri.fromFile(picked))).shown()
         }
 
         assertThat(imported).isEqualTo(shown)
@@ -123,85 +114,29 @@ class FileCardPhotosTest {
 
     @Test
     @Config(sdk = [29]) // #92: the platform ExifInterface reads a PNG's or WebP's EXIF only from API 30
-    fun import_onAndroid10_turnsAPngOrWebpTheWayItsExifOrientationSays() = runTest {
+    fun stored_onAndroid10_turnsAPngOrWebpTheWayItsExifOrientationSays() = runTest {
         val rotated = Shown(20, 40, Color.BLUE, Color.RED, Color.YELLOW) // aPicture(40, 20) turned 90° clockwise
 
         val imported = listOf(Bitmap.CompressFormat.PNG to "png", @Suppress("DEPRECATION") Bitmap.CompressFormat.WEBP to "webp")
             .associate { (format, extension) ->
                 val picked = aPicture(40, 20, "rotated.$extension", format)
                     .withExif(ExifInterface.TAG_ORIENTATION to ExifInterface.ORIENTATION_ROTATE_90.toString())
-                extension to photos.file(photos.import(Uri.fromFile(picked))).shown()
+                extension to photos.file(importWhole(Uri.fromFile(picked))).shown()
             }
 
         assertThat(imported).isEqualTo(mapOf("png" to rotated, "webp" to rotated))
     }
 
     @Test
-    fun import_putsATransparentPictureOnWhite() = runTest { // #88: a JPEG has no transparency, which would show black
+    fun stored_putsATransparentPictureOnWhite() = runTest { // #88: a JPEG has no transparency, which would show black
         val transparent = Bitmap.createBitmap(10, 10, Bitmap.Config.ARGB_8888)
         val picked = temporaryFolder.newFile("transparent.png").apply {
             outputStream().use { transparent.compress(Bitmap.CompressFormat.PNG, 100, it) }
         }
 
-        val imported = photos.file(photos.import(Uri.fromFile(picked)))
+        val imported = photos.file(importWhole(Uri.fromFile(picked)))
 
         assertThat(BitmapFactory.decodeFile(imported.path).getPixel(5, 5).nearest()).isEqualTo(Color.WHITE)
-    }
-
-    @Test
-    fun import_ofAFileThatIsntAPicture_throws_andLeavesNoFile() = runTest {
-        val picked = temporaryFolder.newFile("picked.jpg").apply { writeBytes(byteArrayOf(1, 2, 3)) }
-
-        assertThrows(IOException::class.java) { runBlocking { photos.import(Uri.fromFile(picked)) } }
-
-        assertThat(directory.listFiles().orEmpty()).isEmpty()
-    }
-
-    @Test
-    fun import_ofAPictureThatCantBeRead_throws_andLeavesNoFile() = runTest {
-        val missing = Uri.fromFile(File(temporaryFolder.root, "gone.jpg"))
-
-        assertThrows(FileNotFoundException::class.java) { runBlocking { photos.import(missing) } }
-
-        assertThat(directory.listFiles().orEmpty()).isEmpty()
-    }
-
-    @Test
-    fun import_cancelledWhileCopying_leavesNoFile() = runBlocking { // e.g. Back while a cloud picture downloads
-        val reading = CountDownLatch(1)
-        val release = CountDownLatch(1)
-        val slow = object : InputStream() {
-            private var sent = false
-
-            override fun read(): Int {
-                if (sent) return release.await().let { -1 }
-                sent = true
-                reading.countDown()
-                return 1
-            }
-        }
-        val copying = FileCardPhotos(directory, { slow })
-        val job = launch(Dispatchers.Default) { copying.import(PICKED) }
-        reading.await()
-
-        job.cancel()
-        release.countDown()
-        job.join()
-
-        assertThat(directory.listFiles().orEmpty()).isEmpty()
-    }
-
-    @Test
-    fun import_ofAPictureThatFailsPartway_throws_andLeavesNoFile() = runTest {
-        val failing = object : InputStream() {
-            private var sent = false
-
-            override fun read(): Int = if (sent) throw IOException("connection lost") else 1.also { sent = true }
-        }
-
-        assertThrows(IOException::class.java) { runBlocking { FileCardPhotos(directory, { failing }).import(PICKED) } }
-
-        assertThat(directory.listFiles().orEmpty()).isEmpty()
     }
 
     @Test
@@ -300,22 +235,6 @@ class FileCardPhotosTest {
     }
 
     @Test
-    fun crop_whole_storesTheUprightDownscaledPicture_withoutExif() = runTest { // #88 behaviours through the crop path
-        val picked = aPicture(40, 20).withExif(
-            ExifInterface.TAG_GPS_LATITUDE to "47/1,29/1,0/1",
-            ExifInterface.TAG_GPS_LATITUDE_REF to "N",
-            ExifInterface.TAG_MAKE to "Example",
-        )
-
-        val imported = photos.file(photos.crop(photos.stage(Uri.fromFile(picked)), PhotoCrop.WHOLE))
-
-        assertThat(imported.shown()).isEqualTo(Shown(40, 20, Color.RED, Color.GREEN, Color.BLUE))
-        val exif = ExifInterface(imported.path)
-        assertThat(exif.getAttribute(ExifInterface.TAG_GPS_LATITUDE)).isNull()
-        assertThat(exif.getAttribute(ExifInterface.TAG_MAKE)).isNull()
-    }
-
-    @Test
     fun crop_ofANonPictureStagedFile_throws_andLeavesNoFile() = runTest { // a corrupt capture the camera app wrote
         val capture = photos.newCapture()
         File(capture.uri.path!!).writeBytes(byteArrayOf(1, 2, 3))
@@ -337,17 +256,13 @@ class FileCardPhotosTest {
     }
 
     @Test
-    fun newCapture_isAFileInThePhotoDirectory_underANewName_thatImportsLikeAPick() = runTest { // #10: the camera app writes it
+    fun newCapture_isAFileInThePhotoDirectory_underANewName() = runTest { // #10: the camera app writes it, then crop stores it
         val first = photos.newCapture()
         val second = photos.newCapture()
-        aPicture(40, 20).copyTo(File(first.uri.path!!))
-
-        val imported = photos.import(first.uri)
 
         assertThat(first.name).isNotEqualTo(second.name)
         assertThat(first.name).endsWith(".jpg") // #10 review: a camera app may go by the target's extension
         assertThat(File(first.uri.path!!)).isEqualTo(File(directory, first.name))
-        assertThat(photos.file(imported).shown()).isEqualTo(Shown(40, 20, Color.RED, Color.GREEN, Color.BLUE))
     }
 
     @Test
@@ -363,8 +278,8 @@ class FileCardPhotosTest {
     @Test
     fun delete_removesThosePhotos_andSkipsNamesWithoutAFile() = runTest {
         val picked = aPicture(4, 4)
-        val kept = photos.import(Uri.fromFile(picked))
-        val deleted = photos.import(Uri.fromFile(picked))
+        val kept = importWhole(Uri.fromFile(picked))
+        val deleted = importWhole(Uri.fromFile(picked))
 
         photos.delete(listOf(deleted, "never-stored"))
 
@@ -374,7 +289,7 @@ class FileCardPhotosTest {
     @Test
     fun delete_skipsANameThatIsntAPhotoName_andDeletesTheRest() = runTest { // #87 review: an edit drops such a name
         val picked = aPicture(4, 4)
-        val deleted = photos.import(Uri.fromFile(picked))
+        val deleted = importWhole(Uri.fromFile(picked))
 
         photos.delete(listOf("../loyscan.db", deleted))
 
@@ -386,8 +301,8 @@ class FileCardPhotosTest {
     fun discard_deletesThosePhotosInTheBackground() = runTest {
         val background = FileCardPhotos(directory, { null }, StandardTestDispatcher(testScheduler))
         val picked = aPicture(4, 4)
-        val kept = photos.import(Uri.fromFile(picked))
-        val discarded = photos.import(Uri.fromFile(picked))
+        val kept = importWhole(Uri.fromFile(picked))
+        val discarded = importWhole(Uri.fromFile(picked))
 
         background.discard(listOf(discarded))
         advanceUntilIdle()
@@ -397,7 +312,7 @@ class FileCardPhotosTest {
 
     @Test
     fun exists_saysWhetherThePhotosFileIsThere() = runTest {
-        val imported = photos.import(Uri.fromFile(aPicture(4, 4)))
+        val imported = importWhole(Uri.fromFile(aPicture(4, 4)))
 
         assertThat(photos.exists(imported)).isTrue()
         assertThat(photos.exists("never-stored")).isFalse()

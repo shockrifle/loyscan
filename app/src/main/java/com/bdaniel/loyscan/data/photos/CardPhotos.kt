@@ -26,13 +26,6 @@ import java.util.UUID
 interface CardPhotos {
 
     /**
-     * Stores a re-encoded copy of [picture] (e.g. what the photo picker returned) in the app's storage: downscaled,
-     * upright and without its metadata (#88). Returns the new photo's name. Throws if it can't be read or isn't a
-     * picture that can be decoded; nothing is left behind then, or when the import is cancelled.
-     */
-    suspend fun import(picture: Uri): String
-
-    /**
      * Copies [picture] (e.g. what the photo picker returned) into the app's storage as it is, for the crop screen to
      * show and [crop] to store (#10). Returns the staged file's name, a valid photo name so the app's loader can show
      * it; it survives process death, since the picker's read grant ends with the process. A captured photo is written
@@ -90,32 +83,6 @@ class FileCardPhotos(
 
     constructor(directory: File, contentResolver: ContentResolver, shareCapture: (File) -> Uri = Uri::fromFile) :
         this(directory, contentResolver::openInputStream, shareCapture = shareCapture)
-
-    /**
-     * Copies the picture in as it is, then stores it re-encoded ([encodeCardPhoto]): smaller, the right way up and
-     * without its metadata (#88). The copy is read locally, so a cloud picture is downloaded once; it is deleted after,
-     * and one a killed process leaves behind is swept with the orphans.
-     */
-    override suspend fun import(picture: Uri): String {
-        val name = UUID.randomUUID().toString()
-        val file = file(name)
-        val original = File(directory, "$name.original")
-        try {
-            withContext(ioDispatcher) {
-                directory.mkdirs()
-                val input = openPicture(picture) ?: throw FileNotFoundException("Can't open $picture")
-                input.use { from -> original.outputStream().use { from.copyTo(it) } }
-                ensureActive()
-                encodeCardPhoto(original, file)
-            }
-            return name
-        } catch (e: Throwable) { // cancelled too: a half-written or unused file mustn't stay
-            withContext(NonCancellable + ioDispatcher) { file.delete() }
-            throw e
-        } finally {
-            withContext(NonCancellable + ioDispatcher) { original.delete() }
-        }
-    }
 
     /**
      * Copies the picture in as it is (#10). The copy is read locally, so a cloud picture is downloaded once; a half-

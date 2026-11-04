@@ -4,14 +4,18 @@ A card can carry photos of the physical card, front and back (#10). They are cop
 deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private-files]].
 
 **Entry points** (under `app/src/main/java/com/bdaniel/loyscan/`):
-- `data/photos/CardPhotos.kt`: `CardPhotos` (`import(uri)`, `delete(names)`, `newCapture()`), implemented by
-  `FileCardPhotos` over `files/card_photos/` (`di/CardPhotosModule.kt`, which hands a capture to the camera app through
-  the app's `FileProvider`).
-- `data/photos/CardPhotoEncoding.kt`: `encodeCardPhoto`, how an imported picture is stored (#88).
+- `data/photos/CardPhotos.kt`: `CardPhotos` (`stage(uri)`, `crop(name, crop)`, `delete(names)`, `newCapture()`),
+  implemented by `FileCardPhotos` over `files/card_photos/` (`di/CardPhotosModule.kt`, which hands a capture to the
+  camera app through the app's `FileProvider`).
+- `data/photos/CardPhotoEncoding.kt`: `encodeCardPhoto` and `PhotoCrop`, how an imported picture is stored, framed to
+  the card's ratio (#88, #10).
+- `ui/PhotoCropScreen.kt`: `PhotoCropScreen`, the crop screen; `photoCrop`, `clampCropOffset`, `cropTransform`, its
+  pure maths ([[2026-11-04-card-photos-interactive-crop]]).
 - `DetailScreen.kt`: the photos under the note, `PhotoViewer`.
 - `ui/PhotoCamera.kt`: `PhotoCamera`, `rememberPhotoCamera`, the system camera app and the camera permission it needs.
-- `CardFormScreen.kt` (`PhotoSlot`, its Take photo / Choose from gallery menu), `CardFormViewModel.kt` (`onPhotoPicked`, `startCapture`, `onPhotoTaken`,
-  `removePhoto`, `onCleared`): adding, replacing and removing photos while adding or editing a card.
+- `CardFormScreen.kt` (`PhotoSlot`, its Take photo / Choose from gallery menu, the crop overlay), `CardFormViewModel.kt`
+  (`onPhotoPicked`, `startCapture`, `onPhotoTaken`, `confirmCrop`, `cancelCrop`, `removePhoto`, `onCleared`): adding,
+  framing, replacing and removing photos while adding or editing a card.
 - `ui/CardPhoto.kt`: `CardPhoto(name)`, the image model; `CardPhotoMapper` on the app's Coil loader
   (`di/ImageLoaderModule.kt`) maps it to its file; `CARD_ASPECT_RATIO`.
 - `data/repository/RoomLoyaltyCardRepository.kt` (`update`, `delete`, `deleteAll`) and
@@ -25,17 +29,25 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   system photo picker (images only, no storage permission; the same `PicturePicker` as the scanner's "Scan from
   image", [[barcode-scanner]]). A slot with a photo shows it in the card's proportions (ID-1, cropped to fill) with
   Replace and Remove icons ("Replace front photo", "Remove front photo"); Replace opens the same menu. While a picture
-  is copied in, the slot shows a progress indicator, and neither Save nor another photo is possible. A picture that can't be copied (e.g. a cloud photo that won't download) says "The
+  is copied in or framed, the slot shows a progress indicator, and neither Save nor another photo is possible. A picture that can't be copied (e.g. a cloud photo that won't download) says "The
   photo couldn't be added. Try again."; the next pick clears it. Once saving has started, photos can't be changed.
-- **What is stored** (#88): not the picked file itself but a JPEG at most 2048 px on its long side (a smaller
-  picture keeps its size), turned the way its EXIF orientation says, a transparent picture on white, and with no EXIF
-  (no location). A picked file that isn't a picture can't be added. Why: [[2026-11-03-card-photos-as-private-files]].
+- **Framing a photo** ([[2026-11-04-card-photos-interactive-crop]]): every picked or taken picture opens full screen in
+  the crop screen (`PhotoCropScreen`, `PHOTO_CROP_TAG`) behind a fixed card-ratio frame. The user pans and pinch-zooms
+  the picture within it (the frame stays covered; up to 8× zoom). **Crop** stores the framed part, **Use whole photo**
+  stores all of it, **Cancel** drops it and adds nothing. The picture is requested at `Size.ORIGINAL`, so the crop is
+  framed from full resolution.
+- **What is stored** (#88, #10): not the picked file itself but a JPEG at most 2048 px on its long side (a smaller
+  picture keeps its size), cropped to the frame (or whole), turned the way its EXIF orientation says, a transparent
+  picture on white, and with no EXIF (no location). A picked file that isn't a picture can't be added. Why:
+  [[2026-11-03-card-photos-as-private-files]], [[2026-11-04-card-photos-interactive-crop]].
   The orientation is read with androidx's `ExifInterface` (`androidx.exifinterface`), not the platform's, which reads
   a PNG's or WebP's EXIF only from API 30: on Android 10 such a picture was stored unrotated (#92). Orientation of a
   HEIF picture is read through it too; not checked on a device (#93).
-- **What the form keeps.** A pick is copied in at once (the picker's read grant ends with the process). Its name goes
-  into the `SavedStateHandle` (keys `frontPhoto` / `backPhoto`; `""` means removed), so it survives process death.
-  Replacing or removing a photo picked in this form deletes that copy at once. The edited card's own photo stays
+- **What the form keeps.** A pick is copied in at once (the picker's read grant ends with the process) and staged for
+  the crop screen; the staged name and its side go into the `SavedStateHandle` (keys `cropPhoto` / `cropSide`), so the
+  crop screen survives process death as a capture does. Once framed, the stored photo's name goes into the
+  `SavedStateHandle` (keys `frontPhoto` / `backPhoto`; `""` means removed). A photo staged for the crop screen but never
+  framed is left to the sweep, like an abandoned pick (#95). Replacing or removing a photo picked in this form deletes that copy at once. The edited card's own photo stays
   until the edit is saved, then the repository deletes it. A form closed without saving leaves the copies picked in
   it to the orphan sweep (Orphans): `onCleared` deletes nothing, because it also runs when the activity is destroyed
   with the form still on the back stack and its process alive ("Don't keep activities", a background kill), and the
@@ -52,14 +64,14 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   `resolveActivity`, which on Android 11+ sees it only through the manifest's `<queries>` ([[android-app]]).
 - **A photo taken with the camera** goes through a capture file: `startCapture(side)` makes `<uuid>.jpg` in
   `files/card_photos/` (`CardPhotos.newCapture`) and returns its `content://<applicationId>.photos/…` Uri for the camera
-  app to write. `onPhotoTaken(taken)` then copies it in exactly like a pick (re-encoded, #88) and deletes the capture,
-  whether the copy worked or not; a camera that took nothing deletes it too. The capture's name, Uri and side are in
-  the `SavedStateHandle` (`capture`, `captureUri`, `captureSide`), since the process may die while the camera app is
-  in front. The form's `onCleared` leaves an unanswered capture alone: it also runs when the activity is destroyed
-  behind the camera app while the process lives ("Don't keep activities"), and the restored form then imports it
-  (found in review, `aPhotoTaken_isImported_whenTheFormWasClearedBehindTheCameraApp`). One never answered is swept
-  (Orphans). The `.jpg` name gives the camera app an `image/jpeg` target. No
-  capture starts while a photo is copied in or once saving has started (`startCapture` returns `null`).
+  app to write. `onPhotoTaken(taken)` then opens the crop screen on the capture (it is a staged file already, so it is
+  not copied again), which frames and stores it like a pick; a camera that took nothing deletes the capture. The
+  capture's name, Uri and side are in the `SavedStateHandle` (`capture`, `captureUri`, `captureSide`), since the process
+  may die while the camera app is in front. The form's `onCleared` leaves an unanswered capture alone: it also runs when
+  the activity is destroyed behind the camera app while the process lives ("Don't keep activities"), and the restored
+  form then opens the crop screen on it (`aPhotoTaken_opensTheCropScreen_whenTheFormWasClearedBehindTheCameraApp`). One
+  never answered is swept (Orphans). The `.jpg` name gives the camera app an `image/jpeg` target. No capture starts
+  while a photo is copied in or framed, or once saving has started (`startCapture` returns `null`).
 - **On the list** ([[card-list]]): the front photo is the card's tile, with the label on a dark scrim; a card with only
   a back photo, or a front photo that can't be loaded, keeps the initials.
 - **On the card** ([[card-detail]]): under the note, the photos it has, front first; a tap shows one full screen
@@ -92,18 +104,24 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   `aPhotoWhoseFileIsMissing_showsNoThumbnail` (the thumbnail is the viewer's only way in), `aCardWhosePhotoFilesAreAllMissing_showsNoPhotos` (#87),
   `theOpenPhoto_staysOpenWhenThePhoneTurns`. End to end: `AppNavigationTest.aCardsPhoto_isShownOnTheCard`,
   `deletingACardFromTheList_deletesItsPhotoFiles`.
-- `CardFormViewModelTest`: `aPickedFrontPhoto_…`, `editingACard_startsWithItsPhotos_…`, `removingACardsPhoto_…`,
-  `aPhotoPickedInTheForm_isDeleted_whenAnotherReplacesIt_orItIsRemoved`, `aFormClosedWithoutSaving_leavesItsPicksToTheSweep_…`,
-  `aFormClearedWithoutClosing_keepsItsPicks_…` (#95), `aSavedForm_keepsItsPhotos_…`, `aSaveStillRunningWhenTheFormCloses_keepsItsPhoto`,
+- `CardFormViewModelTest`: `aPickedFrontPhoto_…` (pick → frame → store), `editingACard_startsWithItsPhotos_…`,
+  `removingACardsPhoto_…`, `aPhotoPickedInTheForm_isDeleted_whenAnotherReplacesIt_orItIsRemoved`,
+  `aFormClosedWithoutSaving_leavesItsPicksToTheSweep_…`, `aFormClearedWithoutClosing_keepsItsPicks_…` (#95),
+  `aPhotoStagedForTheCropScreen_isRestoredAfterProcessDeath`, `cancellingTheCropScreen_dropsTheStagedPhoto_andAddsNone`,
+  `aSavedForm_keepsItsPhotos_…`, `aSaveStillRunningWhenTheFormCloses_keepsItsPhoto`,
   `aSaveThatFailsAfterTheFormClosed_leavesItsPickToTheSweep_…` (#95), `aFailedSave_keepsThePhotos_…`, `whileAPhotoIsCopiedIn_…`,
   `aPictureThatCantBeCopiedIn_…`, `aCancelledPick_…`, `noPhotoCanBePickedOrRemoved_onceSavingHasStarted`,
-  `aPickedPhoto_isRestoredAfterProcessDeath`. Camera captures: `aPhotoTaken_isImportedLikeAPick_andItsCaptureDeleted`,
-  `aCameraThatTookNoPhoto_…`, `aPhotoTakenThatCantBeImported_…`, `aPhotoTaken_isImported_afterProcessDeathWhileTheCameraWasOpen`,
-  `noCaptureStarts_…`, `aPhotoTaken_isImported_whenTheFormWasClearedBehindTheCameraApp`. `CardFormScreenTest`: `addingAFrontPhoto_…`,
-  `editingACard_showsItsPhoto_whichCanBeReplacedOrRemoved`, `aPictureThatCantBeCopiedIn_saysSo`; the camera:
+  `aPickedPhoto_isRestoredAfterProcessDeath`. Camera captures: `aPhotoTaken_opensTheCropScreen_andIsStoredFramed_…`,
+  `aCameraThatTookNoPhoto_…`, `aPhotoTakenThatCantBeStored_…`, `aPhotoTaken_opensTheCropScreen_afterProcessDeathWhileTheCameraWasOpen`,
+  `noCaptureStarts_…`, `aPhotoTaken_opensTheCropScreen_whenTheFormWasClearedBehindTheCameraApp`. `CardFormScreenTest`: `addingAFrontPhoto_…`,
+  `theCropScreen_framesAPhoto_toTheCardRatio` (a real staged file, so Crop runs over a loaded picture),
+  `theCropScreen_canBeCancelled_withoutAddingAPhoto`, `editingACard_showsItsPhoto_whichCanBeReplacedOrRemoved`,
+  `aPictureThatCantBeCopiedIn_saysSo`; the camera:
   `withACameraApp_addingAPhoto_offersTheCameraOrTheGallery`, `withoutACameraApp_addingAPhoto_opensTheGalleryAtOnce`,
   `takingAPhoto_opensTheCameraAppOnACapture_andShowsThePhotoTaken`, `replacingAPhoto_offersTheCameraToo`,
   `aCameraDenied_saysWhyItIsNeeded_untilTheNextPhoto`, `aCameraDeniedForGood_offersTheSettings`.
+- The crop maths: `ui/PhotoCropTest` (`photoCrop`, `clampCropOffset`, `cropTransform`) — the framed rectangle, the pan
+  limits and the zoom clamp, pure (the gesture itself isn't tested; Robolectric runs no Compose gestures).
 - `ui/PhotoCameraTest` (the real glue, a test `ActivityResultRegistry` answering the dialog and the camera app):
   allowed → the camera app on the target; asked first, then opened; a denial, then one for good; a dialog answered
   after a rotation still opens the camera; available only with an `IMAGE_CAPTURE` activity. Not checked on a device:
@@ -120,16 +138,18 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
 - `CardPhotoSweepCallbackTest` (on-disk database, closed and reopened), `DatabaseModuleTest.opening_sweepsAnOldPhotoNoCardNames`,
   `FileCardPhotosTest.deleteUnnamed_…`, `exists_…` (a name that isn't a photo name is `false`, not a throw, #87), `delete_skipsANameThatIsntAPhotoName_…`; `CardFormViewModelTest.aPickedPhotoWhoseFileIsGone_isNotSaved`.
 - `BackupRulesTest`: cloud backup excludes `card_photos/` on Android 12+ and 10–11; device transfer doesn't.
-- `data/photos/FileCardPhotosTest` (native graphics, real pixels, #88): `import_dropsTheLocationAndTheOtherExif` (a
-  fixture JPEG with GPS, make and date tags), `import_scalesALargePictureDown_toItsLongSideLimit`,
-  `import_keepsTheSizeOfASmallerPicture`, `import_turnsThePictureTheWayItsExifOrientationSays` (all eight
-  orientations), `import_onAndroid10_turnsAPngOrWebpTheWayItsExifOrientationSays` (`@Config(sdk = [29])`, #92),
-  `import_putsATransparentPictureOnWhite`, `import_ofAFileThatIsntAPicture_throws_andLeavesNoFile`.
-  `newCapture_isAFileInThePhotoDirectory_…`, `aCapture_isDeletedByItsName`; through the real `FileProvider`:
-  `di/CardPhotosModuleTest` (the write runs on CI only, see [[tdd]]).
-  Also: a picked picture is stored under a new name; an unreadable one, one that fails
-  partway and a copy cancelled midway (a blocking stream through the `openPicture` lambda) leave no file;
-  delete skips missing names, discard deletes in the background, a name can't leave the directory.
+- `data/photos/FileCardPhotosTest` (native graphics, real pixels, #88). A stored photo goes through `stage` then `crop`
+  (`importWhole` helper): `stored_dropsTheLocationAndTheOtherExif` (a fixture JPEG with GPS, make and date tags),
+  `stored_scalesALargePictureDown_toItsLongSideLimit`, `stored_keepsTheSizeOfASmallerPicture`,
+  `stored_turnsThePictureTheWayItsExifOrientationSays` (all eight orientations),
+  `stored_onAndroid10_turnsAPngOrWebpTheWayItsExifOrientationSays` (`@Config(sdk = [29])`, #92),
+  `stored_putsATransparentPictureOnWhite`. Cropping (#10): `crop_storesOnlyTheFramedPartOfTheUprightPicture_andDeletesTheStagedSource`,
+  `crop_isInTheUprightPicture_evenWhenTheSourceIsRotated`, `crop_ofAStagedCapture_storesIt_andDeletesTheCapture`,
+  `crop_ofANonPictureStagedFile_throws_andLeavesNoFile`. Staging: `stage_storesTheRawPickedBytes_…`,
+  `stage_ofAFileThatIsntAPicture_…`, `stage_ofAPictureThatCantBeRead_…`, `stage_cancelledWhileCopying_…`,
+  `stage_ofAPictureThatFailsPartway_…`. `newCapture_isAFileInThePhotoDirectory_…`, `aCapture_isDeletedByItsName`;
+  through the real `FileProvider`: `di/CardPhotosModuleTest` (the write runs on CI only, see [[tdd]]).
+  Also: delete skips missing names, discard deletes in the background, a name can't leave the directory.
 - `RoomLoyaltyCardRepositoryTest`: `update_deletesAReplacedOrRemovedPhoto_andKeepsTheOthers`,
   `update_keepingThePhotos_deletesNone`, `delete_deletesTheCardsPhotos`, `deleteAll_deletesThoseCardsPhotos_only`.
   `RoomStoreRepositoryTest.delete_deletesThePhotosOfTheStoresCards`, `delete_ofACatalogueStore_keepsItsCardsPhotos`.
@@ -137,4 +157,5 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
 
 ## Not implemented
 
-Cropping to the card's ratio, and the rest of the backup rules (#71), are later parts of #10.
+The rest of the backup rules — carrying the photos on Android 10–11 device-to-device transfer (#71) — are the last
+part of #10. Cropping to the card's ratio is done (interactive crop screen, [[2026-11-04-card-photos-interactive-crop]]).

@@ -18,6 +18,13 @@ emitted. See [[2025-12-12-brand-color-in-route]] and [[2025-12-12-detail-color-f
 ### Why are icons hand-written `ImageVector`s instead of `Icons.Default.*` from Material?
 The Material icons stopped resolving after the Compose BOM upgrade. See [[2025-12-08-hand-rolled-icons]].
 
+### Why set a `SavedStateHandle` key to `null` instead of removing it, to clear it?
+`savedStateHandle.remove(key)` clears the stored value (so `get` returns `null`) but does **not** emit to a
+`getStateFlow(key, …)` collector, so anything observing that flow (e.g. a `combine` feeding the UI state) keeps the
+stale value. Setting `savedStateHandle[key] = null` emits `null` and clears `get`. The card form clears the crop
+screen's keys this way (`CardFormViewModel.clearCropping`, #10); keys read only through `get` (the camera capture
+keys) can still be removed. Found while building the crop flow: `cancelCrop` left the crop screen on screen.
+
 ### Where do logs go?
 Timber, with a `DebugTree` planted only in debug builds (`LoyScanApplication.kt:11-13`). Release builds log
 nothing. Image-load failures are logged at WARN with the message prefix `Image loading failed for:`
