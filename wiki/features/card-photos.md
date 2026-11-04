@@ -34,8 +34,8 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
 - **Framing a photo** ([[2026-11-04-card-photos-interactive-crop]]): every picked or taken picture opens full screen in
   the crop screen (`PhotoCropScreen`, `PHOTO_CROP_TAG`) behind a fixed card-ratio frame. The user pans and pinch-zooms
   the picture within it (the frame stays covered; up to 8× zoom). **Crop** stores the framed part, **Use whole photo**
-  stores all of it, **Cancel** drops it and adds nothing. The picture is requested at `Size.ORIGINAL`, so the crop is
-  framed from full resolution.
+  stores all of it, **Cancel** drops it and adds nothing. The picture is requested at `MAX_PHOTO_SIDE` (not full size,
+  which would OOM a camera photo); the crop frame is a normalised rectangle, applied to the stored file.
 - **What is stored** (#88, #10): not the picked file itself but a JPEG at most 2048 px on its long side (a smaller
   picture keeps its size), cropped to the frame (or whole), turned the way its EXIF orientation says, a transparent
   picture on white, and with no EXIF (no location). A picked file that isn't a picture can't be added. Why:
@@ -121,7 +121,8 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   `takingAPhoto_opensTheCameraAppOnACapture_andShowsThePhotoTaken`, `replacingAPhoto_offersTheCameraToo`,
   `aCameraDenied_saysWhyItIsNeeded_untilTheNextPhoto`, `aCameraDeniedForGood_offersTheSettings`.
 - The crop maths: `ui/PhotoCropTest` (`photoCrop`, `clampCropOffset`, `cropTransform`) — the framed rectangle, the pan
-  limits and the zoom clamp, pure (the gesture itself isn't tested; Robolectric runs no Compose gestures).
+  limits and the zoom clamp, pure. The gesture over a loaded picture: `CardFormScreenTest.theCropScreen_pinchingToZoomIn_framesASmallerPart`
+  (two pointers through `performTouchInput`).
 - `ui/PhotoCameraTest` (the real glue, a test `ActivityResultRegistry` answering the dialog and the camera app):
   allowed → the camera app on the target; asked first, then opened; a denial, then one for good; a dialog answered
   after a rotation still opens the camera; available only with an `IMAGE_CAPTURE` activity. Not checked on a device:

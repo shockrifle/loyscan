@@ -51,8 +51,9 @@ interface CardPhotos {
     suspend fun exists(name: String): Boolean
 
     /**
-     * A new file for the camera app to write a photo into (#10), to [import] like a pick. It is deleted by its name
-     * once imported, or when the camera app took none; one a killed process leaves is swept with the orphans.
+     * A new file for the camera app to write a photo into (#10): a staged file already, so the crop screen opens on it
+     * and [crop] stores it like a pick. It is deleted when the camera app took none, or by [crop] once framed; one a
+     * killed process leaves is swept with the orphans.
      */
     fun newCapture(): PhotoCapture
 }

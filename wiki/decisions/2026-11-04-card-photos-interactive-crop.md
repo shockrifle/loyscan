@@ -33,12 +33,17 @@ how the user frames what is stored.
   to its framed, downscaled, metadata-free final form (`encodeCardPhoto`, now taking a `PhotoCrop`) and deletes
   the staged file. `onCleared` leaves a staged-but-unframed photo alone, for the same reason it leaves a pick or a
   capture ([[card-photos]], #95); an abandoned one is swept (Orphans).
-- **The crop maths is pure** (`photoCrop`, `clampCropOffset`, `cropTransform` in `PhotoCropScreen.kt`): the
-  gesture is UI, but what rectangle a pan/zoom selects, the pan limits and the zoom clamp are plain functions,
-  tested without a device (`ui/PhotoCropTest`), as the barcode drawing is ([[tdd]]).
-- The crop screen requests the picture at `coil.size.Size.ORIGINAL`, so it is decoded at full size and the crop is
-  framed from full resolution (and its intrinsic size is known without a layout pass, which a Robolectric screen
-  test relies on).
+- **The crop maths is pure** (`photoCrop`, `clampCropOffset`, `cropTransform` in `PhotoCropScreen.kt`): what rectangle
+  a pan/zoom selects, the pan limits and the zoom clamp are plain functions, tested without a device
+  (`ui/PhotoCropTest`), as the barcode drawing is ([[tdd]]). The gesture itself is also driven in a screen test
+  (`CardFormScreenTest.theCropScreen_pinchingToZoomIn_framesASmallerPart`, two pointers through `performTouchInput`).
+- The crop screen requests the picture at a bounded size (`MAX_PHOTO_SIDE`, 2048 px), not `Size.ORIGINAL`: a full-
+  sensor camera photo decoded whole (hundreds of MB as ARGB) would OOM. The crop maths uses only the picture's ratio,
+  so a downscaled display is fine, and the frame is a normalised rectangle `encodeCardPhoto` applies to the stored
+  file. That file's own decode picks `inSampleSize` from the whole picture's long side (not the crop region), so a
+  deep-zoom crop is sampled from that and loses some resolution; a region decode at full resolution is a possible
+  later improvement. (A fixed size, like `Size.ORIGINAL`, also means the picture's intrinsic size is known without a
+  layout pass, which a Robolectric screen test relies on.)
 
 ## Why
 - The user frames the card, so an off-centre or partly-in-frame card is kept properly, which a centre-crop can't.
@@ -49,9 +54,8 @@ how the user frames what is stored.
   already a file, so both sources become a staged file the crop screen and a restart can find.
 
 ## Consequences
-- The crop screen's pan and zoom aren't exercised by a test (Robolectric doesn't run Compose gestures); only the
-  crop maths and the screen's wiring (Crop / Use whole photo / Cancel) are. Not checked on a device: how the frame
-  feels, and the gesture on a real picture.
+- The crop maths, the gesture (a two-pointer zoom), and the screen's wiring (Crop / Use whole photo / Cancel) are
+  tested. Not checked on a device: how the frame feels, and the gesture on a real high-resolution picture.
 - A photo staged for the crop screen but never framed lingers like an abandoned pick — up to a day plus the next
   process start — before the sweep deletes it ([[2026-11-03-card-photos-as-private-files]]).
 - `CardPhotos.import` (copy-and-encode in one) is gone; the form stages then crops. `encodeCardPhoto` keeps the

@@ -26,14 +26,18 @@ by deleting its custom store, where `ON DELETE CASCADE` deletes the rows in SQLi
 ## Decision
 - Photos are files in `files/card_photos/` (`CardPhotosModule.PHOTO_DIRECTORY`). The row stores the file's **name** (a
   UUID). `FileCardPhotos.file(name)` refuses anything that isn't a bare file name.
-- A picked picture is copied in on pick (`CardPhotos.import`). A copy that fails or is cancelled leaves no file.
+- A picked picture is copied in on pick (`CardPhotos.stage`, since the crop screen of #10;
+  [[2026-11-04-card-photos-interactive-crop]]). A copy that fails or is cancelled leaves no file.
 - **It is stored re-encoded, not byte for byte** (#88, `data/photos/CardPhotoEncoding.kt`, `encodeCardPhoto`): a JPEG
   (quality 90) at most `MAX_PHOTO_SIDE` (2048 px) on its long side, never enlarged, turned the way its EXIF orientation
-  says, a transparent picture on white. A fresh encode carries no metadata, so the location and the rest of the EXIF
-  stay behind. The picked picture is first copied as it is to `<name>.original` next to the photo, and decoded from
-  there, so a cloud picture is downloaded once rather than once per pass (bounds, orientation, pixels); that copy is
-  deleted after, and one a killed process leaves is an orphan for the sweep below. A file that can't be decoded throws,
-  so the form says the photo couldn't be added. (Changed 2026-11-03 for #88: this was a byte-for-byte copy.)
+  says, a transparent picture on white, and cropped to the frame the user chose (#10). A fresh encode carries no
+  metadata, so the location and the rest of the EXIF stay behind. The picked picture is first copied as it is to a
+  staged file (`stage`), shown in the crop screen and decoded from there, so a cloud picture is downloaded once rather
+  than once per pass (bounds, orientation, pixels); that staged file is deleted once framed (`crop`), and one a killed
+  process leaves is an orphan for the sweep below. A file that can't be decoded throws, so the form says the photo
+  couldn't be added. `inSampleSize` is picked from the whole picture's long side, so a deep-zoom crop is sampled from
+  that, not re-decoded at full size for the crop region. (Changed 2026-11-03 for #88: this was a byte-for-byte copy;
+  2026-11-04 for #10: the single `import` became `stage` then `crop`, and the `.original` copy a staged file.)
 - **A photo taken with the camera** (added 2026-11-03, the camera slice of #10) is written by the camera app into a
   capture file in the same directory, `<uuid>.jpg` (`CardPhotos.newCapture`), handed to it as a
   `content://<applicationId>.photos/…` Uri by `androidx.core`'s `FileProvider`, whose paths (`res/xml/card_photo_paths.xml`)

@@ -1,11 +1,14 @@
 package com.bdaniel.loyscan.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -35,7 +38,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
-import coil.size.Size as CoilSize
+import com.bdaniel.loyscan.data.photos.MAX_PHOTO_SIDE
 import com.bdaniel.loyscan.data.photos.PhotoCrop
 import kotlin.math.max
 
@@ -57,73 +60,80 @@ fun PhotoCropScreen(
     onConfirm: (PhotoCrop) -> Unit,
     onCancel: () -> Unit,
 ) {
-    // Size.ORIGINAL: the whole picture is decoded (not sized to the view), so its intrinsic size is known for the crop maths.
-    val request = ImageRequest.Builder(LocalContext.current).data(CardPhoto(photo)).size(CoilSize.ORIGINAL).build()
+    // Bounded to MAX_PHOTO_SIDE, not Size.ORIGINAL: a full-sensor camera photo decoded whole (hundreds of MB as ARGB)
+    // would OOM. The crop maths uses only the picture's ratio, so a downscaled intrinsic size is fine.
+    val request = ImageRequest.Builder(LocalContext.current).data(CardPhoto(photo)).size(MAX_PHOTO_SIDE).build()
     val painter = rememberAsyncImagePainter(model = request, imageLoader = hiltImageLoader())
     var transform by remember { mutableStateOf(CropTransform(1f, Offset.Zero)) }
 
+    BackHandler(onBack = onCancel) // Back cancels the crop, not the whole form
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black)
+            // Consume taps on the scrim, so they don't fall through to the form behind the overlay.
+            .pointerInput(Unit) { detectTapGestures {} }
             .testTag(PHOTO_CROP_TAG),
     ) {
-        BoxWithConstraints(modifier = Modifier.align(Alignment.Center).fillMaxWidth().padding(16.dp)) {
+        BoxWithConstraints(modifier = Modifier.fillMaxSize().padding(16.dp)) {
             val frameWidthPx = constraints.maxWidth.toFloat()
             val frameHeightPx = frameWidthPx / CARD_ASPECT_RATIO
             val image = painter.intrinsicSize
 
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(CARD_ASPECT_RATIO)
-                    .clipToBounds()
-                    .pointerInput(Unit) {
-                        detectTransformGestures { _, pan, zoom, _ ->
-                            transform = cropTransform(image.width, image.height, frameWidthPx, frameHeightPx, transform.scale, transform.offset.x, transform.offset.y, pan.x, pan.y, zoom)
-                        }
-                    },
-            ) {
-                Image(
-                    painter = painter,
-                    contentDescription = description,
-                    contentScale = ContentScale.Crop, // covers the frame at scale 1; the user zooms in from there
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .graphicsLayer(
-                            scaleX = transform.scale,
-                            scaleY = transform.scale,
-                            translationX = transform.offset.x,
-                            translationY = transform.offset.y,
-                        ),
-                )
-            }
+            Column(modifier = Modifier.fillMaxSize()) {
+                Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(CARD_ASPECT_RATIO)
+                            .clipToBounds()
+                            // Keyed on the picture and frame: the gesture lambda captures them, and the picture's size is
+                            // unknown until it loads, so this restarts the detector once it is known (else the pan is unclamped).
+                            .pointerInput(image, frameWidthPx, frameHeightPx) {
+                                detectTransformGestures { _, pan, zoom, _ ->
+                                    transform = cropTransform(image.width, image.height, frameWidthPx, frameHeightPx, transform.scale, transform.offset.x, transform.offset.y, pan.x, pan.y, zoom)
+                                }
+                            },
+                    ) {
+                        Image(
+                            painter = painter,
+                            contentDescription = description,
+                            contentScale = ContentScale.Crop, // covers the frame at scale 1; the user zooms in from there
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .graphicsLayer(
+                                    scaleX = transform.scale,
+                                    scaleY = transform.scale,
+                                    translationX = transform.offset.x,
+                                    translationY = transform.offset.y,
+                                ),
+                        )
+                    }
+                }
 
-            Row(
-                modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(bottom = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                TextButton(onClick = onCancel, modifier = Modifier.weight(1f)) {
-                    Text("Cancel", color = Color.White)
-                }
-                TextButton(
-                    onClick = { onConfirm(PhotoCrop.WHOLE) },
-                    modifier = Modifier.weight(1f),
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    Text("Use whole photo", color = Color.White)
-                }
-                Button(
-                    onClick = {
-                        val crop = if (image.hasSize()) {
-                            photoCrop(image.width, image.height, frameWidthPx, frameHeightPx, transform.scale, transform.offset.x, transform.offset.y)
-                        } else {
-                            PhotoCrop.WHOLE
-                        }
-                        onConfirm(crop)
-                    },
-                    modifier = Modifier.weight(1f),
-                ) {
-                    Text("Crop")
+                    TextButton(onClick = onCancel, modifier = Modifier.weight(1f)) {
+                        Text("Cancel", color = Color.White)
+                    }
+                    TextButton(onClick = { onConfirm(PhotoCrop.WHOLE) }, modifier = Modifier.weight(1f)) {
+                        Text("Use whole photo", color = Color.White)
+                    }
+                    Button(
+                        onClick = {
+                            val crop = if (image.hasSize()) {
+                                photoCrop(image.width, image.height, frameWidthPx, frameHeightPx, transform.scale, transform.offset.x, transform.offset.y)
+                            } else {
+                                PhotoCrop.WHOLE
+                            }
+                            onConfirm(crop)
+                        },
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Text("Crop")
+                    }
                 }
             }
         }
