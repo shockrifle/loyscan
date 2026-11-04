@@ -12,7 +12,8 @@ the way they are, what's fragile, and how to work on it.
 - [[architecture]] — layers, DI, data flow, and a worked end-to-end example (the template for new features)
 - [[glossary]] — vocabulary used in code and in this wiki
 - [[faq]] — questions worth remembering
-- [[android-app]] — the one runtime surface: entry points, manifest, build config
+- [[android-app]] — the main runtime surface: entry points, manifest, build config
+- [[card-widget]] — the home-screen Glance widget: cards as tiles, a tap opens the card (#11)
 
 ## Features
 

@@ -84,6 +84,10 @@ Tests run on the JVM (`./gradlew testDebugUnitTest`, see [[build-and-run]]); sha
   `RoomLoyaltyCardRepositoryTest`, `RoomStoreRepositoryTest`), with a real `FileCardPhotos` over a `TemporaryFolder`
   so a test can check which photo files are left. Database callbacks are tested on a real database too: an on-disk one that is
   closed and reopened for the catalogue loader (`CatalogueDatabaseCallbackTest`).
+- **The Glance widget** ([[card-widget]], #11) keeps its logic out of the composable: which tiles, in what order and
+  their colour is a pure function (`toWidgetTiles`, `WidgetTile`) tested in plain/Robolectric JUnit, and the composable
+  is asserted with Glance's JVM unit test (`runGlanceAppWidgetUnitTest`, `glance-appwidget-testing`) without inflating
+  RemoteViews. The `GlanceAppWidget`/receiver glue runs only on a real home screen and is excluded from coverage.
 - **The wired-up app** (`MainActivity`, Hilt, navigation) runs in `@HiltAndroidTest`s on Robolectric.
   `testing/TemporaryPreferencesModule` swaps `PreferencesModule` for a new preferences file per test, and
   `testing/InMemoryDatabaseModule` (`@TestInstallIn`) swaps `DatabaseModule` for an empty in-memory database

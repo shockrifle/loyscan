@@ -41,13 +41,23 @@ class MainActivity : ComponentActivity() {
     /** Pictures shared to LoyScan (#77), each opened once by [AppNavigation]. */
     private val sharedPictures = Channel<Uri>(Channel.UNLIMITED)
 
+    /** Cards the home-screen widget asked to open (#11), each opened once by [AppNavigation]. */
+    private val openCards = Channel<OpenCard>(Channel.UNLIMITED)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // A recreated activity (rotation, process death) has the share's intent again, but its flow is already open.
-        if (savedInstanceState == null) intent.sharedPicture()?.let(sharedPictures::trySend)
-        // A share reaches this activity again only if its sender asked for SINGLE_TOP. Opening it here would replace
-        // what is open, e.g. a half-filled card form (#83), so it goes to a LoyScan of its own, as a chooser share does.
-        addOnNewIntentListener { intent -> if (intent.sharedPicture() != null) intent.forwardToATaskOfItsOwn(this) }
+        // A recreated activity (rotation, process death) has the launch intent again, but its flow is already open.
+        if (savedInstanceState == null) {
+            intent.sharedPicture()?.let(sharedPictures::trySend)
+            intent.openCard()?.let(openCards::trySend)
+        }
+        addOnNewIntentListener { intent ->
+            // A share reaches this activity again only if its sender asked for SINGLE_TOP. Opening it here would
+            // replace what is open, e.g. a half-filled card form (#83), so it goes to a LoyScan of its own.
+            if (intent.sharedPicture() != null) intent.forwardToATaskOfItsOwn(this)
+            // A widget tap is a deliberate request for one card, so it opens it over whatever is on screen (#11).
+            intent.openCard()?.let(openCards::trySend)
+        }
         enableEdgeToEdge()
         setContent {
             LoyScanTheme {
@@ -58,7 +68,10 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     SharedTransitionLayout {
-                        AppNavigation(sharedPictures = sharedPictures.receiveAsFlow())
+                        AppNavigation(
+                            sharedPictures = sharedPictures.receiveAsFlow(),
+                            openCards = openCards.receiveAsFlow(),
+                        )
                     }
                 }
             }
@@ -68,10 +81,17 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun SharedTransitionScope.AppNavigation(modifier: Modifier = Modifier, sharedPictures: Flow<Uri> = emptyFlow()) {
+fun SharedTransitionScope.AppNavigation(
+    modifier: Modifier = Modifier,
+    sharedPictures: Flow<Uri> = emptyFlow(),
+    openCards: Flow<OpenCard> = emptyFlow(),
+) {
     val navController = rememberNavController()
     LaunchedEffect(navController) {
         sharedPictures.collect { navController.openSharedPicture(it.toString()) }
+    }
+    LaunchedEffect(navController) {
+        openCards.collect { navController.openCard(it.cardId, it.color) }
     }
     val entry by navController.currentBackStackEntryAsState()
     // Only the card screen turns with a phone, to show the card (and its barcode) wide.
@@ -113,6 +133,28 @@ fun SharedTransitionScope.AppNavigation(modifier: Modifier = Modifier, sharedPic
             SharedPictureScreen(directions = navController.sharedPictureDirections(it))
         }
     }
+}
+
+/** A card the home-screen widget asked to open (#11): its id and its store colour, for the [Detail] route. */
+data class OpenCard(val cardId: String, val color: String)
+
+internal const val EXTRA_OPEN_CARD_ID = "com.bdaniel.loyscan.extra.OPEN_CARD_ID"
+internal const val EXTRA_OPEN_CARD_COLOR = "com.bdaniel.loyscan.extra.OPEN_CARD_COLOR"
+
+/** The intent a widget tile fires to open the card [cardId] (its store [color]) in LoyScan (#11). */
+internal fun openCardIntent(context: Context, cardId: String, color: String): Intent =
+    Intent(context, MainActivity::class.java)
+        .putExtra(EXTRA_OPEN_CARD_ID, cardId)
+        .putExtra(EXTRA_OPEN_CARD_COLOR, color)
+
+/**
+ * The card this intent asks to open (#11), or `null` when it is not a widget tap. Not one reopened from recents, which
+ * was handled when it arrived. The colour may be empty; the [Detail] route tolerates an empty or malformed one.
+ */
+internal fun Intent.openCard(): OpenCard? {
+    if (flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY != 0) return null
+    val cardId = getStringExtra(EXTRA_OPEN_CARD_ID) ?: return null
+    return OpenCard(cardId, getStringExtra(EXTRA_OPEN_CARD_COLOR).orEmpty())
 }
 
 /**

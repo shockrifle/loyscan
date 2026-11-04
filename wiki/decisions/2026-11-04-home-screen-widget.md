@@ -1,0 +1,44 @@
+# Home-screen widget: Glance, an intent extra, and a first slice
+
+**Status:** Active · **Date:** 2026-11-04 · **Issue:** [#11](https://github.com/shockrifle/loyscan/issues/11) · **Commits:** _this commit_
+
+The home-screen widget ([[card-widget]]), and the three choices that shaped its first slice.
+
+## Context
+
+#11 asks for a widget showing the cards as tiles, following the list's sort, that opens a card's detail on a
+tap — "even when the app process was dead". LoyScan already launches into targets from outside through an
+intent `MainActivity` reads, not through URI deep links (the share flow, [[add-card]], #77).
+
+## Decisions
+
+1. **Glance, not RemoteViews by hand.** `androidx.glance:glance-appwidget` 1.2.0. Glance is the current
+   AndroidX way to build widgets with a Compose-like API, and it has a JVM unit-test library
+   (`glance-appwidget-testing`, `runGlanceAppWidgetUnitTest`) that fits the project's test-first gate — the
+   content composable is asserted on the JVM without inflating RemoteViews.
+2. **Open a card via an intent extra, not a `navDeepLink`.** `openCardIntent` carries the card id + colour as
+   extras; `MainActivity.openCard()` reads them into an `openCards` `Channel` that `AppNavigation` collects, the
+   same shape as the shared-picture channel (#77). A cold intent in `onCreate` is the dead-process case, so it
+   needed no extra machinery. Adding URI deep links would have been a second, parallel way into the app.
+3. **Brand-colour tiles, no photo (this slice).** A tile is the card's colour box with its list label, mirroring
+   the list's non-photo tile. Glance renders RemoteViews, so a photo would mean loading a `Bitmap` into the
+   remote view — more work and risk. Deferred to a follow-up.
+
+## Why
+
+- **Intent extra over deep link:** one launch mechanism, already understood and tested (`ShareToLoyScanTest`),
+  reused. The widget's "process was dead" requirement is just a cold `Intent`, which the channel handles.
+- **Glance:** without its unit-test library the widget content would be untestable on the JVM and the 97 %
+  coverage gate ([[2026-10-09-coverage-gate-kover]]) would have blocked the feature or forced a large exclusion.
+
+## Consequences
+
+- The irreducible Glance/AppWidget glue — `CardWidget`'s `provideGlance` wiring and `CardWidgetReceiver` — runs
+  only on a real home screen and is excluded from coverage, like the theme and icons. All logic (`toWidgetTiles`,
+  the colour helpers, the intent, the navigation) is tested.
+- A widget tap opens the card over whatever is on screen, and counts a use (#4). It does **not** forward to a new
+  task the way a share does (#83): a share is content arriving; a widget tap is the user choosing a card.
+- **Follow-ups (not built):** front-photo tiles, and an empty-state message when there are no cards.
+- `glance-testing`'s unit API matches a tile's click by component, not by intent extras, so the "right card is
+  opened" guarantee rests on `CardWidgetTilesTest` (cardId↔tile) plus the intent/navigation tests, not on the
+  content test.

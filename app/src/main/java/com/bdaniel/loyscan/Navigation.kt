@@ -221,6 +221,17 @@ private fun addCardStep(storeId: String, scannedContent: String?, scannedFormat:
     }
 
 
+/**
+ * Opens the card [cardId] (its store colour [color]) from the home-screen widget (#11), over the list, so Back returns
+ * to the list. Opening a card is a use at a till, as tapping it in the list is (#4), so the open counts one.
+ */
+fun NavController.openCard(cardId: String, color: String) {
+    navigate(Detail(cardId, color)) {
+        popUpTo<CardList>()
+    }
+}
+
+
 /** A picture shared to LoyScan (#77), at the `content://` [uri] granted with the share, read before the store is picked. */
 @Serializable
 data class SharedPicture(val uri: String)

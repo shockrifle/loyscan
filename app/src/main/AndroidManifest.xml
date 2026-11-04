@@ -47,6 +47,17 @@
                 <data android:mimeType="image/*" />
             </intent-filter>
         </activity>
+        <!-- Home-screen widget: the user's cards as tiles, each opening its card (#11). -->
+        <receiver
+            android:name=".widget.CardWidgetReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/card_widget_info" />
+        </receiver>
         <!-- Hands the camera app the file to write a card photo into (#10). -->
         <provider
             android:name="androidx.core.content.FileProvider"

@@ -23,6 +23,9 @@ The project is moving to test-first work (#13). Without a number, untested code 
     `koverVerify`.
 - **Excluded**, because there is no logic to test or it is generated code:
   - `com.bdaniel.loyscan.ui.theme` and its sub-packages, which includes the icon vectors in `Icons.kt`.
+  - `com.bdaniel.loyscan.widget.CardWidget` and `CardWidgetReceiver`: Glance/AppWidget glue that runs only on a
+    real home screen (the `provideGlance` wiring and the system receiver). The logic they show is tested —
+    `toWidgetTiles` and `CardWidgetContent` ([[card-widget]], #11, 2026-11-04).
   - Functions annotated `@Preview`.
   - Hilt/Dagger output: `*_Factory`, `*Module_*Factory`, `*.Hilt_*`, `*_MembersInjector`, `*_HiltModules*`,
     component classes.

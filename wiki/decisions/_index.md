@@ -28,6 +28,7 @@ inferred.
 - [[2026-11-03-card-photos-as-private-files]] — card photos are files in `files/card_photos/`, named (not pathed) in the row, copied on pick; the repositories delete them on every write that drops them, the custom store's cascade included (#10)
 - [[2026-11-03-card-photos-from-the-system-camera-app]] — "Take photo" opens the system camera app, not a CameraX screen of our own (#10)
 - [[2026-11-04-card-photos-interactive-crop]] — a picked or taken photo is framed to the card's ratio in an interactive crop screen (pan/zoom, or keep the whole picture), staged so it survives process death (#10)
+- [[2026-11-04-home-screen-widget]] — a Glance widget; it opens a card via an intent extra `MainActivity` reads (not a URI deep link); brand-colour tiles, no photo, in the first slice (#11)
 - [[2026-10-22-store-suggestion-trigger]] — the card form offers other stores for a scan the picked store rejects, reads only by symbology, or has no rule for; exact format ranks first
 
 ## Superseded

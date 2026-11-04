@@ -27,6 +27,10 @@ versionName `1.0` (versionCode 1). minSdk 29, target/compileSdk 36, Java/JVM 21 
 - A `FileProvider` (`androidx.core.content.FileProvider`, authority `${applicationId}.photos`, not exported, per-Uri
   grants) hands the camera app a file in `files/card_photos/` to write a card photo into (`res/xml/card_photo_paths.xml`,
   [[card-photos]], #10, `CardPhotosModuleTest`).
+- A non-exported `<receiver>` `.widget.CardWidgetReceiver` with the `APPWIDGET_UPDATE` filter and an
+  `android.appwidget.provider` meta-data (`res/xml/card_widget_info.xml`) is the home-screen widget
+  ([[card-widget]], #11). `MainActivity` also reads an open-card intent (`openCardIntent` / `Intent.openCard()`) the
+  widget fires.
 - Native code: zxing-cpp ships `.so` files for `arm64-v8a`, `armeabi-v7a`, `x86` and `x86_64` ([[zxing-cpp]]).
 - `allowBackup="true"`. `data_extraction_rules.xml` (Android 12+) and `backup_rules.xml` (10–11) exclude only
   `files/card_photos/` from cloud backup ([[card-photos]], #10, `BackupRulesTest`). On 10–11 the bare exclude also keeps
