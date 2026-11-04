@@ -121,8 +121,8 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   `takingAPhoto_opensTheCameraAppOnACapture_andShowsThePhotoTaken`, `replacingAPhoto_offersTheCameraToo`,
   `aCameraDenied_saysWhyItIsNeeded_untilTheNextPhoto`, `aCameraDeniedForGood_offersTheSettings`.
 - The crop maths: `ui/PhotoCropTest` (`photoCrop`, `clampCropOffset`, `cropTransform`) — the framed rectangle, the pan
-  limits and the zoom clamp, pure. The gesture over a loaded picture: `CardFormScreenTest.theCropScreen_pinchingToZoomIn_framesASmallerPart`
-  (two pointers through `performTouchInput`).
+  limits and the zoom clamp, pure. The gesture → crop path over a loaded picture:
+  `CardFormScreenTest.theCropScreen_zoomAndPan_storeACardRatioPartOfThePicture` (two pointers through `performTouchInput`).
 - `ui/PhotoCameraTest` (the real glue, a test `ActivityResultRegistry` answering the dialog and the camera app):
   allowed → the camera app on the target; asked first, then opened; a denial, then one for good; a dialog answered
   after a rotation still opens the camera; available only with an `IMAGE_CAPTURE` activity. Not checked on a device:

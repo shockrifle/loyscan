@@ -37,6 +37,7 @@ import com.bdaniel.loyscan.testing.aLoyaltyCard
 import com.bdaniel.loyscan.testing.aStore
 import com.bdaniel.loyscan.testing.cardId
 import com.bdaniel.loyscan.testing.writeOnePixelPng
+import com.bdaniel.loyscan.ui.CARD_ASPECT_RATIO
 import com.bdaniel.loyscan.ui.PHOTO_CROP_TAG
 import com.bdaniel.loyscan.ui.PhotoCamera
 import com.bdaniel.loyscan.ui.scanner.PicturePicker
@@ -337,7 +338,10 @@ class CardFormScreenTest {
     }
 
     @Test
-    fun theCropScreen_pinchingToZoomIn_framesASmallerPart() { // #10 review: the gesture must clamp to the loaded picture
+    fun theCropScreen_zoomAndPan_storeACardRatioPartOfThePicture() { // #10
+        // Exercises the gesture → crop path: a zoom and a pan, then Crop, store a framed part. This does not reproduce
+        // the device-only stale-size bug (in Robolectric the picture loads before the gesture starts), so it isn't a
+        // guard for it; the keyed `pointerInput` fix for that is reasoned, not checked here. See the decision page.
         val context = ApplicationProvider.getApplicationContext<android.content.Context>()
         File(context.filesDir, CardPhotosModule.PHOTO_DIRECTORY).resolve("staged-1").writeOnePixelPng()
         setScreen(CardForm("ruled"))
@@ -345,19 +349,26 @@ class CardFormScreenTest {
         val loader = EntryPointAccessors.fromApplication(context, ImageLoaderEntryPoint::class.java).getImageLoader()
         composeRule.waitUntil(timeoutMillis = 10_000) { ShadowLooper.idleMainLooper(); (loader.memoryCache?.size ?: 0) > 0 }
 
-        // Two fingers spread apart around the frame's centre: zoom in.
+        // Zoom in (two fingers spread), then drag far past the edge.
         composeRule.onNodeWithTag(PHOTO_CROP_TAG).performTouchInput {
             down(0, center - Offset(20f, 0f))
             down(1, center + Offset(20f, 0f))
-            moveTo(0, center - Offset(180f, 0f))
-            moveTo(1, center + Offset(180f, 0f))
+            moveTo(0, center - Offset(160f, 0f))
+            moveTo(1, center + Offset(160f, 0f))
             up(0)
             up(1)
+        }
+        composeRule.onNodeWithTag(PHOTO_CROP_TAG).performTouchInput {
+            down(center)
+            moveTo(center + Offset(2000f, 2000f))
+            up()
         }
         composeRule.onNodeWithText("Crop").performClick()
 
         val crop = photos.cropped.single().second
-        assertThat(crop.right - crop.left).isLessThan(1f) // a zoomed-in frame keeps less than the whole width
+        assertThat(crop.right - crop.left).isLessThan(1f) // zoomed in, so less than the whole width is kept
+        val ratio = (crop.right - crop.left) / (crop.bottom - crop.top) // the 1×1 picture makes this the crop's own ratio
+        assertThat(ratio).isWithin(0.03f).of(CARD_ASPECT_RATIO) // the pan stayed in the picture, so the frame kept its ratio
     }
 
     @Test
