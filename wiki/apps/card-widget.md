@@ -18,12 +18,15 @@ All paths are under `app/src/main/java/com/bdaniel/loyscan/` unless written in f
   `Flow` once its session ends, so something must redraw it when the data changes. `widget/CardWidgetUpdater.kt`
   observes the rendered tiles (`toWidgetTiles`) and refreshes the widget whenever they change — and only then, so an
   edit a tile doesn't show (a note, a number) doesn't redraw it. The two Glance calls it needs — "is a widget placed?"
-  and "redraw them all" — are behind `CardWidgetRefresher` (impl `GlanceCardWidgetRefresher`: `getGlanceIds` and
+  and "redraw them all" — are behind `CardWidgetRefresher` (impl `glance.GlanceCardWidgetRefresher`: `getGlanceIds` and
   `updateAll`), so the updater's logic is unit-tested with a fake and only the Glance impl is excluded from coverage.
-  It is started from `LoyScanApplication.onCreate` on an app-wide scope and stays off the database when no widget is
-  placed — the common case, and every test that boots the app. Cards change only through the running app, so observing
-  while the process is alive is enough. **On-device check (#11): confirm the widget refreshes after a card is added,
-  edited, deleted or re-sorted.**
+  `ensureObserving()` is idempotent and called both from `LoyScanApplication.onCreate` (for a widget placed before the
+  app launched) and from `CardWidgetReceiver.onUpdate` (for one placed, or shown after a restart, while the app runs),
+  so a widget added mid-session is followed too. It observes nothing — and touches neither the database nor the
+  preferences — while no widget is placed, which is the common case and every test that boots the app. A failure to
+  read the cards or redraw is logged, not thrown (an app-scope `CoroutineExceptionHandler` and per-emission
+  `try`/`catch`): the widget is optional and must not crash the app. **On-device check (#11): confirm the widget
+  refreshes after a card is added, edited, deleted or re-sorted, including when the widget was placed mid-session.**
 - `widget/CardWidgetTiles.kt` — the pure logic, unit-tested: `List<LoyaltyCard>.toWidgetTiles(sort)` sorts with
   the list's `sortedBy(sort)` ([[card-list]], #7) and maps each card to a `WidgetTile(cardId, color, label)`,
   the `label` being the card's label or, when it has none, the store name — the same text the list tile shows.
@@ -76,7 +79,8 @@ Glance's `@layout/glance_default_loading_layout` as the initial layout). Glance 
   unit API matches a click by component + `ActionParameters`, not by the intent extras the tile uses, so that a tile
   opens **its own** card is an on-device check, not a unit assertion.
 - `widget/CardWidgetUpdaterTest` — the live-update trigger: it fires when a card or the sort changes the tiles, not on
-  a change a tile doesn't show, and never when no widget is placed.
+  a change a tile doesn't show, never when no widget is placed, starts once a widget is placed mid-session, and a
+  refresh that throws is swallowed so observation continues.
 - `OpenCardIntentTest` — the intent round-trips, and is `null` for a bare intent or one from recents.
 - `WidgetTapOpensCardTest` — end to end: `MainActivity` launched **cold** by `openCardIntent` opens that card's
   detail, and a **warm** `onNewIntent` opens it while the app is already running. Mirrors `ShareToLoyScanTest`. The
@@ -94,8 +98,8 @@ the logic it drives is tested above ([[2026-10-09-coverage-gate-kover]]).
 - No front photo on a tile — a tile is the brand-colour box, as the list's non-photo tile is. Photo tiles are a
   follow-up.
 - No empty-state message: a widget with no cards shows nothing.
-- The live-update trigger only observes while the app is running and a widget was already placed when the app
-  started; a widget added mid-session refreshes on the next app start (it renders current cards when added).
+- The live-update trigger only observes while the app process is alive. Cards change only through the running app,
+  so that covers every real change; a widget added while the app is dead renders current cards when it is next shown.
 - The on-device checks above (live refresh, warm/repeat tap) are why #11 stays open after this slice.
 
 See [[2026-11-04-home-screen-widget]] for the decisions.

@@ -15,12 +15,16 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class CardWidgetUpdaterTest {
 
-    /** A fake [CardWidgetRefresher]: counts refreshes, and says whether a widget is placed. */
-    private class FakeRefresher(private val hasWidget: Boolean) : CardWidgetRefresher {
+    /** A fake [CardWidgetRefresher]: counts refreshes, says whether a widget is placed, can throw once. */
+    private class FakeRefresher(var hasWidget: Boolean = true) : CardWidgetRefresher {
         var refreshes = 0
             private set
+        var failNextRefresh = false
         override suspend fun hasWidget() = hasWidget
-        override suspend fun refresh() { refreshes++ }
+        override suspend fun refresh() {
+            if (failNextRefresh) { failNextRefresh = false; throw RuntimeException("boom") }
+            refreshes++
+        }
     }
 
     @Test
@@ -28,7 +32,7 @@ class CardWidgetUpdaterTest {
         val cards = FakeLoyaltyCardRepository()
         val refresher = FakeRefresher(hasWidget = true)
 
-        CardWidgetUpdater(cards, FakeUserPreferencesRepository(), refresher).start(backgroundScope)
+        CardWidgetUpdater(cards, FakeUserPreferencesRepository(), refresher, backgroundScope).ensureObserving()
         runCurrent()
         val afterFirstRender = refresher.refreshes
 
@@ -45,7 +49,7 @@ class CardWidgetUpdaterTest {
         )
         val preferences = FakeUserPreferencesRepository(CardSort.NAME)
         val refresher = FakeRefresher(hasWidget = true)
-        CardWidgetUpdater(cards, preferences, refresher).start(backgroundScope)
+        CardWidgetUpdater(cards, preferences, refresher, backgroundScope).ensureObserving()
         runCurrent()
         val before = refresher.refreshes
 
@@ -59,7 +63,7 @@ class CardWidgetUpdaterTest {
     fun refresh_doesNotRunForAChangeThatLeavesTheTilesTheSame() = runTest {
         val cards = FakeLoyaltyCardRepository(listOf(aLoyaltyCard(id = cardId(1), label = "Tesco")))
         val refresher = FakeRefresher(hasWidget = true)
-        CardWidgetUpdater(cards, FakeUserPreferencesRepository(), refresher).start(backgroundScope)
+        CardWidgetUpdater(cards, FakeUserPreferencesRepository(), refresher, backgroundScope).ensureObserving()
         runCurrent()
         val before = refresher.refreshes
 
@@ -71,14 +75,51 @@ class CardWidgetUpdaterTest {
     }
 
     @Test
-    fun refresh_neverRunsWhenNoWidgetIsPlaced() = runTest {
+    fun refresh_neverRunsAndNoCardsAreRead_whenNoWidgetIsPlaced() = runTest {
         val cards = FakeLoyaltyCardRepository()
         val refresher = FakeRefresher(hasWidget = false)
 
-        CardWidgetUpdater(cards, FakeUserPreferencesRepository(), refresher).start(backgroundScope)
+        CardWidgetUpdater(cards, FakeUserPreferencesRepository(), refresher, backgroundScope).ensureObserving()
         cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), label = "Tesco"))
         runCurrent()
 
         assertThat(refresher.refreshes).isEqualTo(0)
+    }
+
+    @Test
+    fun observing_startsAfterAWidgetIsPlacedWhileTheAppIsAlreadyRunning() { // #11: the receiver re-triggers it
+        runTest {
+            val cards = FakeLoyaltyCardRepository()
+            val refresher = FakeRefresher(hasWidget = false) // no widget when the app started
+            val updater = CardWidgetUpdater(cards, FakeUserPreferencesRepository(), refresher, backgroundScope)
+
+            updater.ensureObserving()
+            runCurrent() // nothing observed yet
+
+            refresher.hasWidget = true // the user places a widget; the receiver calls ensureObserving again
+            updater.ensureObserving()
+            runCurrent()
+            cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), label = "Tesco"))
+            runCurrent()
+
+            assertThat(refresher.refreshes).isGreaterThan(0)
+        }
+    }
+
+    @Test
+    fun aRefreshFailure_isLoggedNotThrown_andObservationContinues() { // #11: the widget must not crash the app
+        runTest {
+            val cards = FakeLoyaltyCardRepository()
+            val refresher = FakeRefresher(hasWidget = true).apply { failNextRefresh = true }
+
+            CardWidgetUpdater(cards, FakeUserPreferencesRepository(), refresher, backgroundScope).ensureObserving()
+            runCurrent() // the first refresh throws and is swallowed
+
+            cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), label = "Tesco"))
+            runCurrent()
+
+            // The thrown refresh didn't end the observation: a later change still refreshes.
+            assertThat(refresher.refreshes).isGreaterThan(0)
+        }
     }
 }

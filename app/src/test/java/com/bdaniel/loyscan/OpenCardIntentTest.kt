@@ -23,6 +23,13 @@ class OpenCardIntentTest {
     }
 
     @Test
+    fun anOpenCardIntent_isSingleTop_soAWarmTapReachesTheRunningActivity() { // #11
+        val intent = openCardIntent(context, "card-7", "#112233")
+
+        assertThat(intent.flags and Intent.FLAG_ACTIVITY_SINGLE_TOP).isEqualTo(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+    }
+
+    @Test
     fun anIntentWithoutACardId_isNoOpenCard() {
         assertThat(Intent(context, MainActivity::class.java).openCard()).isNull()
     }
