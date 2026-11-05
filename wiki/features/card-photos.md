@@ -80,14 +80,15 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   `CardPhotoSweepCallback` (`data/local/db/`, added in `di/DatabaseModule.kt`) deletes photo files that no card names
   and that are over a day old; newer ones may belong to a form still open or about to be restored. A save drops a
   picked photo whose file has gone since, and keeps the card's own photo for that side ([[2026-11-03-card-photos-as-private-files]]).
-- **A photo whose file is missing** (a cloud restore brings back the database but not the photos, see Backup) is
+- **A photo whose file is missing** (its file was deleted or otherwise lost while the row still names it) is
   treated as no photo (#87). `CardPhotos.withoutMissing(card)` (`data/photos/CardPhotos.kt`) drops such a name from
   the card `DetailViewModel` shows, from the cards `ListViewModel` lists, and from the card `CardFormViewModel` edits. So
   the card screen shows no thumbnail or viewer for it, the tile shows the initials (#89), and the form shows that side
   as "Add … photo". Saving the edit writes the side as `null`, which
   clears the name; until then the row keeps it.
-- **Backup:** `files/card_photos/` is excluded from cloud backup; device-to-device transfer takes it on Android 12+
-  ([[android-app]], [[2026-11-03-card-photos-as-private-files]]).
+- **Backup:** cloud backup carries no app data at all, the photos included, on every supported version; device-to-device
+  transfer to a new phone carries them ([[2026-11-05-no-cloud-backup-in-v1]], [[android-app]],
+  [[2026-11-03-card-photos-as-private-files]], #71). Opt-in cloud backup is #24.
 - Images load through `hiltImageLoader()`, never Coil's default ([[coil-image-loading]]).
 - **Files are deleted on every path:**
   - replacing or removing a photo in an edit ([[edit-card]]);
@@ -138,7 +139,8 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   `AppNavigationTest.aCardsFrontPhoto_isLoadedOntoItsTile_byTheAppsImageLoader`.
 - `CardPhotoSweepCallbackTest` (on-disk database, closed and reopened), `DatabaseModuleTest.opening_sweepsAnOldPhotoNoCardNames`,
   `FileCardPhotosTest.deleteUnnamed_…`, `exists_…` (a name that isn't a photo name is `false`, not a throw, #87), `delete_skipsANameThatIsntAPhotoName_…`; `CardFormViewModelTest.aPickedPhotoWhoseFileIsGone_isNotSaved`.
-- `BackupRulesTest`: cloud backup excludes `card_photos/` on Android 12+ and 10–11; device transfer doesn't.
+- `BackupRulesTest`: cloud backup excludes every domain and includes nothing (Android 12+); the 10–11 rules are
+  include-only with every include gated to device-to-device transfer, which carries every domain, the photos included.
 - `data/photos/FileCardPhotosTest` (native graphics, real pixels, #88). A stored photo goes through `stage` then `crop`
   (`importWhole` helper): `stored_dropsTheLocationAndTheOtherExif` (a fixture JPEG with GPS, make and date tags),
   `stored_scalesALargePictureDown_toItsLongSideLimit`, `stored_keepsTheSizeOfASmallerPicture`,
@@ -158,5 +160,7 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
 
 ## Not implemented
 
-The rest of the backup rules — carrying the photos on Android 10–11 device-to-device transfer (#71) — are the last
-part of #10. Cropping to the card's ratio is done (interactive crop screen, [[2026-11-04-card-photos-interactive-crop]]).
+The photos now stay out of cloud backup and travel on device-to-device transfer on every supported version
+([[2026-11-05-no-cloud-backup-in-v1]], #71), which was the last code piece of #10's backup criterion; opt-in cloud
+backup of the app's data is #24, after v1. Cropping to the card's ratio is done (interactive crop screen,
+[[2026-11-04-card-photos-interactive-crop]]).

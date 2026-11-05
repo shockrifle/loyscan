@@ -79,11 +79,11 @@ by deleting its custom store, where `ON DELETE CASCADE` deletes the rows in SQLi
   otherwise send pictures of the user's cards to their Google account unasked (cloud backup becomes opt-in with #24),
   and they would pass its 25 MB quota, which stops the app's backup altogether, database included. Even at about 1 MB
   each since #88, two photos a card pass it at a dozen cards. (Updated 2026-11-03 in the review of #88: this said the
-  backup would send their location and that a few full-size photos would pass the quota.) Device-to-device transfer takes them on Android
-  12+. On 10–11 the bare exclude leaves them behind for now: `requireFlags="deviceToDeviceTransfer"` includes would
-  carry them, and they are #71's, with the rest of the rules (corrected in the second review: this said the platform
-  forces it). (Corrected 2026-11-03 in review: this said only that
-  they count toward device-to-device transfer, while cloud backup was still on with the template rules.)
+  backup would send their location and that a few full-size photos would pass the quota.) Device-to-device transfer
+  carries them on every supported version. (Changed 2026-11-05 for #71: cloud backup now carries no app data at all, not
+  just the photos, and device-to-device transfer carries the photos on Android 10–11 too, via
+  `requireFlags="deviceToDeviceTransfer"` includes — see [[2026-11-05-no-cloud-backup-in-v1]]. This bullet used to say
+  only the photos were excluded from cloud backup and that 10–11 D2D left them behind, which was #71's to write.)
 - A photo picked in a form that is then abandoned is left to the orphan sweep: the form's `onCleared` deletes no pick,
   because it can't tell a real close from the activity being destroyed with the form still on the back stack, which the
   restored form must survive ([[card-photos]], #95). So an abandoned pick — and a pick a failed save leaves after the
@@ -91,7 +91,9 @@ by deleting its custom store, where `ON DELETE CASCADE` deletes the rows in SQLi
   are small (at most ~1 MB each since #88) and private, so the latency is accepted; deleting on a real back-stack pop
   would need a signal from the UI layer the ViewModel doesn't have. (Changed 2026-11-04 for #95: `onCleared` and the
   failed-save path used to delete the picks at once, which lost them when the clear was an activity destroy, not a close.)
-- Cloud backup still holds `loyscan.db` (#71), but no longer the photos. So a cloud restore brings back rows that name
-  photo files it didn't restore. Since #87 such a photo is shown as none, on the card screen and in the form, and a
-  saved edit clears its name ([[card-photos]]). (Updated 2026-11-03: this said nothing clears the name and the card
-  shows an empty photo.)
+- A card row can name a photo file that no longer exists on disk. Since #87 such a photo is shown as none, on the card
+  screen and in the form, and a saved edit clears its name ([[card-photos]]). (Changed 2026-11-05 for #71: this bullet
+  used to say a *cloud restore* caused it, by bringing back `loyscan.db` but not the photos. Cloud backup now carries no
+  app data at all ([[2026-11-05-no-cloud-backup-in-v1]]), and device-to-device transfer carries the db and photos
+  together, so neither path produces the mismatch; #87's guard still covers a file otherwise deleted or lost.) (Updated
+  2026-11-03: this said nothing clears the name and the card shows an empty photo.)

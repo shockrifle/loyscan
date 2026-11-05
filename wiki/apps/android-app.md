@@ -33,9 +33,9 @@ versionName `1.0` (versionCode 1). minSdk 29, target/compileSdk 36, Java/JVM 21 
   intent (`openCardIntent` / `Intent.openCard()`) the widget fires.
 - Native code: zxing-cpp ships `.so` files for `arm64-v8a`, `armeabi-v7a`, `x86` and `x86_64` ([[zxing-cpp]]).
 - `allowBackup="true"`, but **cloud backup carries no app data** ([[2026-11-05-no-cloud-backup-in-v1]], #71,
-  `BackupRulesTest`). `data_extraction_rules.xml` (Android 12+) excludes every data domain (`file`, `database`,
-  `sharedpref`, `external`) from `<cloud-backup>` and has no `<device-transfer>` section, so device-to-device transfer
-  still carries everything. `backup_rules.xml` (10–11, one rule set for both transfers) is include-only with every
+  `BackupRulesTest`). `data_extraction_rules.xml` (Android 12+) excludes every domain (`root`/`file`/`database`/
+  `sharedpref`/`external` and their `device_*` counterparts) from `<cloud-backup>` and has no `<device-transfer>`
+  section, so device-to-device transfer still carries everything. `backup_rules.xml` (10–11, one rule set for both transfers) is include-only with every
   include gated by `requireFlags="deviceToDeviceTransfer"`, so the cloud gets nothing and a new phone gets the db,
   DataStore prefs and card photos ([[card-photos]], #10) — which the old bare exclude had kept out of D2D on 10–11.
   `allowBackup` stays `true` because `="false"` also drops D2D on some devices. Opt-in cloud backup is #24. This closed

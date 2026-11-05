@@ -14,7 +14,10 @@ Pre-release development; nothing has shipped, so wiping the DB is free.
 
 ## Risk / impact
 The first entity change after any real install crashes the app on launch for those users. During development
-it's a recurring crash after schema edits — [[reset-local-database]].
+it's a recurring crash after schema edits — [[reset-local-database]]. Device-to-device transfer keeps this live after
+v1: it deliberately carries `loyscan.db` ([[2026-11-05-no-cloud-backup-in-v1]], #71), so a new phone gets Play's current
+app build plus the old phone's database, and any post-v1 schema change can then crash on launch. (The *cloud* restore
+path to the same crash was closed by #71.)
 
 ## How to pay it down
 Before the first release: freeze the current schema export (`2.json` as of 2026-10-30, rewritten in place for `stores.frequentlyAdded`; `1.json` is the record of

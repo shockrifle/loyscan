@@ -24,8 +24,16 @@ class BackupRulesTest {
 
     private val context = ApplicationProvider.getApplicationContext<Context>()
 
-    /** The data domains Auto Backup covers by default; excluding every one of them leaves the cloud backup empty. */
-    private val dataDomains = setOf("file", "database", "sharedpref", "external")
+    /**
+     * Every domain an `<include>`/`<exclude>` can name (https://developer.android.com/identity/data/autobackup#xml-include-exclude).
+     * Excluding all of them leaves the cloud backup empty whatever the app writes; including all of them (D2D-gated, on
+     * 10–11) carries all of it to a new phone. The app writes only in `file`/`database` today, but pinning the full set
+     * keeps a future file written outside them from leaking to the cloud or being left behind on transfer.
+     */
+    private val allDomains = setOf(
+        "root", "file", "database", "sharedpref", "external",
+        "device_root", "device_file", "device_database", "device_sharedpref",
+    )
 
     // --- Android 12+ : data_extraction_rules.xml ---
 
@@ -35,7 +43,7 @@ class BackupRulesTest {
             .filter { it.path == "." }
             .map { it.domain }
             .toSet()
-        assertThat(excludedDomains).containsAtLeastElementsIn(dataDomains)
+        assertThat(excludedDomains).containsAtLeastElementsIn(allDomains)
     }
 
     @Test
@@ -63,12 +71,14 @@ class BackupRulesTest {
     }
 
     @Test
-    fun legacyRules_transferDatabasePrefsAndPhotosToANewPhone() {
+    fun legacyRules_transferEveryDomainToANewPhone() {
+        // Photos + DataStore prefs live in `file`, the Room db in `database`; carrying every domain matches 12+, where
+        // the absent <device-transfer> section carries everything.
         val d2dDomains = rules(R.xml.backup_rules, inside = "full-backup-content", tag = "include")
             .filter { it.requireFlags?.contains("deviceToDeviceTransfer") == true && it.path == "." }
             .map { it.domain }
             .toSet()
-        assertThat(d2dDomains).containsAtLeast("file", "database") // photos + DataStore prefs (file), Room db (database)
+        assertThat(d2dDomains).containsAtLeastElementsIn(allDomains)
     }
 
     private data class Rule(val domain: String?, val path: String?, val requireFlags: String?)
