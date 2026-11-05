@@ -1,6 +1,6 @@
 # No Room migration strategy
 
-**Status:** Open · **Issue:** [#12](https://github.com/shockrifle/loyscan/issues/12) · **Since:** 2025-12-08 (`4969a2b`) · **Where:**
+**Status:** Resolved (#12, 2026-11-05; commit: `git log --grep "#12"`) · **Issue:** [#12](https://github.com/shockrifle/loyscan/issues/12) · **Since:** 2025-12-08 (`4969a2b`) · **Where:**
 `app/src/main/java/com/bdaniel/loyscan/di/DatabaseModule.kt`, `provideAppDatabase`,
 `app/src/main/java/com/bdaniel/loyscan/data/local/db/AppDatabase.kt:11`
 
@@ -24,3 +24,9 @@ Before the first release: freeze the current schema export (`2.json` as of 2026-
 the unreleased v1, [[2026-10-12-data-model-v2]]), and from then on bump the version per change with `@AutoMigration` or
 explicit `Migration`s (the schemas are already exported to `app/schemas/`). Procedure: [[database-schema-changes]]. (Corrected 2026-10-22: this
 said to freeze `1.json`, which predates the v2 bump.)
+
+## Resolved
+2026-11-05 (#12): v2 is frozen as the first released schema. `FrozenSchemaTest` pins every version's `identityHash`,
+`AppDatabase.MIGRATIONS` is added to the builder with no destructive fallback, and `DatabaseMigrationTest` opens a v2
+database with a card through the app's builder ([[2026-11-05-room-schema-frozen-from-v2]], procedure:
+[[database-schema-changes]]). The "What" above describes the state before that.

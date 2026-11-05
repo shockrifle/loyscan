@@ -8,8 +8,9 @@ rows. Clear app data once: see [[reset-local-database]] and [[seed-data]]. Catal
 the next open ([[store-catalogue]]).
 
 ### I added a field to an entity and the app crashes on launch.
-The DB is at `version = 2` with no migrations (`AppDatabase.kt:11`). Bump the version and either add a
-`Migration` or wipe the DB. See [[database-schema-changes]] and [[no-room-migrations]].
+Every schema version from 2 on is frozen, so a field added without bumping `AppDatabase.VERSION` fails
+`FrozenSchemaTest` before it reaches a device. Bump the version, pin the new schema and add a migration:
+[[database-schema-changes]]. A dev install from an in-between build can be wiped ([[reset-local-database]]).
 
 ### Why does the detail screen get the brand color as a navigation argument when the ViewModel loads the card anyway?
 So the color is available on the very first frame of the shared-element transition, before Room has

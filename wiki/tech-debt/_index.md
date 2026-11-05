@@ -6,9 +6,11 @@ delete the page.
 
 ## Open
 
-- [[no-room-migrations]] — DB v2, no migration path
+None.
 
 ## Resolved
+
+- [[no-room-migrations]] — v2 frozen; every schema change is a version bump with a migration, pinned by tests (#12)
 
 - [[list-screen-bypasses-image-loader]] — list tiles load their photo and logo through the app's loader (#10)
 - [[gs1-128-drawn-as-code-128]] — scans keep their FNC1 (`GS1_128`); `hu-coop` stays plain Code 128, as Coop's own

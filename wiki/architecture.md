@@ -45,7 +45,9 @@ terms, with domain→entity mappers. Time comes from an injected `java.time.Cloc
   [[store-catalogue]]) and unscoped DAO providers (`di/DatabaseModule.kt`). Two `RoomDatabase.Callback`s run
   on every open through the raw database: `CatalogueDatabaseCallback` writes the catalogue rows, and
   `CardPhotoSweepCallback` deletes old photo files no card names ([[card-photos]]). There are no debug-only demo
-  cards any more ([[seed-data]], #55); `DatabaseModuleTest` checks a new database holds only the catalogue.
+  cards any more ([[seed-data]], #55); `DatabaseModuleTest` checks a new database holds only the catalogue. It adds
+  `AppDatabase.MIGRATIONS` and no destructive fallback; schemas from v2 on are frozen
+  ([[2026-11-05-room-schema-frozen-from-v2]], [[database-schema-changes]]).
 - `PreferencesModule` provides the singleton preferences `DataStore` (file `datastore/user_preferences.preferences_pb`,
   pinned by `PreferencesModuleTest`) behind `UserPreferencesRepository` ([[2026-10-28-datastore-for-user-preferences]]).
 - `CardPhotosModule` provides `FileCardPhotos` over `files/card_photos/`, bound as `CardPhotos` ([[card-photos]]).
@@ -83,7 +85,9 @@ Tests run on the JVM (`./gradlew testDebugUnitTest`, see [[build-and-run]]); sha
 - **DAOs and the repository** are tested against `Room.inMemoryDatabaseBuilder` (`LoyaltyCardDaoTest`,
   `RoomLoyaltyCardRepositoryTest`, `RoomStoreRepositoryTest`), with a real `FileCardPhotos` over a `TemporaryFolder`
   so a test can check which photo files are left. Database callbacks are tested on a real database too: an on-disk one that is
-  closed and reopened for the catalogue loader (`CatalogueDatabaseCallbackTest`).
+  closed and reopened for the catalogue loader (`CatalogueDatabaseCallbackTest`). A database an older release left
+  behind is built from its exported schema (`testing/ExportedSchemas.kt`) and opened through the app's builder
+  (`DatabaseMigrationTest`); `FrozenSchemaTest` pins each released schema's hash.
 - **The Glance widget** ([[card-widget]], #11) keeps its logic out of the composable: which tiles, in what order and
   their colour is a pure function (`toWidgetTiles`, `WidgetTile`) tested in plain/Robolectric JUnit, and the composable
   is asserted with Glance's JVM unit test (`runGlanceAppWidgetUnitTest`, `glance-appwidget-testing`) without inflating
@@ -164,8 +168,9 @@ here exist; read them next to the code.
 
 Each step is red → green → refactor: the test is written and seen failing before the code.
 
-1. Entity + DAO method returning `Flow` (single-row queries: `Flow<T?>`), and bump the DB version
-   ([[database-schema-changes]]). Test: DAO test on an in-memory database, including the no-row case.
+1. Entity + DAO method returning `Flow` (single-row queries: `Flow<T?>`), and bump the DB version with a migration
+   ([[database-schema-changes]]). Test: DAO test on an in-memory database, including the no-row case, and the
+   migration's test.
 2. Mapper to a domain model in `domain/` (test: plain JUnit, every field). Then a repository interface method
    returning `Flow<Domain>`, implemented by the Room-backed class (test: repository over an in-memory database).
    New repositories need an interface, an impl, a `@Binds` in `di/RepositoryModule.kt` and a fake in

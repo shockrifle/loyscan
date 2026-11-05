@@ -50,7 +50,8 @@ because `allowBackup="false"` is documented to also drop D2D on some devices.
   carries `loyscan.db`, and there are no Room migrations ([[no-room-migrations]], #12): a new phone gets Play's current
   app build plus the old phone's database, so after any post-v1 schema change — or between two dev builds that share
   `version = 2` with different schemas — the same identity-hash crash can still happen through D2D. #12 is the fix; this
-  change only removes the cloud path.
+  change only removes the cloud path. (Update 2026-11-05: #12 froze the schema from v2 and wired migrations, so a
+  transferred database from a release is migrated on open: [[2026-11-05-room-schema-frozen-from-v2]].)
 - Nothing in the app is in cloud backup now. When opt-in backup (#24) lands, it will need to re-include data
   deliberately (and handle the 25 MB quota and schema versioning).
 - On-device confirmation (#104): the empty-cloud-backup half is **verified** (ASUS AI2302, Android 15, 2026-11-05).

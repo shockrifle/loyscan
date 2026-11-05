@@ -24,6 +24,8 @@ object DatabaseModule {
                 context,
                 AppDatabase::class.java, "loyscan.db"
         )
+                // No destructive fallback: a missing migration must crash, not delete the user's cards (#12).
+                .addMigrations(*AppDatabase.MIGRATIONS)
                 .addCallback(CatalogueDatabaseCallback.fromAssets(context))
                 .addCallback(CardPhotoSweepCallback(photos))
                 .build()
