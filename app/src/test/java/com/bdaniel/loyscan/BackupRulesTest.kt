@@ -10,9 +10,9 @@ import org.xmlpull.v1.XmlPullParser
 
 /**
  * Cloud backup carries no app data (#71): the user's cards, their photos (#10) and preferences don't go to the user's
- * Google account unasked, and the `loyscan.db` restored at install can't crash the app on a schema it doesn't match
- * ([[no-room-migrations]], #12). Device-to-device transfer to a new phone still carries all of it. Opt-in cloud backup
- * is #24, after v1.
+ * Google account unasked, and a `loyscan.db` restored from the cloud at install can't crash the app on a schema it
+ * doesn't match ([[no-room-migrations]], #12; device-to-device transfer still carries the db, so it keeps that path
+ * open). Device-to-device transfer to a new phone still carries all of it. Opt-in cloud backup is #24, after v1.
  *
  * The app targets API 36, so Android 12+ reads `data_extraction_rules.xml` and Android 10–11 (minSdk 29) reads
  * `backup_rules.xml`. The two formats express "nothing to the cloud, everything to a new phone" differently:

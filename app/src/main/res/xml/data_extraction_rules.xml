@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?><!--
    What Android 12+ backs up. See https://developer.android.com/identity/data/autobackup#include-exclude-android-12
    Cloud backup (Google account) carries no app data (#71): excluding every domain leaves it empty, so the
-   user's cards, their photos (#10) and preferences don't go to Google unasked, and the `loyscan.db` restored at
-   install can't crash the app on a schema it doesn't match ([[no-room-migrations]], #12). Opt-in cloud backup is #24.
+   user's cards, their photos (#10) and preferences don't go to Google unasked, and a `loyscan.db` restored from the
+   cloud at install can't crash the app on a schema it doesn't match ([[no-room-migrations]], #12; device-to-device
+   transfer still carries the db, so it keeps that path open — see [[2026-11-05-no-cloud-backup-in-v1]]).
+   Opt-in cloud backup is #24.
    There is no <device-transfer> section, so device-to-device transfer to a new phone still carries all of it.
 -->
 <data-extraction-rules>

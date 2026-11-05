@@ -57,7 +57,7 @@ tiles, one per row in `loyalty_cards`, live-updating from Room. Sort, search and
   WCAG AA's 4.5:1 (`BrandColorTest.whiteText_onThePhotoLabelScrim_readsOnAWhitePhoto`); the first version's gradient ran
   through the text and left it at about 2.4:1 (review of #10). The brand colour shows under the photo while it loads
   (initials there would flash on every photo tile), and a photo the loader can't load, e.g. a broken file, falls back to
-  the initials (`onError`). The back photo is only on the card screen. A front photo whose file is missing (a cloud restore, #87) is left off the card by
+  the initials (`onError`). The back photo is only on the card screen. A front photo whose file is missing (deleted or otherwise lost, #87) is left off the card by
   `ListViewModel` (`CardPhotos.withoutMissing`), so the tile shows the initials rather than an empty image (#89). Tile
   images, photo and logo, load through `hiltImageLoader()` ([[coil-image-loading]]). Tests:
   `ListScreenTest.aCardWithAFrontPhoto_showsItOnItsTile_inPlaceOfTheInitials`, `aCardWithOnlyABackPhoto_…`,

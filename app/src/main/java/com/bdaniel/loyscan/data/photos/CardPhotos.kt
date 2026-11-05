@@ -62,8 +62,8 @@ interface CardPhotos {
 data class PhotoCapture(val name: String, val uri: Uri)
 
 /**
- * [card] without the photos whose files are missing, e.g. after a cloud restore, which brings back the database but not
- * the photos (#87). Shown as no photo; a saved edit then clears the name.
+ * [card] without the photos whose files are missing, e.g. a file deleted or otherwise lost while the row still names it
+ * (#87). Shown as no photo; a saved edit then clears the name.
  */
 suspend fun CardPhotos.withoutMissing(card: LoyaltyCard): LoyaltyCard = card.copy(
     frontPhotoPath = card.frontPhotoPath?.takeIf { exists(it) },
