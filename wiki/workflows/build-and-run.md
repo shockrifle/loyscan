@@ -31,7 +31,7 @@ All tests but one are in `app/src/test/` and run on the JVM, with no emulator. O
 (the other build types' are turned off in `app/build.gradle.kts`, `androidComponents`). HTML report:
 `app/build/reports/tests/testDebugUnitTest/index.html`.
 
-**Smoke test of the minified build** (#73, [[2026-11-05-r8-smoke-test-on-a-device]]). It's the one test in
+**Smoke test of the minified build** (#73, [[2026-11-05-r8-smoke-test-on-a-device]]). It's the one test class in
 `app/src/androidTest/`: `MinifiedAppSmokeTest`.
 - **What it does.** On a connected device it adds a card by typing (with a new custom store, keeping the scanner's camera
   running for 3 s on the way), opens it, edits it and deletes it. A second test shares a picture of an EAN-13 to the

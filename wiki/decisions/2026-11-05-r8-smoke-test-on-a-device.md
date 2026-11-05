@@ -1,6 +1,6 @@
 # R8 on release, checked by an on-device smoke test of a debug-signed copy
 
-**Status:** Active · **Date:** 2026-11-05 · **Commits:** cffe39e
+**Status:** Active · **Date:** 2026-11-05 · **Commits:** cffe39e, eea7cf8
 
 The release build runs R8 (`isMinifyEnabled`, `isShrinkResources`). It is checked in three ways:
 - CI builds it on every push.
