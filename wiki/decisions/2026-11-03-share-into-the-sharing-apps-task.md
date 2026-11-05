@@ -66,9 +66,15 @@ half-filled card form was open in LoyScan's own task during each share.
   **share's task (`#40492`) forward**, not the form task, matching the `am start` result above. The surfaced share task
   showed the **card list**, not its own "enter by hand" share screen (the launcher `MAIN` intent reset it; mechanism
   not pinned). Both tasks stayed in Recents and the half-filled form was still intact in `#40491`, so the form is not
-  lost — but a launcher tap does not return the user to it. **Open decision (#86):** whether surfacing the share's task
-  rather than the form is acceptable, or worth a follow-up (e.g. a test pinning the behaviour, or a launch-mode/affinity
-  change). `singleTask` was already rejected (Why); the product owner decides.
+  lost — but a launcher tap does not return the user to it. **Decision (#86, accepted 2026-11-05):** this is acceptable
+  for v1. It is the platform's own "launcher brings the most-recent task forward" behaviour; the task-separating flags
+  come from the system sharesheet, not the app; and the one in-app lever that would always surface LoyScan's own task,
+  `singleTask`, was already rejected (Why) for dropping the open screen on *every* share. No new test is owed: the
+  guarantee that matters — a share does not drop a half-filled form — is pinned by
+  `ShareToLoyScanTest.aShareReachingTheOpenLoyScan_keepsItsForm_andOpensInALoyScanOfItsOwn` (#83, green), and which task
+  a real launcher tap resurfaces is OS behaviour that can't be exercised in CI (why #86 was a field check). The one real
+  wrinkle — a share task lingering in Recents — is tracked separately as #85; paying that down reduces how often this
+  resurface happens (it does not eliminate an in-progress share task).
 - A sender that skips the chooser, imitated with `adb shell am start -a android.intent.action.SEND -t image/png
   --eu android.intent.extra.STREAM <content uri> -f 0x10000001 -n com.bdaniel.loyscan/.MainActivity` (`NEW_TASK` and the
   read grant only) while LoyScan's own task showed a half-filled card form: the share went to that activity through
