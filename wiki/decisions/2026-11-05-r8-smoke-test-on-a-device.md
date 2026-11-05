@@ -1,6 +1,6 @@
 # R8 on release, checked by an on-device smoke test of a debug-signed copy
 
-**Status:** Active · **Date:** 2026-11-05 · **Commits:** see `git log --grep "#73"`
+**Status:** Active · **Date:** 2026-11-05 · **Commits:** cffe39e
 
 The release build runs R8 (`isMinifyEnabled`, `isShrinkResources`). It is checked in three ways:
 - CI builds it on every push.
@@ -36,7 +36,7 @@ own consumer rules: Room, Hilt, kotlinx.serialization, Coil, CameraX, Glance, an
   `com.bdaniel.loyscan.smoke` beside a real install, so a phone's own cards are never touched. It is
   `testBuildType`, and it is never shipped.
 - **Smoke test.** `app/src/androidTest/java/com/bdaniel/loyscan/MinifiedAppSmokeTest.kt` walks through the flow:
-  - add a card by typing (a new custom store, then the scanner opens with the camera, then "Enter manually");
+  - add a card by typing (a new custom store, then the scanner's camera runs for 3 s, then "Enter manually");
   - the card opens;
   - edit its label;
   - delete it.

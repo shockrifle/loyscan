@@ -2,6 +2,7 @@ package com.bdaniel.loyscan
 
 import android.Manifest
 import android.content.Intent
+import android.os.SystemClock
 import android.widget.EditText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -16,7 +17,7 @@ import org.junit.runner.RunWith
 
 /**
  * The release build after R8 (#73), driven end to end on a device: add a card by typing (with a new custom store),
- * open it, edit it, delete it, and open the scanner on the way. Run against the `smoke` build type, which is the
+ * open it, edit it, delete it, and run the scanner's camera on the way. Run against the `smoke` build type, which is the
  * release build signed with the debug key: `./gradlew connectedSmokeAndroidTest` (wiki/workflows/build-and-run.md).
  *
  * The app is driven from outside through UiAutomator, by the text and content descriptions the user sees, so the test
@@ -48,6 +49,10 @@ class MinifiedAppSmokeTest {
         await(By.text("New store"))
         fields()[0].text = STORE
         click(By.text("Create"))
+        await(By.text("Scan card"))
+        // Stay while the camera runs: each frame goes through the analyzer and zxing-cpp's JNI read (no barcode in
+        // view, so it finds none). A crash there under R8 ends the process, and the scanner is no longer on screen.
+        SystemClock.sleep(CAMERA_FRAMES_MS)
         await(By.text("Scan card"))
         click(By.text("Enter manually"))
         await(By.text("Save"))
@@ -97,6 +102,7 @@ class MinifiedAppSmokeTest {
 
     private companion object {
         const val TIMEOUT_MS = 10_000L
+        const val CAMERA_FRAMES_MS = 3_000L
         const val STORE = "Smoke Test Store"
         const val NUMBER = "12345678"
         const val LABEL = "Smoke card"

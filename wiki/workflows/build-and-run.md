@@ -28,12 +28,13 @@ How to work test-first and which test goes with which layer: [[tdd]]. The same t
 push to `master`: [[ci]].
 
 All tests but one are in `app/src/test/` and run on the JVM, with no emulator. Only the debug variant has unit tests
-(the other build types' are turned off in `app/build.gradle.kts`, `androidComponents`).
+(the other build types' are turned off in `app/build.gradle.kts`, `androidComponents`). HTML report:
+`app/build/reports/tests/testDebugUnitTest/index.html`.
 
 **Smoke test of the minified build** (#73, [[2026-11-05-r8-smoke-test-on-a-device]]). It's the one test in
 `app/src/androidTest/`: `MinifiedAppSmokeTest`.
-- **What it does.** On a connected device it adds a card by typing (with a new custom store, opening the scanner on
-  the way), opens it, edits it and deletes it, all on the `smoke` build: release's R8 config, signed with the debug
+- **What it does.** On a connected device it adds a card by typing (with a new custom store, keeping the scanner's camera
+  running for 3 s on the way), opens it, edits it and deletes it, all on the `smoke` build: release's R8 config, signed with the debug
   key.
 - **When to run it.** Before a release, and after a change to R8 rules, routes, or a library that ships keep rules.
   CI only builds it.
@@ -43,7 +44,7 @@ All tests but one are in `app/src/test/` and run on the JVM, with no emulator. O
   `adb pull /data/local/tmp/smoke-failure.png`. From Git Bash, prefix the command with `MSYS_NO_PATHCONV=1`, or it
   rewrites the device path.
 - **Reading a crash.** The R8 stack trace is obfuscated; retrace it with
-  `app/build/outputs/mapping/smoke/mapping.txt`. HTML report: `app/build/reports/tests/testDebugUnitTest/index.html`.
+  `app/build/outputs/mapping/smoke/mapping.txt`.
 
 Coverage report: `app/build/reports/kover/htmlDebug/index.html`. The gate's minimum, its exclusions and the rule
 for raising it: [[2026-10-09-coverage-gate-kover]].

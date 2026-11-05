@@ -96,6 +96,7 @@ Code: `app/src/main/java/com/bdaniel/loyscan/ui/scanner/ZxingCppFrameReader.kt` 
   check each family again. JVM tests cover the mapping, the options, `ScanAnalyzer` (with `FakeImageProxy`) and the camera
   lifecycle (with a fake `CameraOpener`). Reading a picture: `ZxingCppBitmapReader` and `decodePicture` are untested
   on the JVM; `ZxingCppPictureReader` around them is.
-- The AAR's consumer ProGuard rule keeps `zxingcpp.**`, which the JNI side needs. The minified release needs no rule
-  of ours for it: the smoke test opens the scanner with the camera on the R8 build
-  ([[2026-11-05-r8-smoke-test-on-a-device]]). Reading a barcode under R8 isn't covered by that test.
+- The AAR's consumer ProGuard rule keeps `zxingcpp.**`, which the JNI side needs. We add no rule of our own. On
+  the R8 build, the smoke test keeps the scanner's camera running for 3 s, so frames go through the analyzer and
+  zxing-cpp's JNI read without crashing ([[2026-11-05-r8-smoke-test-on-a-device]]). No barcode is in view, though:
+  decoding one and building its result under R8 isn't covered.
