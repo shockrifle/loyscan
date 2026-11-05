@@ -1,10 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?><!--
-   What Android 12+ backs up. See https://developer.android.com/about/versions/12/backup-restore#xml-changes
-   Card photos (#10) stay out of cloud backup, and go to a new phone by device-to-device transfer, which has no rules
-   here and so takes everything. Turning the rest of cloud backup off is #71.
+   What Android 12+ backs up. See https://developer.android.com/identity/data/autobackup#include-exclude-android-12
+   Cloud backup (Google account) carries no app data (#71): excluding every data domain leaves it empty, so the
+   user's cards, their photos (#10) and preferences don't go to Google unasked, and the `loyscan.db` restored at
+   install can't crash the app on a schema it doesn't match ([[no-room-migrations]], #12). Opt-in cloud backup is #24.
+   There is no <device-transfer> section, so device-to-device transfer to a new phone still carries all of it.
 -->
 <data-extraction-rules>
     <cloud-backup>
-        <exclude domain="file" path="card_photos/" />
+        <exclude domain="file" path="." />
+        <exclude domain="database" path="." />
+        <exclude domain="sharedpref" path="." />
+        <exclude domain="external" path="." />
     </cloud-backup>
 </data-extraction-rules>

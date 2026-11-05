@@ -30,6 +30,7 @@ inferred.
 - [[2026-11-04-card-photos-interactive-crop]] — a picked or taken photo is framed to the card's ratio in an interactive crop screen (pan/zoom, or keep the whole picture), staged so it survives process death (#10)
 - [[2026-11-04-home-screen-widget]] — a Glance widget; it opens a card via an intent extra `MainActivity` reads (not a URI deep link); brand-colour tiles, no photo, in the first slice (#11)
 - [[2026-10-22-store-suggestion-trigger]] — the card form offers other stores for a scan the picked store rejects, reads only by symbology, or has no rule for; exact format ranks first
+- [[2026-11-05-no-cloud-backup-in-v1]] — cloud backup carries no app data; device-to-device transfer carries all of it; `allowBackup` stays `true` so D2D survives; opt-in backup is #24 (#71)
 
 ## Superseded
 
