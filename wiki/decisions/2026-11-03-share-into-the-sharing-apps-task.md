@@ -60,7 +60,15 @@ half-filled card form was open in LoyScan's own task during each share.
   Why above wanted. A share task left open stays in Recents, so several LoyScan tasks can be listed at once.
 - `adb shell am start` with LoyScan's launcher intent (`MAIN`/`LAUNCHER`, `NEW_TASK | RESET_TASK_IF_NEEDED`) brought
   the most recently used LoyScan task forward, which after a share was the share's task, not the one with the form.
-  Not tried with a real launcher tap.
+- **Real launcher tap (#86, 2026-11-05, same ASUS phone, Android 15).** With a half-filled card form in LoyScan's own
+  task (`#40491`) and a share task on top of it (`#40492`, from an `ACTION_SEND` with `NEW_TASK | MULTIPLE_TASK |
+  NEW_DOCUMENT`), tapping LoyScan's icon in the Nova app drawer — a genuine launcher tap, not `am start` — brought the
+  **share's task (`#40492`) forward**, not the form task, matching the `am start` result above. The surfaced share task
+  showed the **card list**, not its own "enter by hand" share screen (the launcher `MAIN` intent reset it; mechanism
+  not pinned). Both tasks stayed in Recents and the half-filled form was still intact in `#40491`, so the form is not
+  lost — but a launcher tap does not return the user to it. **Open decision (#86):** whether surfacing the share's task
+  rather than the form is acceptable, or worth a follow-up (e.g. a test pinning the behaviour, or a launch-mode/affinity
+  change). `singleTask` was already rejected (Why); the product owner decides.
 - A sender that skips the chooser, imitated with `adb shell am start -a android.intent.action.SEND -t image/png
   --eu android.intent.extra.STREAM <content uri> -f 0x10000001 -n com.bdaniel.loyscan/.MainActivity` (`NEW_TASK` and the
   read grant only) while LoyScan's own task showed a half-filled card form: the share went to that activity through
