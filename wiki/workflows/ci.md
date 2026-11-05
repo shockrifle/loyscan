@@ -19,6 +19,10 @@ The single build step:
 
 `--continue` makes Gradle still write the coverage report when the gate fails (a failing test skips it).
 
+A second step, **Minified release build**, runs after it: `./gradlew assembleRelease compileSmokeAndroidTestKotlin`.
+R8 must succeed on release, and the on-device smoke test must compile. The smoke test itself doesn't run on CI
+([[2026-11-05-r8-smoke-test-on-a-device]], #73).
+
 Caches:
 - Gradle user home, through `gradle/actions/setup-gradle` (which also validates the wrapper)
 - Robolectric's downloaded `android-all` jars (`~/.m2/repository/org/robolectric`, keyed on
@@ -54,8 +58,8 @@ for the failing assertion before changing the test.
 
 ## Choices and constraints
 
-- **No emulator job.** Every test runs on the JVM via Robolectric ([[2026-10-12-tdd-and-coverage]]), and there is
-  no `androidTest` source set. The repo is private, so Actions minutes count against a quota, and an emulator
+- **No emulator job.** Every test runs on the JVM via Robolectric ([[2026-10-12-tdd-and-coverage]]), except the
+  minified build's smoke test, which runs by hand on a device ([[2026-11-05-r8-smoke-test-on-a-device]]). The repo is private, so Actions minutes count against a quota, and an emulator
   job would cost several times this job. Add one only for a test that needs a real device (e.g. camera, #4), and
   run it only when that code changes.
 - **Push to `master` only, no `pull_request` trigger.** Work lands directly on `master` ([[code-review]]), so

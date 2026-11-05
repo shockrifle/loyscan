@@ -52,5 +52,14 @@ data, not the theme. Icons are hand-written `ImageVector`s — [[2025-12-08-hand
 
 ## Build types
 
-Only `debug` and `release`; release has `isMinifyEnabled = false`, so no R8/ProGuard rules are exercised yet.
+- `debug`: the everyday build; the JVM tests run on it.
+- `release`: R8 on (`isMinifyEnabled`, `isShrinkResources`, #73). It's unsigned until #74. Libraries ship their own
+  keep rules. `app/proguard-rules.pro` adds only `-keepnames enum com.bdaniel.loyscan.domain.BarcodeFormat`, since
+  Navigation looks up an enum route argument's class by name. `RouteKeepRulesTest` checks every route's enum
+  arguments against that file.
+- `smoke`: `initWith(release)`, signed with the debug key, applicationId `com.bdaniel.loyscan.smoke`, so it installs
+  beside a real install. It's `testBuildType`, for the on-device `MinifiedAppSmokeTest`. It also keeps `kotlin.**`
+  and `androidx.tracing.**`, which the test runner takes from the app (`app/proguard-smoke-rules.pro`). Not shipped.
+
+Why it's set up this way: [[2026-11-05-r8-smoke-test-on-a-device]].
 `buildConfig = true` exists for `BuildConfig.DEBUG` (the Timber gate). See [[build-and-run]].

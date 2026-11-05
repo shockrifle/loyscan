@@ -33,10 +33,25 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // R8 (#73): shrinks, optimizes and obfuscates; keep rules only where a library doesn't ship its own.
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
+        // The release build, R8 and all, but signed with the debug key and installed beside the real app (its own
+        // applicationId), so the instrumented smoke test can run against it on any device (#73). Not shipped.
+        // wiki/decisions/2026-11-05-r8-smoke-test-on-a-device.md
+        create("smoke") {
+            initWith(getByName("release"))
+            applicationIdSuffix = ".smoke"
+            signingConfig = signingConfigs.getByName("debug")
+            matchingFallbacks += listOf("release")
+            proguardFile("proguard-smoke-rules.pro")
+            testProguardFiles("proguard-smoke-test-rules.pro")
+        }
     }
+    // androidTest (the smoke test) runs against the minified build, not debug.
+    testBuildType = "smoke"
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
@@ -55,14 +70,16 @@ android {
             // FrozenSchemaTest and DatabaseMigrationTest read the exported Room schemas from disk (#12): an edited
             // schema JSON must rerun the tests, not leave them UP-TO-DATE.
             it.inputs.dir("$projectDir/schemas").withPropertyName("roomSchemas").withPathSensitivity(PathSensitivity.RELATIVE)
+            // RouteKeepRulesTest reads the app's R8 rules (#73).
+            it.inputs.file("$projectDir/proguard-rules.pro").withPropertyName("r8Rules").withPathSensitivity(PathSensitivity.RELATIVE)
         }
     }
 }
 
 androidComponents {
     // JVM tests run on the debug variant only: Compose UI tests need ui-test-manifest, which is debug-only.
-    beforeVariants(selector().withBuildType("release")) { variant ->
-        variant.hostTests[HostTestBuilder.UNIT_TEST_TYPE]?.enable = false
+    beforeVariants(selector().all()) { variant ->
+        if (variant.buildType != "debug") variant.hostTests[HostTestBuilder.UNIT_TEST_TYPE]?.enable = false
     }
 }
 
@@ -127,10 +144,11 @@ dependencies {
     kspTest(libs.hilt.compiler)
     testImplementation(platform(libs.androidx.compose.bom))
     testImplementation(libs.androidx.compose.ui.test.junit4)
+    // The smoke test drives the minified app from outside, through UiAutomator only: Compose's test APIs would need
+    // Compose internals that R8 has stripped from the app (#73).
     androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.uiautomator)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }

@@ -31,8 +31,10 @@ get written, new code would go back to being tested afterwards, or not at all.
    fail, then fix. The test stays, named after the behaviour (`emptyBrandColor_doesNotCrash`), not the issue
    number. A `// #N` comment links it.
 3. **JVM-first.** Every test is in `app/src/test/`. Room, `SavedStateHandle`, Compose UI and Hilt run on
-   Robolectric. There is no `androidTest` source set. Add instrumented tests only for something Robolectric
-   can't do, such as the camera (#4), and record why on the feature page.
+   Robolectric. Add instrumented tests only for something Robolectric can't do, such as the camera (#4), and record
+   why on the feature page. *(Update 2026-11-05: the first one is the minified build's smoke test in
+   `app/src/androidTest/`, which a JVM test can't cover. It runs by hand on a device, #73,
+   [[2026-11-05-r8-smoke-test-on-a-device]].)*
 4. **Fakes over mocks.** Doubles are small, hand-written implementations of our own interfaces
    (`FakeLoyaltyCardRepository`), shared in `app/src/test/java/com/bdaniel/loyscan/testing/`. Room is never
    faked; it runs for real, in memory. No mocking library is a dependency.

@@ -15,6 +15,8 @@ adb shell am start -n com.bdaniel.loyscan/.MainActivity
 ./gradlew koverHtmlReportDebug                                       # coverage report (also koverXmlReportDebug)
 ./gradlew koverVerifyDebug                                           # fail if line coverage is below the minimum
 ./gradlew check                                                      # tests + lint + coverage gate
+./gradlew assembleRelease                                            # the minified (R8) release, unsigned (#74)
+./gradlew connectedSmokeAndroidTest                                  # on-device smoke test of the R8 build (below)
 ```
 
 On Windows, use `gradlew.bat` or Git Bash. `local.properties` (the SDK path) is git-ignored and must exist
@@ -25,9 +27,23 @@ locally.
 How to work test-first and which test goes with which layer: [[tdd]]. The same tests and gate run in CI on every
 push to `master`: [[ci]].
 
-All tests are in `app/src/test/` and run on the JVM; there is no `androidTest` source set, so no emulator is
-needed. Only the debug variant has unit tests (release ones are turned off in `app/build.gradle.kts`,
-`androidComponents`). HTML report: `app/build/reports/tests/testDebugUnitTest/index.html`.
+All tests but one are in `app/src/test/` and run on the JVM, with no emulator. Only the debug variant has unit tests
+(the other build types' are turned off in `app/build.gradle.kts`, `androidComponents`).
+
+**Smoke test of the minified build** (#73, [[2026-11-05-r8-smoke-test-on-a-device]]). It's the one test in
+`app/src/androidTest/`: `MinifiedAppSmokeTest`.
+- **What it does.** On a connected device it adds a card by typing (with a new custom store, opening the scanner on
+  the way), opens it, edits it and deletes it, all on the `smoke` build: release's R8 config, signed with the debug
+  key.
+- **When to run it.** Before a release, and after a change to R8 rules, routes, or a library that ships keep rules.
+  CI only builds it.
+- **How.** `./gradlew connectedSmokeAndroidTest`. The smoke app installs as `com.bdaniel.loyscan.smoke`, so a
+  phone's own LoyScan and its cards aren't touched, and it's uninstalled after the run.
+- **On failure.** The message lists the texts that were on screen, and a screenshot is left on the device:
+  `adb pull /data/local/tmp/smoke-failure.png`. From Git Bash, prefix the command with `MSYS_NO_PATHCONV=1`, or it
+  rewrites the device path.
+- **Reading a crash.** The R8 stack trace is obfuscated; retrace it with
+  `app/build/outputs/mapping/smoke/mapping.txt`. HTML report: `app/build/reports/tests/testDebugUnitTest/index.html`.
 
 Coverage report: `app/build/reports/kover/htmlDebug/index.html`. The gate's minimum, its exclusions and the rule
 for raising it: [[2026-10-09-coverage-gate-kover]].
