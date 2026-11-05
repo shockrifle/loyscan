@@ -25,8 +25,10 @@ All paths are under `app/src/main/java/com/bdaniel/loyscan/` unless written in f
   so a widget added mid-session is followed too. It observes nothing — and reads nothing from the database or the
   preferences — while no widget is placed, which is the common case and every test that boots the app. A failure to
   read the cards or redraw is logged, not thrown (an app-scope `CoroutineExceptionHandler` and per-emission
-  `try`/`catch`): the widget is optional and must not crash the app. **On-device check (#11): confirm the widget
-  refreshes after a card is added, edited, deleted or re-sorted, including when the widget was placed mid-session.**
+  `try`/`catch`): the widget is optional and must not crash the app. **On-device check (#102): verified on a device
+  (ASUS AI2302, Android 15, 2026-11-05).** A widget placed mid-session (app already running) drew the current cards at
+  once; adding a card made its tile appear and deleting one made its tile disappear, without reopening the app. (Edit
+  and re-sort go through the same `CardWidgetUpdater` trigger, unit-tested in `CardWidgetUpdaterTest`.)
 - `widget/CardWidgetTiles.kt` — the pure logic, unit-tested: `List<LoyaltyCard>.toWidgetTiles(sort)` sorts with
   the list's `sortedBy(sort)` ([[card-list]], #7) and maps each card to a `WidgetTile(cardId, color, label)`,
   the `label` being the card's label or, when it has none, the store name — the same text the list tile shows.
@@ -58,9 +60,12 @@ navigation (the share flow, [[add-card]], #77). The widget follows that pattern 
   so Back returns to the form with its input intact, rather than popping back to the list. Unlike a share, the tap
   does not forward to a LoyScan of its own; it opens in the running task.
 
-**On-device check (#11):** confirm a warm tap (and a repeat tap) opens the right card in the running task without
-spawning a second LoyScan or losing a half-filled form — the exact task behaviour of a `standard` activity launched
-from a widget is hard to prove on Robolectric.
+**On-device check (#102): verified on a device (ASUS AI2302, Android 15, 2026-11-05).** With a half-filled add form
+open and the app running, a warm tap on a tile opened that tile's card in the same task (`dumpsys` showed the one task
+`#40488`, no second LoyScan), and Back returned to the form with its text intact; a repeat tap on another tile opened
+that card in the same task. Each tile opened its own card (Auchan tile → Auchan, Tesco tile → Tesco), confirming the
+intent-extras match the Glance unit test can't assert. The exact task behaviour of a `standard` activity launched from
+a widget is hard to prove on Robolectric.
 
 ## Manifest
 
@@ -100,6 +105,7 @@ the logic it drives is tested above ([[2026-10-09-coverage-gate-kover]]).
 - No empty-state message: a widget with no cards shows nothing.
 - The live-update trigger only observes while the app process is alive. Cards change only through the running app,
   so that covers every real change; a widget added while the app is dead renders current cards when it is next shown.
-- The on-device checks above (live refresh, warm/repeat tap) are why #11 stays open after this slice.
+- The on-device checks above (live refresh, warm/repeat tap, a tile opening its own card) were the open part of
+  #11 after this slice; they passed on a device on 2026-11-05 (#102).
 
 See [[2026-11-04-home-screen-widget]] for the decisions.
