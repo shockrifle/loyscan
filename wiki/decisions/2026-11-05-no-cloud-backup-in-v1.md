@@ -53,6 +53,10 @@ because `allowBackup="false"` is documented to also drop D2D on some devices.
   change only removes the cloud path.
 - Nothing in the app is in cloud backup now. When opt-in backup (#24) lands, it will need to re-include data
   deliberately (and handle the 25 MB quota and schema versioning).
-- On-device confirmation is still owed by #71's field criteria: `adb shell bmgr` shows an empty cloud backup, and a
-  real device-to-device transfer carries the cards and photos. The rules' correctness is pinned by `BackupRulesTest`;
-  the device checks confirm the platform honours them.
+- On-device confirmation (#104): the empty-cloud-backup half is **verified** (ASUS AI2302, Android 15, 2026-11-05).
+  Against the local transport, `bmgr fullbackup com.bdaniel.loyscan` runs the backup agent but the transport returns
+  `TRANSPORT_PACKAGE_REJECTED` (`Error -1002`) and skips the package — the full-backup stream is empty, so no domain
+  (`loyscan.db`, the DataStore prefs, photos) is backed up while the app stays backup-capable. Still owed: a real
+  device-to-device transfer on a second phone carries the cards, the sort preference and the photos (Android 12+, and
+  10–11 if a device is available). The rules' correctness is pinned by `BackupRulesTest`; the device check confirms the
+  platform honours them.

@@ -126,8 +126,10 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   `CardFormScreenTest.theCropScreen_zoomAndPan_storeACardRatioPartOfThePicture` (two pointers through `performTouchInput`).
 - `ui/PhotoCameraTest` (the real glue, a test `ActivityResultRegistry` answering the dialog and the camera app):
   allowed → the camera app on the target; asked first, then opened; a denial, then one for good; a dialog answered
-  after a rotation still opens the camera; available only with an `IMAGE_CAPTURE` activity. Not checked on a device:
-  which camera apps answer, and a capture after the process died behind the camera app.
+  after a rotation still opens the camera; available only with an `IMAGE_CAPTURE` activity. Checked on a device
+  (ASUS AI2302, Android 15, 2026-11-05, #96): the system camera app stores the photo upright in the slot; a capture
+  taken with "Don't keep activities" on still lands back in the form; a denial shows the reason and a denial for good
+  offers "Open settings", which opens LoyScan's app settings.
 - A missing file (#87): `DetailViewModelTest.aPhotoWhoseFileIsMissing_isLeftOffTheCard`,
   `CardFormViewModelTest.editingACardWhosePhotoFileIsMissing_startsWithThatSideEmpty_andSavingClearsItsName`,
   `CardFormScreenTest.editingACardWhosePhotoFileIsMissing_offersToAddThatPhoto`.
