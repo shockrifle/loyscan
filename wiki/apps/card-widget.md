@@ -22,7 +22,7 @@ All paths are under `app/src/main/java/com/bdaniel/loyscan/` unless written in f
   `updateAll`), so the updater's logic is unit-tested with a fake and only the Glance impl is excluded from coverage.
   `ensureObserving()` is idempotent and called both from `LoyScanApplication.onCreate` (for a widget placed before the
   app launched) and from `CardWidgetReceiver.onUpdate` (for one placed, or shown after a restart, while the app runs),
-  so a widget added mid-session is followed too. It observes nothing — and touches neither the database nor the
+  so a widget added mid-session is followed too. It observes nothing — and reads nothing from the database or the
   preferences — while no widget is placed, which is the common case and every test that boots the app. A failure to
   read the cards or redraw is logged, not thrown (an app-scope `CoroutineExceptionHandler` and per-emission
   `try`/`catch`): the widget is optional and must not crash the app. **On-device check (#11): confirm the widget

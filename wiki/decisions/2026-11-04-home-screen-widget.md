@@ -1,6 +1,6 @@
 # Home-screen widget: Glance, an intent extra, and a first slice
 
-**Status:** Active · **Date:** 2026-11-04 · **Issue:** [#11](https://github.com/shockrifle/loyscan/issues/11) (open: slice) · **Commits:** 61e9d13 + this commit
+**Status:** Active · **Date:** 2026-11-04 · **Issue:** [#11](https://github.com/shockrifle/loyscan/issues/11) (open: slice) · **Commits:** 61e9d13, ccbeb60, 3eead59
 
 The home-screen widget ([[card-widget]]), and the three choices that shaped its first slice.
 
@@ -40,8 +40,8 @@ intent `MainActivity` reads, not through URI deep links (the share flow, [[add-c
 - **Staying in step with the cards** needs an explicit trigger, because Glance renders a snapshot and stops
   following a `Flow` once its session ends. `CardWidgetUpdater.ensureObserving()` observes the tiles and calls
   `updateAll` on a change; it is (idempotently) started both from the Application and from the receiver's `onUpdate`,
-  so a widget placed mid-session is followed, and it observes nothing — touching neither database nor preferences —
-  while no widget is placed. A failure never propagates: the widget is optional and must not crash the app.
+  so a widget placed mid-session is followed, and it observes nothing — reading nothing from the database or the
+  preferences — while no widget is placed. A failure never propagates: the widget is optional and must not crash the app.
 - **A warm tap opens the card without discarding a half-filled form** (the #83 concern, decided for the widget):
   `openCard` pushes the card over whatever is open instead of popping to the list, and `SINGLE_TOP` lands the tap in
   the running task. The exact task behaviour of a `standard` activity launched from a widget can't be proven on
