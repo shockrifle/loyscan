@@ -98,5 +98,8 @@ Code: `app/src/main/java/com/bdaniel/loyscan/ui/scanner/ZxingCppFrameReader.kt` 
   on the JVM; `ZxingCppPictureReader` around them is.
 - The AAR's consumer ProGuard rule keeps `zxingcpp.**`, which the JNI side needs. We add no rule of our own. On
   the R8 build, the smoke test keeps the scanner's camera running for 3 s, so frames go through the analyzer and
-  zxing-cpp's JNI read without crashing ([[2026-11-05-r8-smoke-test-on-a-device]]). No barcode is in view, though:
-  decoding one and building its result under R8 isn't covered.
+  zxing-cpp's JNI read without crashing ([[2026-11-05-r8-smoke-test-on-a-device]]). No barcode is in view there, so
+  no `Result` is built. A second smoke test shares a picture of an EAN-13, which the picture reader decodes into the
+  card form (#105). That covers the result classes, which the native side looks up by name. Checked 2026-11-05: with
+  the AAR's rules dropped and only `BarcodeReader` and its option classes kept, the camera test still passed and
+  the shared picture aborted in `readBitmap` (`JNI DETECTED ERROR IN APPLICATION: java_class == null`).

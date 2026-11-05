@@ -34,8 +34,11 @@ All tests but one are in `app/src/test/` and run on the JVM, with no emulator. O
 **Smoke test of the minified build** (#73, [[2026-11-05-r8-smoke-test-on-a-device]]). It's the one test in
 `app/src/androidTest/`: `MinifiedAppSmokeTest`.
 - **What it does.** On a connected device it adds a card by typing (with a new custom store, keeping the scanner's camera
-  running for 3 s on the way), opens it, edits it and deletes it, all on the `smoke` build: release's R8 config, signed with the debug
-  key.
+  running for 3 s on the way), opens it, edits it and deletes it. A second test shares a picture of an EAN-13 to the
+  app and checks that the card form shows its number (#105). Both run on the `smoke` build: release's R8 config, signed
+  with the debug key.
+- **Needs an unlocked screen.** With the lock screen showing, the first wait fails with nothing listed on screen.
+  `adb shell svc power stayon usb` keeps an unlocked phone awake on USB (`svc power stayon false` undoes it).
 - **When to run it.** Before a release, and after a change to R8 rules, routes, or a library that ships keep rules.
   CI only builds it.
 - **How.** `./gradlew connectedSmokeAndroidTest`. The smoke app installs as `com.bdaniel.loyscan.smoke`, so a

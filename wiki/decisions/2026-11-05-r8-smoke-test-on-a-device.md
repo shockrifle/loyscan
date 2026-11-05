@@ -41,6 +41,11 @@ own consumer rules: Room, Hilt, kotlinx.serialization, Coil, CameraX, Glance, an
   - edit its label;
   - delete it.
 
+  *(Update 2026-11-05, #105: a second test shares a picture of an EAN-13 to the app and checks the card form shows
+  its number. The camera's empty frames never make zxing-cpp build a result, so its result classes went unchecked
+  under R8. The picture is drawn with the platform's graphics and shared through the app's own FileProvider:
+  [[zxing-cpp]] → Quirks, [[tdd]].)*
+
   Run it with `./gradlew connectedSmokeAndroidTest` ([[build-and-run]]). The run uninstalls the smoke app
   afterwards.
 - **App rules** (`app/proguard-rules.pro`): one, `-keepnames enum com.bdaniel.loyscan.domain.BarcodeFormat`.
