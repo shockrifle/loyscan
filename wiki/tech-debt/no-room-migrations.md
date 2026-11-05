@@ -1,8 +1,8 @@
 # No Room migration strategy
 
-**Status:** Resolved (#12, 2026-11-05; commit: `git log --grep "#12"`) · **Issue:** [#12](https://github.com/shockrifle/loyscan/issues/12) · **Since:** 2025-12-08 (`4969a2b`) · **Where:**
+**Status:** Resolved (`e1065d9`, 2026-11-05, #12) · **Issue:** [#12](https://github.com/shockrifle/loyscan/issues/12) · **Since:** 2025-12-08 (`4969a2b`) · **Where:**
 `app/src/main/java/com/bdaniel/loyscan/di/DatabaseModule.kt`, `provideAppDatabase`,
-`app/src/main/java/com/bdaniel/loyscan/data/local/db/AppDatabase.kt:11`
+`app/src/main/java/com/bdaniel/loyscan/data/local/db/AppDatabase.kt`, `@Database` (as of the resolution: `companion object`)
 
 ## What
 `version = 2`, with no `addMigrations`, no `@AutoMigration`, and no `fallbackToDestructiveMigration`. The schema
@@ -26,7 +26,7 @@ explicit `Migration`s (the schemas are already exported to `app/schemas/`). Proc
 said to freeze `1.json`, which predates the v2 bump.)
 
 ## Resolved
-2026-11-05 (#12): v2 is frozen as the first released schema. `FrozenSchemaTest` pins every version's `identityHash`,
+2026-11-05 (`e1065d9`, review fixes after it, #12): v2 is frozen as the first released schema. `FrozenSchemaTest` pins every version's `identityHash`,
 `AppDatabase.MIGRATIONS` is added to the builder with no destructive fallback, and `DatabaseMigrationTest` opens a v2
 database with a card through the app's builder ([[2026-11-05-room-schema-frozen-from-v2]], procedure:
 [[database-schema-changes]]). The "What" above describes the state before that.

@@ -50,7 +50,12 @@ android {
         unitTests.isIncludeAndroidResources = true
         // Robolectric on SDK 36 reaches into FileDescriptor internals; without this every Robolectric test fails
         // with "Failed to interact with raw FileDescriptor internals".
-        unitTests.all { it.jvmArgs("--add-exports=java.base/jdk.internal.access=ALL-UNNAMED") }
+        unitTests.all {
+            it.jvmArgs("--add-exports=java.base/jdk.internal.access=ALL-UNNAMED")
+            // FrozenSchemaTest and DatabaseMigrationTest read the exported Room schemas from disk (#12): an edited
+            // schema JSON must rerun the tests, not leave them UP-TO-DATE.
+            it.inputs.dir("$projectDir/schemas").withPropertyName("roomSchemas").withPathSensitivity(PathSensitivity.RELATIVE)
+        }
     }
 }
 

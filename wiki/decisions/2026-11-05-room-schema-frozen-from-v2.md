@@ -32,7 +32,9 @@ schema change. The 2026-11-03 install crash was this failure ([[android-app]] â†
   and on CI. A bump fails until its hash is pinned.
 - `DatabaseMigrationTest` builds a database from `2.json` (tables, indices, Room's identity row), puts a store and a card
   in it with the v2 columns written out, and opens it with `DatabaseModule.provideAppDatabase`. The card must still be
-  there. An empty database at every frozen version must open too.
+  there. An empty database at every frozen version must open too. A database the app has no migration from (a
+  v2 database marked one version newer than the app) must fail to open and keep its card on disk: that pins the
+  absence of a destructive fallback, which the other tests can't see while there is nothing to migrate.
 - `1.json` is the record of an unreleased schema; it is not frozen and no migration from it exists.
 
 ## Why
@@ -51,7 +53,9 @@ with kotlinx.serialization.
 
 Checked by mutation on 2026-11-05: an added column without a bump fails `FrozenSchemaTest`; a bump without a migration,
 a migration not added to the builder, and a migration that creates the wrong column type fail `DatabaseMigrationTest`.
-A destructive fallback fails it too, because the card is gone.
+A destructive fallback fails `aDatabaseWithNoMigrationPath_failsToOpen_andKeepsItsCards`. (Corrected in review: the
+first version claimed the v2-open test caught a fallback, but it did only after a bump to 3, with no migration from 2.
+At `VERSION = 2` there is nothing to migrate, so the fallback never ran. The no-migration-path test was added for it.)
 
 ## Consequences
 - Every schema change follows [[database-schema-changes]]: bump, pin, migrate, test the migration.

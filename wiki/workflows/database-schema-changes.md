@@ -8,7 +8,9 @@ no destructive fallback, so a missing migration crashes on open rather than dele
 
 Two tests enforce it. `FrozenSchemaTest` fails when a pinned schema JSON changes (KSP rewrites it from the entities on
 every build) or a version has no pin. `DatabaseMigrationTest` opens a v2 database with a card through the app's builder
-and fails on a missing, unwired or wrong migration, or a lost card.
+and fails on a missing, unwired or wrong migration, or a lost card; a database with no migration path must fail to
+open with its cards kept, so a destructive fallback fails too. Both read `app/schemas/`, which is declared an input of
+the unit-test task (`app/build.gradle.kts`, `testOptions`), so editing a schema JSON reruns them.
 
 ## Steps
 

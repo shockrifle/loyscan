@@ -21,7 +21,8 @@ import org.junit.runner.RunWith
  * A database an installed release left behind (or a new phone got by device-to-device transfer) opens in the current
  * app, through the app's own builder and its migrations, with its cards (#12). The old database is built from its
  * exported schema in `app/schemas/`. Without a migration Room throws on open, a migration that leaves the tables unlike
- * the entities fails Room's check after migrating, and a destructive fallback would lose the card.
+ * the entities fails Room's check after migrating, and a database with no migration path must fail to open with its
+ * cards kept (a destructive fallback would open it empty).
  */
 @RunWith(AndroidJUnit4::class)
 class DatabaseMigrationTest {
@@ -64,6 +65,25 @@ class DatabaseMigrationTest {
             opened = null
             context.deleteDatabase(DATABASE)
         }
+    }
+
+    @Test
+    fun aDatabaseWithNoMigrationPath_failsToOpen_andKeepsItsCards() = runTest {
+        // A version the app has no migration from (here: one newer than the app). A destructive fallback would open it
+        // empty; the app must refuse it and leave the cards on disk.
+        createDatabaseFromExportedSchema(context, DATABASE, FIRST_RELEASED_VERSION).use {
+            it.insertACardAsTheFirstReleaseStoredIt()
+            it.version = AppDatabase.VERSION + 1
+        }
+
+        val failure = runCatching { openAsTheAppDoes().loyaltyCardDao().getAllWithStore().first() }.exceptionOrNull()
+
+        assertThat(failure).isInstanceOf(IllegalStateException::class.java)
+        opened?.close()
+        opened = null
+        val cardsOnDisk = SQLiteDatabase.openDatabase(context.getDatabasePath(DATABASE).path, null, SQLiteDatabase.OPEN_READONLY)
+            .use { db -> db.rawQuery("SELECT id FROM loyalty_cards", null).use { it.count } }
+        assertThat(cardsOnDisk).isEqualTo(1)
     }
 
     private fun openAsTheAppDoes(): AppDatabase =
