@@ -3,6 +3,8 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-05 · field check: photo-tile → card shared-element transition verified on a device (ASUS AI2302, Android 15) — screen-recorded open/close stepped frame-by-frame: no flash, no jump, photo keeps its proportions · features/card-transition · #90
+- 2026-11-05 · field check: HEIF import orientation verified on a device (ASUS AI2302, Android 15) — EXIF-tagged HEIC (portrait o6, landscape o8) imports upright, stored JPEG 900×1200 / 1600×900 with EXIF stripped (pulled and inspected); container-irot variant still uncovered · features/card-photos · #93
 - 2026-11-05 · field check: card photo via the system camera verified on a device (ASUS AI2302, Android 15) — upright, survives "don't keep activities", denied→denied-for-good→Open settings · features/card-photos · #96
 - 2026-11-05 · field check: cloud backup is empty verified on a device (ASUS AI2302, Android 15) — local-transport full backup produces an empty stream (TRANSPORT_PACKAGE_REJECTED) while the agent runs, so no domain is backed up; device-to-device (second phone) still owed · decisions/2026-11-05-no-cloud-backup-in-v1 · #104
 - 2026-11-05 · review round 2 for #71 — three more stale "cloud restore" spots the sweep missed: card-detail and card-list missing-photo causes, CardPhotos.withoutMissing KDoc; and the "can't crash on a mismatched schema" comments in data_extraction_rules + BackupRulesTest now qualified as cloud-only (D2D still carries the db) · features/card-detail, features/card-list, data/photos/CardPhotos, data_extraction_rules, BackupRulesTest · review of #71

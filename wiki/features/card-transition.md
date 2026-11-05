@@ -71,6 +71,16 @@ death, on a screen that changed size), `aSecondTileTappedWhileTheListLeaves_isNo
 Not chosen (2026-10-28): freezing the order until the user is back shows a stale order and then
 moves tiles under the user; skipping the shared element when the tile is off screen still loses the tile from view.
 
+## On-device check (#90)
+
+Checked on a device (ASUS AI2302, Android 15, 2026-11-05). Opening and leaving a card whose tile is a **photo**
+(the front photo stands in for the tile, [[card-photos]]) was screen-recorded and stepped through frame by frame at
+30–60 fps. Opening: the tile grows into the brand-coloured detail over ~3 frames (~100 ms); the photo crossfades to
+the brand colour as it expands, so the photo itself is not stretched. Returning: the detail — showing the front photo
+— scales down and travels back into the tile slot over ~5 frames (~160 ms) while the grid fades in behind. No blank
+flash frame between states, no positional jump, and the photo keeps its proportions throughout (its baked-in top bar
+and corner markers stay square). Matches the Robolectric expectation in `DetailScreenTest`, which can't draw Compose.
+
 ## Caveats
 
 None open. The detail side's key depended on async-loaded data until #16

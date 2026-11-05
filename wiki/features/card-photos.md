@@ -42,7 +42,12 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   [[2026-11-03-card-photos-as-private-files]], [[2026-11-04-card-photos-interactive-crop]].
   The orientation is read with androidx's `ExifInterface` (`androidx.exifinterface`), not the platform's, which reads
   a PNG's or WebP's EXIF only from API 30: on Android 10 such a picture was stored unrotated (#92). Orientation of a
-  HEIF picture is read through it too; not checked on a device (#93).
+  HEIF picture is read through it too. Checked on a device (ASUS AI2302, Android 15, 2026-11-05, #93): a HEIC carrying
+  an EXIF orientation tag (portrait, tag 6; landscape, tag 8) imports upright — the stored JPEG comes out 900×1200 /
+  1600×900 with its EXIF stripped and the rotation baked into the pixels (pulled from `files/card_photos/` and
+  inspected), so `ExifInterface` reads the HEIF EXIF and `BitmapFactory` leaves it unapplied, turning it once. Caveat:
+  these test files put the rotation in EXIF; a HEIF that signals rotation only through the container `irot` box (as some
+  phone cameras emit) was not exercised — confirm once with a phone-camera HEIC if that path matters.
 - **What the form keeps.** A pick is copied in at once (the picker's read grant ends with the process) and staged for
   the crop screen; the staged name and its side go into the `SavedStateHandle` (keys `cropPhoto` / `cropSide`), so the
   crop screen survives process death as a capture does. Once framed, the stored photo's name goes into the
