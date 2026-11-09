@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Strings MinifiedAppSmokeTest looks up by name (#72): resource shrinking must keep them, even if the code stops
-     using one. Not packaged into the app. -->
+     using one. Removed by resource shrinking in the release and smoke builds. -->
 <resources xmlns:tools="http://schemas.android.com/tools"
     tools:keep="@string/card_list_title,@string/add_card,@string/no_cards_yet,@string/card_added,@string/edit,@string/delete,@plurals/delete_cards_question" />
