@@ -24,8 +24,21 @@ A second step, **Minified release build**, runs after it: `./gradlew assembleRel
 R8 must succeed on release, and the on-device smoke test must compile. The smoke test itself doesn't run on CI
 ([[2026-11-05-r8-smoke-test-on-a-device]], #73).
 
+Before the build, a **Gradle distribution** step runs `./gradlew --version`, up to three times, 30 seconds apart. The
+wrapper downloads the distribution on a cache miss and tries only once.
+
 Caches:
-- Gradle user home, through `gradle/actions/setup-gradle` (which also validates the wrapper)
+- Gradle user home, through `gradle/actions/setup-gradle` (which also validates the wrapper). Its key is a hash of
+  every Gradle file, `gradle/libs.versions.toml` included, and it matches exactly. A PR that changes one of
+  them (every Dependabot Gradle PR) restores nothing and starts cold. Only runs on `master` save an entry; a PR run
+  reads it.
+- The Gradle distribution (`~/.gradle/wrapper/dists`), keyed on `gradle/wrapper/gradle-wrapper.properties` only,
+  so a PR that leaves the wrapper alone restores it from `master`'s entry. On 2026-11-09 all five Dependabot PR runs
+  started cold and downloaded the distribution themselves. Two failed on that download, before any build: #113 on
+  a read timeout (the wrapper's `networkTimeout` is 10 s, run 42583614640) and #111 on HTTP 504 from GitHub's
+  release download (run 42583570631). The other three got Gradle and failed on the version coupling in #115. The
+  `master` runs restored the cache and never downloaded it (#116). A wrapper bump (like #114) still misses this
+  cache, and the retry step is all it has
 - Robolectric's downloaded `android-all` jars (`~/.m2/repository/org/robolectric`, keyed on
   `gradle/libs.versions.toml`). A cache hit saves nothing, so a jar for an SDK a test newly pins (`@Config(sdk = [N])`)
   is kept only once that file next changes; until then every run downloads it (#94)
