@@ -62,6 +62,11 @@ LoyScan is test-first (`wiki/decisions/2026-10-12-tdd-and-coverage.md`, how-to i
 - Check the tests actually exercise the change: assertions on the new branches and edge cases (null, empty, the
   no-row case, errors), not only the happy path. Per the rule-engine decision, every `CheckDigitAlgorithm` and
   every bundled card-number rule needs its own test vectors.
+- **A test that can't fail is a major finding** (`wiki/workflows/tdd.md`, "Tests that can't fail"): an expected
+  value computed the way the code computes it (tautological), or a test that checks internals (a private helper,
+  the order of internal calls) instead of behaviour at a seam. A fake's call count is fine when the count is the
+  behaviour (a delete reaches the repository once). Expected values must come from an independent
+  source: a hand-worked literal, a spec or published vector.
 - Test doubles are fakes from `app/src/test/java/com/bdaniel/loyscan/testing/`, not a mocking library. If the
   change alters an interface's contract (nullability, ordering, errors), the fake must change with it.
 - Coverage ratchet: if coverage rose by a whole percent or more, `minBound` in `app/build.gradle.kts` should be

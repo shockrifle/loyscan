@@ -38,10 +38,17 @@ Option 3, for the four skills that fill a gap: `diagnosing-bugs`, `writing-for-a
   own tracker setup; we use GitHub Issues directly), and stack-specific or unfinished ones.
 - **Copies over a plugin**: the adaptations would be lost on every update, and only four of ~40 skills are wanted.
 
+**Update, same day.** The shortlist was revisited one skill at a time: `to-tickets` was adapted after all (GitHub
+sub-issues and blocked-by links make it work without the upstream tracker setup); the `tdd` skill's seams and
+tests-that-can't-fail ideas went into [[tdd]] and `review-changes.md` instead of a skill; `wizard` waits for #74;
+a plan critic was chosen as our own agent run by `/next-task` (not built yet; it goes in with the move to pull
+requests); the lesson loop and
+the architecture review were skipped; dependency updates went to Dependabot ([[ci]]).
+
 ## Consequences
 
 - The copies don't follow upstream; [[agent-skills]] says how to port an upstream change by hand.
-- Three of the four are model-invoked, so their descriptions are in every session's context. `retro` is
-  user-invoked only.
+- `diagnosing-bugs`, `writing-for-agents` and `grilling` are model-invoked, so their descriptions are in every
+  session's context. `retro` and `to-tickets` are user-invoked only.
 - The MIT licence text is kept at `.claude/skills/LICENSE-mattpocock-skills`, and each adapted file ends with a
   credit line.

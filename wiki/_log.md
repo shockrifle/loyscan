@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-09 · to-tickets skill; tdd gets seams + tests-that-can't-fail (review-changes rule too, a fake's call count is fine when it is the behaviour); Dependabot (Gradle with Kotlin+KSP grouped, Actions) and a pull_request CI trigger · workflows/agent-skills, workflows/tdd, workflows/ci, decisions/2026-11-09-adapted-third-party-skills (update) · decisions on the 'maybe' skills
 - 2026-11-09 · added four adapted third-party agent skills (diagnosing-bugs, writing-for-agents, grilling, retro) in .claude/skills/ · workflows/agent-skills (new), decisions/2026-11-09-adapted-third-party-skills (new), decisions/_index, workflows/_index, workflows/tdd, index · skill review of two downloaded collections
 - 2026-11-05 · review fixes for #105: "the one test class" wording; decision page gets eea7cf8 · workflows/build-and-run, decisions/2026-11-05-r8-smoke-test-on-a-device · #105 review
 - 2026-11-05 · smoke test reads a real barcode on the R8 build: a drawn EAN-13 shared through the app's FileProvider into the card form; red shown by keeping only the reader and option classes (camera test passed, shared picture aborted in readBitmap); unlocked-screen note · integrations/zxing-cpp, workflows/build-and-run, workflows/tdd, decisions/2026-11-05-r8-smoke-test-on-a-device (update note) · #105

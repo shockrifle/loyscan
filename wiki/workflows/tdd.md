@@ -24,6 +24,40 @@ failure message for the commit, then fix it. Example: `12357a3` (#14). When the 
 
 Set `JAVA_HOME` first from a terminal (root `CLAUDE.md`).
 
+## Seams: where a test looks
+
+A test goes through a **seam**: the public interface where the behaviour is visible without reaching inside. That
+means a ViewModel's `state`, a repository's interface, a DAO's queries, a screen's visible nodes and its recorded
+`*Directions`, a domain function's return value. Private functions, a class's fields and a fake's internals are
+not seams. The test should survive a rewrite of the code behind the seam.
+
+Name the seam before writing the test: when planning an issue, each criterion maps to the test that proves it *and
+the seam it goes through* ("a deleted card's photo files are gone → `RoomLoyaltyCardRepositoryTest`, through the
+repository's `delete` and `FileCardPhotos.exists`"). If the only seam that can see the behaviour is too shallow
+(the bug needs navigation, the seam is one ViewModel), use a deeper layer from the table below, not a hook into
+the code.
+
+Checking a side effect directly (the files on disk, a row in the database) is right when that effect *is* the
+behaviour, like "no orphaned photo files". It is wrong when the interface could show it: read a repository write
+back through the repository, not with SQL.
+
+## Tests that can't fail
+
+- **Tautological.** The expected value is computed the way the code computes it, so the test passes by
+  construction: `assertThat(checkDigit(number)).isEqualTo(luhn(number))` with the same algorithm, or an expected
+  string built with the same formatting call. Expected values come from an independent source: a literal worked
+  out by hand, a vector from the specification or a published example, a made-up number that follows the store's
+  rules ([[add-a-catalogue-store]]).
+- **Implementation-coupled.** The test breaks when the code is refactored but the behaviour hasn't changed: it
+  checks a private helper or the order of internal calls instead of the outcome. A call count on a fake is fine
+  when the count is the behaviour: a delete reaches the repository exactly once (`DetailViewModelTest`,
+  `deleteCalls`).
+- **Never seen red.** A test that was never run against code without the behaviour proves nothing. Step 2 of the
+  loop is why every test is seen failing first.
+
+These are the review's findings too (`.claude/commands/review-changes.md`). Adapted from the `tdd` skill in Matt
+Pocock's skills collection ([[2026-11-09-adapted-third-party-skills]]).
+
 ## Which test for which layer
 
 Paths are under `app/src/test/java/com/bdaniel/loyscan/`, in the same package as the code under test.
