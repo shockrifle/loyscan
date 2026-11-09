@@ -28,7 +28,7 @@ One field says how a card is drawn: `barcodeFormat`. `BarcodeFormat.isGs1` then 
 another field. A flag would also mean nothing on most formats (EAN-13, ITF, …).
 
 ## Consequences
-- A GS1 Aztec or PDF417 scan keeps its plain format: ZXing core 3.5.3 can't write either in GS1 mode, so a saved one
+- A GS1 Aztec or PDF417 scan keeps its plain format: ZXing core (3.5.3, still 3.5.4) can't write either in GS1 mode, so a saved one
   loses the mark. `ScannedBarcode.gs1` still says what was scanned.
 - The custom-store format picker (#6) offers no `GS1_` format and no DataBar: `BarcodeFormat.forCustomStores`, decided
   in #47 ([[2026-10-22-custom-stores]]). A GS1 card keeps its mark by being scanned.
