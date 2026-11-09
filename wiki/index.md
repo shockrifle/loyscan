@@ -30,7 +30,7 @@ the way they are, what's fragile, and how to work on it.
 
 ## How-to
 
-- Workflows: [[tdd]] (start here before writing code), [[build-and-run]], [[ci]], [[database-schema-changes]], [[add-a-catalogue-store]], [[code-review]] (incl. `/next-task`)
+- Workflows: [[tdd]] (start here before writing code), [[build-and-run]], [[ci]], [[database-schema-changes]], [[add-a-catalogue-store]], [[code-review]] (incl. `/next-task`), [[agent-skills]]
 - Runbooks: [[cli-build-jvm-target-mismatch]], [[reset-local-database]]
 - Integrations: [[coil-image-loading]], [[zxing-core]], [[zxing-cpp]]
 - Scripts: [[reviewer-model]] (which model a reviewer subagent really ran on) — see [[scripts/_index|scripts]]
@@ -39,7 +39,7 @@ the way they are, what's fragile, and how to work on it.
 
 | Folder | What's in it |
 |---|---|
-| [[decisions/_index\|decisions]] | Why the codebase looks the way it does (28 pages) |
+| [[decisions/_index\|decisions]] | Why the codebase looks the way it does (29 pages) |
 | [[bugs/_index\|bugs]] | Postmortems (4 pages) |
 | [[tech-debt/_index\|tech-debt]] | Owed work, open vs resolved (7 pages) |
 | [[hacks/_index\|hacks]] | Short-lived workarounds (3 pages) |

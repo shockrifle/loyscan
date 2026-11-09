@@ -19,7 +19,8 @@ The rules and why: [[2026-10-12-tdd-and-coverage]]. This page is the how.
 6. **Commit** with the wiki update. Say what the red step was in the message when it isn't obvious.
 
 **Bug fix:** step 2 is a regression test that reproduces the bug through the public API. Run it and keep the
-failure message for the commit, then fix it. Example: `12357a3` (#14).
+failure message for the commit, then fix it. Example: `12357a3` (#14). When the cause isn't known yet, the
+`diagnosing-bugs` skill builds that failing test (or another loop that goes red) first ([[agent-skills]]).
 
 Set `JAVA_HOME` first from a terminal (root `CLAUDE.md`).
 

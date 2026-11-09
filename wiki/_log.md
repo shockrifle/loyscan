@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-09 · added four adapted third-party agent skills (diagnosing-bugs, writing-for-agents, grilling, retro) in .claude/skills/ · workflows/agent-skills (new), decisions/2026-11-09-adapted-third-party-skills (new), decisions/_index, workflows/_index, workflows/tdd, index · skill review of two downloaded collections
 - 2026-11-05 · review fixes for #105: "the one test class" wording; decision page gets eea7cf8 · workflows/build-and-run, decisions/2026-11-05-r8-smoke-test-on-a-device · #105 review
 - 2026-11-05 · smoke test reads a real barcode on the R8 build: a drawn EAN-13 shared through the app's FileProvider into the card form; red shown by keeping only the reader and option classes (camera test passed, shared picture aborted in readBitmap); unlocked-screen note · integrations/zxing-cpp, workflows/build-and-run, workflows/tdd, decisions/2026-11-05-r8-smoke-test-on-a-device (update note) · #105
 - 2026-11-05 · review fixes for #73: smoke test keeps the scanner camera running 3 s (frames through the analyzer + zxing-cpp JNI under R8); zxing-cpp wording narrowed to what is checked; unit-test report path moved out of the smoke-test bullets; decision gets its SHA · decisions/2026-11-05-r8-smoke-test-on-a-device, workflows/build-and-run, workflows/tdd, integrations/zxing-cpp · #73 review
