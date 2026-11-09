@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-09 · UI strings move to resources with a Hungarian translation: English default, informal register, tests stay in English; StringResourcesTest checks values-hu covers every default string · decisions/2026-11-09-ui-language (new), workflows/add-a-string (new), workflows/_index, decisions/_index, index · #72
 - 2026-11-09 · end-to-end waits: the custom store form's close (keyed on its title), the text itself after a screen's title, and `waitForTextToGo` instead of an immediate `assertDoesNotExist` · workflows/tdd · #118, #62 (flaky custom-store rename test)
 - 2026-11-09 · review fixes for #116: /dependency-pr merges a PR after pushing its wiki update; the wrapper cache's PR restore marked unverified; plan critic's model checked (not a gate); CI-on-every-PR wording in tdd, build-and-run and to-tickets · workflows/ci, workflows/code-review, workflows/tdd, workflows/build-and-run · #116 review
 - 2026-11-09 · workflow moves to pull requests: branch, PR that closes the issue, review, rebase merge by the agent after green CI; /next-task gets a read-only plan-critic subagent and the user's confirmation of each test's seam; /dependency-pr reviews and merges Dependabot PRs, holds coupled bumps for their joint-upgrade issue, rebases ones that failed before the build · decisions/2026-11-09-pull-request-workflow (new), decisions/_index, workflows/code-review, workflows/ci, workflows/_index, CLAUDE, index · #116
