@@ -375,11 +375,14 @@ class AppNavigationTest {
         composeRule.onNodeWithTag(CUSTOM_STORE_NAME_TAG).performTextInput("My Gym")
         composeRule.onNodeWithText("Save").performScrollTo().performClick()
 
+        waitForTheStoreFormToClose()
         waitForText("Choose store")
+        waitForText("My Gym") // the picker's row can recompose after its title shows (#118)
         composeRule.onNodeWithText("My Gym").assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Back").performClick()
+        waitForTextToGo("Choose store")
         waitForText("My Gym")
-        composeRule.onNodeWithText("My Shop").assertDoesNotExist()
+        waitForTextToGo("My Shop") // #62
     }
 
     @Test
@@ -395,6 +398,7 @@ class AppNavigationTest {
         // 4242 isn't an EAN-13, so the card is now drawn in the fallback and the detail says so.
         composeRule.onNodeWithText(BarcodeFormat.EAN_13.displayName).performScrollTo().performClick()
         composeRule.onNodeWithText("Save").performScrollTo().performClick()
+        waitForTheStoreFormToClose()
         waitForText("Choose store")
         composeRule.onNodeWithContentDescription("Back").performClick()
 
@@ -419,8 +423,9 @@ class AppNavigationTest {
         composeRule.onNodeWithText("Its card is deleted with it.").assertIsDisplayed()
         composeRule.onNodeWithText("Delete").performClick()
 
+        waitForTheStoreFormToClose()
         waitForText("Choose store")
-        composeRule.onNodeWithText("My Shop").assertDoesNotExist()
+        waitForTextToGo("My Shop")
         assertThat(runBlocking { db.loyaltyCardDao().getAllWithStore().first() }.map { it.loyaltyCard.storeId })
             .containsExactly(STORE_ID)
     }
@@ -432,8 +437,18 @@ class AppNavigationTest {
     private fun waitForTheCardFormToClose() =
         composeRule.waitUntil(WAIT_TIMEOUT_MS) { composeRule.onAllNodes(hasText("Card number")).fetchSemanticsNodes().isEmpty() }
 
+    /**
+     * As [waitForTheCardFormToClose], for the custom store form: its field holds the store's name. Keyed on the title,
+     * which stays until the form leaves; the fields go as soon as the store is deleted.
+     */
+    private fun waitForTheStoreFormToClose() = waitForTextToGo("Edit store")
+
     private fun waitForText(text: String) =
         composeRule.waitUntil(WAIT_TIMEOUT_MS) { composeRule.onAllNodes(hasText(text)).fetchSemanticsNodes().isNotEmpty() }
+
+    /** A screen that is leaving can still show [text] for a while, so asserting it is gone at once is racy (#62). */
+    private fun waitForTextToGo(text: String) =
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) { composeRule.onAllNodes(hasText(text)).fetchSemanticsNodes().isEmpty() }
 
     /** Waits until the app's image loader has decoded a photo and closed its file. Its result comes on the main looper. */
     private fun waitForThePhotoToLoad() =
