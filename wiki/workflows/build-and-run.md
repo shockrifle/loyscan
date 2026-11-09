@@ -71,6 +71,14 @@ All versions live in `gradle/libs.versions.toml`. Constraints that have bitten b
   2.2.21 and 2.3.21 alike. After a Kotlin bump, run the full build and bump KSP only if it fails
   ([[2025-12-08-ksp-instead-of-kapt]]). Kotlin is at least 2.3.20 because zxing-cpp 3.1.x is built on that stdlib
   ([[zxing-cpp]]).
+- **Kotlin, Hilt, the Android Gradle plugin and Gradle move together** (the joint upgrade is #115). Seen on
+  Dependabot's first PRs, 2026-11-09 ([[ci]] → Dependabot):
+  - Kotlin 2.4.21 (PR #110) doesn't compile with Hilt 2.57.2: *"[Hilt] Provided Metadata instance has version
+    2.4.0, while maximum supported version is 2.3.0"*. Hilt's annotation processor reads Kotlin metadata, so a
+    Kotlin minor needs a Hilt release that knows it.
+  - Hilt 2.60.1 alone (PR #112) fails to apply its Gradle plugin (`com.google.dagger.hilt.android`) with AGP 8.13.1
+    and Gradle 8.13; the log doesn't say why (a newer AGP or Gradle requirement is likely, not checked).
+  - Gradle 9.8.2 alone (PR #114) fails to apply AGP 8.13.1 (`com.android.application`).
 - Compose libraries come from the Compose BOM. The BOM bump in `d0d171a` removed the transitive Material
   icons — [[2025-12-08-hand-rolled-icons]].
 - The `kotlinSerialization` plugin version is pinned to the Kotlin version (`2.3.21`). It's needed for the

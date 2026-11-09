@@ -1,6 +1,6 @@
 # Adapted copies of four third-party agent skills
 
-**Status:** Active · **Date:** 2026-11-09 · **Commits:** (this commit)
+**Status:** Active · **Date:** 2026-11-09 · **Commits:** f77fbee, 3169bbd
 
 ## Context
 
