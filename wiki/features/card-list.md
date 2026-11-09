@@ -88,6 +88,9 @@ tiles, one per row in `loyalty_cards`, live-updating from Room. Sort, search and
     (`ListViewModelTest.deletingTheSelection_…`, `aFailedDelete_…`, `ListScreenTest.deletingTheSelection_…`,
     `AppNavigationTest.selectingCardsOnTheList_andDeletingThem_keepsTheOthers`). The cards' photo files are deleted
     with them ([[card-photos]]).
+- **Language** (#72): every text on the list is a string resource, in English or Hungarian by the phone's language;
+  the store names and labels are the user's data and aren't translated ([[add-a-string]]). Tests:
+  `ListScreenTest.inHungarian_everyTextOnTheList_isTranslated`.
 - The Settings icon in the top bar is a no-op (`ListScreen.kt:143`, `/* TODO */`).
 - The "Add card" floating button → `directions.toAddCard()` → the store picker of [[add-card]]. The grid has 88dp of bottom content
   padding so the button never covers the last row (`ListScreenTest.theLastTile_isNotCoveredByTheAddButtonWhenScrolledToTheEnd`).

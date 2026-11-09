@@ -52,6 +52,10 @@ fun translationProblems(default: String, translated: String): List<String> {
     return problems
 }
 
+/** Every text in a `strings.xml` (each string, each plural item), as Android shows it: `'` is `'`. */
+fun stringValues(xml: String): List<String> =
+    parseResources(xml).values.flatMap { it.items.values }.map { it.replace(Regex("""\\(.)""")) { match -> match.groupValues[1] } }
+
 /** A `<string>` (its text under the key "") or a `<plurals>` (its items by quantity). */
 private class Resource(val plural: Boolean, val translatable: Boolean, val items: Map<String, String>)
 

@@ -1,4 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="widget_description">A törzsvásárlói kártyáid egy érintésre</string>
+
+    <!-- Shared -->
+    <string name="close">Bezárás</string>
+    <string name="edit">Szerkesztés</string>
+    <string name="delete">Törlés</string>
+    <string name="cancel">Mégse</string>
+
+    <!-- Card list -->
+    <string name="card_list_title">Kártyáim</string>
+    <string name="settings">Beállítások</string>
+    <string name="add_card">Kártya hozzáadása</string>
+    <string name="search_cards">Keresés a kártyák között</string>
+    <string name="no_card_matches">Nincs ilyen kártya: „%1$s”</string>
+    <string name="select_card">Kijelölés</string>
+    <string name="sort">Rendezés</string>
+    <string name="sort_by_name">Név</string>
+    <string name="sort_by_most_used">Leggyakrabban használt</string>
+    <string name="sort_by_recently_used">Legutóbb használt</string>
+    <string name="no_cards_yet">Még nincs kártyád</string>
+    <string name="no_cards_yet_hint">Adj hozzá egy törzsvásárlói kártyát: olvasd be a vonalkódját, vagy írd be a számát.</string>
+    <string name="add_first_card">Add hozzá az első kártyádat</string>
+    <plurals name="cards_selected">
+        <item quantity="one">%d kijelölve</item>
+        <item quantity="other">%d kijelölve</item>
+    </plurals>
+    <plurals name="delete_cards_question">
+        <item quantity="one">Törlöd ezt a kártyát?</item>
+        <item quantity="other">Törlöd a kijelölt %d kártyát?</item>
+    </plurals>
+    <plurals name="delete_cards_explanation">
+        <item quantity="one">Végleg törlődik erről a telefonról.</item>
+        <item quantity="other">Végleg törlődnek erről a telefonról.</item>
+    </plurals>
+    <plurals name="delete_cards_failed">
+        <item quantity="one">Nem sikerült törölni a kártyát. Próbáld újra.</item>
+        <item quantity="other">Nem sikerült törölni a kártyákat. Próbáld újra.</item>
+    </plurals>
 </resources>

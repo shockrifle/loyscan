@@ -29,7 +29,8 @@ import java.io.File
  * (wiki/workflows/build-and-run.md).
  *
  * The app is driven from outside through UiAutomator, by the text and content descriptions the user sees, so the test
- * depends on none of the app's classes, which R8 has renamed or removed. The run uninstalls the smoke app afterwards,
+ * depends on none of the app's classes, which R8 has renamed or removed. A text the app has as a string resource is
+ * looked up by its name ([string]), so the test passes on a phone in Hungarian too (#72); the others are still English. The run uninstalls the smoke app afterwards,
  * so the store and card it adds don't outlive it. A failed wait lists what was on screen and leaves a screenshot in
  * `/data/local/tmp/smoke-failure.png` (`adb pull` it).
  */
@@ -46,13 +47,13 @@ class MinifiedAppSmokeTest {
         val launch = instrumentation.targetContext.packageManager.getLaunchIntentForPackage(packageName)!!
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
         instrumentation.targetContext.startActivity(launch)
-        await(By.text("My Cards"))
+        await(By.text(string("card_list_title")))
     }
 
     @Test
     fun aCardTyped_opens_isEdited_andIsDeleted() {
         // Add: a custom store, the scanner for it, then the number typed in.
-        click(By.desc("Add card"))
+        click(By.desc(string("add_card")))
         click(By.text("Other card"))
         await(By.text("New store"))
         fields()[0].text = STORE
@@ -84,8 +85,8 @@ class MinifiedAppSmokeTest {
         click(By.desc("Delete"))
         await(By.text("Delete this card?"))
         click(By.text("Delete"))
-        await(By.text("My Cards"))
-        await(By.text("No cards yet"))
+        await(By.text(string("card_list_title")))
+        await(By.text(string("no_cards_yet")))
     }
 
     @Test
@@ -117,6 +118,17 @@ class MinifiedAppSmokeTest {
         } finally {
             picture.delete()
         }
+    }
+
+    /**
+     * The app's string [name] as the app shows it in the device's language (#72). Looked up by name, since the app's
+     * `R` class is renamed by R8; resource shrinking keeps the names (`res/raw/smoke_test_keep.xml`).
+     */
+    private fun string(name: String): String {
+        val resources = instrumentation.targetContext.resources
+        val id = resources.getIdentifier(name, "string", packageName)
+        check(id != 0) { "The app has no string resource $name" }
+        return resources.getString(id)
     }
 
     /** The screen's text fields, top to bottom, once there is one. */

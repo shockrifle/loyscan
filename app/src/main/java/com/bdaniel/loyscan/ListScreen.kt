@@ -56,6 +56,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -137,11 +139,11 @@ fun SharedTransitionScope.ListScreen(
                     onDelete = { confirmingDelete = true },
                 )
             } else TopAppBar(
-                title = { Text("My Cards") },
+                title = { Text(stringResource(R.string.card_list_title)) },
                 actions = {
                     SortMenu(sort = sort, onSortChange = viewModel::onSortChange)
                     IconButton(onClick = { /* TODO: Handle settings click */ }) {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings")
+                        Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings))
                     }
                 }
             )
@@ -149,7 +151,7 @@ fun SharedTransitionScope.ListScreen(
         floatingActionButton = {
             if (!selecting) {
                 FloatingActionButton(onClick = directions.toAddCard) {
-                    Icon(Icons.Default.Add, contentDescription = "Add card")
+                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_card))
                 }
             }
         },
@@ -165,11 +167,11 @@ fun SharedTransitionScope.ListScreen(
                 value = query,
                 onValueChange = viewModel::onQueryChange,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp).testTag(CARD_SEARCH_TAG),
-                placeholder = { Text("Search cards") },
+                placeholder = { Text(stringResource(R.string.search_cards)) },
                 singleLine = true,
             )
             if (cards?.isEmpty() == true) {
-                Text("No card matches “${query.trim()}”", modifier = Modifier.padding(16.dp))
+                Text(stringResource(R.string.no_card_matches, query.trim()), modifier = Modifier.padding(16.dp))
             }
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
@@ -216,20 +218,20 @@ fun SharedTransitionScope.ListScreen(
 @Composable
 private fun SelectionBar(count: Int, onClose: () -> Unit, onEdit: (() -> Unit)?, onDelete: () -> Unit) {
     TopAppBar(
-        title = { Text("$count selected") },
+        title = { Text(pluralStringResource(R.plurals.cards_selected, count, count)) },
         navigationIcon = {
             IconButton(onClick = onClose) {
-                Icon(Icons.Default.Close, contentDescription = "Close")
+                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.close))
             }
         },
         actions = {
             if (onEdit != null) {
                 IconButton(onClick = onEdit) {
-                    Icon(Icons.Default.Edit, contentDescription = "Edit")
+                    Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.edit))
                 }
             }
             IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = "Delete")
+                Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete))
             }
         },
     )
@@ -241,23 +243,17 @@ private fun SelectionBar(count: Int, onClose: () -> Unit, onEdit: (() -> Unit)?,
  */
 @Composable
 private fun ConfirmDelete(count: Int, failed: Boolean, deleting: Boolean, onConfirm: () -> Unit, onDismiss: () -> Unit) {
-    val one = count == 1
     AlertDialog(
         onDismissRequest = { if (!deleting) onDismiss() },
-        title = { Text(if (one) "Delete this card?" else "Delete $count cards?") },
+        title = { Text(pluralStringResource(R.plurals.delete_cards_question, count, count)) },
         text = {
             Text(
-                when {
-                    failed && one -> "The card couldn't be deleted. Try again."
-                    failed -> "The cards couldn't be deleted. Try again."
-                    one -> "It is removed from this phone for good."
-                    else -> "They are removed from this phone for good."
-                },
+                pluralStringResource(if (failed) R.plurals.delete_cards_failed else R.plurals.delete_cards_explanation, count),
                 color = if (failed) MaterialTheme.colorScheme.error else Color.Unspecified,
             )
         },
-        confirmButton = { TextButton(onClick = onConfirm, enabled = !deleting) { Text("Delete") } },
-        dismissButton = { TextButton(onClick = onDismiss, enabled = !deleting) { Text("Cancel") } },
+        confirmButton = { TextButton(onClick = onConfirm, enabled = !deleting) { Text(stringResource(R.string.delete)) } },
+        dismissButton = { TextButton(onClick = onDismiss, enabled = !deleting) { Text(stringResource(R.string.cancel)) } },
     )
 }
 
@@ -282,22 +278,22 @@ private fun EmptyCardList(onAddCard: () -> Unit, modifier: Modifier = Modifier) 
         verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text("No cards yet", style = MaterialTheme.typography.headlineSmall)
+        Text(stringResource(R.string.no_cards_yet), style = MaterialTheme.typography.headlineSmall)
         Text(
-            "Add a loyalty card by scanning its barcode or typing its number.",
+            stringResource(R.string.no_cards_yet_hint),
             style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center,
         )
         Button(onClick = onAddCard) {
-            Text("Add your first card")
+            Text(stringResource(R.string.add_first_card))
         }
     }
 }
 
 private val SORT_LABELS = mapOf(
-    CardSort.NAME to "Name",
-    CardSort.MOST_USED to "Most used",
-    CardSort.RECENTLY_USED to "Recently used",
+    CardSort.NAME to R.string.sort_by_name,
+    CardSort.MOST_USED to R.string.sort_by_most_used,
+    CardSort.RECENTLY_USED to R.string.sort_by_recently_used,
 )
 
 /** The Sort button and its menu; the current [sort] is marked. */
@@ -306,12 +302,12 @@ private fun SortMenu(sort: CardSort, onSortChange: (CardSort) -> Unit) {
     var expanded by rememberSaveable { mutableStateOf(false) }
     Box {
         IconButton(onClick = { expanded = true }) {
-            Icon(Icons.Default.Sort, contentDescription = "Sort")
+            Icon(Icons.Default.Sort, contentDescription = stringResource(R.string.sort))
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             CardSort.entries.forEach { option ->
                 DropdownMenuItem(
-                    text = { Text(SORT_LABELS.getValue(option)) },
+                    text = { Text(stringResource(SORT_LABELS.getValue(option))) },
                     leadingIcon = { RadioButton(selected = option == sort, onClick = null) },
                     onClick = {
                         expanded = false
@@ -352,7 +348,7 @@ fun SharedTransitionScope.CardItem(
         modifier = modifier
             .fillMaxWidth()
             .semantics { this.selected = selected }
-            .combinedClickable(onClick = onClick, onLongClick = onLongClick, onLongClickLabel = "Select"),
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick, onLongClickLabel = stringResource(R.string.select_card)),
         border = if (selected) BorderStroke(3.dp, MaterialTheme.colorScheme.primary) else null,
     ) {
         Box {

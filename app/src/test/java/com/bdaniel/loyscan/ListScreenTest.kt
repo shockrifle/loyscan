@@ -27,6 +27,7 @@ import androidx.compose.ui.test.isNotSelected
 import androidx.compose.ui.test.isSelected
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.hasScrollAction
@@ -47,6 +48,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.bdaniel.loyscan.domain.CardSort
 import com.bdaniel.loyscan.domain.LoyaltyCard
 import com.bdaniel.loyscan.testing.FakeCardPhotos
+import com.bdaniel.loyscan.testing.ShownTexts
 import com.bdaniel.loyscan.testing.FakeLoyaltyCardRepository
 import com.bdaniel.loyscan.testing.FakeUserPreferencesRepository
 import com.bdaniel.loyscan.testing.aLoyaltyCard
@@ -58,6 +60,7 @@ import com.bdaniel.loyscan.di.ImageLoaderEntryPoint
 import dagger.hilt.android.EntryPointAccessors
 import androidx.compose.ui.test.onAllNodesWithText
 import org.robolectric.shadows.ShadowLooper
+import org.robolectric.annotation.Config
 import java.io.File
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.CompletableDeferred
@@ -749,6 +752,44 @@ class ListScreenTest {
     }
 
     private fun top(text: String) = composeRule.onNodeWithText(text).fetchSemanticsNode().boundsInRoot.top
+
+    @Test
+    @Config(qualifiers = "+hu")
+    fun inHungarian_everyTextOnTheList_isTranslated() { // #72
+        val repository = FakeLoyaltyCardRepository(
+            listOf(aLoyaltyCard(id = cardId(1), store = aStore(name = "Apple"), label = "Work"), aLoyaltyCard(id = cardId(2), store = aStore(name = "Berry"))),
+        )
+        setScreen(viewModel = ListViewModel(repository, FakeUserPreferencesRepository(), SavedStateHandle(), FakeCardPhotos()))
+        val shown = ShownTexts(composeRule)
+        shown.collect()
+
+        composeRule.onNodeWithContentDescription("Rendezés").performClick()
+        shown.collect()
+        composeRule.onNodeWithText("Név").performClick()
+        composeRule.onNodeWithTag(CARD_SEARCH_TAG).performTextInput("xyz")
+        shown.collect()
+        composeRule.onNodeWithTag(CARD_SEARCH_TAG).performTextClearance()
+        composeRule.onNodeWithText("Work").performTouchInput { longClick() }
+        composeRule.onNodeWithContentDescription("Törlés").performClick()
+        shown.collect()
+        composeRule.onNodeWithText("Mégse").performClick()
+        composeRule.onNodeWithText("Berry").performClick()
+        composeRule.onNodeWithContentDescription("Törlés").performClick()
+        shown.collect()
+        repository.deleteFailure = IllegalStateException("disk I/O error")
+        composeRule.onNode(hasText("Törlés") and hasAnyAncestor(isDialog())).performClick()
+        shown.collect()
+        repository.deleteFailure = null
+        composeRule.onNode(hasText("Törlés") and hasAnyAncestor(isDialog())).performClick()
+        composeRule.onNodeWithText("Még nincs kártyád").assertIsDisplayed()
+        shown.collect()
+
+        shown.assertSeen(
+            "Kártyáim", "Keresés a kártyák között", "Nincs ilyen kártya: „xyz”", "1 kijelölve", "Törlöd ezt a kártyát?",
+            "2 kijelölve", "Törlöd a kijelölt 2 kártyát?", "Nem sikerült törölni a kártyákat. Próbáld újra.", "Kijelölés",
+        )
+        shown.assertEveryTextIsTranslated("Apple", "Work", "Berry", "A", "B", "Apple, Work", "xyz")
+    }
 
     private fun setScreen(
         vararg cards: LoyaltyCard,
