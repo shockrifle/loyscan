@@ -1,0 +1,30 @@
+# Weekly dependency update PRs. Why and how they are handled: wiki/workflows/ci.md → Dependabot
+version: 2
+updates:
+  - package-ecosystem: gradle
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      # Kotlin, its serialization plugin and KSP are coupled (wiki/workflows/build-and-run.md → Dependencies):
+      # bump them in one PR so the build is checked with the combination that would ship.
+      kotlin:
+        patterns:
+          - "org.jetbrains.kotlin*"
+          - "com.google.devtools.ksp*"
+      androidx:
+        patterns:
+          - "androidx.*"
+    ignore:
+      # Must match the kotlinx-coroutines-core version the app resolves transitively, which Dependabot can't see.
+      - dependency-name: "org.jetbrains.kotlinx:kotlinx-coroutines-test"
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns:
+          - "*"

@@ -1,8 +1,10 @@
-# Unit tests + Kover coverage gate, and the minified release build, on every push to master. What runs and how to reproduce: wiki/workflows/ci.md
+# Unit tests + Kover coverage gate, and the minified release build, on every push to master and every PR into it. What runs and how to reproduce: wiki/workflows/ci.md
 name: Tests
 
 on:
   push:
+    branches: [master]
+  pull_request:
     branches: [master]
   workflow_dispatch:
 

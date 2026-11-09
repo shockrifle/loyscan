@@ -1,12 +1,13 @@
 # Continuous integration (GitHub Actions)
 
-Every push to `master` runs the unit tests and the Kover coverage gate on GitHub Actions. A red run means
+Every push to `master`, and every pull request into it, runs the unit tests and the Kover coverage gate on GitHub Actions. A red run means
 `master` is broken, so fix it before pushing anything else. Workflow: `.github/workflows/tests.yml` (added for #29).
 
 ## What runs
 
 One job, `test`, on `ubuntu-latest`, with JDK 21 (Temurin). It has a 30-minute timeout and starts:
 - on every push to `master`
+- on every pull request into `master` (Dependabot's, see below), on the PR's merge commit
 - by hand from the Actions tab, or `gh workflow run tests.yml --ref master`
 
 A newer push to the same ref cancels a run that is still going.
@@ -62,13 +63,28 @@ for the failing assertion before changing the test.
   minified build's smoke test, which runs by hand on a device ([[2026-11-05-r8-smoke-test-on-a-device]]). The repo is private, so Actions minutes count against a quota, and an emulator
   job would cost several times this job. Add one only for a test that needs a real device (e.g. camera, #4), and
   run it only when that code changes.
-- **Push to `master` only, no `pull_request` trigger.** Work lands directly on `master` ([[code-review]]), so
-  CI is a safety net after the push. The local gate in [[tdd]] and `/review-changes` are what keep red commits off
-  `master`.
+- **Push to `master`, and pull requests into it.** Work has landed directly on `master` ([[code-review]]), with
+  CI as a safety net after the push; the local gate in [[tdd]] and `/review-changes` keep red commits off `master`.
+  The `pull_request` trigger was added on 2026-11-09 so Dependabot's PRs are tested before they are merged; the
+  user decided the same day to move all work to pull requests, and the review commands will be changed for that
+  separately.
 - **Basic Gradle caching** (`cache-provider: basic`). `setup-gradle` v6 defaults to a proprietary "enhanced"
   cache, which is a free preview for private repos with pricing announced for later. The basic provider is MIT and
   uses `actions/cache`.
 - **`gradlew` is executable in git** (`git update-index --chmod=+x gradlew`). On Windows the bit isn't visible,
   but the Linux runner needs it.
 - Action versions are pinned to major tags (`checkout@v7`, `setup-java@v6`, `setup-gradle@v6`, `cache@v6`,
-  `upload-artifact@v7`). Run annotations warn when a major is deprecated; bump it then.
+  `upload-artifact@v7`). Dependabot proposes new majors (below).
+
+## Dependabot
+
+`.github/dependabot.yml` opens update PRs once a week, at most 5 open at a time for Gradle:
+- **Gradle** (`gradle/libs.versions.toml`). Kotlin, the serialization plugin and KSP come as one grouped PR, because
+  their versions are coupled ([[build-and-run]] → Dependencies); all `androidx.*` libraries come as another.
+  `kotlinx-coroutines-test` is ignored: it must match the coroutines version the app resolves transitively, which
+  Dependabot can't see, so bump it by hand when that changes.
+- **GitHub Actions** (the `uses:` versions in the workflows), all in one PR.
+
+Each PR runs the Tests workflow. Merge it once CI is green and the change has been reviewed. A Gradle bump
+changes the Robolectric cache key, so its run is a cold one (about 5 minutes). Dependabot labels its PRs
+`dependencies`, a label outside the issue vocabulary in [[CLAUDE]]; it applies to PRs only.
