@@ -34,3 +34,9 @@ resource, in English in `app/src/main/res/values/strings.xml` and in Hungarian i
 - Screen tests assert English literals: Robolectric runs at `en-rUS` unless `@Config(qualifiers)` says otherwise.
 - A test that sets a Hungarian locale (`qualifiers = "+hu"`; the `+` keeps the class's other qualifiers, such as a
   tall screen) asserts Hungarian literals written by hand, never English ones.
+- Each translated screen has one such test that walks the screen through its states (menus, dialogs, failures,
+  empty state) and checks with `ShownTexts.assertEveryTextIsTranslated` that every text shown is either the
+  fixture's data or a `values-hu` value ([[tdd]] → Screen in Hungarian). A new text on a translated screen should
+  appear in one of the states it walks; add the state if it doesn't.
+- The on-device smoke test (`MinifiedAppSmokeTest`) finds a translated text by its resource name (`string("…")`),
+  since the phone may be in either language. A name it looks up goes in `res/raw/smoke_test_keep.xml`.
