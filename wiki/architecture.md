@@ -17,7 +17,7 @@ All paths below are under `app/src/main/java/com/bdaniel/loyscan/` unless writte
 | **Repository** | `data/repository/` — `LoyaltyCardRepository`, `StoreRepository` and `UserPreferencesRepository` (interfaces) + `RoomLoyaltyCardRepository` / `RoomStoreRepository` / `DataStoreUserPreferencesRepository` (`@Singleton` impls; preferences: [[2026-10-28-datastore-for-user-preferences]]) | Exposes `Flow<domain>` | ViewModels depend on the **interface**, so tests pass a fake (see Testing seams). Reads return domain models. |
 | **Domain** | `domain/` — `LoyaltyCard`, `Store`, `BarcodeFormat`; `domain/cardnumber/` — card-number rule engine ([[2026-10-09-card-number-rule-engine]]) | Plain data classes with an `EMPTY` sentinel; pure-Kotlin logic. Barcode content, display number and barcode format are derived on read (`LoyaltyCard`), never stored ([[2026-10-12-data-model-v2]]) | No Android/Room imports — unit-tested on the JVM. |
 | **Presentation state** | root package — `ListViewModel`, `DetailViewModel`, `ScannerViewModel` (UI state only, no repository) | `@HiltViewModel`; turn repository Flows into `StateFlow` via `stateIn(viewModelScope, WhileSubscribed(5_000), initial)` | Route args read with `savedStateHandle.toRoute<Route>()`. |
-| **UI** | root package — `ListScreen`, `DetailScreen`; `ui/` — theme, icons, `hiltImageLoader()`; `ui/barcode/` — ZXing encoding and barcode drawing ([[zxing-core]]); `ui/scanner/` — camera, permission and zxing-cpp decoding for `ScannerScreen` ([[zxing-cpp]]) | Composables, extensions on `SharedTransitionScope` | Screens receive a `*Directions` object, never a `NavController`. |
+| **UI** | root package — `ListScreen`, `DetailScreen`; `ui/` — theme, icons, `hiltImageLoader()`; `ui/barcode/` — ZXing encoding and barcode drawing ([[zxing-core]]); `ui/scanner/` — camera, permission and zxing-cpp decoding for `ScannerScreen` ([[zxing-cpp]]) | Composables, extensions on `SharedTransitionScope` | Screens receive a `*Directions` object, never a `NavController`. Texts come from string resources (`stringResource`, `pluralStringResource`), English by default and Hungarian in `values-hu` ([[add-a-string]], #72; the card list and card screen so far). |
 | **Navigation** | `Navigation.kt`, `MainActivity.kt` (`AppNavigation`) | `@Serializable` routes + `NavController.*Directions(entry)` factories | See [[2025-12-09-type-safe-navigation-directions]]. |
 | **DI** | `di/DatabaseModule.kt`, `di/PreferencesModule.kt`, `di/ImageLoaderModule.kt`, `di/RepositoryModule.kt`, `di/UserCountryModule.kt` | `@Module @InstallIn(SingletonComponent)` providers; `@Binds` repository interface → Room / DataStore impl | Implementations use `@Inject constructor`. |
 
@@ -100,6 +100,10 @@ content descriptions, so it needs no seam in the app ([[2026-11-05-r8-smoke-test
   that the test injects and fills (`AppNavigationTest`). `testing/FakePictureReaderModule` swaps the zxing-cpp
   `PictureReader` for one injected `FakePictureReader`. An activity started by an intent (a share, #77) is launched
   with `ActivityScenario.launch(intent)` under `createEmptyComposeRule()` (`ShareToLoyScanTest`).
+- **Language.** Screen tests run in English, Robolectric's default locale, and assert English literals. A screen's
+  Hungarian is checked by one test at `@Config(qualifiers = "+hu")` that collects every text it shows (`ShownTexts`) and
+  fails on any that isn't the fixture's data or a `values-hu` value; `StringResourcesTest` checks `values-hu` covers
+  every default string ([[2026-11-09-ui-language]], [[add-a-string]]).
 - Fixture builders (`aLoyaltyCard()`, `aStoreEntity()`, …) give every field a default; `cardId(n)` makes distinct UUID-shaped card ids.
 
 ### Build tooling

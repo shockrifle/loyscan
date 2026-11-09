@@ -1,5 +1,6 @@
 package com.bdaniel.loyscan
 
+import androidx.compose.ui.res.stringResource
 import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -261,7 +262,8 @@ fun CardFormScreen(
 internal val CardPhotoSide.sideName: String get() = if (this == CardPhotoSide.FRONT) "front" else "back"
 
 /** A photo's content description: "Front photo", "Back photo". */
-internal val CardPhotoSide.photoDescription: String get() = "${sideName.replaceFirstChar { it.uppercase() }} photo"
+internal val CardPhotoSide.photoDescription: String
+    @Composable get() = stringResource(if (this == CardPhotoSide.FRONT) R.string.front_photo else R.string.back_photo)
 
 /**
  * One side's photo (#10): the photo in the card's proportions with Replace and Remove, a progress indicator while a

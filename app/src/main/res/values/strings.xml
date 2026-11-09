@@ -40,4 +40,18 @@
         <item quantity="one">The card couldn\'t be deleted. Try again.</item>
         <item quantity="other">The cards couldn\'t be deleted. Try again.</item>
     </plurals>
+
+    <!-- Card detail -->
+    <string name="back">Back</string>
+    <string name="card_added">Card added</string>
+    <string name="add_another_card">Add another</string>
+    <string name="show_full_screen">Show full screen</string>
+    <string name="close_full_screen">Close full screen</string>
+    <string name="barcode">Barcode</string>
+    <string name="barcode_shown_as">Shown as %1$s</string>
+    <string name="copy_number">Copy number</string>
+    <string name="card_number_clip_label">Card number</string>
+    <string name="number_copied">Number copied</string>
+    <string name="front_photo">Front photo</string>
+    <string name="back_photo">Back photo</string>
 </resources>

@@ -21,6 +21,13 @@ resource, in English in `app/src/main/res/values/strings.xml` and in Hungarian i
 6. **Not translated:** a name that is the same in every language (`app_name`) gets `translatable="false"` in
    `values/` and no Hungarian entry. Store names and aliases from the catalogue are data, not resources.
 
+## Not translated yet
+
+The move is done screen by screen (#72). Until it is finished, a Hungarian phone shows the translated screens (the
+card list, the card screen) in Hungarian and the others in English. Barcode format names (`BarcodeFormat.displayName`:
+"QR code", "EAN-13") are not resources yet, so the card screen says "Megjelenítve: QR code"; they are shown by the card
+form too and move with it.
+
 ## Writing the Hungarian
 
 - Informal register: *te*, not *Ön* ("Törlöd ezt a kártyát?").

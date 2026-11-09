@@ -38,4 +38,18 @@
         <item quantity="one">Nem sikerült törölni a kártyát. Próbáld újra.</item>
         <item quantity="other">Nem sikerült törölni a kártyákat. Próbáld újra.</item>
     </plurals>
+
+    <!-- Card detail -->
+    <string name="back">Vissza</string>
+    <string name="card_added">Kártya hozzáadva</string>
+    <string name="add_another_card">Újabb hozzáadása</string>
+    <string name="show_full_screen">Megjelenítés teljes képernyőn</string>
+    <string name="close_full_screen">Teljes képernyő bezárása</string>
+    <string name="barcode">Vonalkód</string>
+    <string name="barcode_shown_as">Megjelenítve: %1$s</string>
+    <string name="copy_number">Szám másolása</string>
+    <string name="card_number_clip_label">Kártyaszám</string>
+    <string name="number_copied">Szám másolva</string>
+    <string name="front_photo">Előoldali fotó</string>
+    <string name="back_photo">Hátoldali fotó</string>
 </resources>
