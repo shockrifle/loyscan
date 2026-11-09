@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-09 · CI caches the Gradle distribution on the wrapper's own key and retries its download: Dependabot PR runs missed setup-gradle's exact-match cache and two failed downloading Gradle (timeout, HTTP 504) · workflows/ci · #116
 - 2026-11-09 · Kotlin/Hilt/AGP/Gradle must move together (Dependabot PRs #110, #112, #114 each fail alone; upgrade is #115); decision page gets its SHAs · workflows/build-and-run, decisions/2026-11-09-adapted-third-party-skills · first Dependabot run
 - 2026-11-09 · to-tickets skill; tdd gets seams + tests-that-can't-fail (review-changes rule too, a fake's call count is fine when it is the behaviour); Dependabot (Gradle with Kotlin+KSP grouped, Actions) and a pull_request CI trigger · workflows/agent-skills, workflows/tdd, workflows/ci, decisions/2026-11-09-adapted-third-party-skills (update) · decisions on the 'maybe' skills
 - 2026-11-09 · added four adapted third-party agent skills (diagnosing-bugs, writing-for-agents, grilling, retro) in .claude/skills/ · workflows/agent-skills (new), decisions/2026-11-09-adapted-third-party-skills (new), decisions/_index, workflows/_index, workflows/tdd, index · skill review of two downloaded collections

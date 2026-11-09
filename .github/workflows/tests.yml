@@ -36,6 +36,18 @@ jobs:
           path: ~/.m2/repository/org/robolectric
           key: robolectric-${{ hashFiles('gradle/libs.versions.toml') }}
 
+      # The Gradle distribution, cached on its own key. setup-gradle's basic cache key hashes every Gradle file, so a
+      # PR that bumps a dependency misses it, and services.gradle.org timed out or answered 504 on such runs (#116).
+      # This key changes only with the wrapper version, and PR runs restore entries saved on master.
+      - uses: actions/cache@v6
+        with:
+          path: ~/.gradle/wrapper/dists
+          key: gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
+
+      # Download the distribution (on a cache miss) with retries: the wrapper itself tries once.
+      - name: Gradle distribution
+        run: for attempt in 1 2 3; do ./gradlew --version && exit 0; sleep 30; done; exit 1
+
       - name: Tests and coverage gate
         run: ./gradlew --continue testDebugUnitTest koverVerify koverHtmlReportDebug koverXmlReportDebug
 
