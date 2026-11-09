@@ -1,32 +1,40 @@
 # Code review
 
-Work lands directly on `master` with no pull requests, so review happens **locally, before the push**, through two
-project Claude Code commands in `.claude/commands/`. The command files hold the steps; this page holds the loop
-and why it looks this way.
+Every change lands through a **pull request**: a branch off `master`, a PR that closes the issue, a review, and a
+rebase merge after CI is green on the PR ([[2026-11-09-pull-request-workflow]]; until 2026-11-09 work was committed
+straight to `master`). The review runs through project Claude Code commands in `.claude/commands/`. The command
+files hold the steps; this page holds the loop and why it looks this way.
 
 ## The loop
 
-1. Commit locally on `master`.
-2. `/review-changes` — reviews the unpushed commits plus uncommitted changes (or a given commit, range, PR or
-   issue) against the linked issue's acceptance criteria, the test-first rules, [[architecture]], the open
+1. Branch off `master` (`<issue>-<slug>`), commit there, push the branch, open a PR whose body says `Fixes #N`.
+2. `/review-changes` — reviews the branch's commits that aren't on `master` plus uncommitted changes (or a given
+   commit, range, PR or issue) against the linked issue's acceptance criteria, the test-first rules, [[architecture]], the open
    [[hacks/_index|hacks]] and [[tech-debt/_index|tech-debt]] items, and the wiki checklist in [[CLAUDE]]. It only
    reports; it does not change code.
 3. `/review-fix <review text>` — takes a review (from step 2, or from a human or another tool), verifies each
    claim and each proposed fix, and stops with a plan. After approval it implements the plan, commits locally and
-   drafts a reply to the reviewer.
-4. Push once the review has no blockers. CI then runs the tests and the coverage gate on GitHub Actions ([[ci]]);
-   a red run means `master` is broken and comes first.
+   drafts a reply to the reviewer. Push the fixes to the branch.
+4. Merge once the review has no blockers or majors and CI is green on the PR ([[ci]]):
+   `gh pr merge <p> --rebase --delete-branch`. Each commit lands on `master` as it is, so each must pass the gate
+   on its own. CI runs again on `master`; a red run there means `master` is broken and comes first.
+
+GitHub doesn't enforce any of this: branch protection needs a paid plan for a private repo. The commands follow it.
+
+Dependabot's PRs have no issue and go through `/dependency-pr` instead ([[ci]] → Dependabot).
 
 ## The end-to-end loop: `/next-task`
 
 `/next-task [issue #n]` runs the whole cycle for one issue: it picks the next open issue (milestone order, then
-dependencies and size; offers a choice when several are close), implements it test-first, commits locally, and
-then has `/review-changes` run by an **independent reviewer**. That reviewer is a fresh subagent on a different
+dependencies and size; offers a choice when several are close; skips one an open PR works on) and plans it. A
+**plan critic** checks the plan before any code exists (below), and the user confirms the plan with the seam of
+each test. Then it implements it test-first on a branch, opens the PR, and has `/review-changes` run by an
+**independent reviewer**. That reviewer is a fresh subagent on a different
 model (Sonnet, high effort), not a fork. The main session then fixes the findings with the `/review-fix` method, talking to the
 reviewer: it rebuts claims it thinks are invalid, and disputes that survive one exchange go to the user. The
 reviewer re-reviews the fixes (at most 3 rounds). Once the gates are green (no blocker/major findings, tests,
-coverage and build pass), it pushes, watches CI, comments on the issue and offers the review's follow-ups as new
-issues.
+coverage and build pass locally, CI green on the PR), it merges the PR, watches CI on `master`, comments on the
+issue and offers the review's follow-ups as new issues.
 
 Why it is set up this way:
 - **The reviewer gets no context from the implementing session.** Its prompt is fixed in the command and holds
@@ -58,8 +66,15 @@ Why it is set up this way:
   proof that the code is right.
 - **Disagreement is resolved by evidence, then by the user.** Neither side simply obeys the other. This is the
   same "verified, not obeyed" rule as `/review-fix`, plus a way for the reviewer to answer back.
-- **Running the command authorizes the push and the issue comment.** Creating new issues still needs
-  confirmation, because those change the backlog.
+- **Running the command authorizes the branch, its push, the PR, the merge and the issue comment**, for that
+  task only. Creating new issues or touching other PRs still needs confirmation.
+- **The plan critic** is `.claude/agents/plan-critic.md`: Sonnet at high effort, with only Read, Glob and Grep, so
+  it can't change anything. Its prompt is the issue and the plan, nothing else, for the same reason as the
+  reviewer's. It checks that every acceptance criterion has a test that can fail through a real seam ([[tdd]]), and
+  checks the plan against [[architecture]], the wiki checklist and the open hacks and tech debt. The main
+  session revises the plan, then shows the user the seams and the findings it rejected. A wrong seam costs a
+  rewrite once the code exists, which is why the user confirms the plan before implementation and isn't only
+  told about it.
 
 ## What the review enforces about tests
 
@@ -76,8 +91,10 @@ The project is test-first ([[2026-10-12-tdd-and-coverage]], [[tdd]]), and `/revi
 
 ## Why it looks this way
 
-- **No PRs, so the unpushed range is the unit of review.** Both commands run `git fetch origin` first; without it
-  the `origin/master..HEAD` range can be stale and include commits that are already pushed (seen 2026-10-09).
+- **The branch's range is the unit of review** (`origin/master..HEAD`), the same commits the PR shows. Both
+  commands run `git fetch origin` first; without it the range can be stale and include commits that are already on
+  `master` (seen 2026-10-09, when the range was the unpushed commits on `master`). A review of a PR by number
+  checks the PR out first, so the tests run on its code and not on whatever happens to be checked out.
 - **Reviews are verified, not obeyed.** `/review-fix` gives every claim a verdict before anything changes, because
   reviewers (human or AI) misread code or miss a recorded decision.
 - **The commands point at the wiki instead of copying it.** Architecture rules, the schema-change steps, the

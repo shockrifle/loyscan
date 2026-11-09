@@ -14,8 +14,8 @@ The review is input to check, not a list of orders. Reviewers (human or AI) misr
 ## 1. Establish the scope
 
 - Run `git fetch origin` first so `origin/master` is current; if it fails (offline), say so and continue with the last-known `origin/master`.
-- Work is committed directly to `master` (root `CLAUDE.md`). By default the review is about the local work not yet on GitHub: unpushed commits (`git log origin/master..HEAD`, `git diff origin/master...HEAD`) plus uncommitted changes (`git status`, `git diff HEAD`).
-- If the review names a commit, a commit range, a PR (`gh pr view <n>`, `gh pr diff <n>`) or an issue, use that instead; if it is unclear which revision was reviewed, ask.
+- Work lands through pull requests (root `CLAUDE.md`). By default the review is about the checked-out branch's work that is not on `master` yet: its commits (`git log origin/master..HEAD`, `git diff origin/master...HEAD`) plus uncommitted changes (`git status`, `git diff HEAD`).
+- If the review names a commit, a commit range, a PR (`gh pr view <n>`, `gh pr diff <n>`; work on its branch, `gh pr checkout <n>`) or an issue, use that instead; if it is unclear which revision was reviewed, ask.
 - Split the review into individual, numbered claims. A comment that makes several points becomes several claims.
 
 ## 2. Validate every claim
@@ -77,7 +77,7 @@ Then:
 - set `JAVA_HOME` to Android Studio's JBR first (see root `CLAUDE.md`), then run `./gradlew testDebugUnitTest koverVerify assembleDebug` and make sure it passes; raise the Kover
   `minBound` if coverage rose (`wiki/decisions/2026-10-09-coverage-gate-kover.md`)
 - update the wiki pages from the plan in the same commit as the code, and append a line to `wiki/_log.md`
-- commit locally on `master`; do not push, do not comment on the PR or issue, and do not create, edit or close GitHub issues — report back and I will answer the reviewer myself. Out-of-scope findings go in the report as suggested follow-up issues.
+- commit locally on the change's branch, never on `master`; do not push, do not comment on the PR or issue, and do not create, edit or close GitHub issues — report back and I will answer the reviewer myself. Out-of-scope findings go in the report as suggested follow-up issues.
 - keep commits within the "Public-safe" rule in `wiki/CLAUDE.md`
 
 ## 6. Draft the reply to the reviewer

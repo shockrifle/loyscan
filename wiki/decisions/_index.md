@@ -2,8 +2,8 @@
 
 One page per architectural or design decision: `YYYY-MM-DD-<slug>.md` (date = when the decision landed).
 Skeleton: Context / Options considered / Decision / **Why** / Consequences — see [[CLAUDE]]. Write one only when
-the why isn't obvious from the diff. This repo has no PRs and terse commit messages, so label inferred whys as
-inferred.
+the why isn't obvious from the diff. Commit messages are terse and, until 2026-11-09, there were no PRs, so label
+inferred whys as inferred.
 
 ## Active
 
@@ -33,6 +33,7 @@ inferred.
 - [[2026-11-05-no-cloud-backup-in-v1]] — cloud backup carries no app data; device-to-device transfer carries all of it; `allowBackup` stays `true` so D2D survives; opt-in backup is #24 (#71)
 - [[2026-11-05-r8-smoke-test-on-a-device]] — release runs R8; a debug-signed `smoke` copy is tested on a device by a UiAutomator test, run by hand (not CI); one app keep rule, for the enum route argument, pinned by `RouteKeepRulesTest` (#73)
 - [[2026-11-05-room-schema-frozen-from-v2]] — v2 is the first released schema; every change is a version bump with a migration, no destructive fallback; pinned hashes and a v2-database open test enforce it (#12)
+- [[2026-11-09-pull-request-workflow]] — every change lands through a PR, rebase-merged by the agent after review and green CI; a plan critic and the user's confirmation before code; Dependabot PRs reviewed and merged by `/dependency-pr` (#116)
 - [[2026-11-09-adapted-third-party-skills]] — four of Matt Pocock's MIT skills (`diagnosing-bugs`, `writing-for-agents`, `grilling`, `retro`) copied into `.claude/skills/` and adapted; no plugin install, nothing from unlicensed `ai-utils`
 
 ## Superseded

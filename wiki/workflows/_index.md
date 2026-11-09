@@ -7,6 +7,6 @@ a procedure with real commands, plus the constraints that have bitten before.
 - [[build-and-run]] — Gradle commands, dependency/version-coupling rules, logs
 - [[database-schema-changes]] — bump the Room version, export the schema, update the raw-row mappers
 - [[add-a-catalogue-store]] — sourcing rules, entry format and test vector for a catalogue store
-- [[ci]] — GitHub Actions: tests + coverage gate on every push to `master`, where the reports are
-- [[code-review]] — local review before push: `/review-changes`, then `/review-fix`; `/next-task` runs issue → independent review → push end to end
+- [[ci]] — GitHub Actions: tests + coverage gate on every PR and on `master`, where the reports are, how Dependabot's PRs are handled (`/dependency-pr`)
+- [[code-review]] — changes land through PRs: `/review-changes`, then `/review-fix`; `/next-task` runs issue → plan critic → PR → independent review → merge end to end
 - [[agent-skills]] — the project skills in `.claude/skills/` (`diagnosing-bugs`, `writing-for-agents`, `grilling`, `retro`, `to-tickets`): what each is for, what was adapted, how to change one
