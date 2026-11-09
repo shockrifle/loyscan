@@ -1,2 +1,4 @@
 # Wiki changelog is append-only, one self-contained line per entry; union-merge concurrent appends.
 wiki/_log.md merge=union
+# Shell scripts run under bash (Git Bash on Windows too), which breaks on CRLF.
+*.sh text eol=lf
