@@ -25,7 +25,7 @@ locally.
 ## Tests
 
 How to work test-first and which test goes with which layer: [[tdd]]. The same tests and gate run in CI on every
-push to `master`: [[ci]].
+pull request and on `master`: [[ci]].
 
 All tests but one are in `app/src/test/` and run on the JVM, with no emulator. Only the debug variant has unit tests
 (the other build types' are turned off in `app/build.gradle.kts`, `androidComponents`). HTML report:

@@ -35,12 +35,13 @@ Caches:
   them (every Dependabot Gradle PR) restores nothing and starts cold. Only runs on `master` save an entry; a PR run
   reads it.
 - The Gradle distribution (`~/.gradle/wrapper/dists`), keyed on `gradle/wrapper/gradle-wrapper.properties` only,
-  so a PR that leaves the wrapper alone restores it from `master`'s entry. On 2026-11-09 all five Dependabot PR runs
+  so a PR that leaves the wrapper alone should restore it from `master`'s entry (a PR run can read caches saved
+  on its base branch, by GitHub's cache scoping; not yet seen on a run here, #116). On 2026-11-09 all five Dependabot PR runs
   started cold and downloaded the distribution themselves. Two failed on that download, before any build: #113 on
   a read timeout (the wrapper's `networkTimeout` is 10 s, run 42583614640) and #111 on HTTP 504 from GitHub's
   release download (run 42583570631). The other three got Gradle and failed on the version coupling in #115. The
   `master` runs restored the cache and never downloaded it (#116). A wrapper bump (like #114) still misses this
-  cache, and the retry step is all it has
+  cache, and the retry step is all it has.
 - Robolectric's downloaded `android-all` jars (`~/.m2/repository/org/robolectric`, keyed on
   `gradle/libs.versions.toml`). A cache hit saves nothing, so a jar for an SDK a test newly pins (`@Config(sdk = [N])`)
   is kept only once that file next changes; until then every run downloads it (#94)

@@ -40,7 +40,7 @@ prefactoring gets its own first ticket.
 - A completed slice is verifiable on its own: its acceptance criteria are testable statements
   (`wiki/CLAUDE.md`, "GitHub Issues vs this wiki"), each provable by a test at one of the layers in
   `wiki/workflows/tdd.md`.
-- Each slice fits one `/next-task` run: one fresh session, test-first, reviewed, pushed.
+- Each slice fits one `/next-task` run: one fresh session, test-first, reviewed, merged as one PR.
 - Prefactoring comes first.
 - A slice that changes the Room schema carries its version bump and migration (`wiki/workflows/database-schema-changes.md`);
   the schema is frozen from v2, so there is no "migration later" ticket.
