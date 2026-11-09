@@ -68,8 +68,9 @@ Why it is set up this way:
   same "verified, not obeyed" rule as `/review-fix`, plus a way for the reviewer to answer back.
 - **Running the command authorizes the branch, its push, the PR, the merge and the issue comment**, for that
   task only. Creating new issues or touching other PRs still needs confirmation.
-- **The plan critic** is `.claude/agents/plan-critic.md`: Sonnet at high effort, with only Read, Glob and Grep, so
-  it can't change anything. Its prompt is the issue and the plan, nothing else, for the same reason as the
+- **The plan critic** is `.claude/agents/plan-critic.md`: its definition asks for Sonnet at high effort, and gives
+  it only Read, Glob and Grep, so it can't change anything. `/next-task` checks the model it really ran on with
+  [[reviewer-model]] and reports a mismatch, without blocking on it (not yet checked on a real run, 2026-11-09). Its prompt is the issue and the plan, nothing else, for the same reason as the
   reviewer's. It checks that every acceptance criterion has a test that can fail through a real seam ([[tdd]]), and
   checks the plan against [[architecture]], the wiki checklist and the open hacks and tech debt. The main
   session revises the plan, then shows the user the seams and the findings it rejected. A wrong seam costs a

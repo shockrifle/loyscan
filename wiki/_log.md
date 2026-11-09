@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-09 · review fixes for #116: /dependency-pr merges a PR after pushing its wiki update; the wrapper cache's PR restore marked unverified; plan critic's model checked (not a gate); CI-on-every-PR wording in tdd, build-and-run and to-tickets · workflows/ci, workflows/code-review, workflows/tdd, workflows/build-and-run · #116 review
 - 2026-11-09 · workflow moves to pull requests: branch, PR that closes the issue, review, rebase merge by the agent after green CI; /next-task gets a read-only plan-critic subagent and the user's confirmation of each test's seam; /dependency-pr reviews and merges Dependabot PRs, holds coupled bumps for their joint-upgrade issue, rebases ones that failed before the build · decisions/2026-11-09-pull-request-workflow (new), decisions/_index, workflows/code-review, workflows/ci, workflows/_index, CLAUDE, index · #116
 - 2026-11-09 · CI caches the Gradle distribution on the wrapper's own key and retries its download: Dependabot PR runs missed setup-gradle's exact-match cache and two failed downloading Gradle (timeout, HTTP 504) · workflows/ci · #116
 - 2026-11-09 · Kotlin/Hilt/AGP/Gradle must move together (Dependabot PRs #110, #112, #114 each fail alone; upgrade is #115); decision page gets its SHAs · workflows/build-and-run, decisions/2026-11-09-adapted-third-party-skills · first Dependabot run

@@ -55,7 +55,9 @@ them with AskUserQuestion: the recommended one first, each with a one-line reaso
   splits into commits.
 - **Plan critic.** Spawn the `plan-critic` agent (Agent tool, `subagent_type: "plan-critic"`; its definition in
   `.claude/agents/plan-critic.md` sets the model and its read-only tools). Its prompt is the issue (title, body,
-  comments) and the plan, verbatim, and nothing else. Work through its findings: revise the plan for the ones
+  comments) and the plan, verbatim, and nothing else. Check which model really answered
+  (`python -I .claude/scripts/reviewer_model.py <agent id> --expect claude-sonnet-5-5 --effort high`) and tell
+  me if it isn't Sonnet at high effort; it is not a gate. Work through its findings: revise the plan for the ones
   that hold; for the ones you reject, keep a one-line reason.
 - Show me the revised plan in a few lines, with the seam of every test, plus the critic's findings you rejected
   and why, and ask me to confirm it (AskUserQuestion). Implement only the plan I confirmed.

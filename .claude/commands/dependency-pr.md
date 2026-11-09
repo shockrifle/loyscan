@@ -22,8 +22,8 @@ branch. Anything else outward-facing (new issues, other PRs) needs my go-ahead.
      Actions tab would reuse the old merge commit and the old workflow.
    - **CI failed because the bump needs other bumps at the same time** (the coupling rules in
      `wiki/workflows/build-and-run.md` → Dependencies, e.g. Kotlin / Hilt / AGP / Gradle) → find the open issue for
-     that joint upgrade (#115 for that set) and comment `Waits for #<issue>: <one line from the failing log>.` Leave
-     the PR open. No such issue → ask me whether to open one.
+     that joint upgrade (`gh issue list --state open`; #115 is the Kotlin / Hilt / AGP / Gradle one) and comment
+     `Waits for #<issue>: <one line from the failing log>.` Leave the PR open. No such issue → ask me whether to open one.
    - **CI failed in the build or the tests otherwise** → diagnose it (the `diagnosing-bugs` skill). The fix
      goes in its own PR through `/next-task`, so leave this PR open and report it to me.
    - **CI is green** → review it (step 3).
@@ -37,9 +37,10 @@ branch. Anything else outward-facing (new issues, other PRs) needs my go-ahead.
 4. **Act on the review:**
    - A blocker or major (a breaking change that needs code, a coupling CI doesn't catch) → leave the PR open and
      report it to me with the evidence.
-   - Wiki pages name the old version → commit their update on the PR's branch, with the `wiki/_log.md` line, and
-     push it (Dependabot stops rebasing a branch someone else pushed to, so merge it now). Then wait for CI again.
-   - Otherwise → merge: `gh pr merge <n> --rebase`.
+   - Wiki pages name the old version → commit their update on the PR's branch (`gh pr checkout <n>`), with the
+     `wiki/_log.md` line, and push it. Dependabot stops rebasing a branch someone else pushed to, so finish this PR
+     in this run: wait for CI on the new head (`gh pr checks <n> --watch`), and merge when it is green.
+   - Then, or with nothing to update → merge: `gh pr merge <n> --rebase`.
 
 ## 2. Finish
 
