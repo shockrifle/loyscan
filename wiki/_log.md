@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-09 · ZXing core 3.5.3 → 3.5.4: version updated; Code128Writer, DataMatrixWriter, FieldParser and the Aztec writer are unchanged between the two (GitHub compare), so the GS1 notes still hold · integrations/zxing-core, decisions/2026-10-21-gs1-mark-as-barcode-format, decisions/2026-10-21-gs1-scans-shown-as-hri · Dependabot #113
 - 2026-11-09 · review fixes for #72: line links into ListScreen/DetailScreen refreshed after the slice moved them; the form's Hungarian photo descriptions noted as a mixed-language state until the form slice · architecture, features/card-detail, features/card-list, features/card-transition, tech-debt/empty-brand-color-crash, tech-debt/shared-element-key-from-async-state, workflows/add-a-string · #72 review
 - 2026-11-09 · card screen texts in resources and Hungarian (its delete dialog shares the list's plurals); the Android 10–12 copy toast gets a test; format names noted as not translated yet · features/card-detail, architecture, workflows/tdd, workflows/add-a-string · #72
 - 2026-11-09 · card list texts in resources and Hungarian; the Hungarian screen check (ShownTexts) and the smoke test's lookup by resource name · features/card-list, workflows/tdd, workflows/add-a-string · #72

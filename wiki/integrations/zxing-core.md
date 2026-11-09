@@ -1,6 +1,6 @@
 # ZXing core (barcode drawing)
 
-Barcodes on the detail screen are encoded with **ZXing core 3.5.3** (`com.google.zxing:core`, Apache-2.0): pure
+Barcodes on the detail screen are encoded with **ZXing core 3.5.4** (`com.google.zxing:core`, Apache-2.0): pure
 Java, no Android or network code. Only its writers are used, in `BarcodeEncoder`
 (`app/src/main/java/com/bdaniel/loyscan/ui/barcode/BarcodeEncoder.kt`); Compose draws the result
 (`app/src/main/java/com/bdaniel/loyscan/ui/barcode/Barcode.kt`). Scanning is a separate library: [[zxing-cpp]].
@@ -36,7 +36,7 @@ Java, no Android or network code. Only its writers are used, in `BarcodeEncoder`
   stores without a rule ([[add-card]]). Found in review, 2026-10-22. Test: `BarcodeEncoderTest.holdsAsIs_…`.
 - **GS1-128 needs an escape character, not a hint.** ZXing has no GS1-128 format: it is Code 128 with a leading FNC1.
   `EncodeHintType.GS1_FORMAT` doesn't add that FNC1 to Code 128. In 3.5.3 `Code128Writer` reads only `CODE128_COMPACT`
-  and `FORCE_CODE_SET` (checked in its bytecode, 2026-10-20), and the GS1 hint is read only by 2D writers. Instead,
+  and `FORCE_CODE_SET` (checked in its bytecode, 2026-10-20; the class is unchanged in 3.5.4), and the GS1 hint is read only by 2D writers. Instead,
   the Code 128 writer writes FNC1–FNC4 for the characters U+00F1–U+00F4 (`ñ` `ò` `ó` `ô`), so `BarcodeEncoder` puts
   U+00F1 in front of `GS1_128` content (`withFnc1For`). Test: `BarcodeEncoderTest.gs1_128_isCode128WithALeadingFnc1`.
   ZXing's reader reports symbology identifier `]C1` for GS1-128 and `]C0` for plain Code 128. *Correction 2026-10-20:* this
@@ -49,7 +49,7 @@ Java, no Android or network code. Only its writers are used, in `BarcodeEncoder`
 - **GS1 Data Matrix and GS1 QR come from hints** (#45). `EncodeHintType.GS1_FORMAT` makes the 2D writers start with
   FNC1, but `DataMatrixWriter` reads it only together with `DATA_MATRIX_COMPACT` (its minimal encoder, which also
   writes each GS as FNC1, per its source; a read-back test can't check this, since ZXing's reader returns a literal GS
-  and an FNC1 alike); its default encoder ignores it (3.5.3 source). In a QR code a GS in byte mode already is
+  and an FNC1 alike); its default encoder ignores it (3.5.3 source, unchanged in 3.5.4). In a QR code a GS in byte mode already is
   GS1's FNC1. In alphanumeric mode, which ZXing picks when every character fits it, a single `%` means FNC1 and the
   `%` sign is `%%`; ZXing doesn't escape it, so `BarcodeEncoder` doubles `%` for such content (`withFnc1For`). ZXing's
   reader reports `]d2` / `]Q3` for them (`]d1` / `]Q1` plain). Its Data Matrix reader returns every FNC1 as GS, the
