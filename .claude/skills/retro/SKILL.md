@@ -64,7 +64,7 @@ to improve future runs. Target: `$ARGUMENTS`
 
 All work goes through two stages: implementation and review (`wiki/workflows/code-review.md`). The implementing
 session has the most **context pressure**: it explores, writes code and debugs. The independent reviewer has the
-least: it receives the unpushed range, so it needs no exploration. So the reviewer is responsible for imposing
+least: it receives the branch's commit range, so it needs no exploration. So the reviewer is responsible for imposing
 judgement-call standards, not the implementing session's steering files.
 
 ### Where things go

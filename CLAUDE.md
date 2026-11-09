@@ -39,8 +39,10 @@ type-safe route/Directions). Use it as the template. Each layer there starts wit
 - **Test-first.** Write the failing test before the code, and see it fail. A bug fix starts with a failing
   regression test. `./gradlew testDebugUnitTest koverVerify` must pass before committing; raise the Kover
   `minBound` when coverage rises. How: `wiki/workflows/tdd.md`; why: `wiki/decisions/2026-10-12-tdd-and-coverage.md`.
-- Remote: GitHub `shockrifle/loyscan` (`origin`, SSH). Commit directly to `master`. The repo-local
-  `core.sshCommand` points at the user's SSH key, so plain `git push` / `git pull` work.
+- Remote: GitHub `shockrifle/loyscan` (`origin`, SSH). **Changes land through pull requests**: a branch off `master`,
+  a PR that closes the issue, review, rebase-merge after green CI; nothing is committed to `master` directly. How
+  and why: `wiki/workflows/code-review.md`. The repo-local `core.sshCommand` points at the user's SSH key, so plain
+  `git push` / `git pull` work.
 - Work is tracked in GitHub Issues + milestones (`gh issue list`); reference issues in commits (`Fixes #N`).
   Issues hold what/status, the wiki holds why/how — see "GitHub Issues vs this wiki" in `wiki/CLAUDE.md`.
   The repo is private but treated as public: nothing personal or third-party-proprietary in issues/commits.

@@ -1,5 +1,5 @@
 ---
-description: Review the unpushed changes (or a commit, range, PR) against LoyScan's issues, tests, architecture and wiki rules
+description: Review the current branch's changes (or a commit, range, PR) against LoyScan's issues, tests, architecture and wiki rules
 argument-hint: "[commit | range | PR #n | issue #n] [focus notes]"
 ---
 
@@ -13,11 +13,16 @@ on, or feed into `/review-fix`.
 
 - Run `git fetch origin` first so `origin/master` is current; if it fails (offline), say so and continue with
   the last-known `origin/master`.
-- Default (no target given): the local work not yet on GitHub — unpushed commits
+- Default (no target given): the checked-out branch's work that is not on `master` yet — its commits
   (`git log origin/master..HEAD`, `git diff origin/master...HEAD`) plus uncommitted changes (`git status`,
-  `git diff HEAD`).
-- A commit or range → `git show` / `git diff` it. A PR → `gh pr view <n>` and `gh pr diff <n>`. An issue on its
-  own → review the commits that reference it (`git log -E --grep '#<n>([^0-9]|$)'`).
+  `git diff HEAD`). Work lands through pull requests (`wiki/workflows/code-review.md`), so this is the PR's content
+  whether or not the branch is pushed yet.
+- A commit or range → `git show` / `git diff` it. A PR → `gh pr view <n>` and `gh pr diff <n>`; the tests and the
+  build must run on the PR's code, so unless its branch is already checked out, check it out with
+  `gh pr checkout <n>` (only from a clean working tree) and switch back to the branch you started on when done.
+  An issue on its own → review the commits that reference it (`git log -E --grep '#<n>([^0-9]|$)'`).
+- A Dependabot PR has no issue. In place of the criteria, review it by the checks in
+  `.claude/commands/dependency-pr.md` step 1.3.
 - Find the linked issue(s): `Fixes #N` / `#N` in the commit messages, or the issue given as argument. Read each
   with `gh issue view <n> --comments` (read-only). If a feature change has no issue, that is a finding.
 
@@ -42,7 +47,7 @@ rule, a `Flow` that never emits or emits `EMPTY` first, configuration change and
 ### Issue fit
 - Check every acceptance criterion of the linked issue: met / partly / not met, with the evidence. Wiki items in
   the criteria (e.g. "decision record") count too.
-- `Fixes #N` closes the issue on push. It is a finding if it is used while criteria are still open (suggest
+- `Fixes #N` closes the issue when the PR merges into `master`. It is a finding if it is used while criteria are still open (suggest
   `Refs #N` or finishing the work), or missing when everything is done.
 - Scope creep: changes that belong to a different open issue (`gh issue list`), or user-visible behaviour no
   issue asks for.
@@ -113,7 +118,8 @@ Run the "When to update" checklist in `wiki/CLAUDE.md` against the change and li
 ### Public-safety and commit hygiene
 - The diff, the commit messages and the wiki follow the "Public-safe" rule in `wiki/CLAUDE.md` (and contain no
   credentials or keystores).
-- One logical change per commit; message style matches the repo (short imperative, capitalized subject; body
+- One logical change per commit, and each one builds and passes the gate on its own: PRs are rebase-merged, so
+  every commit lands on `master` as it is. Message style matches the repo (short imperative, capitalized subject; body
   for the why; `Fixes #N` / `Refs #N`).
 
 ## 4. Verify the findings
@@ -134,4 +140,4 @@ and don't pad the list with taste-level nits.
 5. **Follow-ups** — true but out-of-scope problems, phrased as suggested new issues (title + label). Don't
    create them.
 
-End with one line: whether the change is ready to push, and if not, the blockers.
+End with one line: whether the change is ready to merge, and if not, the blockers.
