@@ -1,5 +1,7 @@
 package com.bdaniel.loyscan
 
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
 import android.content.ClipData
 import android.os.Build
 import android.widget.Toast
@@ -112,9 +114,11 @@ fun SharedTransitionScope.DetailScreen(
     // and gone after that or after Edit, so it isn't made again on return from the picker or the form. Scan mode
     // would hide it while it times out, so it waits until scan mode closes.
     var offeringAnother by rememberSaveable { mutableStateOf(added) }
+    val cardAdded = stringResource(R.string.card_added)
+    val addAnother = stringResource(R.string.add_another_card)
     LaunchedEffect(offeringAnother, scanMode) {
         if (!offeringAnother || scanMode) return@LaunchedEffect
-        val result = snackbarHostState.showSnackbar("Card added", actionLabel = "Add another", duration = SnackbarDuration.Long)
+        val result = snackbarHostState.showSnackbar(cardAdded, actionLabel = addAnother, duration = SnackbarDuration.Long)
         offeringAnother = false
         if (result == SnackbarResult.ActionPerformed) directions.toAddCard()
     }
@@ -126,7 +130,7 @@ fun SharedTransitionScope.DetailScreen(
                     title = { Text(text = card.store.name) },
                     navigationIcon = {
                         IconButton(onClick = { directions.toBack() }) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                            Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.back))
                         }
                     },
                     actions = {
@@ -137,10 +141,10 @@ fun SharedTransitionScope.DetailScreen(
                             },
                             enabled = card.id.isNotEmpty(),
                         ) {
-                            Icon(Icons.Default.Edit, contentDescription = "Edit")
+                            Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.edit))
                         }
                         IconButton(onClick = { confirmingDelete = true }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Delete")
+                            Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete))
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
@@ -198,6 +202,7 @@ fun SharedTransitionScope.DetailScreen(
                         card.label?.let { Text(text = it, style = MaterialTheme.typography.titleMedium) }
                         Text(text = card.store.name)
                         if (barcode != null) {
+                            val showFullScreen = stringResource(R.string.show_full_screen)
                             Box(
                                 modifier = Modifier
                                     .padding(top = 16.dp)
@@ -205,7 +210,7 @@ fun SharedTransitionScope.DetailScreen(
                                     // White whatever the theme, with a margin for the quiet zone: scanners need it.
                                     .background(Color.White, RoundedCornerShape(8.dp))
                                     .pointerInput(Unit) { detectTapGestures(onDoubleTap = { scanMode = true }) }
-                                    .semantics { onClick(label = "Show full screen") { scanMode = true; true } }
+                                    .semantics { onClick(label = showFullScreen) { scanMode = true; true } }
                                     .padding(16.dp),
                                 contentAlignment = Alignment.Center,
                             ) {
@@ -214,7 +219,7 @@ fun SharedTransitionScope.DetailScreen(
                             // The card's own format couldn't be drawn (no writer, or content it can't hold).
                             if (barcode.format != card.barcodeFormat) {
                                 Text(
-                                    text = "Shown as ${barcode.format.displayName}",
+                                    text = stringResource(R.string.barcode_shown_as, barcode.format.displayName),
                                     style = MaterialTheme.typography.bodySmall,
                                     modifier = Modifier.padding(top = 8.dp),
                                 )
@@ -252,7 +257,7 @@ fun SharedTransitionScope.DetailScreen(
                                             .weight(1f)
                                             .aspectRatio(CARD_ASPECT_RATIO)
                                             .clip(RoundedCornerShape(8.dp))
-                                            .clickable(onClickLabel = "Show full screen") { openPhoto = side },
+                                            .clickable(onClickLabel = stringResource(R.string.show_full_screen)) { openPhoto = side },
                                     )
                                 }
                                 // A single photo keeps the size it has next to the other.
@@ -288,15 +293,16 @@ fun SharedTransitionScope.DetailScreen(
 private fun ConfirmDelete(failed: Boolean, deleting: Boolean, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Delete this card?") },
+        // The list's dialog for one card: the same words.
+        title = { Text(pluralStringResource(R.plurals.delete_cards_question, 1)) },
         text = {
             Text(
-                if (failed) "The card couldn't be deleted. Try again." else "It is removed from this phone for good.",
+                pluralStringResource(if (failed) R.plurals.delete_cards_failed else R.plurals.delete_cards_explanation, 1),
                 color = if (failed) MaterialTheme.colorScheme.error else Color.Unspecified,
             )
         },
-        confirmButton = { TextButton(onClick = onConfirm, enabled = !deleting) { Text("Delete") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        confirmButton = { TextButton(onClick = onConfirm, enabled = !deleting) { Text(stringResource(R.string.delete)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
     )
 }
 
@@ -312,7 +318,7 @@ private fun ScanMode(barcode: EncodedBarcode, number: String, onExit: () -> Unit
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
-            .clickable(onClickLabel = "Close full screen", onClick = onExit)
+            .clickable(onClickLabel = stringResource(R.string.close_full_screen), onClick = onExit)
             .testTag("scanMode")
             .padding(24.dp),
     ) {
@@ -349,7 +355,7 @@ private fun PhotoViewer(photo: String, description: String, onExit: () -> Unit) 
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black)
-            .clickable(onClickLabel = "Close full screen", onClick = onExit)
+            .clickable(onClickLabel = stringResource(R.string.close_full_screen), onClick = onExit)
             .testTag(PHOTO_VIEWER_TAG)
             .padding(16.dp),
     ) {
@@ -369,14 +375,15 @@ private fun CopyableNumber(number: String, modifier: Modifier = Modifier) {
     val clipboard = LocalClipboard.current
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val clipLabel = stringResource(R.string.card_number_clip_label)
     Text(
         text = number,
         style = MaterialTheme.typography.headlineMedium,
-        modifier = modifier.clickable(onClickLabel = "Copy number") {
-            scope.launch { clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("Card number", number))) }
+        modifier = modifier.clickable(onClickLabel = stringResource(R.string.copy_number)) {
+            scope.launch { clipboard.setClipEntry(ClipEntry(ClipData.newPlainText(clipLabel, number))) }
             // From Android 13 the system confirms a copy itself.
             if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
-                Toast.makeText(context, "Number copied", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.number_copied), Toast.LENGTH_SHORT).show()
             }
         },
     )

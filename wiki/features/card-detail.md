@@ -93,6 +93,11 @@ UUID string.
   `AddCardDirectionsTest.aCardDeletedAfterBack_leavesACardOpenedSinceAsItIs`.
 - **Right after adding** (`Detail.added`), a snackbar says "Card added" and offers "Add another", once
   ([[add-card]], #6).
+- **Language** (#72): every text on the card screen, its dialogs, scan mode and the photo viewer is a string resource,
+  in English or Hungarian by the phone's language; the card's own data isn't translated, and neither is the barcode
+  format's name yet ([[add-a-string]]). The delete dialog uses the list's plurals for one card. Tests:
+  `DetailScreenTest.inHungarian_everyTextOnTheCard_isTranslated`, `onAndroid12OrOlder_copyingTheNumber_saysSo`,
+  `inHungarian_copyingTheNumber_saysSoInHungarian`.
 - The whole `Scaffold` is the shared element `card/{id}` — [[card-transition]].
 
 ## Not implemented (as of 2026-10-30)

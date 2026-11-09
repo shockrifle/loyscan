@@ -1,5 +1,7 @@
 package com.bdaniel.loyscan.ui.barcode
 
+import com.bdaniel.loyscan.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,9 +28,10 @@ import kotlin.math.min
  */
 @Composable
 fun Barcode(barcode: EncodedBarcode, modifier: Modifier = Modifier) {
+    val description = stringResource(R.string.barcode)
     Spacer(
         modifier
-            .semantics { contentDescription = "Barcode" }
+            .semantics { contentDescription = description }
             .drawWithCache {
                 val rects = barcodeRects(barcode, size)
                 onDrawBehind { rects.forEach { drawRect(Color.Black, it.topLeft, it.size) } }

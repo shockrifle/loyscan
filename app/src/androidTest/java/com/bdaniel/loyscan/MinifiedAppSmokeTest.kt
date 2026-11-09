@@ -70,21 +70,21 @@ class MinifiedAppSmokeTest {
         click(By.text("Save"))
 
         // The new card opens.
-        await(By.text("Card added"))
+        await(By.text(string("card_added")))
         await(By.text(LABEL))
         await(By.text(NUMBER))
 
         // Edit its label.
-        click(By.desc("Edit"))
+        click(By.desc(string("edit")))
         await(By.text("Save"))
         fields()[1].text = EDITED_LABEL
         click(By.text("Save"))
         await(By.text(EDITED_LABEL))
 
         // Delete it: back on the list, which has no card left.
-        click(By.desc("Delete"))
-        await(By.text("Delete this card?"))
-        click(By.text("Delete"))
+        click(By.desc(string("delete")))
+        await(By.text(plural("delete_cards_question", 1)))
+        click(By.text(string("delete")))
         await(By.text(string("card_list_title")))
         await(By.text(string("no_cards_yet")))
     }
@@ -129,6 +129,14 @@ class MinifiedAppSmokeTest {
         val id = resources.getIdentifier(name, "string", packageName)
         check(id != 0) { "The app has no string resource $name" }
         return resources.getString(id)
+    }
+
+    /** The app's plural [name] for [count], as [string] finds a string. */
+    private fun plural(name: String, count: Int): String {
+        val resources = instrumentation.targetContext.resources
+        val id = resources.getIdentifier(name, "plurals", packageName)
+        check(id != 0) { "The app has no plurals resource $name" }
+        return resources.getQuantityString(id, count, count)
     }
 
     /** The screen's text fields, top to bottom, once there is one. */

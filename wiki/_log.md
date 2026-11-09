@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-09 · card screen texts in resources and Hungarian (its delete dialog shares the list's plurals); the Android 10–12 copy toast gets a test; format names noted as not translated yet · features/card-detail, architecture, workflows/tdd, workflows/add-a-string · #72
 - 2026-11-09 · card list texts in resources and Hungarian; the Hungarian screen check (ShownTexts) and the smoke test's lookup by resource name · features/card-list, workflows/tdd, workflows/add-a-string · #72
 - 2026-11-09 · UI strings move to resources with a Hungarian translation: English default, informal register, tests stay in English; StringResourcesTest checks values-hu covers every default string · decisions/2026-11-09-ui-language (new), workflows/add-a-string (new), workflows/_index, decisions/_index, index · #72
 - 2026-11-09 · end-to-end waits: the custom store form's close (keyed on its title), the text itself after a screen's title, and `waitForTextToGo` instead of an immediate `assertDoesNotExist` · workflows/tdd · #118, #62 (flaky custom-store rename test)

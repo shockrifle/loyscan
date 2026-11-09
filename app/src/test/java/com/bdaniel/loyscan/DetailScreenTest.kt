@@ -49,6 +49,9 @@ import com.bdaniel.loyscan.domain.cardnumber.CardNumberRule
 import com.bdaniel.loyscan.testing.aLoyaltyCard
 import com.bdaniel.loyscan.testing.aStore
 import com.google.common.truth.Truth.assertThat
+import com.bdaniel.loyscan.testing.ShownTexts
+import org.robolectric.shadows.ShadowToast
+import androidx.compose.ui.test.isDialog
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -279,6 +282,66 @@ class DetailScreenTest {
         val clipboard = ApplicationProvider.getApplicationContext<Context>().getSystemService(ClipboardManager::class.java)
         composeRule.waitUntil { clipboard.primaryClip != null }
         assertThat(clipboard.primaryClip!!.getItemAt(0).text.toString()).isEqualTo("123 456 789")
+    }
+
+    @Test
+    @Config(sdk = [32])
+    fun onAndroid12OrOlder_copyingTheNumber_saysSo() { // Android 13+ confirms a copy itself
+        setScreen()
+
+        composeRule.onNodeWithText("0042").performClick()
+
+        assertThat(ShadowToast.getTextOfLatestToast()).isEqualTo("Number copied")
+    }
+
+    @Test
+    @Config(sdk = [32], qualifiers = "+hu")
+    fun inHungarian_copyingTheNumber_saysSoInHungarian() { // #72
+        setScreen()
+
+        composeRule.onNodeWithText("0042").performClick()
+
+        assertThat(ShadowToast.getTextOfLatestToast()).isEqualTo("Szám másolva")
+        val clipboard = ApplicationProvider.getApplicationContext<Context>().getSystemService(ClipboardManager::class.java)
+        composeRule.waitUntil { clipboard.primaryClip != null }
+        assertThat(clipboard.primaryClipDescription!!.label.toString()).isEqualTo("Kártyaszám")
+    }
+
+    @Test
+    @Config(qualifiers = "+hu")
+    fun inHungarian_everyTextOnTheCard_isTranslated() { // #72
+        // A DataBar card is drawn as GS1-128, so the screen names the format drawn.
+        val card = aLoyaltyCard(
+            label = "Gold card",
+            store = aStore(name = "Test Store", defaultBarcodeFormat = BarcodeFormat.DATABAR),
+            number = "0109012345678901",
+            note = "PIN hint",
+            frontPhotoPath = "front",
+            backPhotoPath = "back",
+        )
+        val repository = FakeLoyaltyCardRepository(listOf(card))
+        setScreen(card = card, repository = repository, added = true)
+        val shown = ShownTexts(composeRule)
+        shown.collect()
+
+        composeRule.onNodeWithContentDescription("Hátoldali fotó").performScrollTo().performClick()
+        shown.collect()
+        composeRule.onNodeWithTag(PHOTO_VIEWER_TAG).performClick()
+        composeRule.onNodeWithContentDescription("Vonalkód").performScrollTo().performTouchInput { doubleClick() }
+        shown.collect()
+        composeRule.onNodeWithTag("scanMode").performClick()
+        composeRule.onNodeWithContentDescription("Törlés").performClick()
+        shown.collect()
+        repository.deleteFailure = IllegalStateException("disk I/O error")
+        composeRule.onNode(hasText("Törlés") and hasAnyAncestor(isDialog())).performClick()
+        shown.collect()
+
+        shown.assertSeen(
+            "Kártya hozzáadva", "Újabb hozzáadása", "Megjelenítve: GS1-128", "Előoldali fotó", "Hátoldali fotó",
+            "Teljes képernyő bezárása", "Törlöd ezt a kártyát?", "Nem sikerült törölni a kártyát. Próbáld újra.",
+            "Szám másolása", "Vissza",
+        )
+        shown.assertEveryTextIsTranslated("Test Store", "Gold card", card.displayNumber, "PIN hint")
     }
 
     @Test
