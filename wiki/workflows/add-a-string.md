@@ -26,7 +26,9 @@ resource, in English in `app/src/main/res/values/strings.xml` and in Hungarian i
 The move is done screen by screen (#72). Until it is finished, a Hungarian phone shows the translated screens (the
 card list, the card screen) in Hungarian and the others in English. Barcode format names (`BarcodeFormat.displayName`:
 "QR code", "EAN-13") are not resources yet, so the card screen says "Megjelenítve: QR code"; they are shown by the card
-form too and move with it.
+form too and move with it. The photo descriptions ("Front photo") are shared with the card form, so on a
+Hungarian phone the form's photos are already described in Hungarian while its buttons ("Add front photo") are still
+English.
 
 ## Writing the Hungarian
 

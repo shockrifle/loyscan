@@ -6,7 +6,7 @@ Compose's experimental shared-element API.
 **Entry points:** `SharedTransitionLayout` wrapping `AppNavigation`
 (`app/src/main/java/com/bdaniel/loyscan/MainActivity.kt:56-63`); the `CardItem` box's
 `.sharedElement(key = cardTransitionKey(card.id))` in `ListScreen.kt`; `Scaffold(modifier = Modifier.sharedElement(…))`
-in `app/src/main/java/com/bdaniel/loyscan/DetailScreen.kt:152-156`.
+in `app/src/main/java/com/bdaniel/loyscan/DetailScreen.kt:156-160`.
 
 ## How it's wired
 
@@ -57,7 +57,7 @@ screen then shrank into nothing. The reorder can also arrive *during* the return
 state, so it survives process death too), only when the tap opened the card: `ListDirections.toCard` says whether it
 did, and a second tile tapped while the list leaves opens nothing (#69). Until the list's return transition settles, it
 calls `LazyGridState.requestScrollToItem(newIndex, -offset)` on every new order, in a `SideEffect`, which applies before that frame's measure
-(`app/src/main/java/com/bdaniel/loyscan/ListScreen.kt:104-122`). The tile comes back where it was tapped, or as near as
+(`app/src/main/java/com/bdaniel/loyscan/ListScreen.kt:106-124`). The tile comes back where it was tapped, or as near as
 the list allows (at the top when it moved there), and the card shrinks into it. After that, reorders scroll as usual.
 The offset is in pixels, so it is kept only on the screen it was measured on (window size, density, font scale): after
 a rotation or a display size change the tile's top is put at the top of the grid instead, so the tile is in view. On a
