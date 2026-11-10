@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-10 · `@dependabot recreate` when `rebase` is ignored (seen on #111 and #113); /dependency-pr asks for it · workflows/ci, (.claude/commands/dependency-pr) · /dependency-pr run 2026-11-09
 - 2026-11-10 · review fix for #115: the retro skill no longer cites the retired JVM-target runbook as a live failure · (.claude/skills/retro) · #115 review
 - 2026-11-10 · the androidx group (AGP 9.1 + compileSdk 37) and kotlinx-serialization-json 1.12, which wraps constructor exceptions; the rootCause test helper; Dependabot PRs no longer wait, Hilt/AGP/Gradle still ungrouped · workflows/build-and-run, workflows/tdd, workflows/ci · #115
 - 2026-11-10 · Kotlin 2.4.21, Hilt 2.60.1, AGP 9.5.1, Gradle 9.8.2, compileSdk 37 as one set: which versions go together and why, AGP 9 built-in Kotlin, unit tests beyond testBuildType, the switched-off non-debug test tasks; R8 metadata warning rechecked (gone); a terminal JDK 19 build works, so the JVM-target runbook no longer applies · workflows/build-and-run, decisions/2026-10-09-coverage-gate-kover, decisions/2026-11-05-r8-smoke-test-on-a-device, decisions/2025-12-08-ksp-instead-of-kapt, runbooks/cli-build-jvm-target-mismatch, runbooks/_index, apps/android-app, architecture, integrations/zxing-cpp · #115

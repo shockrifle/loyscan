@@ -39,9 +39,9 @@ Caches:
   on its base branch, by GitHub's cache scoping; not yet seen on a run here, #116). On 2026-11-09 all five Dependabot PR runs
   started cold and downloaded the distribution themselves. Two failed on that download, before any build: #113 on
   a read timeout (the wrapper's `networkTimeout` is 10 s, run 42583614640) and #111 on HTTP 504 from GitHub's
-  release download (run 42583570631). The other three got Gradle and failed on the version coupling in #115. The
-  `master` runs restored setup-gradle's cache and never downloaded it (#116). A wrapper bump (like #114) still misses this
-  cache, and the retry step is all it has.
+  release download (run 42583570631); recreated, #113 passed and #111 failed on the coupling too. The other three
+  got Gradle and failed on the version coupling in #115. The `master` runs restored setup-gradle's cache and never
+  downloaded it (#116). A wrapper bump (like #114) still misses this cache, and the retry step is all it has.
 - Robolectric's downloaded `android-all` jars (`~/.m2/repository/org/robolectric`, keyed on
   `gradle/libs.versions.toml`). A cache hit saves nothing, so a jar for an SDK a test newly pins (`@Config(sdk = [N])`)
   is kept only once that file next changes; until then every run downloads it (#94)
@@ -118,7 +118,9 @@ bumped (Caches, above).
   its next run (Dependabot's documented behaviour, not yet seen here).
 - **Rebased** (`@dependabot rebase`) when CI failed before the build ran, e.g. on the Gradle download. Dependabot
   rebuilds the branch on the current `master`, so the run uses `master`'s workflow; a rerun from the Actions tab
-  would reuse the old merge commit.
+  would reuse the old merge commit. If Dependabot ignores it, `@dependabot recreate` (rebuilds the branch from
+  scratch, dropping any pushed commits): on 2026-11-09 a `rebase` on #111 and #113 started no update job in 3 hours,
+  and `recreate` started one within minutes (the cause wasn't visible).
 - **Left for the user** when the review finds a breaking change that needs code, or the build fails for another
   reason. The fix goes through its own issue and PR. Dependabot labels its PRs
 `dependencies`, a label outside the issue vocabulary in [[CLAUDE]]; it applies to PRs only.
