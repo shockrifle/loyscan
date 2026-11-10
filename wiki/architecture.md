@@ -104,6 +104,8 @@ content descriptions, so it needs no seam in the app ([[2026-11-05-r8-smoke-test
   Hungarian is checked by one test at `@Config(qualifiers = "+hu")` that collects every text it shows (`ShownTexts`) and
   fails on any that isn't the fixture's data or a `values-hu` value; `StringResourcesTest` checks `values-hu` covers
   every default string ([[2026-11-09-ui-language]], [[add-a-string]]).
+- **Waits.** Every Compose `waitUntil*` passes the shared `WAIT_TIMEOUT_MS` (`testing/Waits.kt`), never the 1 s default
+  that timed out on CI; `WaitTimeoutsTest` reads the test sources and fails on a wait that doesn't ([[tdd]], #59).
 - Fixture builders (`aLoyaltyCard()`, `aStoreEntity()`, …) give every field a default; `cardId(n)` makes distinct UUID-shaped card ids.
 
 ### Build tooling

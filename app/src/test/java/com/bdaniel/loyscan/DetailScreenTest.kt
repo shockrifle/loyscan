@@ -46,6 +46,7 @@ import com.bdaniel.loyscan.testing.FakeLoyaltyCardRepository
 import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.domain.LoyaltyCard
 import com.bdaniel.loyscan.domain.cardnumber.CardNumberRule
+import com.bdaniel.loyscan.testing.WAIT_TIMEOUT_MS
 import com.bdaniel.loyscan.testing.aLoyaltyCard
 import com.bdaniel.loyscan.testing.aStore
 import com.google.common.truth.Truth.assertThat
@@ -280,7 +281,7 @@ class DetailScreenTest {
         composeRule.onNodeWithText("123 456 789").performClick()
 
         val clipboard = ApplicationProvider.getApplicationContext<Context>().getSystemService(ClipboardManager::class.java)
-        composeRule.waitUntil { clipboard.primaryClip != null }
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) { clipboard.primaryClip != null }
         assertThat(clipboard.primaryClip!!.getItemAt(0).text.toString()).isEqualTo("123 456 789")
     }
 
@@ -303,7 +304,7 @@ class DetailScreenTest {
 
         assertThat(ShadowToast.getTextOfLatestToast()).isEqualTo("Szám másolva")
         val clipboard = ApplicationProvider.getApplicationContext<Context>().getSystemService(ClipboardManager::class.java)
-        composeRule.waitUntil { clipboard.primaryClip != null }
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) { clipboard.primaryClip != null }
         assertThat(clipboard.primaryClipDescription!!.label.toString()).isEqualTo("Kártyaszám")
     }
 
@@ -595,7 +596,7 @@ class DetailScreenTest {
         composeRule.onNodeWithContentDescription("Delete").performClick()
         composeRule.onNodeWithText("Delete").performClick()
 
-        composeRule.waitUntil { wentBack }
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) { wentBack }
         assertThat(repository.cards.value).isEmpty()
     }
 

@@ -10,6 +10,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.bdaniel.loyscan.data.local.db.AppDatabase
 import com.bdaniel.loyscan.testing.CARD_ID
+import com.bdaniel.loyscan.testing.WAIT_TIMEOUT_MS
 import com.bdaniel.loyscan.testing.aLoyaltyCardEntity
 import com.bdaniel.loyscan.testing.aStoreEntity
 import dagger.hilt.android.testing.HiltAndroidRule
@@ -82,5 +83,5 @@ class WidgetTapOpensCardTest {
     }
 
     private fun waitForText(text: String) =
-        composeRule.waitUntil(10_000L) { composeRule.onAllNodes(hasText(text)).fetchSemanticsNodes().isNotEmpty() }
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) { composeRule.onAllNodes(hasText(text)).fetchSemanticsNodes().isNotEmpty() }
 }

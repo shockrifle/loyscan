@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-10 · WAIT_TIMEOUT_MS moved to testing/Waits.kt and passed by every wait; WaitTimeoutsTest, a new kind of test that reads the test sources, fails on a wait left on the 1 s default · workflows/tdd, architecture · #59
 - 2026-11-10 · review fixes for the Dependabot self-rebase: its own step reached from step 2 (ignored recreate, conflicting PR) and step 4, review kept, _log order fixed by hand after the union merge; the force-push noted in the PR-workflow decision · workflows/ci, decisions/2026-11-09-pull-request-workflow, (.claude/commands/dependency-pr) · PR #128 review
 - 2026-11-10 · an ignored `@dependabot recreate` (#114): /dependency-pr rebases the branch itself and force-pushes; GitHub ignores the _log union driver, so a wiki commit on a Dependabot branch can conflict · workflows/ci, (.claude/commands/dependency-pr) · /dependency-pr run 2026-11-10
 - 2026-11-10 · Gradle wrapper 9.8.2 → 9.9.0: version in the coupling note · workflows/build-and-run · Dependabot #114

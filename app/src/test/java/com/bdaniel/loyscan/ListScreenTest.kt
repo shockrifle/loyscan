@@ -51,6 +51,7 @@ import com.bdaniel.loyscan.testing.FakeCardPhotos
 import com.bdaniel.loyscan.testing.ShownTexts
 import com.bdaniel.loyscan.testing.FakeLoyaltyCardRepository
 import com.bdaniel.loyscan.testing.FakeUserPreferencesRepository
+import com.bdaniel.loyscan.testing.WAIT_TIMEOUT_MS
 import com.bdaniel.loyscan.testing.aLoyaltyCard
 import com.bdaniel.loyscan.testing.aStore
 import com.bdaniel.loyscan.testing.cardId
@@ -143,7 +144,7 @@ class ListScreenTest {
         setScreen(aLoyaltyCard(store = aStore(name = "Shell ClubSmart"), label = "Work car", frontPhotoPath = "front"), photos = FakeCardPhotos("front"))
         // Loaded, so a failed load (which shows the initials) would have shown by now.
         val loader = EntryPointAccessors.fromApplication(composeRule.activity, ImageLoaderEntryPoint::class.java).getImageLoader()
-        composeRule.waitUntil(timeoutMillis = 10_000) { ShadowLooper.idleMainLooper(); (loader.memoryCache?.size ?: 0) > 0 }
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) { ShadowLooper.idleMainLooper(); (loader.memoryCache?.size ?: 0) > 0 }
 
         composeRule.onNodeWithTag(CARD_TILE_PHOTO_TAG, useUnmergedTree = true).assertIsDisplayed()
         composeRule.onNodeWithText("SC").assertDoesNotExist()
@@ -156,7 +157,7 @@ class ListScreenTest {
         // The fake says the photo exists, but the app's loader finds no file to decode.
         setScreen(aLoyaltyCard(store = aStore(name = "Shell ClubSmart"), frontPhotoPath = "broken"), photos = FakeCardPhotos("broken"))
 
-        composeRule.waitUntil(timeoutMillis = 10_000) { // the 1 s default is too short on CI (#56)
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) {
             ShadowLooper.idleMainLooper() // the loader's result comes on the main looper
             composeRule.onAllNodesWithText("SC").fetchSemanticsNodes().isNotEmpty()
         }
