@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-10 · Gradle wrapper 9.8.2 → 9.9.0: version in the coupling note · workflows/build-and-run · Dependabot #114
 - 2026-11-10 · `@dependabot recreate` when `rebase` is ignored (seen on #111 and #113); /dependency-pr asks for it · workflows/ci, (.claude/commands/dependency-pr) · /dependency-pr run 2026-11-09
 - 2026-11-10 · review fix for #115: the retro skill no longer cites the retired JVM-target runbook as a live failure · (.claude/skills/retro) · #115 review
 - 2026-11-10 · the androidx group (AGP 9.1 + compileSdk 37) and kotlinx-serialization-json 1.12, which wraps constructor exceptions; the rootCause test helper; Dependabot PRs no longer wait, Hilt/AGP/Gradle still ungrouped · workflows/build-and-run, workflows/tdd, workflows/ci · #115
