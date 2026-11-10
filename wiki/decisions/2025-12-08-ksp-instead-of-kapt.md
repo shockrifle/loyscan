@@ -24,5 +24,6 @@ and doesn't follow Kotlin 2.x/K2 well. Both processors in use support KSP, so th
   together. *Correction (2026-10-19):* this page used to say the KSP version is coupled to Kotlin. That was true
   for KSP1 (`<kotlin>-<ksp>` versions) but not for KSP 2.3.x, which is versioned on its own: KSP `2.3.3` built
   unchanged with Kotlin 2.2.21 and 2.3.21 (#5). When bumping Kotlin, still run the full build, and bump KSP only if
-  it fails — see [[build-and-run]].
+  it fails — see [[build-and-run]]. #115 took KSP `2.3.13` with Kotlin 2.4.21 and AGP 9's built-in Kotlin, as
+  Dependabot's Kotlin group proposed it; `2.3.3` wasn't tried with that set.
 - Don't add a kapt-only processor. Check for KSP support first.

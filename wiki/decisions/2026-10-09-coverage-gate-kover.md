@@ -41,8 +41,9 @@ The project is moving to test-first work (#13). Without a number, untested code 
   - 90 % after the safety-net backfill (#30): 390 of 432 lines. Still uncovered: the DI module bodies,
     `hiltImageLoader` and the unused `BrandRepository`.
 - **Targets:** about 80 % overall, and at least 90 % for `domain/`, `data/` and the ViewModels.
-- Only the debug variant has unit tests. Release unit tests are turned off in `androidComponents { }`, because the
-  Compose UI tests need `ui-test-manifest`, which is a debug-only dependency.
+- Only the debug variant runs unit tests. The other build types' test tasks are switched off
+  (`tasks.withType<Test>` since #115; `androidComponents { }` before that), because the Compose UI tests need
+  `ui-test-manifest`, which is a debug-only dependency. Why the tasks still exist: [[build-and-run]] → Dependencies.
 
 ## Why
 - **The ratchet:** whenever a change raises coverage, set `minBound` to the new measured value, rounded down to a

@@ -81,7 +81,8 @@ own consumer rules: Room, Hilt, kotlinx.serialization, Coil, CameraX, Glance, an
 - **R8's Kotlin-metadata warning.** AGP 8.13.1's R8 warns *"An error occurred when parsing kotlin metadata"* for
   Kotlin 2.3 classes. Only Kotlin reflection reads that metadata, and nothing on the release classpath depends on
   `kotlin-reflect` (checked 2026-11-05). So the warning is harmless today (inferred). Recheck it after an AGP bump,
-  or if kotlin-reflect is added.
+  or if kotlin-reflect is added. *Rechecked 2026-11-10 (#115):* AGP 9.5.1's R8 doesn't print it for Kotlin 2.4.21
+  (release and smoke minification rerun).
 - **UiAutomator and Compose's accessibility tree.** After deleting a card, UiAutomator sometimes misses later
   screens' top-bar nodes (title, Back, Delete), even though they're drawn. This was seen with R8 on and off. The test
   avoids depending on those nodes after the delete. Whether TalkBack is affected hasn't been checked.

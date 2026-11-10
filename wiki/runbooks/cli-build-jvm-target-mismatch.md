@@ -1,5 +1,8 @@
 # CLI build fails: "Inconsistent JVM Target Compatibility"
 
+**Status:** No longer applies since #115 (2026-11-10). AGP 9 compiles Kotlin itself and takes the JVM target from
+`compileOptions`, so a terminal build on JDK 19 works ([[build-and-run]]). Kept for building commits before #115.
+
 **Use when** `./gradlew …` from a terminal fails at `:app:compileDebugKotlin` with:
 
 ```
