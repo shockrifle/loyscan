@@ -5,8 +5,9 @@ argument-hint: "[PR #n]"
 
 Handle Dependabot's pull requests for LoyScan. Target: `$ARGUMENTS` (empty: every open Dependabot PR,
 `gh pr list --author app/dependabot --state open`). The rules and why: `wiki/workflows/ci.md` → Dependabot. Running
-this command authorizes, for those PRs only: merging, commenting, and pushing a wiki commit onto a Dependabot
-branch. Anything else outward-facing (new issues, other PRs) needs my go-ahead.
+this command authorizes, for those PRs only: merging, commenting, pushing a wiki commit onto a Dependabot branch,
+and rebasing a Dependabot branch onto `master` with `git push --force-with-lease`. Anything else outward-facing (new
+issues, other PRs) needs my go-ahead.
 
 ## 0. Preflight
 
@@ -21,7 +22,8 @@ branch. Anything else outward-facing (new issues, other PRs) needs my go-ahead.
      `gh run view <id> --log-failed`) → comment `@dependabot rebase` and go to the next PR. A rerun from the
      Actions tab would reuse the old merge commit and the old workflow. A `@dependabot rebase` over an hour old with no
      newer commit (`gh pr view <n> --json comments,commits`) means Dependabot ignored it → comment
-     `@dependabot recreate` instead. A `recreate` that got the same treatment → report the PR to me.
+     `@dependabot recreate` instead. A `recreate` ignored the same way → rebase the branch yourself (below) and
+     finish the PR in this run.
    - **CI failed because the bump needs other bumps at the same time** (the coupling rules in
      `wiki/workflows/build-and-run.md` → Dependencies, e.g. Kotlin / Hilt / AGP / Gradle) → find the open issue for
      that joint upgrade (`gh issue list --state open`; #115 is the Kotlin / Hilt / AGP / Gradle one) and comment
@@ -43,6 +45,11 @@ branch. Anything else outward-facing (new issues, other PRs) needs my go-ahead.
      `wiki/_log.md` line, and push it. Dependabot stops rebasing a branch someone else pushed to, so finish this PR
      in this run: wait for CI on the new head (`gh pr checks <n> --watch`), and merge when it is green.
    - Then, or with nothing to update → merge: `gh pr merge <n> --rebase`.
+   - **Rebase it yourself** when Dependabot ignored a `recreate`, or when the PR conflicts with `master`
+     (`gh pr view <n> --json mergeable` says `CONFLICTING`; CI doesn't run then). `gh pr checkout <n>`,
+     `git rebase origin/master` (the local union driver merges `wiki/_log.md`; keep the newest line first), then
+     `git push --force-with-lease origin HEAD:<branch>`. Dependabot no longer maintains a branch someone else pushed
+     to, so wait for CI on the new head and merge it in this run.
 
 ## 2. Finish
 
