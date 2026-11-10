@@ -2,11 +2,13 @@
 
 A standard Gradle-wrapper project with no custom tasks or scripts; coverage tasks come from the Kover plugin.
 
-**From a terminal, Gradle must run on JDK 21** (Android Studio's bundled JBR), or the Kotlin compile fails with a
-JVM-target mismatch — [[cli-build-jvm-target-mismatch]].
+**Gradle runs on JDK 17 or newer** (AGP 9's minimum). Since AGP 9 (#115) Kotlin takes its JVM target (21) from
+`compileOptions`, so the JDK that runs Gradle no longer decides the bytecode: a terminal build on JDK 19 works
+(checked 2026-11-10). CI uses JDK 21, the same as Android Studio's bundled JBR. Before #115 any JDK other than 21
+failed the build — [[cli-build-jvm-target-mismatch]].
 
 ```sh
-export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"   # see the runbook above
+export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"   # optional: the JDK version CI uses
 ./gradlew assembleDebug        # build (verified passing 2026-10-08 with JAVA_HOME as above)
 ./gradlew installDebug         # install on the connected device/emulator
 adb shell am start -n com.bdaniel.loyscan/.MainActivity
@@ -27,8 +29,10 @@ locally.
 How to work test-first and which test goes with which layer: [[tdd]]. The same tests and gate run in CI on every
 pull request and on `master`: [[ci]].
 
-All tests but one are in `app/src/test/` and run on the JVM, with no emulator. Only the debug variant has unit tests
-(the other build types' are turned off in `app/build.gradle.kts`, `androidComponents`). HTML report:
+All tests but one are in `app/src/test/` and run on the JVM, with no emulator. Only the debug variant runs unit tests:
+the other build types' test tasks exist but are switched off (`app/build.gradle.kts`, `tasks.withType<Test>`), because
+the Compose UI tests need `ui-test-manifest`, a debug-only dependency. Why they exist at all: AGP 9's Compose Preview
+tasks (Dependencies, below). HTML report:
 `app/build/reports/tests/testDebugUnitTest/index.html`.
 
 **Smoke test of the minified build** (#73, [[2026-11-05-r8-smoke-test-on-a-device]]). It's the one test class in
@@ -67,21 +71,38 @@ for raising it: [[2026-10-09-coverage-gate-kover]].
 
 All versions live in `gradle/libs.versions.toml`. Constraints that have bitten before:
 
-- **Kotlin `2.3.21`, KSP `2.3.3`.** KSP 2.3.x is versioned independently of Kotlin; `2.3.3` builds with Kotlin
+- **Kotlin `2.4.21`, KSP `2.3.13`.** KSP 2.3.x is versioned independently of Kotlin; `2.3.3` built with Kotlin
   2.2.21 and 2.3.21 alike. After a Kotlin bump, run the full build and bump KSP only if it fails
-  ([[2025-12-08-ksp-instead-of-kapt]]). Kotlin is at least 2.3.20 because zxing-cpp 3.1.x is built on that stdlib
-  ([[zxing-cpp]]).
-- **Kotlin, Hilt, the Android Gradle plugin and Gradle move together** (the joint upgrade is #115). Seen on
-  Dependabot's first PRs, 2026-11-09 ([[ci]] → Dependabot):
-  - Kotlin 2.4.21 (PR #110) doesn't compile with Hilt 2.57.2: *"[Hilt] Provided Metadata instance has version
-    2.4.0, while maximum supported version is 2.3.0"*. Hilt's annotation processor reads Kotlin metadata, so a
-    Kotlin minor needs a Hilt release that knows it.
-  - Hilt 2.60.1 alone (PR #112) fails to apply its Gradle plugin (`com.google.dagger.hilt.android`) with AGP 8.13.1
-    and Gradle 8.13; the log doesn't say why (a newer AGP or Gradle requirement is likely, not checked).
-  - Gradle 9.8.2 alone (PR #114) fails to apply AGP 8.13.1 (`com.android.application`).
+  ([[2025-12-08-ksp-instead-of-kapt]]). `2.3.13` came with Dependabot's Kotlin group in #115 and is what was tested
+  with AGP 9's built-in Kotlin; `2.3.3` wasn't tried there. Kotlin is at least 2.3.20 because zxing-cpp 3.1.x is
+  built on that stdlib ([[zxing-cpp]]).
+- **Kotlin, Hilt, the Android Gradle plugin, Gradle and compileSdk move together.** Upgraded as one set in #115
+  (2026-11-10): Kotlin 2.4.21, Hilt 2.60.1, AGP 9.5.1, Gradle 9.8.2, compileSdk 37 (targetSdk stays 36). Each failed
+  alone on Dependabot's first PRs, 2026-11-09 ([[ci]] → Dependabot):
+  - **A Kotlin minor needs a Hilt that knows it.** Kotlin 2.4.21 (PR #110) doesn't compile with Hilt 2.57.2:
+    *"[Hilt] Provided Metadata instance has version 2.4.0, while maximum supported version is 2.3.0"*. Hilt's
+    annotation processor reads Kotlin metadata.
+  - **Hilt 2.60 needs AGP 9** (inferred). Hilt 2.60.1 alone (PR #112) fails to apply its Gradle plugin
+    (`com.google.dagger.hilt.android`) with AGP 8.13.1 and Gradle 8.13; the log doesn't say why. It applies with
+    AGP 9.5.1.
+  - **AGP 8 runs on Gradle 9.5 at most.** Gradle 9.8.2 alone (PR #114) fails to apply AGP 8.13.1
+    (`com.android.application`): AGP 8.x uses `org.gradle.api.problems.internal.InternalProblems`, a Gradle internal
+    API removed in Gradle 9.6 (Gradle's upgrade guide, `upgrading_version_9.html#agp_8x_incompatible`).
+- **AGP 9 changes that touched this build** (#115):
+  - **Built-in Kotlin.** AGP 9 compiles Kotlin itself, and applying `org.jetbrains.kotlin.android` fails (*"Failed to
+    apply plugin 'org.jetbrains.kotlin.android'"*), so that plugin is gone. The Compose compiler, serialization, KSP,
+    Hilt and Kover plugins stay. The JVM target follows `compileOptions` (21), see the top of this page.
+  - **Unit tests only for `testBuildType`.** AGP 9 creates unit tests only for the tested build type, here `smoke`
+    (the instrumented smoke test runs on the minified build), so `testDebugUnitTest` didn't exist.
+    `android.onlyEnableUnitTestForTheTestedBuildType=false` in `gradle.properties` turns them on for every variant.
+  - **Compose Preview tasks need unit tests on every variant.** AGP 9 adds `generate<Variant>ComposePreviewRunfiles`.
+    With the release and smoke unit tests disabled in `androidComponents.beforeVariants` (the setup before #115),
+    creating those tasks failed (*"Compose Preview requires unit tests…"*), e.g. in `./gradlew tasks --all`. So the
+    test tasks now exist on every variant, and the non-debug ones are switched off (`enabled = false`). A bare
+    `./gradlew test` still compiles the release and smoke unit-test sources; the gate runs `testDebugUnitTest` only.
 - Compose libraries come from the Compose BOM. The BOM bump in `d0d171a` removed the transitive Material
   icons — [[2025-12-08-hand-rolled-icons]].
-- The `kotlinSerialization` plugin version is pinned to the Kotlin version (`2.3.21`). It's needed for the
+- The `kotlinSerialization` plugin version is pinned to the Kotlin version (`2.4.21`). It's needed for the
   type-safe navigation routes.
 - `coroutinesTest` must match the `kotlinx-coroutines-core` version the app actually resolves (check with
   `./gradlew :app:dependencies --configuration debugRuntimeClasspath`); a newer one silently upgrades core.

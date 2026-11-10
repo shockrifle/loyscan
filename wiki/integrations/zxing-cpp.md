@@ -85,7 +85,7 @@ Code: `app/src/main/java/com/bdaniel/loyscan/ui/scanner/ZxingCppFrameReader.kt` 
 
 - **3.0.2 can't return DataBar.** Its native core and Kotlin enum don't match, and every DataBar frame throws
   `Invalid BarcodeFormat`: [[2026-10-19-zxing-cpp-3-0-databar]]. Don't go below 3.1.
-- **3.1.x needs Kotlin 2.3.20+** (its stdlib); the app is on 2.3.21.
+- **3.1.x needs Kotlin 2.3.20+** (its stdlib); the app is on 2.4.21.
 - **A reader exception is per frame and only logged.** `ScanAnalyzer` logs "Couldn't read a camera frame" (tag
   `ScanAnalyzer`) and skips the frame. If a symbology never scans, look for that warning first, then for "Dropped a
   … result" (a format the app doesn't store).

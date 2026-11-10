@@ -4,5 +4,6 @@ What to do when something breaks. Format: **Use when** (symptoms, exact error te
 actual commands → what to check if the steps don't help. Add one when an incident is handled or a failure
 recurs.
 
-- [[cli-build-jvm-target-mismatch]] — terminal `./gradlew` fails with Java 21 vs Kotlin 19; use Studio's JBR
+- [[cli-build-jvm-target-mismatch]] — terminal `./gradlew` fails with Java 21 vs Kotlin 19; use Studio's JBR (no
+  longer applies since #115, AGP 9)
 - [[reset-local-database]] — Room integrity crash after a schema change, stale or empty seed data

@@ -1,8 +1,5 @@
-import com.android.build.api.variant.HostTestBuilder
-
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt.android.plugin)
     alias(libs.plugins.kotlin.ksp)
@@ -13,7 +10,7 @@ plugins {
 android {
     namespace = "com.bdaniel.loyscan"
     compileSdk {
-        version = release(36)
+        version = release(37)
     }
 
     defaultConfig {
@@ -76,11 +73,11 @@ android {
     }
 }
 
-androidComponents {
-    // JVM tests run on the debug variant only: Compose UI tests need ui-test-manifest, which is debug-only.
-    beforeVariants(selector().all()) { variant ->
-        if (variant.buildType != "debug") variant.hostTests[HostTestBuilder.UNIT_TEST_TYPE]?.enable = false
-    }
+// JVM tests run on the debug variant only: Compose UI tests need ui-test-manifest, which is debug-only. The other
+// variants' test tasks exist (AGP 9's Compose Preview tasks need unit tests enabled on every variant, and
+// gradle.properties turns them on beyond testBuildType) but are switched off. wiki/workflows/build-and-run.md
+tasks.withType<Test>().configureEach {
+    if (name != "testDebugUnitTest") enabled = false
 }
 
 dependencies {

@@ -110,7 +110,7 @@ content descriptions, so it needs no seam in the app ([[2026-11-05-r8-smoke-test
 
 Version catalog `gradle/libs.versions.toml`; KSP (not kapt) for Hilt + Room ([[2025-12-08-ksp-instead-of-kapt]]);
 Room schemas exported to `app/schemas/` (`app/build.gradle.kts`, `ksp { room.schemaLocation }`); Java/JVM target 21; minSdk 29,
-target/compileSdk 36. Kover gates line coverage ([[2026-10-09-coverage-gate-kover]]). See [[android-app]] and
+targetSdk 36, compileSdk 37. Kover gates line coverage ([[2026-10-09-coverage-gate-kover]]). See [[android-app]] and
 [[build-and-run]].
 
 ## Worked example: tap a card → see its details
