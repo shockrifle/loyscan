@@ -7,6 +7,7 @@ import android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -209,7 +210,7 @@ class AppNavigationTest {
         waitForText("0042")
 
         composeRule.onNodeWithContentDescription("Edit").performClick()
-        waitForText("Edit card")
+        waitForTheCardFormToLoad()
         composeRule.onNodeWithTag(CARD_LABEL_TAG).performTextClearance()
         composeRule.onNodeWithTag(CARD_LABEL_TAG).performTextInput("Silver card")
         composeRule.onNodeWithText("Save").performClick()
@@ -229,14 +230,14 @@ class AppNavigationTest {
         waitForText("0042")
 
         composeRule.onNodeWithContentDescription("Edit").performClick()
-        waitForText("Edit card")
+        waitForTheCardFormToLoad()
         composeRule.onNodeWithTag(CARD_NOTE_TAG).performScrollTo().performTextInput("PIN hint: birthday")
         composeRule.onNodeWithText("Save").performScrollTo().performClick()
         waitForTheCardFormToClose()
         waitForText("PIN hint: birthday")
 
         composeRule.onNodeWithContentDescription("Edit").performClick()
-        waitForText("Edit card")
+        waitForTheCardFormToLoad()
         composeRule.onNodeWithTag(CARD_LABEL_TAG).performTextClearance()
         composeRule.onNodeWithTag(CARD_LABEL_TAG).performTextInput("Silver card")
         composeRule.onNodeWithText("Save").performScrollTo().performClick()
@@ -348,7 +349,7 @@ class AppNavigationTest {
 
         composeRule.onNodeWithText("Gold card").performTouchInput { longClick() }
         composeRule.onNodeWithContentDescription("Edit").performClick()
-        waitForText("Edit card")
+        waitForTheCardFormToLoad()
         composeRule.onNodeWithTag(CARD_LABEL_TAG).performTextClearance()
         composeRule.onNodeWithTag(CARD_LABEL_TAG).performTextInput("Silver card")
         composeRule.onNodeWithText("Save").performClick()
@@ -371,7 +372,7 @@ class AppNavigationTest {
         waitForText("My Shop")
 
         composeRule.onNodeWithContentDescription("Edit My Shop").performClick()
-        waitForText("Edit store")
+        waitForTheStoreFormToLoad()
         composeRule.onNodeWithTag(CUSTOM_STORE_NAME_TAG).performTextClearance()
         composeRule.onNodeWithTag(CUSTOM_STORE_NAME_TAG).performTextInput("My Gym")
         composeRule.onNodeWithText("Save").performScrollTo().performClick()
@@ -395,7 +396,7 @@ class AppNavigationTest {
         composeRule.onNodeWithContentDescription("Add card").performClick()
         waitForText("My Shop")
         composeRule.onNodeWithContentDescription("Edit My Shop").performClick()
-        waitForText("Edit store")
+        waitForTheStoreFormToLoad()
         // 4242 isn't an EAN-13, so the card is now drawn in the fallback and the detail says so.
         composeRule.onNodeWithText(BarcodeFormat.EAN_13.displayName).performScrollTo().performClick()
         composeRule.onNodeWithText("Save").performScrollTo().performClick()
@@ -419,7 +420,7 @@ class AppNavigationTest {
         waitForText("My Shop")
 
         composeRule.onNodeWithContentDescription("Edit My Shop").performClick()
-        waitForText("Edit store")
+        waitForTheStoreFormToLoad()
         composeRule.onNodeWithContentDescription("Delete").performClick()
         composeRule.onNodeWithText("Its card is deleted with it.").assertIsDisplayed()
         composeRule.onNodeWithText("Delete").performClick()
@@ -430,6 +431,18 @@ class AppNavigationTest {
         assertThat(runBlocking { db.loyaltyCardDao().getAllWithStore().first() }.map { it.loyaltyCard.storeId })
             .containsExactly(STORE_ID)
     }
+
+    /**
+     * The card form shows "Edit card" as soon as it knows it is editing, before the card has loaded and its fields are
+     * drawn, so typing right after the title can find no field (#123). Only the loaded form has the label field.
+     */
+    private fun waitForTheCardFormToLoad() = waitForTag(CARD_LABEL_TAG)
+
+    /** As [waitForTheCardFormToLoad], for the custom store form: "Edit store" shows before the store has loaded. */
+    private fun waitForTheStoreFormToLoad() = waitForTag(CUSTOM_STORE_NAME_TAG)
+
+    private fun waitForTag(tag: String) =
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) { composeRule.onAllNodes(hasTestTag(tag)).fetchSemanticsNodes().isNotEmpty() }
 
     /**
      * The form's own fields hold the label and number the card screen then shows, so waiting for those can pass on the
