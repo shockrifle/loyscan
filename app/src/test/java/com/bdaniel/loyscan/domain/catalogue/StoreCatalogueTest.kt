@@ -4,9 +4,10 @@ import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.domain.cardnumber.CardNumberRule
 import com.bdaniel.loyscan.domain.cardnumber.CardNumberRule.CheckDigit
 import com.bdaniel.loyscan.domain.cardnumber.CheckDigitAlgorithm
+import com.bdaniel.loyscan.testing.rootCause
 import com.google.common.truth.Truth.assertThat
 import kotlinx.serialization.SerializationException
-import org.junit.Assert.assertFalse
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Test
 
@@ -111,8 +112,9 @@ class StoreCatalogueTest {
         )
         for (entry in invalid) {
             val e = assertThrows(entry, IllegalArgumentException::class.java) { StoreCatalogue.parse("[$entry]") }
-            // SerializationException extends IllegalArgumentException; make sure a check fired, not a JSON error.
-            assertFalse(entry, e is SerializationException)
+            // Make sure a check (require) fired, not a JSON error. Since kotlinx.serialization 1.12 the check's
+            // IllegalArgumentException arrives as the cause of a JsonException.
+            assertEquals(entry, IllegalArgumentException::class.java, e.rootCause.javaClass)
         }
     }
 

@@ -88,6 +88,11 @@ All versions live in `gradle/libs.versions.toml`. Constraints that have bitten b
   - **AGP 8 runs on Gradle 9.5 at most.** Gradle 9.8.2 alone (PR #114) fails to apply AGP 8.13.1
     (`com.android.application`): AGP 8.x uses `org.gradle.api.problems.internal.InternalProblems`, a Gradle internal
     API removed in Gradle 9.6 (Gradle's upgrade guide, `upgrading_version_9.html#agp_8x_incompatible`).
+  - **The androidx group needs AGP 9.1 and compileSdk 37.** Dependabot's androidx PR (#111): `hilt-navigation-compose`
+    1.4.0, `navigation-compose` 2.10.2 and others fail `checkDebugAarMetadata`, requiring AGP 9.1.0 or newer and
+    compileSdk 37 (AGP 8.13.1 recommends 36 at most). The AAR metadata check catches it, so CI does. Landed with the
+    set in #115: core-ktx 1.19.1, Compose BOM 2026.09.00, navigation 2.10.2, hilt-navigation-compose 1.4.0, Room
+    2.8.5, DataStore 1.3.0, UiAutomator 2.4.1.
 - **AGP 9 changes that touched this build** (#115):
   - **Built-in Kotlin.** AGP 9 compiles Kotlin itself, and applying `org.jetbrains.kotlin.android` fails (*"Failed to
     apply plugin 'org.jetbrains.kotlin.android'"*), so that plugin is gone. The Compose compiler, serialization, KSP,
@@ -104,11 +109,16 @@ All versions live in `gradle/libs.versions.toml`. Constraints that have bitten b
   icons — [[2025-12-08-hand-rolled-icons]].
 - The `kotlinSerialization` plugin version is pinned to the Kotlin version (`2.4.21`). It's needed for the
   type-safe navigation routes.
+- **kotlinx-serialization-json 1.12 wraps constructor exceptions.** An exception thrown in a `@Serializable` class's
+  constructor while decoding (a `require` in an `init` block, as in `CardNumberRule` and the catalogue entries) now
+  arrives as the cause of a `JsonException`, a `SerializationException` (its 1.12.0 release notes, "Exceptions
+  rework"). The parsers still throw `IllegalArgumentException`s, so callers didn't change; tests that tell a rule check
+  from a JSON error look at `rootCause` ([[tdd]] → Shared helpers). Seen in #115.
 - `coroutinesTest` must match the `kotlinx-coroutines-core` version the app actually resolves (check with
   `./gradlew :app:dependencies --configuration debugRuntimeClasspath`); a newer one silently upgrades core.
 - DataStore (`datastore`, [[2026-10-28-datastore-for-user-preferences]]) pulls `kotlinx-coroutines-core` 1.8.1, which
-  resolves to the app's 1.9.0; recheck after a bump. On a Windows host it can't replace an existing file, so JVM
-  tests write each preferences file at most once.
+  resolves to the app's 1.9.0; recheck after a bump (still 1.9.0 with DataStore 1.3.0, #115). On a Windows host it
+  can't replace an existing file, so JVM tests write each preferences file at most once.
 - Robolectric on SDK 36 needs `--add-exports=java.base/jdk.internal.access=ALL-UNNAMED` on the test JVM
   (`app/build.gradle.kts`, `testOptions`). Without it every Robolectric test fails with *"Failed to interact with
   raw FileDescriptor internals"*. Seen with Robolectric 4.17 on JDK 21, 2026-10-09.
