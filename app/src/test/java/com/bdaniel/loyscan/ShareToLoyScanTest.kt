@@ -17,6 +17,7 @@ import com.bdaniel.loyscan.data.local.db.AppDatabase
 import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.domain.ScannedBarcode
 import com.bdaniel.loyscan.testing.FakePictureReader
+import com.bdaniel.loyscan.testing.WAIT_TIMEOUT_MS
 import com.bdaniel.loyscan.testing.aStoreEntity
 import com.bdaniel.loyscan.ui.scanner.PictureScan
 import com.google.common.truth.Truth.assertThat
@@ -156,5 +157,3 @@ private const val SHARE_IN_A_TASK_OF_ITS_OWN =
     Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK or Intent.FLAG_ACTIVITY_NEW_DOCUMENT
 private val EAN_13_SCAN = ScannedBarcode("5901234123457", BarcodeFormat.EAN_13)
 
-// waitUntil's 1 s default timed out on a slow CI runner (#56).
-private const val WAIT_TIMEOUT_MS = 10_000L

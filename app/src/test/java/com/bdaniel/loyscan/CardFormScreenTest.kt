@@ -33,6 +33,7 @@ import com.bdaniel.loyscan.testing.FakeLoyaltyCardRepository
 import com.bdaniel.loyscan.testing.FakePhotoCamera
 import com.bdaniel.loyscan.testing.FakeStoreRepository
 import com.bdaniel.loyscan.testing.SOME_INSTANT
+import com.bdaniel.loyscan.testing.WAIT_TIMEOUT_MS
 import com.bdaniel.loyscan.testing.aLoyaltyCard
 import com.bdaniel.loyscan.testing.aStore
 import com.bdaniel.loyscan.testing.cardId
@@ -330,7 +331,7 @@ class CardFormScreenTest {
 
         composeRule.onNodeWithText("Add front photo").performScrollTo().performClick()
         val loader = EntryPointAccessors.fromApplication(context, ImageLoaderEntryPoint::class.java).getImageLoader()
-        composeRule.waitUntil(timeoutMillis = 10_000) { ShadowLooper.idleMainLooper(); (loader.memoryCache?.size ?: 0) > 0 }
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) { ShadowLooper.idleMainLooper(); (loader.memoryCache?.size ?: 0) > 0 }
         composeRule.onNodeWithText("Crop").performClick()
 
         composeRule.onNodeWithContentDescription("Front photo").assertExists()
@@ -347,7 +348,7 @@ class CardFormScreenTest {
         setScreen(CardForm("ruled"))
         composeRule.onNodeWithText("Add front photo").performScrollTo().performClick()
         val loader = EntryPointAccessors.fromApplication(context, ImageLoaderEntryPoint::class.java).getImageLoader()
-        composeRule.waitUntil(timeoutMillis = 10_000) { ShadowLooper.idleMainLooper(); (loader.memoryCache?.size ?: 0) > 0 }
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) { ShadowLooper.idleMainLooper(); (loader.memoryCache?.size ?: 0) > 0 }
 
         // Zoom in (two fingers spread), then drag far past the edge.
         composeRule.onNodeWithTag(PHOTO_CROP_TAG).performTouchInput {

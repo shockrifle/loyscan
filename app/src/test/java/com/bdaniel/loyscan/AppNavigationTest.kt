@@ -26,6 +26,7 @@ import com.bdaniel.loyscan.data.local.db.AppDatabase
 import com.bdaniel.loyscan.data.photos.FileCardPhotos
 import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.testing.STORE_ID
+import com.bdaniel.loyscan.testing.WAIT_TIMEOUT_MS
 import com.bdaniel.loyscan.testing.aLoyaltyCardEntity
 import com.bdaniel.loyscan.testing.aStoreEntity
 import com.bdaniel.loyscan.testing.cardId
@@ -461,6 +462,3 @@ class AppNavigationTest {
 
     private val brightness get() = composeRule.activity.window.attributes.screenBrightness
 }
-
-// waitUntil's 1 s default timed out on a slow CI runner (#56).
-private const val WAIT_TIMEOUT_MS = 10_000L
