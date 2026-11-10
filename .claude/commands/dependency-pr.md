@@ -17,14 +17,14 @@ issues, other PRs) needs my go-ahead.
 
 1. **Read it.** `gh pr view <n> --comments` (the bump, the release notes and changelog Dependabot quotes) and
    `gh pr checks <n>`.
-2. **Sort it into one case:**
+2. **Sort it into one case.** Check `gh pr view <n> --json mergeable` first, whatever `gh pr checks` shows: a
+   conflicting PR can still show green checks from its old head (`UNKNOWN` right after a push: ask again).
+   - **The PR conflicts with `master`** (`CONFLICTING`) → **rebase it yourself** (step 5).
    - **CI failed before the build ran** (the Gradle download, a runner or network problem; read
      `gh run view <id> --log-failed`) → comment `@dependabot rebase` and go to the next PR. A rerun from the
      Actions tab would reuse the old merge commit and the old workflow. A `@dependabot rebase` over an hour old with no
      newer commit (`gh pr view <n> --json comments,commits`) means Dependabot ignored it → comment
      `@dependabot recreate` instead. A `recreate` ignored the same way → **rebase it yourself** (step 5).
-   - **No CI run because the PR conflicts with `master`** (`gh pr view <n> --json mergeable` says
-     `CONFLICTING`) → **rebase it yourself** (step 5).
    - **CI failed because the bump needs other bumps at the same time** (the coupling rules in
      `wiki/workflows/build-and-run.md` → Dependencies, e.g. Kotlin / Hilt / AGP / Gradle) → find the open issue for
      that joint upgrade (`gh issue list --state open`; #115 is the Kotlin / Hilt / AGP / Gradle one) and comment
@@ -44,8 +44,8 @@ issues, other PRs) needs my go-ahead.
      report it to me with the evidence.
    - Wiki pages name the old version → commit their update on the PR's branch (`gh pr checkout <n>`), with the
      `wiki/_log.md` line, and push it. Dependabot stops rebasing a branch someone else pushed to, so finish this PR
-     in this run: wait for CI on the new head (`gh pr checks <n> --watch`), and merge when it is green.
-     If the PR then shows `CONFLICTING` (no CI run), rebase it yourself (step 5).
+     in this run. If the PR then shows `CONFLICTING`, rebase it yourself (step 5); otherwise wait for CI on the new
+     head (`gh pr checks <n> --watch`) and merge when it is green.
    - Then, or with nothing to update → merge: `gh pr merge <n> --rebase`.
 5. **Rebase it yourself** (reached from step 2 or 4):
    1. `gh pr checkout <n>`, then `git rebase origin/master`. The local union driver merges `wiki/_log.md` without
