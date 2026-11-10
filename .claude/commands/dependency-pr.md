@@ -19,7 +19,8 @@ branch. Anything else outward-facing (new issues, other PRs) needs my go-ahead.
 2. **Sort it into one case:**
    - **CI failed before the build ran** (the Gradle download, a runner or network problem; read
      `gh run view <id> --log-failed`) → comment `@dependabot rebase` and go to the next PR. A rerun from the
-     Actions tab would reuse the old merge commit and the old workflow.
+     Actions tab would reuse the old merge commit and the old workflow. A `@dependabot rebase` already on the PR with
+     no new commit or run after it (Dependabot ignored it) → comment `@dependabot recreate` instead.
    - **CI failed because the bump needs other bumps at the same time** (the coupling rules in
      `wiki/workflows/build-and-run.md` → Dependencies, e.g. Kotlin / Hilt / AGP / Gradle) → find the open issue for
      that joint upgrade (`gh issue list --state open`; #115 is the Kotlin / Hilt / AGP / Gradle one) and comment
