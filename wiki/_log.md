@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-10 · /next-task and /dependency-pr pick the master CI run by the merged SHA, since master runs now overlap · (no wiki page change; workflows/ci already says it) · PR #130 review
 - 2026-11-10 · CI: only a pull request's runs cancel each other; every run on master (and every manual run) has its own concurrency group and is never cancelled · workflows/ci · #119
 - 2026-11-10 · review fixes for #123/#59: the wait-timeout scan skips strings nested in a string template, and its declaration, escape and char-literal cases are pinned by snippet tests · (no page change; workflows/tdd row still accurate) · PR #129 review
 - 2026-11-10 · app tests wait for an edit form's field, not its title, before typing: the title shows before the card or store has loaded · workflows/tdd · #123

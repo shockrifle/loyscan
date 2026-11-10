@@ -21,8 +21,9 @@ issue or wiki settles, a reviewer finding we disagree on. Otherwise keep going.
 - `git fetch origin`. You must be on `master`, the working tree clean, and `master` neither behind
   `origin/master` (`git pull --ff-only` if it is) nor ahead of it. Local commits on `master` or uncommitted
   changes → stop and ask: they would end up in this task's PR.
-- Check the latest CI run on `master` (`gh run list --branch master --limit 1`). If it is red, that is the task
-  (`wiki/workflows/ci.md`: a red `master` comes first). Tell me and work on it instead.
+- Check the push runs on `master` for its recent commits (`gh run list --branch master --event push --limit 5`).
+  Runs on `master` are never cancelled and can overlap, so the newest run isn't always the head's. If any is red,
+  that is the task (`wiki/workflows/ci.md`: a red `master` comes first). Tell me and work on it instead.
 
 ## 1. Pick the task
 
@@ -132,7 +133,8 @@ adding fix commits.
 
 Then `gh pr merge <p> --rebase --delete-branch`. Switch back: `git switch master`, `git pull --ff-only`, and
 delete the local branch. The merge rewrites the commits, so their SHAs on `master` differ from the branch's.
-Watch the CI run on `master` for the merged head (`gh run watch`). If it fails, `master` is red: investigate and
+Watch the CI run on `master` for the merged head, picked by its SHA, not the newest run (`gh run list --branch master
+--event push --commit $(git rev-parse HEAD)`, then `gh run watch <id>`). If it fails, `master` is red: investigate and
 report, don't pile on fixes without telling me.
 
 ## 8. Update the issue
