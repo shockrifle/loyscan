@@ -12,7 +12,12 @@ One job, `test`, on `ubuntu-latest`, with JDK 21 (Temurin). It has a 30-minute t
   current `master`), when the PR opens and on each push to its branch
 - by hand from the Actions tab, or `gh workflow run tests.yml --ref master`
 
-A newer push to the same ref cancels a run that is still going.
+Which runs cancel which (#119):
+- **A pull request's runs:** a newer push to the PR's branch cancels that PR's run that is still going; only its
+  latest commit matters. Their concurrency group is `tests-refs/pull/<n>/merge`, one per PR.
+- **Runs on `master` (a merged PR) and manual runs:** never cancelled. Each has a group of its own (keyed by its run
+  id), so two merges in quick succession get one run each, and every merged commit is checked. These runs can
+  overlap: when watching `master` after a merge, pick the run for the merged head's SHA, not just the latest run.
 
 The single build step:
 
@@ -83,6 +88,12 @@ for the failing assertion before changing the test.
   ([[2026-11-09-pull-request-workflow]]), and the PR's green run is a merge gate. The run on `master` after a merge
   checks the rebased commits on the `master` they landed on. Until 2026-11-09 work was pushed straight to `master`,
   and CI ran only after the push. The `pull_request` trigger was added that day for Dependabot's PRs (`2fb04af`).
+- **`master` runs are never cancelled** (#119). Until 2026-11-10 every run shared the group `tests-<ref>` with
+  `cancel-in-progress: true`, so a second merge cancelled the first merge's run on `master` (runs 41074550651 and
+  41406854925), and that commit was never checked there. `cancel-in-progress: false` alone wouldn't do: a group holds
+  one running and one pending run, and a newer run replaces the pending one, so a third quick merge would still
+  cancel the second's run. Hence a unique group per non-PR run. The cost: overlapping `master` runs use more Actions
+  minutes, and both may try to save the same cache key, which `actions/cache` only warns about.
 - **Basic Gradle caching** (`cache-provider: basic`). `setup-gradle` v6 defaults to a proprietary "enhanced"
   cache, which is a free preview for private repos with pricing announced for later. The basic provider is MIT and
   uses `actions/cache`.
