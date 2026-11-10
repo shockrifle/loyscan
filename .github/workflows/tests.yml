@@ -8,9 +8,11 @@ on:
     branches: [master]
   workflow_dispatch:
 
+# A newer push to a PR cancels that PR's older run. Every other run (a push to master, a manual run) has a group of its
+# own, so none is ever cancelled or replaced (#119): wiki/workflows/ci.md -> What runs
 concurrency:
-  group: tests-${{ github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.event_name == 'pull_request' && format('tests-{0}', github.ref) || format('tests-run-{0}', github.run_id) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   test:

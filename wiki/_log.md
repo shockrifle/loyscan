@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-10 · CI: only a pull request's runs cancel each other; every run on master (and every manual run) has its own concurrency group and is never cancelled · workflows/ci · #119
 - 2026-11-10 · review fixes for #123/#59: the wait-timeout scan skips strings nested in a string template, and its declaration, escape and char-literal cases are pinned by snippet tests · (no page change; workflows/tdd row still accurate) · PR #129 review
 - 2026-11-10 · app tests wait for an edit form's field, not its title, before typing: the title shows before the card or store has loaded · workflows/tdd · #123
 - 2026-11-10 · WAIT_TIMEOUT_MS moved to testing/Waits.kt and passed by every wait; WaitTimeoutsTest, a new kind of test that reads the test sources, fails on a wait left on the 1 s default · workflows/tdd, architecture · #59
