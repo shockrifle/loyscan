@@ -3,9 +3,9 @@ package com.bdaniel.loyscan.domain.cardnumber
 import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.domain.cardnumber.CardNumberRule.CheckDigit
 import com.bdaniel.loyscan.domain.cardnumber.CardNumberRule.Display
+import com.bdaniel.loyscan.testing.rootCause
 import kotlinx.serialization.SerializationException
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertThrows
 import org.junit.Test
 
@@ -123,8 +123,9 @@ class CardNumberRulesTest {
         )
         for (rule in invalid) {
             val e = assertThrows(rule, IllegalArgumentException::class.java) { CardNumberRules.parse("[$rule]") }
-            // SerializationException extends IllegalArgumentException; make sure a rule check fired, not a JSON error.
-            assertFalse(rule, e is SerializationException)
+            // Make sure a rule check (require) fired, not a JSON error. Since kotlinx.serialization 1.12 the check's
+            // IllegalArgumentException arrives as the cause of a JsonException.
+            assertEquals(rule, IllegalArgumentException::class.java, e.rootCause.javaClass)
         }
     }
 
@@ -182,7 +183,7 @@ class CardNumberRulesTest {
         )
         for (rule in invalid) {
             val e = assertThrows(rule, IllegalArgumentException::class.java) { CardNumberRules.parse("[$rule]") }
-            assertFalse(rule, e is SerializationException)
+            assertEquals(rule, IllegalArgumentException::class.java, e.rootCause.javaClass)
         }
     }
 

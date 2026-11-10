@@ -95,7 +95,9 @@ for the failing assertion before changing the test.
 
 `.github/dependabot.yml` opens update PRs once a week, at most 5 open at a time for Gradle:
 - **Gradle** (`gradle/libs.versions.toml`). Kotlin, the serialization plugin and KSP come as one grouped PR, because
-  their versions are coupled ([[build-and-run]] → Dependencies); all `androidx.*` libraries come as another.
+  their versions are coupled ([[build-and-run]] → Dependencies); all `androidx.*` libraries come as another. Hilt,
+  AGP and the Gradle wrapper come one PR each, though a Kotlin minor needs a Hilt release that reads its metadata
+  and new androidx releases can need a newer AGP and compileSdk; such a PR fails alone and waits (below).
   `kotlinx-coroutines-test` is ignored: it must match the coroutines version the app resolves transitively, which
   Dependabot can't see, so bump it by hand when that changes.
 - **GitHub Actions** (the `uses:` versions in the workflows), all in one PR.
@@ -110,10 +112,10 @@ bumped (Caches, above).
   for changes that touch how LoyScan uses the library, checks the coupling rules in [[build-and-run]] →
   Dependencies, and greps the wiki for the old version. A page that names it is updated in a commit pushed onto the
   Dependabot branch before the merge.
-- **Waiting** when the bump fails because it needs other bumps at the same time (Kotlin, Hilt, AGP and Gradle:
-  #110, #112, #114 wait for #115). It stays open with a comment naming the joint-upgrade issue. Once that upgrade
-  lands, Dependabot closes a PR whose version is already reached on its next run (Dependabot's documented
-  behaviour, not yet seen here).
+- **Waiting** when the bump fails because it needs other bumps at the same time (Kotlin, Hilt, AGP, Gradle and
+  compileSdk: #110, #111, #112 and #114 waited for #115, which landed their versions). It stays open with a comment
+  naming the joint-upgrade issue. Once that upgrade lands, Dependabot closes a PR whose version is already reached on
+  its next run (Dependabot's documented behaviour, not yet seen here).
 - **Rebased** (`@dependabot rebase`) when CI failed before the build ran, e.g. on the Gradle download. Dependabot
   rebuilds the branch on the current `master`, so the run uses `master`'s workflow; a rerun from the Actions tab
   would reuse the old merge commit.

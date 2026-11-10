@@ -125,6 +125,10 @@ Shared helpers are in `testing/`:
   the photo to load writes one there with `File.writeOnePixelPng()` (`testing/PhotoFiles.kt`) and waits for it in the
   app loader's memory cache, idling the main looper (`ListScreenTest.aCardWithAFrontPhoto_…`); a name with no file
   there is a photo that fails to load (`aFrontPhotoThatCantBeLoaded_…`).
+- **`Throwable.rootCause`** (`testing/Throwables.kt`): the innermost cause. A parser test that must tell a rule check
+  from a JSON error asserts the root cause is exactly `IllegalArgumentException` (what `require` throws): since
+  kotlinx-serialization 1.12 the check's exception is wrapped in a `JsonException`, and a JSON error's root is the
+  `JsonException` itself (`CardNumberRulesTest.parse_rejectsInvalidRuleDefinitions`, #115).
 - **`MainDispatcherRule`** for anything that uses `viewModelScope`. A timer in a ViewModel takes its duration as a
   constructor parameter (`ScannerViewModel(hintDelay)`): `advanceTimeBy` tests it in virtual time, and a screen test
   passes `Duration.ZERO`. A timeout around work on another thread fires at once under `runTest`, which jumps virtual
