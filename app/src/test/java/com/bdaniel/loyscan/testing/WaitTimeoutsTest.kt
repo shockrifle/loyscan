@@ -65,6 +65,32 @@ class WaitTimeoutsTest {
     }
 
     @Test
+    fun declaringAWait_isNotACall() {
+        assertThat(waitsOnTheDefaultTimeout("private fun waitUntilLoaded(tag: String) = done")).isEmpty()
+    }
+
+    @Test
+    fun anEscapedQuote_doesNotEndTheString() {
+        assertThat(waitsOnTheDefaultTimeout("""val s = "say \"waitUntil { done }\" twice"""")).isEmpty()
+    }
+
+    @Test
+    fun aQuoteInACharLiteral_doesNotOpenAString() {
+        assertThat(waitsOnTheDefaultTimeout("""val q = '"'; composeRule.waitUntil { done }""")).containsExactly(1)
+    }
+
+    @Test
+    fun aStringInsideATemplate_doesNotEndTheOuterString() {
+        val source = """
+            |val s = "${'$'}{name("waitUntil { done }")} waitUntil { done }"
+            |val t = "${'$'}{if (a) "}" else "{"} waitUntil { done }"
+            |label = "${'$'}{name("x")}"; composeRule.waitUntil { done }
+        """.trimMargin()
+
+        assertThat(waitsOnTheDefaultTimeout(source)).containsExactly(3)
+    }
+
+    @Test
     fun everyWaitInTheTests_passesTheSharedTimeout() {
         val files = File("src/test/java").walk().filter { it.isFile && it.extension == "kt" }.toList()
         assertThat(files.filter { "waitUntil" in it.readText() }).isNotEmpty() // the walk found the tests
