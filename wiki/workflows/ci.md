@@ -120,7 +120,14 @@ bumped (Caches, above).
   rebuilds the branch on the current `master`, so the run uses `master`'s workflow; a rerun from the Actions tab
   would reuse the old merge commit. If Dependabot ignores it, `@dependabot recreate` (rebuilds the branch from
   scratch, dropping any pushed commits): on 2026-11-09 a `rebase` on #111 and #113 started no update job in 3 hours,
-  and `recreate` started one within minutes (the cause wasn't visible).
+  and `recreate` started one within minutes (the cause wasn't visible). On 2026-11-10 a `recreate` on #114 was
+  ignored too. An accepted command gets a 👍 reaction from Dependabot and an update job within seconds; the ignored
+  ones got neither, and no GitHub incident covered those times. So when a `recreate` is ignored as well,
+  `/dependency-pr` rebases the branch onto `master` itself and force-pushes it.
+- **A wiki commit on a Dependabot branch can conflict later.** GitHub's merge ignores the `merge=union` driver for
+  `wiki/_log.md` (`.gitattributes`), so a branch carrying a `_log` line conflicts as soon as `master` adds one, and
+  CI no longer runs on it (#114, 2026-11-10). Dependabot doesn't rebase a branch someone else pushed to, so
+  `/dependency-pr` rebases it itself; locally the union driver merges the file.
 - **Left for the user** when the review finds a breaking change that needs code, or the build fails for another
   reason. The fix goes through its own issue and PR. Dependabot labels its PRs
 `dependencies`, a label outside the issue vocabulary in [[CLAUDE]]; it applies to PRs only.

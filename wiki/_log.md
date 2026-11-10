@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-10 · an ignored `@dependabot recreate` (#114): /dependency-pr rebases the branch itself and force-pushes; GitHub ignores the _log union driver, so a wiki commit on a Dependabot branch can conflict · workflows/ci, (.claude/commands/dependency-pr) · /dependency-pr run 2026-11-10
 - 2026-11-10 · Gradle wrapper 9.8.2 → 9.9.0: version in the coupling note · workflows/build-and-run · Dependabot #114
 - 2026-11-10 · `@dependabot recreate` when `rebase` is ignored (seen on #111 and #113); /dependency-pr asks for it · workflows/ci, (.claude/commands/dependency-pr) · /dependency-pr run 2026-11-09
 - 2026-11-10 · review fix for #115: the retro skill no longer cites the retired JVM-target runbook as a live failure · (.claude/skills/retro) · #115 review
