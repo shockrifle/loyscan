@@ -31,7 +31,9 @@ them ([[ci]]). The same day the user decided that pull requests should be the no
 - `/next-task` now confirms the plan with the user before any code is written: a read-only `plan-critic` subagent
   (`.claude/agents/plan-critic.md`) checks it first, and the plan names the seam each test goes through ([[tdd]]).
 - Dependabot PRs are reviewed **and merged by the agent** with `/dependency-pr`; a bump that needs a joint upgrade
-  waits for that upgrade's issue ([[ci]] → Dependabot).
+  waits for that upgrade's issue ([[ci]] → Dependabot). Since 2026-11-10 the command may also rebase a Dependabot
+  branch onto `master` and force-push it, when Dependabot ignores a `recreate` or the PR conflicts with `master`:
+  without it such a PR can't be finished (#114, [[ci]] → Dependabot).
 - Without branch protection, "merge only after green CI and review" is a rule the commands follow, not something
   GitHub enforces.
 

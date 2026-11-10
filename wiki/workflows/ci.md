@@ -123,11 +123,16 @@ bumped (Caches, above).
   and `recreate` started one within minutes (the cause wasn't visible). On 2026-11-10 a `recreate` on #114 was
   ignored too. An accepted command gets a 👍 reaction from Dependabot and an update job within seconds; the ignored
   ones got neither, and no GitHub incident covered those times. So when a `recreate` is ignored as well,
-  `/dependency-pr` rebases the branch onto `master` itself and force-pushes it.
-- **A wiki commit on a Dependabot branch can conflict later.** GitHub's merge ignores the `merge=union` driver for
-  `wiki/_log.md` (`.gitattributes`), so a branch carrying a `_log` line conflicts as soon as `master` adds one, and
-  CI no longer runs on it (#114, 2026-11-10). Dependabot doesn't rebase a branch someone else pushed to, so
-  `/dependency-pr` rebases it itself; locally the union driver merges the file.
+  `/dependency-pr` rebases the branch onto `master` itself and force-pushes it (below).
 - **Left for the user** when the review finds a breaking change that needs code, or the build fails for another
   reason. The fix goes through its own issue and PR. Dependabot labels its PRs
 `dependencies`, a label outside the issue vocabulary in [[CLAUDE]]; it applies to PRs only.
+
+**Rebasing a Dependabot branch ourselves** (2026-11-10). `/dependency-pr` may rebase a Dependabot branch onto
+`master` and `git push --force-with-lease` it, in two cases: Dependabot ignored a `recreate` (above), or the PR
+conflicts with `master`. The second comes from a wiki commit pushed onto the branch: GitHub's merge ignores the
+`merge=union` driver for `wiki/_log.md` (`.gitattributes`), so a branch with a `_log` line conflicts as soon as
+`master` adds one, and CI no longer runs on it (#114). Dependabot doesn't rebase a branch someone else pushed to, so
+the command rebases it and finishes the PR in the same run, review included. Locally the union driver merges
+`_log.md` without stopping but puts `master`'s new lines first, so the branch's newer line is moved back to the
+top.
