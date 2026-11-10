@@ -42,9 +42,8 @@ to improve future runs. Target: `$ARGUMENTS`
   lead the agent wrong, stall at a step, or ask the user something it could have looked up? _Use when_ the
   session ran one of them.
 - **Tool economy**: did the agent make expensive tool calls that could be streamlined: a full Gradle build where
-  one test class would do, a whole-suite run in a loop, reading huge files or transcripts whole, a CLI build that
-  failed on the JVM target (`wiki/runbooks/cli-build-jvm-target-mismatch.md`)? _Use when_ the agent made an
-  expensive tool call.
+  one test class would do, a whole-suite run in a loop, reading huge files or transcripts whole, a build retried
+  without reading why it failed? _Use when_ the agent made an expensive tool call.
 - **No-ops**: instructions in steering files that don't change the agent's behaviour. _Use when_ the steering
   files are large and unwieldy.
 - **Information access**: could the agent have had information it lacked: device logcat, a CI run's report, an
