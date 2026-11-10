@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-10 · review fixes for #123/#59: the wait-timeout scan skips strings nested in a string template, and its declaration, escape and char-literal cases are pinned by snippet tests · (no page change; workflows/tdd row still accurate) · PR #129 review
 - 2026-11-10 · app tests wait for an edit form's field, not its title, before typing: the title shows before the card or store has loaded · workflows/tdd · #123
 - 2026-11-10 · WAIT_TIMEOUT_MS moved to testing/Waits.kt and passed by every wait; WaitTimeoutsTest, a new kind of test that reads the test sources, fails on a wait left on the 1 s default · workflows/tdd, architecture · #59
 - 2026-11-10 · review fixes for the Dependabot self-rebase: its own step reached from step 2 (ignored recreate, conflicting PR) and step 4, review kept, _log order fixed by hand after the union merge; the force-push noted in the PR-workflow decision · workflows/ci, decisions/2026-11-09-pull-request-workflow, (.claude/commands/dependency-pr) · PR #128 review

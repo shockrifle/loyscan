@@ -60,11 +60,37 @@ private fun blankCommentsAndStrings(source: String): String {
     return out.toString()
 }
 
-/** The index after the closing quote of the string or char literal opening at [start], skipping escapes. */
+/**
+ * The index after the closing quote of the string or char literal opening at [start], skipping escapes and a string's
+ * `${…}` templates, whose own strings would otherwise end it early.
+ */
 private fun quotedEnd(source: String, start: Int): Int {
+    val quote = source[start]
     var i = start + 1
-    while (i < source.length && source[i] != source[start] && source[i] != '\n') {
-        i += if (source[i] == '\\') 2 else 1
+    while (i < source.length && source[i] != quote && source[i] != '\n') {
+        i = when {
+            source[i] == '\\' -> i + 2
+            quote == '"' && source.startsWith("\${", i) -> templateEnd(source, i + 2)
+            else -> i + 1
+        }
     }
     return minOf(i + 1, source.length)
+}
+
+/** The index after the `}` closing a template whose expression starts at [start], skipping the strings in it. */
+private fun templateEnd(source: String, start: Int): Int {
+    var depth = 1
+    var i = start
+    while (i < source.length && source[i] != '\n') {
+        when (source[i]) {
+            '"', '\'' -> {
+                i = quotedEnd(source, i)
+                continue
+            }
+            '{' -> depth++
+            '}' -> if (--depth == 0) return i + 1
+        }
+        i++
+    }
+    return i
 }

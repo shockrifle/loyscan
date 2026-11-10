@@ -156,4 +156,3 @@ private const val PICTURE = "content://media/picker/0/42"
 private const val SHARE_IN_A_TASK_OF_ITS_OWN =
     Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK or Intent.FLAG_ACTIVITY_NEW_DOCUMENT
 private val EAN_13_SCAN = ScannedBarcode("5901234123457", BarcodeFormat.EAN_13)
-
