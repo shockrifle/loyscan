@@ -58,7 +58,8 @@ issues, other PRs) needs my go-ahead.
 
 ## 2. Finish
 
-Switch back to the branch you started on. After any merge, watch the CI run on `master` for the merged head, picked by its SHA (`gh run list --branch master
---event push --commit <sha>`, then `gh run watch <id>`); a red
+Switch back to the branch you started on. After any merge, watch the CI run on `master` for the merged head, picked by its SHA
+(`gh run list --branch master --event push --commit <sha>`, then `gh run watch <id>`; retry an empty list, the run
+can take a few seconds to appear); a red
 `master` comes first, so investigate and report it. Report each PR: merged (and the `master` SHA), waiting (for
 which issue), rebased, or left open for me (and why).
