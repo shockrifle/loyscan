@@ -185,7 +185,7 @@ Required before declaring done:
 - [ ] Regression test passes (or the absence of a seam is reported)
 - [ ] All `[DEBUG-` instrumentation removed (`git grep '\[DEBUG-'` is empty)
 - [ ] Throwaway harnesses and HITL scripts deleted from the repo (they live in the scratchpad)
-- [ ] `./gradlew testDebugUnitTest koverVerify` passes
+- [ ] `./gradlew testDebugUnitTest koverVerify lintDebug` passes
 - [ ] The hypothesis that turned out correct is stated in the commit message, with `Fixes #N` / `Refs #N`
 - [ ] The wiki checklist in `wiki/CLAUDE.md`: a surprising root cause or a class of bug likely to recur gets a
   `wiki/bugs/YYYY-MM-DD-<slug>.md` postmortem; a recurring failure gets a runbook

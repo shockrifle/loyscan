@@ -40,7 +40,8 @@ get written, new code would go back to being tested afterwards, or not at all.
    faked; it runs for real, in memory. No mocking library is a dependency.
 5. **Coverage:** about 80 % line coverage overall and at least 90 % for `domain/`, `data/` and the ViewModels.
    `koverVerify` enforces the bound and it is only ever raised ([[2026-10-09-coverage-gate-kover]]).
-   `./gradlew testDebugUnitTest koverVerify` passes before every commit.
+   `./gradlew testDebugUnitTest koverVerify` passes before every commit (since 2026-11-11 with `lintDebug` too,
+   #126, [[ci]]).
 6. **Acceptance criteria are testable statements** (see [[CLAUDE]] → GitHub Issues vs this wiki), so each
    criterion maps to one or more tests.
 

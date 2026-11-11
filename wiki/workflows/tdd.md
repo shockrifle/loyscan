@@ -152,6 +152,7 @@ screens, and an `Executor` into callbacks. See [[architecture]] → Testing seam
 
 - `./gradlew testDebugUnitTest`: all tests. Report: `app/build/reports/tests/testDebugUnitTest/index.html`.
 - `./gradlew koverVerify`: the coverage gate (it runs the tests too). `./gradlew check` runs it as well.
+- `./gradlew lintDebug`: Android lint; an error fails it, and the gate and CI include it (#126).
 - `./gradlew koverHtmlReportDebug`: line-by-line report at `app/build/reports/kover/htmlDebug/index.html`. Red
   lines are untested. Look at them before deciding a test is "done".
 - More on the commands and the test libraries: [[build-and-run]] → Tests. CI runs the same gate on every PR, as a merge gate,

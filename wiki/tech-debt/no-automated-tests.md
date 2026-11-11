@@ -22,7 +22,8 @@ Progress (2026-10-09):
   [[2026-10-09-missing-card-throws-from-room]].
 - Test-first is the default (#28): [[2026-10-12-tdd-and-coverage]], how-to in [[tdd]]. It is in the root
   `CLAUDE.md`, and `/review-changes` enforces it.
-- CI (#29): GitHub Actions runs `testDebugUnitTest koverVerify` on every push to `master` — [[ci]].
+- CI (#29): GitHub Actions runs `testDebugUnitTest koverVerify` on every push to `master`, and on every PR since
+  2026-11-09; lint too since 2026-11-11 (#126) — [[ci]].
 
 ## Why it exists
 Early prototype phase (20 commits, 2025-12-03 → 2025-12-12).
