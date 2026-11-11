@@ -54,7 +54,11 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   the crop screen; the staged name and its side go into the `SavedStateHandle` (keys `cropPhoto` / `cropSide`), so the
   crop screen survives process death as a capture does. Once framed, the stored photo's name goes into the
   `SavedStateHandle` (keys `frontPhoto` / `backPhoto`; `""` means removed). A photo staged for the crop screen but never
-  framed is left to the sweep, like an abandoned pick (#95). Replacing or removing a photo picked in this form deletes that copy at once. The edited card's own photo stays
+  framed is left to the sweep, like an abandoned pick (#95). Replacing or removing a photo picked in this form deletes that copy at once,
+  unless a save was handed it: `save()` lists the picks it hands over in the saved state (key `savedPhotos`) before
+  it starts, and a pick on that list may be named by a stored card, e.g. in a form restored after its save stored the
+  card, so it stays until the form's own save drops it from the card (the repository deletes it then) or the sweep
+  finds no card naming it (#141). A failed save takes back the names it added. The edited card's own photo stays
   until the edit is saved, then the repository deletes it. A form closed without saving leaves the copies picked in
   it to the orphan sweep (Orphans): `onCleared` deletes nothing, because it also runs when the activity is destroyed
   with the form still on the back stack and its process alive ("Don't keep activities", a background kill), and the
@@ -62,6 +66,7 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   capture, below, has the same reason). Such a restored form saves the same card again, not a second one
   ([[2026-11-11-restored-form-saved-a-duplicate]], #99). A form closed while its save runs leaves them to the save; if that save then
   fails it keeps the picks too (for the same reason — the clear may be an activity destroy), and they go to the sweep.
+  A form still open after its save failed deletes a pick it then replaces or removes at once, as before saving.
 - **Taking a photo** opens the system camera app (`ACTION_IMAGE_CAPTURE` through `ActivityResultContracts.TakePicture`,
   `ui/PhotoCamera.kt`, `rememberPhotoCamera`), not a camera screen of LoyScan's own. Because the manifest declares the
   camera permission for the scanner, Android refuses that intent until the permission is granted, so "Take photo" asks

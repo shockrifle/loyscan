@@ -295,7 +295,8 @@ class CardFormViewModel @Inject constructor(
     /**
      * Stores the photo framed in the crop screen (#10): the staged picture re-encoded, cropped to [crop]
      * ([com.bdaniel.loyscan.data.photos.PhotoCrop.WHOLE] keeps it all). A photo picked earlier in this form for that
-     * side is deleted; the edited card's own goes when the edit is saved. A crop that fails says so.
+     * side is deleted, unless a save was handed it ([discardUnlessSaved]); the edited card's own goes when the edit is
+     * saved. A crop that fails says so.
      */
     fun confirmCrop(crop: PhotoCrop) {
         val name = savedStateHandle.get<String>(CROP_PHOTO) ?: return
@@ -315,7 +316,7 @@ class CardFormViewModel @Inject constructor(
             val replaced = picked(side)
             savedStateHandle[side.key] = cropped
             progress.update { it.copy(importing = null) }
-            replaced?.let { photos.discard(listOf(it)) }
+            discardUnlessSaved(replaced)
         }
     }
 
@@ -356,8 +357,19 @@ class CardFormViewModel @Inject constructor(
         if (!canChangePhotos()) return
         val replaced = picked(side)
         savedStateHandle[side.key] = REMOVED
-        replaced?.let { photos.discard(listOf(it)) }
+        discardUnlessSaved(replaced)
     }
+
+    /**
+     * Deletes a pick this form replaced or removed, unless a save was handed it (#141): a card may name it then (a form
+     * restored after its save stored the card drafts that card), so the file stays until this form saves the change,
+     * when the repository's update deletes it, or the orphan sweep finds no card naming it.
+     */
+    private fun discardUnlessSaved(name: String?) {
+        if (name != null && name !in handedToSaves()) photos.discard(listOf(name))
+    }
+
+    private fun handedToSaves(): List<String> = savedStateHandle.get<ArrayList<String>>(SAVED_PHOTOS).orEmpty()
 
     /**
      * Deliberately deletes nothing (#95). onCleared also runs when the activity is destroyed with the form still on the
@@ -400,6 +412,10 @@ class CardFormViewModel @Inject constructor(
         )
         val drafted = original?.let { draft } ?: draft.copy(id = checkNotNull(newCardId), createdAt = now)
         val picked = pickedNames()
+        // Before the save starts, so the state the activity saves when it stops carries it (#141, as newCardId for #99).
+        val listed = handedToSaves()
+        val handed = picked.filterNot { it in listed }
+        savedStateHandle[SAVED_PHOTOS] = ArrayList(listed + handed)
         viewModelScope.launch {
             progress.value = try {
                 withContext(NonCancellable) {
@@ -420,6 +436,8 @@ class CardFormViewModel @Inject constructor(
                 throw e
             } catch (e: Exception) { // a failed insert mustn't crash the form (#49)
                 Timber.e(e, "Couldn't save the card")
+                // No card names the picks this save added; those listed before may be named by an earlier save's card.
+                savedStateHandle[SAVED_PHOTOS] = ArrayList(handedToSaves() - handed.toSet())
                 Progress(saveFailed = true)
             }
         }
@@ -569,6 +587,9 @@ class CardFormViewModel @Inject constructor(
         const val TYPED_NUMBER = "typedNumber"
         const val FRONT_PHOTO = "frontPhoto"
         const val BACK_PHOTO = "backPhoto"
+
+        /** The photos picked in this form that a save was handed (#141): a card may name them, so they aren't discarded. */
+        const val SAVED_PHOTOS = "savedPhotos"
 
         /** The id a new card is saved under (#99), kept from the add form's creation. */
         const val NEW_CARD_ID = "newCardId"

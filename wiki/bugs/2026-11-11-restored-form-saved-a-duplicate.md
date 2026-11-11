@@ -1,6 +1,6 @@
 # A card form restored mid-save could save the card twice
 
-**Fixed in:** #99 · **Date:** 2026-11-11 · **Area:** [[add-card]], [[card-photos]]
+**Fixed in:** #99 (its photo case: #141) · **Date:** 2026-11-11 · **Area:** [[add-card]], [[card-photos]]
 
 ## Symptom
 
@@ -32,13 +32,25 @@ and the retry updates. The window is one insert against an activity being recrea
 
 Accepted: a restored form's Save writes the form's fields over the card, so an edit made to that card elsewhere in
 the meantime (opened from the home-screen widget, then Back to the old form) is overwritten. Before the fix that Save
-added a duplicate instead. Removing or re-cropping, in the restored form, a photo the first save stored deletes that
-file at once, as it did before the fix; if the form is then left without saving, the card names a missing file and
-shows no photo for that side (#87).
+added a duplicate instead.
+
+Fixed later (#141): removing or re-cropping, in the restored form, a photo the first save stored deleted that file at
+once; if the form was then left without saving, the card named a missing file and showed no photo for that side
+(#87). The form now writes the names of the picks it hands to a save into the saved state (key `savedPhotos`) before
+the save starts, as it does the id, and doesn't discard a pick on that list: it is left to the form's own save, whose
+`update` deletes the photo the card drops, or to the orphan sweep. A save that fails takes back only the names it
+added, since a restored form can't tell whether the save before it stored the card. Tests:
+`CardFormViewModelTest.aFormRestoredAfterItsCardWasSaved_removingItsPhotoWithoutSaving_keepsThePhoto`,
+`…_reCroppingItsPhotoWithoutSaving_keepsThePhoto`, `…_savingItsPhotoRemoval_deletesThePhoto`,
+`…_whoseOwnSaveFails_stillKeepsThePhotoOnRemoval`,
+`anEditFormRestoredAfterItsSave_removingThePickedPhotoWithoutSaving_keepsThePhoto`,
+`aFailedSave_thenRemovingItsPhoto_deletesItAtOnce`.
 
 ## Lessons
 
 - State a restored screen must know goes into the saved state **before** the work it describes starts, not when it
   ends: the activity's snapshot may already have been taken.
 - Test a restore from a snapshot of the handle taken where the activity would save its state, not from the same
-  handle object ([[tdd]] → Fixtures and doubles).
+  handle object ([[tdd]] → Fixtures and doubles). Once Save is tapped, that is after `save()` returns and before the
+  save ends (a gate on the fake repository holds it): state `save()` writes is in the snapshot (#141), state the save
+  writes when it ends is not.
