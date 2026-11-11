@@ -31,6 +31,8 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   Replace and Remove icons ("Replace front photo", "Remove front photo"); Replace opens the same menu. While a picture
   is copied in or framed, the slot shows a progress indicator, and neither Save nor another photo is possible. A picture that can't be copied (e.g. a cloud photo that won't download) says "The
   photo couldn't be added. Try again."; the next pick clears it. Once saving has started, photos can't be changed.
+  These texts and the crop screen's are string resources, in Hungarian on a Hungarian phone ("Előoldali fotó
+  hozzáadása", "Kivágás"); each side's label is a whole string, not "Add" + the side's name ([[add-a-string]], #72).
 - **Framing a photo** ([[2026-11-04-card-photos-interactive-crop]]): every picked or taken picture opens full screen in
   the crop screen (`PhotoCropScreen`, `PHOTO_CROP_TAG`) behind a fixed card-ratio frame. The user pans and pinch-zooms
   the picture within it (the frame stays covered; up to 8× zoom). **Crop** stores the framed part, **Use whole photo**

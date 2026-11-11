@@ -175,10 +175,10 @@ class CardFormScreenTest {
 
     @Test
     @Config(qualifiers = "+hu")
-    fun inHungarian_aScannedQrCode_namesItsFormatInHungarian() { // #72; the line's prefix moves with the form
+    fun inHungarian_aScannedQrCode_namesItsFormatInHungarian() { // #72
         setScreen(CardForm("plain", scannedContent = "ABC-123", scannedFormat = BarcodeFormat.QR_CODE))
 
-        composeRule.onNodeWithText("Scanned · QR-kód").assertIsDisplayed()
+        composeRule.onNodeWithText("Beolvasva · QR-kód").assertIsDisplayed()
     }
 
     @Test
@@ -254,12 +254,12 @@ class CardFormScreenTest {
 
     @Test
     @Config(qualifiers = "+hu")
-    fun inHungarian_theStoreChooser_isTranslated() { // #72; the form behind it is translated in its own slice
+    fun inHungarian_theStoreChooser_isTranslated() { // #72
         cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, label = "Gold card", number = "12345674"))
         setScreen(CardForm("ruled", cardId = cardId(1)))
         val shown = ShownTexts(composeRule)
 
-        composeRule.onNodeWithText("Change store").performClick()
+        composeRule.onNodeWithText("Másik bolt").performClick()
         composeRule.onNodeWithTag(STORE_SEARCH_TAG).performTextInput("xyz")
         shown.collect()
 
@@ -528,7 +528,196 @@ class CardFormScreenTest {
         assertThat(camera.settingsOpened).isEqualTo(1)
     }
 
-    private fun setScreen(route: CardForm, camera: FakePhotoCamera = FakePhotoCamera(available = false)) {
+    @Test
+    @Config(qualifiers = "+hu")
+    fun inHungarian_everyTextOnTheNewCardForm_isTranslated() { // #72
+        setScreen(CardForm("ruled"), FakePhotoCamera())
+        val shown = ShownTexts(composeRule)
+        shown.collect()
+
+        // One problem at a time: a number with two shows both messages in one line.
+        listOf("123", "12345675", "1234567A", "123456741", "12345674").forEach { number ->
+            typeNumber(number)
+            shown.collect()
+        }
+        composeRule.onNodeWithText("Előoldali fotó hozzáadása").performScrollTo().performClick()
+        shown.collect()
+        composeRule.onNodeWithText("Választás a galériából").performClick()
+        shown.collect()
+        composeRule.onNodeWithText("Kivágás").performClick()
+        shown.collect()
+        cards.addFailure = IllegalStateException("insert failed")
+        typeNumber("12345675")
+        composeRule.onNodeWithText("Mentés így is").performScrollTo().performClick()
+        composeRule.onNodeWithText("Nem sikerült menteni a kártyát. Próbáld újra.").performScrollTo()
+        shown.collect()
+
+        shown.assertEveryTextIsTranslated("Ruled Store")
+        shown.assertSeen(
+            "Kártya hozzáadása",
+            "Vissza",
+            "Kártyaszám",
+            "Címke (nem kötelező)",
+            "Megjegyzés (nem kötelező)",
+            "Előoldali fotó hozzáadása",
+            "Hátoldali fotó hozzáadása",
+            "Mentés",
+            "Túl rövid Ruled Store kártyaszámnak.",
+            "Az ellenőrző számjegy nem egyezik. Nézd meg, nincs-e elírás a számban.",
+            "Ruled Store kártyaszámban nem lehet ilyen karakter.",
+            "Túl hosszú Ruled Store kártyaszámnak.",
+            "Megjelenítve: 1234 5674",
+            "Fotó készítése",
+            "Választás a galériából",
+            "Mégse",
+            "Az egész fotó",
+            "Kivágás",
+            "Előoldali fotó cseréje",
+            "Előoldali fotó eltávolítása",
+            "Mentés így is",
+            "Nem sikerült menteni a kártyát. Próbáld újra.",
+        )
+    }
+
+    @Test
+    @Config(qualifiers = "+hu")
+    fun inHungarian_editingACard_isTranslated() { // #72
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, number = "12345674", backPhotoPath = "back"))
+        photos.stored += "back"
+        setScreen(CardForm("ruled", cardId = cardId(1)))
+        val shown = ShownTexts(composeRule)
+
+        shown.collect()
+
+        shown.assertEveryTextIsTranslated("Ruled Store")
+        shown.assertSeen(
+            "Kártya szerkesztése",
+            "Másik bolt",
+            "Hátoldali fotó",
+            "Hátoldali fotó cseréje",
+            "Hátoldali fotó eltávolítása",
+        )
+    }
+
+    @Test
+    @Config(qualifiers = "+hu")
+    fun inHungarian_aScanAnotherStoresRuleReads_isTranslated() { // #72
+        setScreen(CardForm("nine", scannedContent = "12345674", scannedFormat = BarcodeFormat.CODE_128))
+        val shown = ShownTexts(composeRule)
+
+        shown.collect()
+
+        shown.assertEveryTextIsTranslated("Nine Store", "Ruled Store")
+        shown.assertSeen(
+            "Ez a vonalkód nem tűnik Nine Store kártyának.",
+            "Ezek közül valamelyik bolt kártyájának tűnik:",
+            "Beolvasva · Code 128",
+        )
+    }
+
+    @Test
+    @Config(qualifiers = "+hu")
+    fun inHungarian_aScanShownAsPrinted_offersToTypeTheNumber() { // #72
+        setScreen(CardForm("plain", scannedContent = "0109501101530003" + "\u001D" + "10ABC", scannedFormat = BarcodeFormat.GS1_128))
+        val shown = ShownTexts(composeRule)
+
+        shown.collect()
+
+        shown.assertEveryTextIsTranslated("Plain Store")
+        shown.assertSeen("Inkább beírom a számot")
+    }
+
+    @Test
+    @Config(qualifiers = "+hu")
+    fun inHungarian_aNumberTheStoresBarcodeCantHold_saysSo() { // #72
+        setScreen(CardForm("ean"))
+        val shown = ShownTexts(composeRule)
+
+        typeNumber("1234")
+        shown.collect()
+
+        shown.assertEveryTextIsTranslated("Ean Store")
+        shown.assertSeen("Vonalkód: EAN-13", "Ez a szám nem érvényes ebben a formátumban: EAN-13.")
+    }
+
+    @Test
+    @Config(qualifiers = "+hu")
+    fun inHungarian_aNumberThatStartsWrong_saysSo() { // #72
+        setScreen(CardForm("nine"))
+        val shown = ShownTexts(composeRule)
+
+        typeNumber("12345674")
+        shown.collect()
+
+        shown.assertEveryTextIsTranslated("Nine Store")
+        shown.assertSeen("Nine Store kártyaszám nem így kezdődik.")
+    }
+
+    @Test
+    @Config(qualifiers = "+hu")
+    fun inHungarian_aCameraDenied_saysSo() { // #72
+        setScreen(CardForm("ruled"), FakePhotoCamera().apply { answer = PhotoCamera.Result.DENIED })
+        val shown = ShownTexts(composeRule)
+
+        composeRule.onNodeWithText("Előoldali fotó hozzáadása").performScrollTo().performClick()
+        composeRule.onNodeWithText("Fotó készítése").performClick()
+        shown.collect()
+
+        shown.assertEveryTextIsTranslated("Ruled Store")
+        shown.assertSeen("A kártya lefotózásához a LoyScannek szüksége van a kamerára.")
+    }
+
+    @Test
+    @Config(qualifiers = "+hu")
+    fun inHungarian_aCameraDeniedForGood_saysSo() { // #72
+        setScreen(CardForm("ruled"), FakePhotoCamera().apply { answer = PhotoCamera.Result.DENIED_PERMANENTLY })
+        val shown = ShownTexts(composeRule)
+
+        composeRule.onNodeWithText("Előoldali fotó hozzáadása").performScrollTo().performClick()
+        composeRule.onNodeWithText("Fotó készítése").performClick()
+        composeRule.onNodeWithText("Beállítások megnyitása").performScrollTo()
+        shown.collect()
+
+        shown.assertEveryTextIsTranslated("Ruled Store")
+        shown.assertSeen(
+            "A LoyScan nem használhatja a kamerát. Az alkalmazás beállításaiban engedélyezheted.",
+            "Beállítások megnyitása",
+        )
+    }
+
+    @Test
+    @Config(qualifiers = "+hu")
+    fun inHungarian_aPictureThatCantBeCopiedIn_saysSo() { // #72
+        photos.importFailure = FileNotFoundException("gone")
+        setScreen(CardForm("ruled"))
+        val shown = ShownTexts(composeRule)
+
+        composeRule.onNodeWithText("Előoldali fotó hozzáadása").performScrollTo().performClick()
+        shown.collect()
+
+        shown.assertEveryTextIsTranslated("Ruled Store")
+        shown.assertSeen("Nem sikerült hozzáadni a fotót. Próbáld újra.")
+    }
+
+    @Test
+    @Config(qualifiers = "+hu")
+    fun inHungarian_aStoreThatIsGone_saysSo() { // #72
+        setScreen(CardForm("plain"))
+        val shown = ShownTexts(composeRule)
+
+        stores.stores.value = stores.stores.value.filterNot { it.id == "plain" }
+        shown.collect()
+
+        shown.assertEveryTextIsTranslated()
+        shown.assertSeen("Ez a bolt már nem létezik.")
+    }
+
+    private fun typeNumber(number: String) {
+        composeRule.onNodeWithTag(CARD_NUMBER_TAG).performTextClearance()
+        composeRule.onNodeWithTag(CARD_NUMBER_TAG).performTextInput(number)
+    }
+
+    private fun setScreen(route: CardForm,camera: FakePhotoCamera = FakePhotoCamera(available = false)) {
         val viewModel = CardFormViewModel(
             SavedStateHandle(route = route),
             stores,

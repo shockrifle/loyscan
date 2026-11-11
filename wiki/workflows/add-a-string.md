@@ -28,13 +28,15 @@ resource, in English in `app/src/main/res/values/strings.xml` and in Hungarian i
 ## Not translated yet
 
 The move is done screen by screen (#72). Until it is finished, a Hungarian phone shows the translated screens (the
-card list, the card screen, the store picker, the card form's "Choose store" dialog and the custom store form) in Hungarian and the others in
-English. Texts shared with a screen not translated yet show in Hungarian there already: the photo descriptions
-("Front photo") and the barcode format's name ("Scanned · QR-kód", `CardFormScreenTest.inHungarian_aScannedQrCode_namesItsFormatInHungarian`) on the card form,
-whose own texts are still English.
-The card form's "This isn't a valid … number." still names the format with `BarcodeFormat.displayName`, since it is
-built outside composition; it moves with the form. The on-device smoke test still needs a phone in English: it clicks
-the card form's and the scanner's texts ("Save", "Scan card") by their English literals.
+card list, the card screen, the store picker, the card form with its "Choose store" dialog and photo crop screen, and
+the custom store form) in Hungarian and the others (the scanner, the shared picture screen, the widget) in English.
+The on-device smoke test still needs a phone in English: it clicks the scanner's texts ("Scan card", "Enter
+manually") by their English literals.
+
+A message put together from parts ("Add" + "front photo", a list of problems) is a whole string per case in both
+languages, since Hungarian orders and inflects the parts differently: the card form has `add_front_photo` and
+`add_back_photo`, not one string with the side's name in it. A message that names a store puts the name where no
+article or suffix has to agree with it ("Túl rövid %1$s kártyaszámnak.").
 
 ## Writing the Hungarian
 
@@ -53,5 +55,6 @@ the card form's and the scanner's texts ("Save", "Scan card") by their English l
   empty state) and checks with `ShownTexts.assertEveryTextIsTranslated` that every text shown is either the
   fixture's data or a `values-hu` value ([[tdd]] → Screen in Hungarian). A new text on a translated screen should
   appear in one of the states it walks; add the state if it doesn't.
-- The on-device smoke test (`MinifiedAppSmokeTest`) finds a translated text by its resource name (`string("…")`),
+- The on-device smoke test (`MinifiedAppSmokeTest`) finds a translated text by its resource name (`string("…")`, with its format
+  arguments: `string("scanned_format", "EAN-13")`),
   since the phone may be in either language. A name it looks up goes in `res/raw/smoke_test_keep.xml`.

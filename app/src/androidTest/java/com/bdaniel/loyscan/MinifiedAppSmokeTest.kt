@@ -64,10 +64,10 @@ class MinifiedAppSmokeTest {
         SystemClock.sleep(CAMERA_FRAMES_MS)
         await(By.text("Scan card"))
         click(By.text("Enter manually"))
-        await(By.text("Save"))
+        await(By.text(string("save")))
         fields()[0].text = NUMBER
         fields()[1].text = LABEL
-        click(By.text("Save"))
+        click(By.text(string("save")))
 
         // The new card opens.
         await(By.text(string("card_added")))
@@ -76,9 +76,9 @@ class MinifiedAppSmokeTest {
 
         // Edit its label.
         click(By.desc(string("edit")))
-        await(By.text("Save"))
+        await(By.text(string("save")))
         fields()[1].text = EDITED_LABEL
-        click(By.text("Save"))
+        click(By.text(string("save")))
         await(By.text(EDITED_LABEL))
 
         // Delete it: back on the list, which has no card left.
@@ -113,7 +113,7 @@ class MinifiedAppSmokeTest {
             await(By.text(string("new_store")))
             fields()[0].text = SHARED_STORE
             click(By.text(string("create")))
-            await(By.text("Scanned · EAN-13"))
+            await(By.text(string("scanned_format", "EAN-13")))
             await(By.text(BARCODE))
         } finally {
             picture.delete()
@@ -124,11 +124,11 @@ class MinifiedAppSmokeTest {
      * The app's string [name] as the app shows it in the device's language (#72). Looked up by name, since the app's
      * `R` class is renamed by R8; resource shrinking keeps the names (`res/raw/smoke_test_keep.xml`).
      */
-    private fun string(name: String): String {
+    private fun string(name: String, vararg args: Any): String {
         val resources = instrumentation.targetContext.resources
         val id = resources.getIdentifier(name, "string", packageName)
         check(id != 0) { "The app has no string resource $name" }
-        return resources.getString(id)
+        return resources.getString(id, *args)
     }
 
     /** The app's plural [name] for [count], as [string] finds a string. */

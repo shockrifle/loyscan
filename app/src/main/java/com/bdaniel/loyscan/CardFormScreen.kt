@@ -100,10 +100,10 @@ fun CardFormScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (state.editing) "Edit card" else "Add card") },
+                title = { Text(stringResource(if (state.editing) R.string.edit_card else R.string.add_card)) },
                 navigationIcon = {
                     IconButton(onClick = directions.toBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
             )
@@ -112,7 +112,7 @@ fun CardFormScreen(
     ) { innerPadding ->
         if (store == null) {
             if (state.storeGone) {
-                Text("This store is no longer available.", modifier = Modifier.padding(innerPadding).padding(16.dp))
+                Text(stringResource(R.string.store_gone), modifier = Modifier.padding(innerPadding).padding(16.dp))
             }
             return@Scaffold
         }
@@ -124,18 +124,19 @@ fun CardFormScreen(
                 StoreDot(store, 32.dp)
                 Text(store.name, style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
                 if (state.otherStores.isNotEmpty()) {
-                    TextButton(onClick = { choosingStore = true }) { Text("Change store") }
+                    TextButton(onClick = { choosingStore = true }) { Text(stringResource(R.string.change_store)) }
                 }
             }
             val problem = problemText(state.check, store.name)
+            val shownAs = state.shownAs?.let { stringResource(R.string.barcode_shown_as, it) }
             OutlinedTextField(
                 value = state.number,
                 onValueChange = viewModel::onNumberChange,
                 modifier = Modifier.fillMaxWidth().testTag(CARD_NUMBER_TAG),
-                label = { Text("Card number") },
+                label = { Text(stringResource(R.string.card_number)) },
                 readOnly = !state.numberEditable,
                 isError = problem != null,
-                supportingText = (problem ?: state.shownAs?.let { "Shown as $it" })?.let { { Text(it) } },
+                supportingText = (problem ?: shownAs)?.let { { Text(it) } },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = if (store.cardNumberRule?.charset == CardNumberRule.Charset.DIGITS) {
@@ -146,11 +147,11 @@ fun CardFormScreen(
                 ),
             )
             if (!state.numberEditable) {
-                TextButton(onClick = viewModel::typeNumberInstead) { Text("Type the number instead") }
+                TextButton(onClick = viewModel::typeNumberInstead) { Text(stringResource(R.string.type_number_instead)) }
             }
             if (state.suggestedStores.isNotEmpty()) {
                 Column {
-                    Text("It looks like a card from:", style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(R.string.looks_like_card_from), style = MaterialTheme.typography.bodyMedium)
                     state.suggestedStores.forEach { suggested ->
                         TextButton(onClick = { viewModel.switchStore(suggested.id) }) { Text(suggested.name) }
                     }
@@ -158,9 +159,10 @@ fun CardFormScreen(
             }
             state.barcodeFormat?.let { format ->
                 Text(
-                    barcodeFormatName(format).let { name ->
-                        if (state.scannedFormat != null) "Scanned · $name" else "Barcode: $name"
-                    },
+                    stringResource(
+                        if (state.scannedFormat != null) R.string.scanned_format else R.string.typed_number_barcode,
+                        barcodeFormatName(format),
+                    ),
                     style = MaterialTheme.typography.bodyMedium,
                 )
             }
@@ -168,14 +170,14 @@ fun CardFormScreen(
                 value = state.label,
                 onValueChange = viewModel::onLabelChange,
                 modifier = Modifier.fillMaxWidth().testTag(CARD_LABEL_TAG),
-                label = { Text("Label (optional)") },
+                label = { Text(stringResource(R.string.label_optional)) },
                 singleLine = true,
             )
             OutlinedTextField(
                 value = state.note,
                 onValueChange = viewModel::onNoteChange,
                 modifier = Modifier.fillMaxWidth().testTag(CARD_NOTE_TAG),
-                label = { Text("Note (optional)") },
+                label = { Text(stringResource(R.string.note_optional)) },
                 minLines = 2,
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
             )
@@ -207,36 +209,36 @@ fun CardFormScreen(
             }
             if (state.photoFailed) {
                 Text(
-                    "The photo couldn't be added. Try again.",
+                    stringResource(R.string.photo_add_failed),
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodyMedium,
                 )
             }
             when (cameraProblem) {
                 PhotoCamera.Result.DENIED -> Text(
-                    "LoyScan needs the camera to take a photo of your card.",
+                    stringResource(R.string.camera_needed_for_photo),
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 PhotoCamera.Result.DENIED_PERMANENTLY -> Column {
                     Text(
-                        "Camera access is turned off for LoyScan. You can allow it in the app's settings.",
+                        stringResource(R.string.camera_turned_off),
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodyMedium,
                     )
-                    TextButton(onClick = camera::openSettings) { Text("Open settings") }
+                    TextButton(onClick = camera::openSettings) { Text(stringResource(R.string.open_settings)) }
                 }
                 else -> Unit
             }
             if (state.saveFailed) {
                 Text(
-                    "The card couldn't be saved. Try again.",
+                    stringResource(R.string.card_save_failed),
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodyMedium,
                 )
             }
             Button(onClick = viewModel::save, enabled = state.canSave, modifier = Modifier.fillMaxWidth()) {
-                Text(if (problem != null) "Save anyway" else "Save")
+                Text(stringResource(if (problem != null) R.string.save_anyway else R.string.save))
             }
         }
         if (choosingStore) {
@@ -261,9 +263,6 @@ fun CardFormScreen(
     }
 }
 
-/** "front" or "back", for a photo's texts (#10). */
-internal val CardPhotoSide.sideName: String get() = if (this == CardPhotoSide.FRONT) "front" else "back"
-
 /** A photo's content description: "Front photo", "Back photo". */
 internal val CardPhotoSide.photoDescription: String
     @Composable get() = stringResource(if (this == CardPhotoSide.FRONT) R.string.front_photo else R.string.back_photo)
@@ -284,7 +283,7 @@ private fun PhotoSlot(
     onRemove: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val sideName = side.sideName
+    val front = side == CardPhotoSide.FRONT
     var choosing by remember { mutableStateOf(false) }
     val onPick = { if (onTake == null) onChoose() else choosing = true }
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
@@ -305,25 +304,38 @@ private fun PhotoSlot(
                 )
                 Row {
                     IconButton(onClick = onPick, enabled = enabled) {
-                        Icon(Icons.Default.Edit, contentDescription = "Replace $sideName photo")
+                        Icon(
+                            Icons.Default.Edit,
+                            contentDescription = stringResource(
+                                if (front) R.string.replace_front_photo else R.string.replace_back_photo
+                            ),
+                        )
                     }
                     IconButton(onClick = onRemove, enabled = enabled) {
-                        Icon(Icons.Default.Delete, contentDescription = "Remove $sideName photo")
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = stringResource(
+                                if (front) R.string.remove_front_photo else R.string.remove_back_photo
+                            ),
+                        )
                     }
                 }
             }
             else -> OutlinedButton(onClick = onPick, enabled = enabled, modifier = Modifier.fillMaxWidth()) {
-                Text("Add $sideName photo", textAlign = TextAlign.Center)
+                Text(
+                    stringResource(if (front) R.string.add_front_photo else R.string.add_back_photo),
+                    textAlign = TextAlign.Center,
+                )
             }
         }
         if (onTake != null) {
             Box {
                 DropdownMenu(expanded = choosing, onDismissRequest = { choosing = false }) {
-                    DropdownMenuItem(text = { Text("Take photo") }, onClick = {
+                    DropdownMenuItem(text = { Text(stringResource(R.string.take_photo)) }, onClick = {
                         choosing = false
                         onTake()
                     })
-                    DropdownMenuItem(text = { Text("Choose from gallery") }, onClick = {
+                    DropdownMenuItem(text = { Text(stringResource(R.string.choose_from_gallery)) }, onClick = {
                         choosing = false
                         onChoose()
                     })
@@ -333,19 +345,21 @@ private fun PhotoSlot(
     }
 }
 
-/** Why the number may be wrong, or `null` when there is nothing to say. */
+/** Why the number may be wrong, in the phone's language (#72), or `null` when there is nothing to say. */
+@Composable
 private fun problemText(check: NumberCheck, storeName: String): String? = when (check) {
     NumberCheck.Empty, NumberCheck.Valid -> null
-    is NumberCheck.DoesNotFitFormat -> "This isn't a valid ${check.format.displayName} number."
-    NumberCheck.ScanDoesNotMatchStore -> "This barcode doesn't look like a $storeName card."
-    is NumberCheck.Invalid -> check.errors.sorted().joinToString(" ") { error ->
+    is NumberCheck.DoesNotFitFormat -> stringResource(R.string.number_does_not_fit_format, barcodeFormatName(check.format))
+    NumberCheck.ScanDoesNotMatchStore -> stringResource(R.string.scan_does_not_match_store, storeName)
+    // `map` is inline, so it can read resources; `joinToString`'s transform isn't composable.
+    is NumberCheck.Invalid -> check.errors.sorted().map { error ->
         when (error) {
             Validation.Error.EMPTY -> ""
-            Validation.Error.INVALID_CHARACTERS -> "It has characters $storeName card numbers don't use."
-            Validation.Error.TOO_SHORT -> "Too short for a $storeName card number."
-            Validation.Error.TOO_LONG -> "Too long for a $storeName card number."
-            Validation.Error.WRONG_START -> "$storeName card numbers don't start like this."
-            Validation.Error.BAD_CHECK_DIGIT -> "The check digit doesn't match. Check the number for a typo."
+            Validation.Error.INVALID_CHARACTERS -> stringResource(R.string.number_has_invalid_characters, storeName)
+            Validation.Error.TOO_SHORT -> stringResource(R.string.number_too_short, storeName)
+            Validation.Error.TOO_LONG -> stringResource(R.string.number_too_long, storeName)
+            Validation.Error.WRONG_START -> stringResource(R.string.number_starts_wrong, storeName)
+            Validation.Error.BAD_CHECK_DIGIT -> stringResource(R.string.number_bad_check_digit)
         }
-    }
+    }.joinToString(" ")
 }
