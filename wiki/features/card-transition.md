@@ -6,7 +6,7 @@ Compose's experimental shared-element API.
 **Entry points:** `SharedTransitionLayout` wrapping `AppNavigation`
 (`app/src/main/java/com/bdaniel/loyscan/MainActivity.kt:56-63`); the `CardItem` box's
 `.sharedElement(key = cardTransitionKey(card.id))` in `ListScreen.kt`; `Scaffold(modifier = Modifier.sharedElement(…))`
-in `app/src/main/java/com/bdaniel/loyscan/DetailScreen.kt:156-160`.
+in `app/src/main/java/com/bdaniel/loyscan/DetailScreen.kt:157-161`.
 
 ## How it's wired
 

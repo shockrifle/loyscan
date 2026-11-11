@@ -53,6 +53,10 @@
     <string name="front_photo">Előoldali fotó</string>
     <string name="back_photo">Hátoldali fotó</string>
 
+    <!-- Barcode format names: only the QR ones are translated; the others are proper names (barcodeFormatName) -->
+    <string name="barcode_format_qr_code">QR-kód</string>
+    <string name="barcode_format_gs1_qr_code">GS1 QR-kód</string>
+
     <!-- Store picker -->
     <string name="choose_store">Válassz boltot</string>
     <string name="other_card">Egyéb kártya</string>

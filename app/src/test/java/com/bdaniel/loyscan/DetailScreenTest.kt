@@ -262,6 +262,14 @@ class DetailScreenTest {
     }
 
     @Test
+    @Config(qualifiers = "+hu")
+    fun inHungarian_contentNotEvenCode128CanHold_namesQrInHungarian() { // #72
+        setScreen(card = aLoyaltyCard(store = aStore(defaultBarcodeFormat = BarcodeFormat.EAN_13), number = "Café"))
+
+        composeRule.onNodeWithText("Megjelenítve: QR-kód").assertIsDisplayed()
+    }
+
+    @Test
     fun scannedGs1_128Card_isDrawnAsGs1_128_withNoFormatNote() { // #33: drawn with its FNC1, not as plain Code 128
         setScreen(card = aLoyaltyCard(number = "9799123456789012", scannedFormat = BarcodeFormat.GS1_128))
 

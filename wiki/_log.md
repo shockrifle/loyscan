@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-11 · barcode format names go through barcodeFormatName: only the QR ones are translated ("QR-kód"), other symbology names are proper names; DetailScreen.kt line links moved by one · decisions/2026-11-09-ui-language, workflows/add-a-string, features/card-detail, features/card-transition, architecture, tech-debt/shared-element-key-from-async-state, tech-debt/empty-brand-color-crash · #72 slice 2
 - 2026-11-11 · the store picker and the card form's "Choose store" dialog are in Hungarian on a Hungarian phone; a long lazy screen's Hungarian test runs tall · features/add-card, features/edit-card, workflows/add-a-string, workflows/tdd, architecture · #72 slice 2
 - 2026-11-11 · the Robolectric cache key includes a hash of the jars present, so a newly pinned SDK's jar is saved by the run that downloads it (corrected: a key hit never saved it) · workflows/ci, workflows/tdd · #94
 - 2026-11-11 · the gate's other mentions name lintDebug too (corrected: they still named only the tests and koverVerify) · decisions/2026-10-12-tdd-and-coverage, workflows/tdd, tech-debt/no-automated-tests · PR #131 review

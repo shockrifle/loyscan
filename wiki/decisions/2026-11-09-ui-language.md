@@ -24,6 +24,9 @@ so for a while a Hungarian phone shows some screens translated and others in Eng
 - JVM tests keep their English literals. Robolectric runs every test at `en-rUS` unless the test's `@Config(qualifiers)`
   sets another locale, whatever the machine's locale is. Hungarian is checked by tests that set `qualifiers = "+hu"`.
 - Store names and aliases from the catalogue are proper names and are not translated.
+- Barcode format names are translated only where the name has a Hungarian form: "QR code" → "QR-kód" (and
+  "GS1 QR-kód"). EAN-13, Code 128, Data Matrix, PDF417 and the others are symbology names, shown as they are (user's
+  choice, 2026-11-11, when confirming slice 2 of #72).
 
 ## Why
 

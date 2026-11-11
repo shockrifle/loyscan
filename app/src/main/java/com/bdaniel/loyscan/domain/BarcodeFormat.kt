@@ -9,7 +9,7 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 enum class BarcodeFormat(
-    /** The symbology's usual name, for showing to the user. */
+    /** The symbology's usual name. The UI shows it through `barcodeFormatName`, which translates the QR ones (#72). */
     val displayName: String,
 ) {
     AZTEC("Aztec"),

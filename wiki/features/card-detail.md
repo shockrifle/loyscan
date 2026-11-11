@@ -4,7 +4,7 @@ Shows one card at the checkout: a top bar and a 200dp header in the store's bran
 name), then a `Card` with the card's label, the store name, the barcode on white, the display number in large
 type and the card's note. The screen runs at full brightness; a double-tap on the barcode opens a full-screen scan mode.
 
-**Entry points:** `DetailScreen` (`app/src/main/java/com/bdaniel/loyscan/DetailScreen.kt:88-96`);
+**Entry points:** `DetailScreen` (`app/src/main/java/com/bdaniel/loyscan/DetailScreen.kt:89-97`);
 `DetailViewModel` (`app/src/main/java/com/bdaniel/loyscan/DetailViewModel.kt`); route
 `Detail(cardId, color, countUse, added)` (`app/src/main/java/com/bdaniel/loyscan/Navigation.kt:40-41`), where `cardId` is the card's
 UUID string.
@@ -37,7 +37,7 @@ UUID string.
   their aspect ratio at full width. Its content description is "Barcode".
 - **Fallback note:** when the barcode is drawn in a format other than the card's `barcodeFormat`, a `bodySmall` line
   under it names the format drawn, e.g. a DataBar card shows "Shown as GS1-128" (#35, #45). The name is
-  `BarcodeFormat.displayName`. A card drawn in its own format shows no note. Tests:
+  `barcodeFormatName(format)` (`ui/BarcodeFormatName.kt`): `BarcodeFormat.displayName`, with the QR names translated (#72). A card drawn in its own format shows no note. Tests:
   `DetailScreenTest.cardDrawnInAFallbackFormat_namesTheFormatDrawn`, `contentNotEvenCode128CanHold_namesQrAsTheFormatDrawn`,
   `cardDrawnInItsOwnFormat_showsNoFormatNote`.
 - **Scan mode shows no fallback note** (product choice, 2026-10-16, #37): it stays barcode and number only. The note
@@ -94,10 +94,11 @@ UUID string.
 - **Right after adding** (`Detail.added`), a snackbar says "Card added" and offers "Add another", once
   ([[add-card]], #6).
 - **Language** (#72): every text on the card screen, its dialogs, scan mode and the photo viewer is a string resource,
-  in English or Hungarian by the phone's language; the card's own data isn't translated, and neither is the barcode
-  format's name yet ([[add-a-string]]). The delete dialog uses the list's plurals for one card. Tests:
+  in English or Hungarian by the phone's language; the card's own data isn't translated. The barcode format's name is
+  ("Megjelenítve: QR-kód") only for the QR formats; the others are proper names ([[2026-11-09-ui-language]]). The delete dialog uses the list's plurals for one card. Tests:
   `DetailScreenTest.inHungarian_everyTextOnTheCard_isTranslated`, `onAndroid12OrOlder_copyingTheNumber_saysSo`,
-  `inHungarian_copyingTheNumber_saysSoInHungarian`.
+  `inHungarian_copyingTheNumber_saysSoInHungarian`, `inHungarian_contentNotEvenCode128CanHold_namesQrInHungarian`,
+  `ui/BarcodeFormatNameTest`.
 - The whole `Scaffold` is the shared element `card/{id}` — [[card-transition]].
 
 ## Not implemented (as of 2026-10-30)
