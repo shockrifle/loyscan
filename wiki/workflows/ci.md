@@ -111,10 +111,11 @@ for the failing assertion before changing the test.
   `actions/cache` saves nothing on a key hit, so a jar for a newly pinned SDK was cached only once the toml next
   changed; until then every run downloaded it (SDK 29's jar, #92, was cached only because that commit also changed the
   toml). Now the key follows the set of jars, with restore and save as separate steps. Saved only after green tests,
-  so a jar cut short by a failing run is never stored; the next green run saves it. Restore takes the newest entry for the toml hash, not the largest, so a
-  PR-scope entry can hide a newer one on `master` and the run downloads and saves again. No fallback to an older
-  toml's entries, so jars of an old Robolectric version don't pile up. The cost: one entry (about 450 MB) per new set
-  and scope, and a jar a test no longer pins stays in the set until the toml changes.
+  so a jar cut short by a failing run is never stored; the next green run saves it. Restore takes the newest entry
+  for the toml hash, not the largest, so a PR-scope entry can hide a newer one on `master` and the run downloads and
+  saves again. No fallback to an older toml's entries, so jars of an old Robolectric version don't pile up. The cost:
+  one entry (about 450 MB) per new set and scope, and a jar a test no longer pins stays in the set until the toml
+  changes.
 - **Basic Gradle caching** (`cache-provider: basic`). `setup-gradle` v6 defaults to a proprietary "enhanced"
   cache, which is a free preview for private repos with pricing announced for later. The basic provider is MIT and
   uses `actions/cache`.
