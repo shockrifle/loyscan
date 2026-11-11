@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-11 · ScannerScreen.kt line links moved by one (the stringResource import) · features/barcode-scanner · PR #138 review
 - 2026-11-11 · the shared picture screen is in Hungarian, so every screen is translated (#72 done); "Not translated yet" becomes "Messages built from parts" · features/add-card, workflows/add-a-string, decisions/2026-11-09-ui-language · #72
 - 2026-11-11 · the scanner is in Hungarian on a Hungarian phone; the smoke test finds "Scan card" and "Enter manually" by resource name, so it no longer needs a phone in English · features/barcode-scanner, features/add-card, workflows/add-a-string · #72
 - 2026-11-11 · the card form and its photo crop screen are in Hungarian on a Hungarian phone; the smoke test finds "Save" and the scanned format line by resource name · features/add-card, features/edit-card, features/card-photos, workflows/add-a-string · #72 slice 3
