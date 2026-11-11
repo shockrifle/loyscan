@@ -23,7 +23,7 @@ to improve future runs. Target: `$ARGUMENTS`
   or not linked from `wiki/index.md` or the feature page? Would a **navigation pointer** make it easier? _Use
   when_ the session took a long time to find a piece of information.
 - **Automated checks**: are there automated checks that could catch errors the agent made? The repo's gate is
-  `./gradlew testDebugUnitTest koverVerify` locally and the GitHub Actions workflow in `.github/workflows/`
+  `./gradlew testDebugUnitTest koverVerify lintDebug` locally and the GitHub Actions workflow in `.github/workflows/`
   (`wiki/workflows/ci.md`). Read those first, so a check that exists but is unwired or
   silently broken is the finding, not a reinvention. A **mechanical** mistake (a fixed pattern, a banned API, a
   file-location rule, a missing keep rule) gets a deterministic check: a plain JUnit test that reads the source
