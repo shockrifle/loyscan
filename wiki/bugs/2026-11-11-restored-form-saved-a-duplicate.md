@@ -31,7 +31,7 @@ add; Room's primary key rejects the second (`@Insert` aborts on conflict), the f
 and the retry updates. The window is one insert against an activity being recreated.
 
 Accepted: a restored form's Save writes the form's fields over the card, so an edit made to that card elsewhere in
-the meantime (opened from the widget or the list, then Back to the old form) is overwritten. Before the fix that Save
+the meantime (opened from the home-screen widget, then Back to the old form) is overwritten. Before the fix that Save
 added a duplicate instead. Removing or re-cropping, in the restored form, a photo the first save stored deletes that
 file at once, as it did before the fix; if the form is then left without saving, the card names a missing file and
 shows no photo for that side (#87).
