@@ -32,11 +32,19 @@ jobs:
         with:
           cache-provider: basic
 
-      # Robolectric downloads its android-all jars on first use; keep them between runs.
-      - uses: actions/cache@v6
+      # Robolectric downloads its android-all jars on first use. An entry's key ends in a hash of its jar list, so a
+      # run that downloads a new jar (a test pins a new SDK) saves a new entry; restore takes the newest one for this
+      # toml (#94): wiki/workflows/ci.md -> Caches. `key` never matches exactly: saved keys always have the suffix.
+      - name: Restore Robolectric jars
+        id: robolectric-restore
+        uses: actions/cache/restore@v6
         with:
           path: ~/.m2/repository/org/robolectric
-          key: robolectric-${{ hashFiles('gradle/libs.versions.toml') }}
+          key: robolectric-jars-${{ hashFiles('gradle/libs.versions.toml') }}-
+          restore-keys: robolectric-jars-${{ hashFiles('gradle/libs.versions.toml') }}-
+
+      - name: Robolectric jars before the tests
+        run: .github/scripts/robolectric-jars.sh ~/.m2/repository/org/robolectric robolectric-jars-${{ hashFiles('gradle/libs.versions.toml') }}-
 
       # The Gradle distribution, cached on its own key. setup-gradle's basic cache key hashes every Gradle file, so a
       # PR that bumps a dependency misses it, and services.gradle.org timed out or answered 504 on such runs (#116).
@@ -52,6 +60,19 @@ jobs:
 
       - name: Tests and coverage gate
         run: ./gradlew --continue testDebugUnitTest koverVerify koverHtmlReportDebug koverXmlReportDebug
+
+      # A jar the tests downloaded shows up here and not in the list before the tests. Saved only when the set changed,
+      # and only after green tests, so a jar cut off by a failing run is never cached.
+      - name: Robolectric jars after the tests
+        id: robolectric-jars
+        run: .github/scripts/robolectric-jars.sh ~/.m2/repository/org/robolectric robolectric-jars-${{ hashFiles('gradle/libs.versions.toml') }}-
+
+      - name: Save Robolectric jars
+        if: steps.robolectric-jars.outputs.count != '0' && steps.robolectric-jars.outputs.key != steps.robolectric-restore.outputs.cache-matched-key
+        uses: actions/cache/save@v6
+        with:
+          path: ~/.m2/repository/org/robolectric
+          key: ${{ steps.robolectric-jars.outputs.key }}
 
       # Lint errors fail the run; warnings don't (#126). One variant: release and smoke lint the same sources.
       - name: Lint
