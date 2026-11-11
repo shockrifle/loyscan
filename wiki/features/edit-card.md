@@ -36,7 +36,8 @@ number and store of one card. Deleting a card is on [[card-detail]].
   survives process death. Once saving has started the store can't be switched (`switchStore` refuses), so the card
   opens in the colour of the store it was saved in (found in review). Adding a card doesn't offer it: Back returns to
   the picker there. Catalogue and custom stores are both listed; "Other card" isn't, so a card can't be moved to a
-  store that doesn't exist yet.
+  store that doesn't exist yet. Its texts are translated with the store picker's ([[add-card]], #72); the form's own
+  are not yet ([[add-a-string]]).
 - **Saving writes only what the form edits:** the store, label, number, scanned format, note (#9), photos (#10) and
   `updatedAt` (now). Room's partial `@Update(entity = LoyaltyCardEntity::class)` with `LoyaltyCardEdit` writes those
   columns and no others, so `createdAt`, the use count and `lastUsedAt` stay as stored even if they changed after the

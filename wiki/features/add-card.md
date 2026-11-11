@@ -31,6 +31,10 @@ with the picture's barcode (#77, below). Everything runs offline on the local da
   [[2026-10-30-frequently-added-stores]]) lists the catalogue stores flagged `frequentlyAdded` whose `countryCodes`
   contain the user's country (`UserCountry`: SIM, then network, then locale), by name, between "Other card" and an
   "All stores" heading; they stay in the full list too. With none for the country, neither heading is shown.
+- **Language** (#72): every text on the store picker, its search and the card form's "Choose store" dialog is a string
+  resource, in English or Hungarian by the phone's language; store names are data and aren't translated
+  ([[add-a-string]]). Tests: `StorePickerScreenTest.inHungarian_everyTextOnThePicker_isTranslated`,
+  `CardFormScreenTest.inHungarian_theStoreChooser_isTranslated`.
 - **Custom store** ([[2026-10-22-custom-stores]]): a name (required, trimmed), one of eight colours (the first picked
   by default) and the barcode format for the store's typed numbers (Code 128 by default; the 13 formats of
   `BarcodeFormat.forCustomStores`, no GS1 or DataBar, #47). A scan keeps its own format. "Create" saves the store once

@@ -16,6 +16,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -47,10 +48,10 @@ fun StorePickerScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Choose store") },
+                title = { Text(stringResource(R.string.choose_store)) },
                 navigationIcon = {
                     IconButton(onClick = directions.toBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
             )
@@ -66,34 +67,34 @@ fun StorePickerScreen(
             header = {
                 item(key = OTHER_CARD_KEY) {
                     ListItem(
-                        headlineContent = { Text("Other card") },
-                        supportingContent = { Text("A store that isn't listed") },
+                        headlineContent = { Text(stringResource(R.string.other_card)) },
+                        supportingContent = { Text(stringResource(R.string.other_card_hint)) },
                         leadingContent = { Icon(Icons.Default.Add, contentDescription = null) },
                         modifier = Modifier.clickable(onClick = directions.toCustomStore),
                     )
                 }
                 // Each section's stores are also in the full list below, so their keys mustn't be the store id alone.
                 if (suggested.isNotEmpty()) {
-                    item(key = SUGGESTED_KEY) { SectionHeading("Suggested") }
+                    item(key = SUGGESTED_KEY) { SectionHeading(stringResource(R.string.suggested_stores)) }
                     items(suggested, key = { "$SUGGESTED_KEY/${it.id}" }) { store ->
                         StoreRow(store, onClick = { directions.toStore(store.id) })
                     }
                 }
                 if (frequentlyAdded.isNotEmpty()) {
-                    item(key = FREQUENTLY_ADDED_KEY) { SectionHeading("Frequently added") }
+                    item(key = FREQUENTLY_ADDED_KEY) { SectionHeading(stringResource(R.string.frequently_added_stores)) }
                     items(frequentlyAdded, key = { "$FREQUENTLY_ADDED_KEY/${it.id}" }) { store ->
                         StoreRow(store, onClick = { directions.toStore(store.id) })
                     }
                 }
                 if (suggested.isNotEmpty() || frequentlyAdded.isNotEmpty()) {
-                    item(key = ALL_STORES_KEY) { SectionHeading("All stores") }
+                    item(key = ALL_STORES_KEY) { SectionHeading(stringResource(R.string.all_stores)) }
                 }
             },
             trailing = { store ->
                 if (store.isCustom) {
                     {
                         IconButton(onClick = { directions.toEditStore(store.id) }) {
-                            Icon(Icons.Default.Edit, contentDescription = "Edit ${store.name}")
+                            Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.edit_store_named, store.name))
                         }
                     }
                 } else {

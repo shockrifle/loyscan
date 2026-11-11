@@ -54,4 +54,15 @@
     <string name="number_copied">Number copied</string>
     <string name="front_photo">Front photo</string>
     <string name="back_photo">Back photo</string>
+
+    <!-- Store picker -->
+    <string name="choose_store">Choose store</string>
+    <string name="other_card">Other card</string>
+    <string name="other_card_hint">A store that isn\'t listed</string>
+    <string name="suggested_stores">Suggested</string>
+    <string name="frequently_added_stores">Frequently added</string>
+    <string name="all_stores">All stores</string>
+    <string name="edit_store_named">Edit %1$s</string>
+    <string name="search_stores">Search stores</string>
+    <string name="no_store_matches">No store matches “%1$s”</string>
 </resources>

@@ -13,6 +13,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.domain.Store
 import com.bdaniel.loyscan.testing.FakeStoreRepository
+import com.bdaniel.loyscan.testing.ShownTexts
 import com.bdaniel.loyscan.testing.aStore
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -193,6 +194,28 @@ class StorePickerScreenTest {
         composeRule.onNodeWithContentDescription("Back").performClick()
 
         assertThat(backs).isEqualTo(1)
+    }
+
+    @Test
+    @Config(qualifiers = "+hu-w411dp-h891dp") // tall, so every section's rows are composed
+    fun inHungarian_everyTextOnThePicker_isTranslated() { // #72
+        setScreen(
+            aStore(id = "reads", name = "Reads It", cardNumberRule = luhn8Rule(BarcodeFormat.CODE_128)),
+            aStore(id = "hu-tesco", name = "Tesco", frequentlyAdded = true),
+            aStore(id = "custom", name = "My Shop", isCustom = true),
+            route = StorePicker("12345674", BarcodeFormat.CODE_128),
+        )
+        val shown = ShownTexts(composeRule)
+        shown.collect()
+
+        composeRule.onNodeWithTag(STORE_SEARCH_TAG).performTextInput("xyz")
+        shown.collect()
+
+        shown.assertSeen(
+            "Válassz boltot", "Vissza", "Boltok keresése", "Egyéb kártya", "Egy bolt, ami nincs a listán", "Javasolt",
+            "Gyakran hozzáadott", "Minden bolt", "My Shop szerkesztése", "Nincs ilyen bolt: „xyz”",
+        )
+        shown.assertEveryTextIsTranslated("Reads It", "Tesco", "My Shop", "xyz")
     }
 
     private fun setScreen(vararg stores: Store, route: StorePicker = StorePicker(), country: String? = "HU") {

@@ -33,6 +33,7 @@ import com.bdaniel.loyscan.testing.FakeLoyaltyCardRepository
 import com.bdaniel.loyscan.testing.FakePhotoCamera
 import com.bdaniel.loyscan.testing.FakeStoreRepository
 import com.bdaniel.loyscan.testing.SOME_INSTANT
+import com.bdaniel.loyscan.testing.ShownTexts
 import com.bdaniel.loyscan.testing.WAIT_TIMEOUT_MS
 import com.bdaniel.loyscan.testing.aLoyaltyCard
 import com.bdaniel.loyscan.testing.aStore
@@ -47,6 +48,7 @@ import dagger.hilt.android.EntryPointAccessors
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowLooper
 import java.io.File
 import java.io.FileNotFoundException
@@ -240,6 +242,20 @@ class CardFormScreenTest {
 
         composeRule.waitForIdle()
         assertThat(cards.cards.value.single().note).isEqualTo("PIN hint: birthday")
+    }
+
+    @Test
+    @Config(qualifiers = "+hu")
+    fun inHungarian_theStoreChooser_isTranslated() { // #72; the form behind it is translated in its own slice
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, label = "Gold card", number = "12345674"))
+        setScreen(CardForm("ruled", cardId = cardId(1)))
+        val shown = ShownTexts(composeRule)
+
+        composeRule.onNodeWithText("Change store").performClick()
+        composeRule.onNodeWithTag(STORE_SEARCH_TAG).performTextInput("xyz")
+        shown.collect()
+
+        shown.assertSeen("Válassz boltot", "Bezárás", "Nincs ilyen bolt: „xyz”")
     }
 
     @Test
