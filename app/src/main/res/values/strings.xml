@@ -55,6 +55,10 @@
     <string name="front_photo">Front photo</string>
     <string name="back_photo">Back photo</string>
 
+    <!-- Barcode format names: only the QR ones are translated; the others are proper names (barcodeFormatName) -->
+    <string name="barcode_format_qr_code">QR code</string>
+    <string name="barcode_format_gs1_qr_code">GS1 QR code</string>
+
     <!-- Store picker -->
     <string name="choose_store">Choose store</string>
     <string name="other_card">Other card</string>

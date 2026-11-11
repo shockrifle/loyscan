@@ -74,6 +74,7 @@ import com.bdaniel.loyscan.ui.barcode.Barcode
 import com.bdaniel.loyscan.ui.barcode.BarcodeEncoder
 import com.bdaniel.loyscan.ui.barcode.EncodedBarcode
 import com.bdaniel.loyscan.ui.barcode.barcodeSize
+import com.bdaniel.loyscan.ui.barcodeFormatName
 import com.bdaniel.loyscan.ui.hiltImageLoader
 import com.bdaniel.loyscan.ui.contrastingTextColor
 import com.bdaniel.loyscan.ui.toBrandColorOrNull
@@ -219,7 +220,7 @@ fun SharedTransitionScope.DetailScreen(
                             // The card's own format couldn't be drawn (no writer, or content it can't hold).
                             if (barcode.format != card.barcodeFormat) {
                                 Text(
-                                    text = stringResource(R.string.barcode_shown_as, barcode.format.displayName),
+                                    text = stringResource(R.string.barcode_shown_as, barcodeFormatName(barcode.format)),
                                     style = MaterialTheme.typography.bodySmall,
                                     modifier = Modifier.padding(top = 8.dp),
                                 )

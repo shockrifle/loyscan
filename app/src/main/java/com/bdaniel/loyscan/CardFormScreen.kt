@@ -58,6 +58,7 @@ import com.bdaniel.loyscan.ui.PhotoCropScreen
 import com.bdaniel.loyscan.ui.rememberPhotoCamera
 import com.bdaniel.loyscan.ui.hiltImageLoader
 import com.bdaniel.loyscan.ui.scanner.PicturePicker
+import com.bdaniel.loyscan.ui.barcodeFormatName
 import com.bdaniel.loyscan.ui.scanner.rememberPicturePicker
 import com.bdaniel.loyscan.ui.theme.icons.Icons
 
@@ -157,7 +158,9 @@ fun CardFormScreen(
             }
             state.barcodeFormat?.let { format ->
                 Text(
-                    if (state.scannedFormat != null) "Scanned · ${format.displayName}" else "Barcode: ${format.displayName}",
+                    barcodeFormatName(format).let { name ->
+                        if (state.scannedFormat != null) "Scanned · $name" else "Barcode: $name"
+                    },
                     style = MaterialTheme.typography.bodyMedium,
                 )
             }
