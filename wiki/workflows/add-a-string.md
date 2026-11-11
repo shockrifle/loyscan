@@ -11,8 +11,10 @@ resource, in English in `app/src/main/res/values/strings.xml` and in Hungarian i
    (`card_list_title`, `delete_card_question`), lower case with underscores.
 2. **Add the Hungarian translation** to `values-hu/strings.xml` under the same name. `StringResourcesTest` fails
    until it is there, and it checks the format arguments match.
-3. **Use it**: `stringResource(R.string.x)` in a composable, `context.getString(R.string.x)` outside composition (a
-   toast).
+3. **Use it**: `stringResource(R.string.x)` in a composable. Text used outside composition (a toast shown from a
+   click) is read the same way, into a `val` in the composable, and the lambda uses that `val`. Not
+   `LocalContext.current.getString(…)`: `LocalContext`'s resources don't follow a configuration change Compose
+   handles, and lint fails on it (`LocalContextGetResourceValueCall`, #126).
 4. **A count** ("2 selected") is a `<plurals>` with `one` and `other` items in both files, read with
    `pluralStringResource(R.plurals.x, count, count)`. Hungarian has only `one` and `other`. The `one` item may leave
    the number out ("Delete this card?").

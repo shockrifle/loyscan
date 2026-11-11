@@ -2,6 +2,12 @@ package com.bdaniel.loyscan
 
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.res.Configuration
+import android.os.LocaleList
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalResources
+import java.util.Locale
 import android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_FULL
 import android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
 import androidx.activity.ComponentActivity
@@ -81,19 +87,22 @@ class DetailScreenTest {
         added: Boolean = false,
         onAddAnother: () -> Unit = {},
         restorationTester: StateRestorationTester? = null,
+        wrap: @Composable (@Composable () -> Unit) -> Unit = { it() },
     ) {
         val viewModel = DetailViewModel(SavedStateHandle(route = Detail(cardId = card.id, color = color, added = added)), repository, photos)
         val content = @Composable {
-            SharedTransitionLayout {
-                AnimatedVisibility(visible = true) {
-                    DetailScreen(
-                        cardId = card.id,
-                        color = color,
-                        added = added,
-                        animatedVisibilityScope = this,
-                        directions = DetailDirections(toBack = onBack, toEdit = onEdit, toAddCard = onAddAnother),
-                        viewModel = viewModel,
-                    )
+            wrap {
+                SharedTransitionLayout {
+                    AnimatedVisibility(visible = true) {
+                        DetailScreen(
+                            cardId = card.id,
+                            color = color,
+                            added = added,
+                            animatedVisibilityScope = this,
+                            directions = DetailDirections(toBack = onBack, toEdit = onEdit, toAddCard = onAddAnother),
+                            viewModel = viewModel,
+                        )
+                    }
                 }
             }
         }
@@ -293,6 +302,30 @@ class DetailScreenTest {
         composeRule.onNodeWithText("0042").performClick()
 
         assertThat(ShadowToast.getTextOfLatestToast()).isEqualTo("Number copied")
+    }
+
+    @Test
+    @Config(sdk = [32])
+    fun theCopyToast_readsComposeResources() { // #126
+        // Compose updates LocalConfiguration and LocalResources on a configuration change it handles; LocalContext's
+        // resources don't follow it. The app recreates its activity on a locale change today, so this pins where the
+        // text is read (lint's LocalContextGetResourceValueCall) rather than a bug a user can hit.
+        val english = composeRule.activity.resources
+        val hungarian = composeRule.activity.createConfigurationContext(
+            Configuration(english.configuration).apply { setLocales(LocaleList(Locale.forLanguageTag("hu"))) },
+        ).resources
+        var resources by mutableStateOf(english)
+        setScreen(wrap = { content ->
+            CompositionLocalProvider(LocalConfiguration provides resources.configuration, LocalResources provides resources) {
+                content()
+            }
+        })
+
+        resources = hungarian
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("0042").performClick()
+
+        assertThat(ShadowToast.getTextOfLatestToast()).isEqualTo("Szám másolva")
     }
 
     @Test

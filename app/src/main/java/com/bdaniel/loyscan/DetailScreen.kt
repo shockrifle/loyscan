@@ -376,6 +376,7 @@ private fun CopyableNumber(number: String, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val clipLabel = stringResource(R.string.card_number_clip_label)
+    val copied = stringResource(R.string.number_copied)
     Text(
         text = number,
         style = MaterialTheme.typography.headlineMedium,
@@ -383,7 +384,7 @@ private fun CopyableNumber(number: String, modifier: Modifier = Modifier) {
             scope.launch { clipboard.setClipEntry(ClipEntry(ClipData.newPlainText(clipLabel, number))) }
             // From Android 13 the system confirms a copy itself.
             if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
-                Toast.makeText(context, context.getString(R.string.number_copied), Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, copied, Toast.LENGTH_SHORT).show()
             }
         },
     )
