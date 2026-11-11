@@ -145,4 +145,9 @@
     <string name="enter_manually">Beírás kézzel</string>
     <string name="camera_needed_for_scan">A kártyád vonalkódjának beolvasásához a LoyScannek szüksége van a kamerára. A képeket a telefonod olvassa be, és sehol nem tárolja, sehova nem küldi el őket.</string>
     <string name="allow_camera">Kamera engedélyezése</string>
+
+    <!-- Shared picture -->
+    <string name="shared_picture_no_barcode">Ezen a képen nem található vonalkód. A kártyán lévő számot kézzel is beírhatod.</string>
+    <string name="shared_picture_unreadable">Nem sikerült megnyitni a képet. A kártyán lévő számot kézzel is beírhatod.</string>
+    <string name="enter_number_by_hand">A szám beírása kézzel</string>
 </resources>

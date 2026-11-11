@@ -20,6 +20,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -45,10 +46,10 @@ fun SharedPictureScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Add card") },
+                title = { Text(stringResource(R.string.add_card)) },
                 navigationIcon = {
                     IconButton(onClick = directions.toBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
             )
@@ -63,18 +64,21 @@ fun SharedPictureScreen(
             when (val current = scan) {
                 null, is PictureScan.Found -> {
                     CircularProgressIndicator()
-                    Text("Reading the picture…")
+                    Text(stringResource(R.string.reading_picture))
                 }
                 PictureScan.NoBarcode, PictureScan.Unreadable -> {
                     Text(
-                        when (current) {
-                            PictureScan.NoBarcode -> "No barcode was found in that picture."
-                            else -> "That picture couldn't be opened."
-                        } + " You can enter the number from the card by hand.",
+                        stringResource(
+                            if (current == PictureScan.NoBarcode) {
+                                R.string.shared_picture_no_barcode
+                            } else {
+                                R.string.shared_picture_unreadable
+                            }
+                        ),
                         textAlign = TextAlign.Center,
                     )
                     FilledTonalButton(onClick = directions.toManualEntry, modifier = Modifier.fillMaxWidth()) {
-                        Text("Enter the number by hand")
+                        Text(stringResource(R.string.enter_number_by_hand))
                     }
                 }
             }

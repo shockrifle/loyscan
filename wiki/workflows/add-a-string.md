@@ -3,7 +3,8 @@
 Every text the user sees or hears (labels, content descriptions, click labels, toasts, snackbars) is a string
 resource, in English in `app/src/main/res/values/strings.xml` and in Hungarian in
 `app/src/main/res/values-hu/strings.xml`. Why English is the default and the tests stay in English:
-[[2026-11-09-ui-language]]. Moving the UI to resources is #72, done screen by screen.
+[[2026-11-09-ui-language]]. Every screen has been in resources since #72 (2026-11-11); a new text on any screen
+follows these steps.
 
 ## Steps
 
@@ -25,12 +26,7 @@ resource, in English in `app/src/main/res/values/strings.xml` and in Hungarian i
    format's name goes through `barcodeFormatName(format)` (`ui/BarcodeFormatName.kt`): "QR code" and "GS1 QR code" are
    resources ("QR-kód"), the other symbology names are proper names and show as `BarcodeFormat.displayName` says.
 
-## Not translated yet
-
-The move is done screen by screen (#72). Until it is finished, a Hungarian phone shows the translated screens (the
-card list, the card screen, the store picker, the scanner, the card form with its "Choose store" dialog and photo
-crop screen, and the custom store form) in Hungarian and the shared picture screen in English. The on-device smoke
-test finds every text it clicks by resource name, so it runs on a phone in either language.
+## Messages built from parts
 
 A message put together from parts ("Add" + "front photo", a list of problems) is a whole string per case in both
 languages, since Hungarian orders and inflects the parts differently: the card form has `add_front_photo` and
