@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-11 · a new card's id is kept in the form's saved state from its creation, so a form restored mid-save updates its card instead of adding a duplicate; restore tests use a snapshot of the handle · features/add-card, features/card-photos, workflows/tdd, bugs/2026-11-11-restored-form-saved-a-duplicate, bugs/_index, index · #99
 - 2026-11-11 · ScannerScreen.kt line links moved by one (the stringResource import) · features/barcode-scanner · PR #138 review
 - 2026-11-11 · the shared picture screen is in Hungarian, so every screen is translated (#72 done); "Not translated yet" becomes "Messages built from parts" · features/add-card, workflows/add-a-string, decisions/2026-11-09-ui-language · #72
 - 2026-11-11 · the scanner is in Hungarian on a Hungarian phone; the smoke test finds "Scan card" and "Enter manually" by resource name, so it no longer needs a phone in English · features/barcode-scanner, features/add-card, workflows/add-a-string · #72

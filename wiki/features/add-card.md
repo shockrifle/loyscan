@@ -91,7 +91,11 @@ with the picture's barcode (#77, below). Everything runs offline on the local da
   date). It is trimmed, and blank is stored as `null`. The detail screen shows it ([[card-detail]]); the list's search
   finds it ([[card-list]]). Tests: `CardFormViewModelTest.aNote_isSavedWithANewCard_trimmed`, `aBlankNote_isSavedAsNull`.
 - **Save** writes the card once (a second tap does nothing): a new UUID, `createdAt` = `updatedAt` = now from the
-  injected `Clock`, no use yet. Then the card's detail opens in place of the flow (`popUpTo<CardList>()`), so back from it
+  injected `Clock`, no use yet. The UUID is fixed when the form is first created and kept in its saved state (key
+  `newCardId`), and a new card's save adds it only when no card has that id yet, else updates it (#99): a form restored
+  after its activity was destroyed while its save ran would otherwise save the card a second time, since the state
+  it is restored from was saved before that save ended ([[2026-11-11-restored-form-saved-a-duplicate]]). A restored
+  form looks unsaved; its Save writes any later change to the same card and opens it. Then the card's detail opens in place of the flow (`popUpTo<CardList>()`), so back from it
   returns to the list. That opening isn't counted as a use (`Detail.countUse = false`): it is the end of adding the
   card, not showing it at a till.
 - **Add another** (step 6 of #6; a snackbar was the product choice, 2026-10-29): the new card opens with
@@ -183,6 +187,9 @@ with the picture's barcode (#77, below). Everything runs offline on the local da
   ending after Back from the form (`aSaveThatEndsAfterBackFromTheForm_…`, #64).
 - `CardFormViewModelTest.aSaveStillRunningWhenTheFormCloses_isStillSaved` (#64): a save held by
   `FakeLoyaltyCardRepository.addGate` is finished after the ViewModel is cleared.
+- `CardFormViewModelTest.aSaveThatEndsAfterTheFormWasCleared_isNotSavedAgainByTheRestoredForm`,
+  `aFormRestoredAfterItsCardWasSaved_savesLaterChangesToThatCard`, `twoAddForms_saveTwoCards` (#99): the restored
+  form is built from a snapshot of the handle taken before the save, as the activity's saved state is.
 - `DetailViewModelTest.opening_aCardJustAdded_countsNoUse`.
 - `AppNavigationTest`: picker → scanner → back, adding a card by hand end to end, and for a new custom store;
   "Add another" → picker → back to the new card (`addingACard_offersAnother_…`).
