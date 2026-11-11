@@ -1,4 +1,4 @@
-# Unit tests + Kover coverage gate, and the minified release build, on every push to master and every PR into it. What runs and how to reproduce: wiki/workflows/ci.md
+# Unit tests + Kover coverage gate, lint, and the minified release build, on every push to master and every PR into it. What runs and how to reproduce: wiki/workflows/ci.md
 name: Tests
 
 on:
@@ -53,6 +53,10 @@ jobs:
       - name: Tests and coverage gate
         run: ./gradlew --continue testDebugUnitTest koverVerify koverHtmlReportDebug koverXmlReportDebug
 
+      # Lint errors fail the run; warnings don't (#126). One variant: release and smoke lint the same sources.
+      - name: Lint
+        run: ./gradlew lintDebug
+
       # The minified release (R8, #73) must build, and the on-device smoke test that runs against it must compile.
       # The smoke test itself runs on a device, by hand: wiki/workflows/build-and-run.md
       - name: Minified release build
@@ -77,5 +81,6 @@ jobs:
           path: |
             app/build/reports/tests/testDebugUnitTest/
             app/build/test-results/testDebugUnitTest/
+            app/build/reports/lint-results-debug.*
           if-no-files-found: ignore
           retention-days: 14

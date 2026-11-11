@@ -16,6 +16,7 @@ adb shell am start -n com.bdaniel.loyscan/.MainActivity
 ./gradlew testDebugUnitTest --tests "com.bdaniel.loyscan.ListViewModelTest"   # one class (wildcards work)
 ./gradlew koverHtmlReportDebug                                       # coverage report (also koverXmlReportDebug)
 ./gradlew koverVerifyDebug                                           # fail if line coverage is below the minimum
+./gradlew lintDebug                                                  # lint; errors fail it, as on CI (#126)
 ./gradlew check                                                      # tests + lint + coverage gate
 ./gradlew assembleRelease                                            # the minified (R8) release, unsigned (#74)
 ./gradlew connectedSmokeAndroidTest                                  # on-device smoke test of the R8 build (below)
