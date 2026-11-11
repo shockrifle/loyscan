@@ -28,6 +28,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -70,10 +71,10 @@ fun ScannerScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Scan card") },
+                title = { Text(stringResource(R.string.scan_card)) },
                 navigationIcon = {
                     IconButton(onClick = directions.toBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 actions = {
@@ -81,7 +82,9 @@ fun ScannerScreen(
                         IconToggleButton(checked = state.torchOn, onCheckedChange = { viewModel.toggleTorch() }) {
                             Icon(
                                 Icons.Default.Flashlight,
-                                contentDescription = if (state.torchOn) "Turn off torch" else "Turn on torch",
+                                contentDescription = stringResource(
+                                    if (state.torchOn) R.string.turn_off_torch else R.string.turn_on_torch
+                                ),
                             )
                         }
                     }
@@ -94,7 +97,7 @@ fun ScannerScreen(
             Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                 when {
                     permission.status != Status.GRANTED -> PermissionRationale(permission)
-                    state.cameraFailed -> Message("The camera couldn't be opened. Enter the number from the card instead.")
+                    state.cameraFailed -> Message(stringResource(R.string.camera_failed))
                     else -> {
                         val events = remember(viewModel, directions) {
                             CameraEvents(
@@ -111,10 +114,7 @@ fun ScannerScreen(
                                 Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
                                 contentAlignment = Alignment.Center,
                             ) {
-                                Message(
-                                    "The camera isn't available. It may be in use by another app. Enter the number " +
-                                        "from the card instead.",
-                                )
+                                Message(stringResource(R.string.camera_unavailable))
                             }
                         }
                     }
@@ -130,10 +130,12 @@ fun ScannerScreen(
                 if (pictureProblem != null) {
                     Card(Modifier.fillMaxWidth()) {
                         Text(
-                            when (pictureProblem) {
-                                PictureProblem.NO_BARCODE -> "No barcode was found in that picture."
-                                PictureProblem.UNREADABLE -> "That picture couldn't be opened."
-                            } + " Try another picture, or enter the number by hand.",
+                            stringResource(
+                                when (pictureProblem) {
+                                    PictureProblem.NO_BARCODE -> R.string.scanner_picture_no_barcode
+                                    PictureProblem.UNREADABLE -> R.string.scanner_picture_unreadable
+                                }
+                            ),
                             modifier = Modifier.padding(16.dp),
                             style = MaterialTheme.typography.bodyMedium,
                         )
@@ -141,8 +143,7 @@ fun ScannerScreen(
                 } else if (state.showHint && cameraRunning) {
                     Card(Modifier.fillMaxWidth()) {
                         Text(
-                            "Card won't scan? Hold it flat and steady, about 15 cm from the camera, in good light. " +
-                                "Try the torch, or enter the number by hand.",
+                            stringResource(R.string.scan_hint),
                             modifier = Modifier.padding(16.dp),
                             style = MaterialTheme.typography.bodyMedium,
                         )
@@ -153,10 +154,10 @@ fun ScannerScreen(
                     enabled = !state.readingPicture,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text(if (state.readingPicture) "Reading the picture…" else "Scan from image")
+                    Text(stringResource(if (state.readingPicture) R.string.reading_picture else R.string.scan_from_image))
                 }
                 FilledTonalButton(onClick = directions.toManualEntry, modifier = Modifier.fillMaxWidth()) {
-                    Text("Enter manually")
+                    Text(stringResource(R.string.enter_manually))
                 }
             }
         }
@@ -171,20 +172,19 @@ private fun PermissionRationale(permission: CameraPermission) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            "LoyScan needs the camera to read the barcode on your card. The pictures are read on your phone and " +
-                "never stored or sent anywhere.",
+            stringResource(R.string.camera_needed_for_scan),
             textAlign = TextAlign.Center,
         )
         when (permission.status) {
             Status.DENIED_PERMANENTLY -> {
                 Text(
-                    "Camera access is turned off for LoyScan. You can allow it in the app's settings.",
+                    stringResource(R.string.camera_turned_off),
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.bodyMedium,
                 )
-                Button(onClick = permission::openSettings) { Text("Open settings") }
+                Button(onClick = permission::openSettings) { Text(stringResource(R.string.open_settings)) }
             }
-            else -> Button(onClick = permission::request) { Text("Allow camera") }
+            else -> Button(onClick = permission::request) { Text(stringResource(R.string.allow_camera)) }
         }
     }
 }

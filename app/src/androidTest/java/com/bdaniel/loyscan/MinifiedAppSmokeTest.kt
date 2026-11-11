@@ -30,7 +30,7 @@ import java.io.File
  *
  * The app is driven from outside through UiAutomator, by the text and content descriptions the user sees, so the test
  * depends on none of the app's classes, which R8 has renamed or removed. A text the app has as a string resource is
- * looked up by its name ([string]), so the test passes on a phone in Hungarian too (#72); the others are still English. The run uninstalls the smoke app afterwards,
+ * looked up by its name ([string]), so the test passes on a phone in Hungarian too (#72). The run uninstalls the smoke app afterwards,
  * so the store and card it adds don't outlive it. A failed wait lists what was on screen and leaves a screenshot in
  * `/data/local/tmp/smoke-failure.png` (`adb pull` it).
  */
@@ -58,12 +58,12 @@ class MinifiedAppSmokeTest {
         await(By.text(string("new_store")))
         fields()[0].text = STORE
         click(By.text(string("create")))
-        await(By.text("Scan card"))
+        await(By.text(string("scan_card")))
         // Stay while the camera runs: each frame goes through the analyzer and zxing-cpp's JNI read (no barcode in
         // view, so it finds none). A crash there under R8 ends the process, and the scanner is no longer on screen.
         SystemClock.sleep(CAMERA_FRAMES_MS)
-        await(By.text("Scan card"))
-        click(By.text("Enter manually"))
+        await(By.text(string("scan_card")))
+        click(By.text(string("enter_manually")))
         await(By.text(string("save")))
         fields()[0].text = NUMBER
         fields()[1].text = LABEL

@@ -132,4 +132,19 @@
     <!-- Photo crop screen -->
     <string name="use_whole_photo">Use whole photo</string>
     <string name="crop_photo">Crop</string>
+
+    <!-- Scanner -->
+    <string name="scan_card">Scan card</string>
+    <string name="turn_on_torch">Turn on torch</string>
+    <string name="turn_off_torch">Turn off torch</string>
+    <string name="camera_failed">The camera couldn\'t be opened. Enter the number from the card instead.</string>
+    <string name="camera_unavailable">The camera isn\'t available. It may be in use by another app. Enter the number from the card instead.</string>
+    <string name="scanner_picture_no_barcode">No barcode was found in that picture. Try another picture, or enter the number by hand.</string>
+    <string name="scanner_picture_unreadable">That picture couldn\'t be opened. Try another picture, or enter the number by hand.</string>
+    <string name="scan_hint">Card won\'t scan? Hold it flat and steady, about 15 cm from the camera, in good light. Try the torch, or enter the number by hand.</string>
+    <string name="reading_picture">Reading the picture…</string>
+    <string name="scan_from_image">Scan from image</string>
+    <string name="enter_manually">Enter manually</string>
+    <string name="camera_needed_for_scan">LoyScan needs the camera to read the barcode on your card. The pictures are read on your phone and never stored or sent anywhere.</string>
+    <string name="allow_camera">Allow camera</string>
 </resources>

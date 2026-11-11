@@ -28,10 +28,9 @@ resource, in English in `app/src/main/res/values/strings.xml` and in Hungarian i
 ## Not translated yet
 
 The move is done screen by screen (#72). Until it is finished, a Hungarian phone shows the translated screens (the
-card list, the card screen, the store picker, the card form with its "Choose store" dialog and photo crop screen, and
-the custom store form) in Hungarian and the others (the scanner, the shared picture screen, the widget) in English.
-The on-device smoke test still needs a phone in English: it clicks the scanner's texts ("Scan card", "Enter
-manually") by their English literals.
+card list, the card screen, the store picker, the scanner, the card form with its "Choose store" dialog and photo
+crop screen, and the custom store form) in Hungarian and the shared picture screen in English. The on-device smoke
+test finds every text it clicks by resource name, so it runs on a phone in either language.
 
 A message put together from parts ("Add" + "front photo", a list of problems) is a whole string per case in both
 languages, since Hungarian orders and inflects the parts differently: the card form has `add_front_photo` and
