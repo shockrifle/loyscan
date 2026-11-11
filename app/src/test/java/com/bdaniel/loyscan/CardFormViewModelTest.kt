@@ -1026,6 +1026,81 @@ class CardFormViewModelTest {
     }
 
     @Test
+    fun aSaveThatEndsAfterTheFormWasCleared_isNotSavedAgainByTheRestoredForm() = runTest { // #99
+        // The activity destroyed with the form on the back stack while its save runs: the form comes back from the
+        // state saved when the activity stopped, which is before the save ends. The snapshot is taken before save(),
+        // so nothing the form writes during or after the save reaches the restored form.
+        val handle = SavedStateHandle(route = CardForm("ruled"))
+        val owner = ViewModelStore()
+        val first = owner.keep { viewModel(handle) }
+        val gate = CompletableDeferred<Unit>()
+        cards.addGate = gate
+        first.state.test {
+            awaitLoaded()
+            first.onNumberChange("12345674")
+            cancelAndIgnoreRemainingEvents()
+        }
+        val saved = handle.snapshot()
+        first.save()
+        owner.clear()
+        gate.complete(Unit)
+        val firstCard = cards.cards.value.single()
+
+        val restored = viewModel(saved)
+        restored.state.test {
+            awaitLoaded()
+            restored.save()
+            assertThat(expectMostRecentItem().savedCardId).isEqualTo(firstCard.id)
+        }
+
+        assertThat(cards.cards.value.map { it.id }).containsExactly(firstCard.id)
+    }
+
+    @Test
+    fun aFormRestoredAfterItsCardWasSaved_savesLaterChangesToThatCard() = runTest { // #99
+        val handle = SavedStateHandle(route = CardForm("ruled"))
+        val owner = ViewModelStore()
+        val first = owner.keep { viewModel(handle) }
+        first.state.test {
+            awaitLoaded()
+            first.onLabelChange("Gold card")
+            first.onNumberChange("12345674")
+            cancelAndIgnoreRemainingEvents()
+        }
+        val saved = handle.snapshot()
+        first.save()
+        owner.clear()
+
+        val restored = viewModel(saved)
+        restored.state.test {
+            awaitLoaded()
+            restored.onLabelChange("Silver card")
+            restored.save()
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        val card = cards.cards.value.single()
+        assertThat(card.label).isEqualTo("Silver card")
+        assertThat(card.number).isEqualTo("12345674")
+    }
+
+    @Test
+    fun twoAddForms_saveTwoCards() = runTest { // #99: the form's kept id is per form
+        val forms = List(2) { viewModel(CardForm("ruled")) }
+
+        forms.forEach { form ->
+            form.state.test {
+                awaitLoaded()
+                form.onNumberChange("12345674")
+                form.save()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+        assertThat(cards.cards.value.map { it.id }.distinct()).hasSize(2)
+    }
+
+    @Test
     fun aSaveStillRunningWhenTheFormCloses_keepsItsPhoto() = runTest { // #10, #64
         val gate = CompletableDeferred<Unit>()
         cards.addGate = gate
@@ -1395,6 +1470,9 @@ class CardFormViewModelTest {
 
     private fun viewModel(handle: SavedStateHandle) =
         CardFormViewModel(handle, stores, cards, Clock.fixed(NOW, ZoneOffset.UTC), photos)
+
+    /** What `onSaveInstanceState` keeps of [this] now: a new handle, so later writes to this one don't reach it. */
+    private fun SavedStateHandle.snapshot() = SavedStateHandle(keys().associateWith { get<Any?>(it) })
 
     /** The first state with the store loaded. */
     private suspend fun ReceiveTurbine<CardFormState>.awaitLoaded(): CardFormState {

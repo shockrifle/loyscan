@@ -59,7 +59,8 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   it to the orphan sweep (Orphans): `onCleared` deletes nothing, because it also runs when the activity is destroyed
   with the form still on the back stack and its process alive ("Don't keep activities", a background kill), and the
   form restored from the same saved state still names those copies, so their files must survive (#95; the unanswered
-  capture, below, has the same reason). A form closed while its save runs leaves them to the save; if that save then
+  capture, below, has the same reason). Such a restored form saves the same card again, not a second one
+  ([[2026-11-11-restored-form-saved-a-duplicate]], #99). A form closed while its save runs leaves them to the save; if that save then
   fails it keeps the picks too (for the same reason — the clear may be an activity destroy), and they go to the sweep.
 - **Taking a photo** opens the system camera app (`ACTION_IMAGE_CAPTURE` through `ActivityResultContracts.TakePicture`,
   `ui/PhotoCamera.kt`, `rememberPhotoCamera`), not a camera screen of LoyScan's own. Because the manifest declares the

@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -173,6 +174,19 @@ class CardFormViewModel @Inject constructor(
     }
 
     private val progress = MutableStateFlow(Progress())
+
+    /**
+     * The id a new card is saved under, fixed when the add form is first created (#99). It goes into the saved state
+     * at once, so every snapshot of it carries the id: a form restored after its activity was destroyed while a save
+     * ran drafts the same card, and saving again updates it instead of adding a second one. A write made only when
+     * saving would be too late, since the activity saves its state when it stops, before that save ends.
+     */
+    private val newCardId: String? = if (route.cardId != null) {
+        null
+    } else {
+        savedStateHandle.get<String>(NEW_CARD_ID)
+            ?: UUID.randomUUID().toString().also { savedStateHandle[NEW_CARD_ID] = it }
+    }
 
     /**
      * Started eagerly, not while subscribed: [onNumberChange] and [save] guard on `state.value`, which must stay current
@@ -384,11 +398,13 @@ class CardFormViewModel @Inject constructor(
             backPhotoPath = current.backPhoto,
             updatedAt = now,
         )
-        val drafted = original?.let { draft } ?: draft.copy(id = UUID.randomUUID().toString(), createdAt = now)
+        val drafted = original?.let { draft } ?: draft.copy(id = checkNotNull(newCardId), createdAt = now)
         val picked = pickedNames()
         viewModelScope.launch {
             progress.value = try {
                 withContext(NonCancellable) {
+                    // A new card this form already saved before it was restored (#99): saving again updates it.
+                    val saved = original ?: cardRepository.getByIdWithStore(drafted.id).first()
                     // A pick restored after process death may have been swept since, if it waited over a day: that side
                     // stays as the card had it, so the edit doesn't delete the card's own photo.
                     val gone = picked.filterNot { photos.exists(it) }.toSet()
@@ -397,7 +413,7 @@ class CardFormViewModel @Inject constructor(
                         frontPhotoPath = unlessGone(drafted.frontPhotoPath, original?.frontPhotoPath),
                         backPhotoPath = unlessGone(drafted.backPhotoPath, original?.backPhotoPath),
                     )
-                    if (original == null) cardRepository.add(card) else cardRepository.update(card)
+                    if (saved == null) cardRepository.add(card) else cardRepository.update(card)
                 }
                 Progress(savedCardId = drafted.id)
             } catch (e: CancellationException) {
@@ -553,6 +569,9 @@ class CardFormViewModel @Inject constructor(
         const val TYPED_NUMBER = "typedNumber"
         const val FRONT_PHOTO = "frontPhoto"
         const val BACK_PHOTO = "backPhoto"
+
+        /** The id a new card is saved under (#99), kept from the add form's creation. */
+        const val NEW_CARD_ID = "newCardId"
 
         /** The file handed to the camera app (#10), until it answers: its name, its Uri and the side it is for. */
         const val CAPTURE = "capture"
