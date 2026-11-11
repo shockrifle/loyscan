@@ -48,12 +48,16 @@ Caches:
   release download (run 42583570631); recreated, #113 passed and #111 failed on the coupling too. The other three
   got Gradle and failed on the version coupling in #115. The `master` runs restored setup-gradle's cache and never
   downloaded it (#116). A wrapper bump (like #114) still misses this cache, and the retry step is all it has.
-- Robolectric's downloaded `android-all` jars (`~/.m2/repository/org/robolectric`, keyed on
-  `gradle/libs.versions.toml`). A cache hit saves nothing, so a jar for an SDK a test newly pins (`@Config(sdk = [N])`)
-  is kept only once that file next changes; until then every run downloads it (#94)
+- Robolectric's downloaded `android-all` jars (`~/.m2/repository/org/robolectric`), one per SDK the tests run on:
+  `targetSdk` and each SDK a test pins with `@Config(sdk = [N])`. The key is `robolectric-jars-<hash of
+  gradle/libs.versions.toml>-<hash of the jar list>`, made by `.github/scripts/robolectric-jars.sh` (#94). **Restore
+  Robolectric jars** takes the newest entry for this toml hash, and **Robolectric jars before the tests** prints what
+  it restored. A test that needs a jar the entry lacks downloads it, **Robolectric jars after the tests** lists it, and
+  **Save Robolectric jars** stores the new set under its own key; the next run restores it. When the two lists match,
+  nothing was downloaded and the save step is skipped. A toml change (a Robolectric bump) starts this cache cold.
 
 **Runtime** (measured 2026-10-12): about 2 minutes with a warm Gradle cache (2m4s), and about 5 minutes cold
-(4m57s–5m32s, the first run, or after the cache key changes, e.g. a dependency bump).
+(4m57s–5m32s, the first run, or after setup-gradle's cache key changes, e.g. a dependency bump).
 
 ## Where the reports are
 
@@ -103,13 +107,21 @@ for the failing assertion before changing the test.
   about a minute. It runs after the tests, so a test failure is reported first, and before the release build. It is
   also in the local gate ([[tdd]]). The cost: about a minute per run, and a dependency bump (AGP, androidx) can add
   an error-level check, so a Dependabot PR can turn red on lint and need a code fix before it merges.
+- **The Robolectric cache is keyed on its jars** (#94). Until 2026-11-11 the key was the toml hash alone, and
+  `actions/cache` saves nothing on a key hit, so a jar for a newly pinned SDK was cached only once the toml next
+  changed; until then every run downloaded it (SDK 32, pinned in #126, was such a jar). Now the key follows the set of
+  jars, with restore and save as separate steps. Saved only after green tests, so a jar cut short by a failing run is
+  never stored; the next green run saves it. Restore takes the newest entry for the toml hash, not the largest, so a
+  PR-scope entry can hide a newer one on `master` and the run downloads and saves again. No fallback to an older
+  toml's entries, so jars of an old Robolectric version don't pile up. The cost: one entry (about 450 MB) per new set
+  and scope, and a jar a test no longer pins stays in the set until the toml changes.
 - **Basic Gradle caching** (`cache-provider: basic`). `setup-gradle` v6 defaults to a proprietary "enhanced"
   cache, which is a free preview for private repos with pricing announced for later. The basic provider is MIT and
   uses `actions/cache`.
 - **`gradlew` is executable in git** (`git update-index --chmod=+x gradlew`). On Windows the bit isn't visible,
   but the Linux runner needs it.
 - Action versions are pinned to major tags (`checkout@v7`, `setup-java@v6`, `setup-gradle@v6`, `cache@v6`,
-  `upload-artifact@v7`). Dependabot proposes new majors (below).
+  `cache/restore@v6`, `cache/save@v6`, `upload-artifact@v7`). Dependabot proposes new majors (below).
 
 ## Dependabot
 
@@ -122,7 +134,7 @@ for the failing assertion before changing the test.
   Dependabot can't see, so bump it by hand when that changes.
 - **GitHub Actions** (the `uses:` versions in the workflows), all in one PR.
 
-Each PR runs the Tests workflow. A Gradle bump changes the Robolectric cache key and setup-gradle's, so its run
+Each PR runs the Tests workflow. A Gradle bump changes setup-gradle's cache key and the toml part of the Robolectric one, so its run
 starts cold (about 5 minutes); the Gradle distribution still comes from its own cache unless the wrapper itself is
 bumped (Caches, above).
 
