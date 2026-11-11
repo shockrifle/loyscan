@@ -147,4 +147,9 @@
     <string name="enter_manually">Enter manually</string>
     <string name="camera_needed_for_scan">LoyScan needs the camera to read the barcode on your card. The pictures are read on your phone and never stored or sent anywhere.</string>
     <string name="allow_camera">Allow camera</string>
+
+    <!-- Shared picture -->
+    <string name="shared_picture_no_barcode">No barcode was found in that picture. You can enter the number from the card by hand.</string>
+    <string name="shared_picture_unreadable">That picture couldn\'t be opened. You can enter the number from the card by hand.</string>
+    <string name="enter_number_by_hand">Enter the number by hand</string>
 </resources>

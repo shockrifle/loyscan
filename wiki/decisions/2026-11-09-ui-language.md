@@ -5,8 +5,8 @@
 ## Context
 
 LoyScan is for Hungarian stores, but its UI was English only, with every string hardcoded in Kotlin (#72). Before the
-first release the UI moves to string resources and gets a Hungarian translation. The move is done screen by screen,
-so for a while a Hungarian phone shows some screens translated and others in English.
+first release the UI moves to string resources and gets a Hungarian translation. The move was done screen by screen
+(four PRs, #122, #136, #137 and the scanner and shared picture screen); since 2026-11-11 every screen is translated.
 
 ## Options considered
 
