@@ -6,7 +6,7 @@ its format, and whether it holds GS1 data (a Code 128, Data Matrix or QR marked 
 after the store picker of [[add-card]]; a scan or "Enter manually" replaces it with the card form.
 
 **Entry points** (under `app/src/main/java/com/bdaniel/loyscan/`):
-- `ScannerScreen.kt:51`, `ScannerScreen`; state in `ScannerViewModel.kt`.
+- `ScannerScreen.kt:52`, `ScannerScreen`; state in `ScannerViewModel.kt`.
 - Route `Scanner(storeId)`, `ScannerDirections` and `scannerDirections()` in `Navigation.kt:142-172`; registered in
   `MainActivity.kt:106-108`.
 - `ui/scanner/`: `CameraPermission.kt` (permission state), `CameraScanner.kt` (CameraX, `ScanAnalyzer`),
@@ -16,7 +16,7 @@ after the store picker of [[add-card]]; a scan or "Enter manually" replaces it w
 ## Behaviour
 
 - **Permission.** On entry, if the camera permission was never asked for on this visit, the system dialog opens
-  (`ScannerScreen.kt:54`). While it isn't granted, the screen explains why the camera is needed, with "Allow camera"
+  (`ScannerScreen.kt:55`). While it isn't granted, the screen explains why the camera is needed, with "Allow camera"
   (asks again) or, once the system won't ask again, "Open settings" (the app's details page). The status is read
   again on every resume, so allowing it in the settings and coming back shows the camera. Which denial is which
   (`cameraPermissionStatus`): the first denial on a visit always offers "Allow camera", because on Android 11+
@@ -55,7 +55,7 @@ after the store picker of [[add-card]]; a scan or "Enter manually" replaces it w
   by `ZxingCppPictureReader` off the main thread with the camera's formats and options ([[zxing-cpp]] → Reading a
   picture), and only held in memory while it is read. A barcode found goes through `ScannerViewModel.onScanned`, the
   same first-scan-only rule as the camera (`ScannerViewModel.onPicturePicked`, `ScannerViewModel.kt:90`), then to
-  `directions.onScanned` from a `LaunchedEffect` collecting `pictureScans` (`ScannerScreen.kt:66`): the card form
+  `directions.onScanned` from a `LaunchedEffect` collecting `pictureScans` (`ScannerScreen.kt:67`): the card form
   opens with its content and format exactly as after a camera scan. No barcode, or a picture that can't be opened,
   keeps the scanner open with a message in place of the hint; a cancelled picker changes nothing. While a picture is
   read, the button says "Reading the picture…" and is disabled, so one picture is read at a time. Opening a picture
