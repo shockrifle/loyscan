@@ -96,4 +96,40 @@
     <string name="colour_teal">Teal</string>
     <string name="colour_brown">Brown</string>
     <string name="colour_grey">Grey</string>
+
+    <!-- Card form -->
+    <string name="edit_card">Edit card</string>
+    <string name="change_store">Change store</string>
+    <string name="card_number">Card number</string>
+    <string name="type_number_instead">Type the number instead</string>
+    <string name="looks_like_card_from">It looks like a card from:</string>
+    <string name="scanned_format">Scanned · %1$s</string>
+    <string name="typed_number_barcode">Barcode: %1$s</string>
+    <string name="label_optional">Label (optional)</string>
+    <string name="note_optional">Note (optional)</string>
+    <string name="add_front_photo">Add front photo</string>
+    <string name="add_back_photo">Add back photo</string>
+    <string name="replace_front_photo">Replace front photo</string>
+    <string name="replace_back_photo">Replace back photo</string>
+    <string name="remove_front_photo">Remove front photo</string>
+    <string name="remove_back_photo">Remove back photo</string>
+    <string name="take_photo">Take photo</string>
+    <string name="choose_from_gallery">Choose from gallery</string>
+    <string name="photo_add_failed">The photo couldn\'t be added. Try again.</string>
+    <string name="camera_needed_for_photo">LoyScan needs the camera to take a photo of your card.</string>
+    <string name="camera_turned_off">Camera access is turned off for LoyScan. You can allow it in the app\'s settings.</string>
+    <string name="open_settings">Open settings</string>
+    <string name="card_save_failed">The card couldn\'t be saved. Try again.</string>
+    <string name="save_anyway">Save anyway</string>
+    <string name="number_does_not_fit_format">This isn\'t a valid %1$s number.</string>
+    <string name="scan_does_not_match_store">This barcode doesn\'t look like a %1$s card.</string>
+    <string name="number_has_invalid_characters">It has characters %1$s card numbers don\'t use.</string>
+    <string name="number_too_short">Too short for a %1$s card number.</string>
+    <string name="number_too_long">Too long for a %1$s card number.</string>
+    <string name="number_starts_wrong">%1$s card numbers don\'t start like this.</string>
+    <string name="number_bad_check_digit">The check digit doesn\'t match. Check the number for a typo.</string>
+
+    <!-- Photo crop screen -->
+    <string name="use_whole_photo">Use whole photo</string>
+    <string name="crop_photo">Crop</string>
 </resources>

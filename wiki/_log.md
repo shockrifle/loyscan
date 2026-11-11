@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-11 · the card form and its photo crop screen are in Hungarian on a Hungarian phone; the smoke test finds "Save" and the scanned format line by resource name · features/add-card, features/edit-card, features/card-photos, workflows/add-a-string · #72 slice 3
 - 2026-11-11 · review fix: the card form's format line in Hungarian is pinned by a test, linked from the not-translated-yet note · workflows/add-a-string · PR #136 review
 - 2026-11-11 · the custom store form and its delete dialog are in Hungarian on a Hungarian phone; swatch names come from the ViewModel as resource ids · features/edit-store, workflows/add-a-string, workflows/tdd, architecture · #72 slice 2
 - 2026-11-11 · barcode format names go through barcodeFormatName: only the QR ones are translated ("QR-kód"), other symbology names are proper names; DetailScreen.kt line links moved by one · decisions/2026-11-09-ui-language, workflows/add-a-string, features/card-detail, features/card-transition, architecture, tech-debt/shared-element-key-from-async-state, tech-debt/empty-brand-color-crash · #72 slice 2

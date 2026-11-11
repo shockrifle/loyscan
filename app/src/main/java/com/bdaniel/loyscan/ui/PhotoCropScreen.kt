@@ -35,9 +35,11 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
+import com.bdaniel.loyscan.R
 import com.bdaniel.loyscan.data.photos.MAX_PHOTO_SIDE
 import com.bdaniel.loyscan.data.photos.PhotoCrop
 import kotlin.math.max
@@ -116,10 +118,10 @@ fun PhotoCropScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     TextButton(onClick = onCancel, modifier = Modifier.weight(1f)) {
-                        Text("Cancel", color = Color.White)
+                        Text(stringResource(R.string.cancel), color = Color.White)
                     }
                     TextButton(onClick = { onConfirm(PhotoCrop.WHOLE) }, modifier = Modifier.weight(1f)) {
-                        Text("Use whole photo", color = Color.White)
+                        Text(stringResource(R.string.use_whole_photo), color = Color.White)
                     }
                     Button(
                         onClick = {
@@ -132,7 +134,7 @@ fun PhotoCropScreen(
                         },
                         modifier = Modifier.weight(1f),
                     ) {
-                        Text("Crop")
+                        Text(stringResource(R.string.crop_photo))
                     }
                 }
             }

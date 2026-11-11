@@ -94,4 +94,40 @@
     <string name="colour_teal">Türkiz</string>
     <string name="colour_brown">Barna</string>
     <string name="colour_grey">Szürke</string>
+
+    <!-- Card form -->
+    <string name="edit_card">Kártya szerkesztése</string>
+    <string name="change_store">Másik bolt</string>
+    <string name="card_number">Kártyaszám</string>
+    <string name="type_number_instead">Inkább beírom a számot</string>
+    <string name="looks_like_card_from">Ezek közül valamelyik bolt kártyájának tűnik:</string>
+    <string name="scanned_format">Beolvasva · %1$s</string>
+    <string name="typed_number_barcode">Vonalkód: %1$s</string>
+    <string name="label_optional">Címke (nem kötelező)</string>
+    <string name="note_optional">Megjegyzés (nem kötelező)</string>
+    <string name="add_front_photo">Előoldali fotó hozzáadása</string>
+    <string name="add_back_photo">Hátoldali fotó hozzáadása</string>
+    <string name="replace_front_photo">Előoldali fotó cseréje</string>
+    <string name="replace_back_photo">Hátoldali fotó cseréje</string>
+    <string name="remove_front_photo">Előoldali fotó eltávolítása</string>
+    <string name="remove_back_photo">Hátoldali fotó eltávolítása</string>
+    <string name="take_photo">Fotó készítése</string>
+    <string name="choose_from_gallery">Választás a galériából</string>
+    <string name="photo_add_failed">Nem sikerült hozzáadni a fotót. Próbáld újra.</string>
+    <string name="camera_needed_for_photo">A kártya lefotózásához a LoyScannek szüksége van a kamerára.</string>
+    <string name="camera_turned_off">A LoyScan nem használhatja a kamerát. Az alkalmazás beállításaiban engedélyezheted.</string>
+    <string name="open_settings">Beállítások megnyitása</string>
+    <string name="card_save_failed">Nem sikerült menteni a kártyát. Próbáld újra.</string>
+    <string name="save_anyway">Mentés így is</string>
+    <string name="number_does_not_fit_format">Ez a szám nem érvényes ebben a formátumban: %1$s.</string>
+    <string name="scan_does_not_match_store">Ez a vonalkód nem tűnik %1$s kártyának.</string>
+    <string name="number_has_invalid_characters">%1$s kártyaszámban nem lehet ilyen karakter.</string>
+    <string name="number_too_short">Túl rövid %1$s kártyaszámnak.</string>
+    <string name="number_too_long">Túl hosszú %1$s kártyaszámnak.</string>
+    <string name="number_starts_wrong">%1$s kártyaszám nem így kezdődik.</string>
+    <string name="number_bad_check_digit">Az ellenőrző számjegy nem egyezik. Nézd meg, nincs-e elírás a számban.</string>
+
+    <!-- Photo crop screen -->
+    <string name="use_whole_photo">Az egész fotó</string>
+    <string name="crop_photo">Kivágás</string>
 </resources>
