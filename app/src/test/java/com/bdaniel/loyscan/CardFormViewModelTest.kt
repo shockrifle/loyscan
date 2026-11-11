@@ -62,8 +62,8 @@ class CardFormViewModelTest {
     private val qrStore = aStore(id = "qr", name = "A QR Store", cardNumberRule = rule.copy(format = BarcodeFormat.QR_CODE))
     private val eanStore = aStore(id = "ean", name = "Ean Store", defaultBarcodeFormat = BarcodeFormat.EAN_13)
     private val stores = FakeStoreRepository(listOf(store, plainStore, nineStore, gs1Store, qrStore, eanStore))
-    private val cards = FakeLoyaltyCardRepository()
     private val photos = FakeCardPhotos()
+    private val cards = FakeLoyaltyCardRepository(photos = photos)
 
     @Test
     fun typedForm_startsEmpty_andCantBeSaved() = runTest {
@@ -899,7 +899,7 @@ class CardFormViewModelTest {
         assertThat(cards.cards.value.single().frontPhotoPath).isEqualTo("front")
         assertThat(cards.cards.value.single().backPhotoPath).isEqualTo("photo-1")
         // The card's own back photo is the repository's to delete, once the edit is saved.
-        assertThat(photos.stored).containsExactly("front", "back", "photo-1")
+        assertThat(photos.stored).containsExactly("front", "photo-1")
     }
 
     @Test
@@ -1098,6 +1098,98 @@ class CardFormViewModelTest {
         }
 
         assertThat(cards.cards.value.map { it.id }.distinct()).hasSize(2)
+    }
+
+    @Test
+    fun aFormRestoredAfterItsCardWasSaved_removingItsPhotoWithoutSaving_keepsThePhoto() = runTest { // #141
+        cards.addGate = CompletableDeferred()
+        val saved = snapshotWhileTheSaveRuns(CardForm("ruled"), cards.addGate!!)
+        val owner = ViewModelStore()
+
+        owner.keep { viewModel(saved) }.removePhoto(CardPhotoSide.FRONT)
+        owner.clear()
+
+        assertTheCardShowsItsFrontPhoto(cards.cards.value.single().id, "photo-1")
+    }
+
+    @Test
+    fun aFormRestoredAfterItsCardWasSaved_reCroppingItsPhotoWithoutSaving_keepsThePhoto() = runTest { // #141
+        cards.addGate = CompletableDeferred()
+        val saved = snapshotWhileTheSaveRuns(CardForm("ruled"), cards.addGate!!)
+        val owner = ViewModelStore()
+
+        owner.keep { viewModel(saved) }.pickAndCrop(CardPhotoSide.FRONT)
+        owner.clear()
+
+        assertTheCardShowsItsFrontPhoto(cards.cards.value.single().id, "photo-1")
+    }
+
+    @Test
+    fun aFormRestoredAfterItsCardWasSaved_savingItsPhotoRemoval_deletesThePhoto() = runTest { // #141
+        cards.addGate = CompletableDeferred()
+        val saved = snapshotWhileTheSaveRuns(CardForm("ruled"), cards.addGate!!)
+        val restored = viewModel(saved)
+
+        restored.state.test {
+            awaitLoaded()
+            restored.removePhoto(CardPhotoSide.FRONT)
+            restored.save()
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        assertThat(cards.cards.value.single().frontPhotoPath).isNull()
+        assertThat(photos.stored).doesNotContain("photo-1")
+    }
+
+    @Test
+    fun anEditFormRestoredAfterItsSave_removingThePickedPhotoWithoutSaving_keepsThePhoto() = runTest { // #141
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, number = "12345674"))
+        cards.updateGate = CompletableDeferred()
+        val saved = snapshotWhileTheSaveRuns(CardForm("ruled", cardId = cardId(1)), cards.updateGate!!)
+        val owner = ViewModelStore()
+
+        owner.keep { viewModel(saved) }.removePhoto(CardPhotoSide.FRONT)
+        owner.clear()
+
+        assertTheCardShowsItsFrontPhoto(cardId(1), "photo-1")
+    }
+
+    @Test
+    fun aFormRestoredAfterItsCardWasSaved_whoseOwnSaveFails_stillKeepsThePhotoOnRemoval() = runTest { // #141
+        cards.addGate = CompletableDeferred()
+        val saved = snapshotWhileTheSaveRuns(CardForm("ruled"), cards.addGate!!)
+        cards.updateFailure = IllegalStateException("disk full")
+        val owner = ViewModelStore()
+        val restored = owner.keep { viewModel(saved) }
+
+        restored.state.test {
+            awaitLoaded()
+            restored.save()
+            restored.removePhoto(CardPhotoSide.FRONT)
+            cancelAndIgnoreRemainingEvents()
+        }
+        owner.clear()
+
+        assertThat(restored.state.value.saveFailed).isTrue()
+        assertTheCardShowsItsFrontPhoto(cards.cards.value.single().id, "photo-1")
+    }
+
+    @Test
+    fun aFailedSave_thenRemovingItsPhoto_deletesItAtOnce() = runTest { // #141: only a save that may have stored it keeps it
+        cards.addFailure = IllegalStateException("disk full")
+        val viewModel = viewModel(CardForm("ruled"))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.onNumberChange("12345674")
+            viewModel.pickAndCrop(CardPhotoSide.FRONT)
+            viewModel.save()
+            viewModel.removePhoto(CardPhotoSide.FRONT)
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        assertThat(viewModel.state.value.saveFailed).isTrue()
+        assertThat(photos.stored).isEmpty()
     }
 
     @Test
@@ -1470,6 +1562,36 @@ class CardFormViewModelTest {
 
     private fun viewModel(handle: SavedStateHandle) =
         CardFormViewModel(handle, stores, cards, Clock.fixed(NOW, ZoneOffset.UTC), photos)
+
+    /**
+     * A form for [route] given a number (when adding) and a front photo (`photo-1`), saved while [gate] holds the save:
+     * returns the snapshot of its handle the activity keeps when it stops after Save is tapped, then clears the form and
+     * lets the save end (#141).
+     */
+    private suspend fun snapshotWhileTheSaveRuns(route: CardForm, gate: CompletableDeferred<Unit>): SavedStateHandle {
+        val handle = SavedStateHandle(route = route)
+        val owner = ViewModelStore()
+        val form = owner.keep { viewModel(handle) }
+        form.state.test {
+            awaitLoaded()
+            if (route.cardId == null) form.onNumberChange("12345674")
+            form.pickAndCrop(CardPhotoSide.FRONT)
+            form.save()
+            cancelAndIgnoreRemainingEvents()
+        }
+        val saved = handle.snapshot()
+        owner.clear()
+        gate.complete(Unit)
+        return saved
+    }
+
+    /** The card [id] names [photo] for its front, the file is there, and a form opened on the card shows it (#87). */
+    private suspend fun assertTheCardShowsItsFrontPhoto(id: String, photo: String) {
+        assertThat(photos.stored).contains(photo)
+        assertThat(cards.cards.value.single { it.id == id }.frontPhotoPath).isEqualTo(photo)
+        val opened = viewModel(CardForm("ruled", cardId = id))
+        opened.state.test { assertThat(awaitLoaded().frontPhoto).isEqualTo(photo) }
+    }
 
     /** What `onSaveInstanceState` keeps of [this] now: a new handle, so later writes to this one don't reach it. */
     private fun SavedStateHandle.snapshot() = SavedStateHandle(keys().associateWith { get<Any?>(it) })

@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-11 · a restored card form no longer deletes a photo a save was handed (`savedPhotos` in the saved state); the repository fake's update deletes dropped photos; restore tests snapshot after save() · bugs/2026-11-11-restored-form-saved-a-duplicate, features/card-photos, workflows/tdd · #141
 - 2026-11-11 · the restored-form postmortem notes what a restored form's Save still does: it overwrites an edit made elsewhere, and its photo removal deletes a file the saved card names · bugs/2026-11-11-restored-form-saved-a-duplicate · PR #140 review
 - 2026-11-11 · a new card's id is kept in the form's saved state from its creation, so a form restored mid-save updates its card instead of adding a duplicate; restore tests use a snapshot of the handle · features/add-card, features/card-photos, workflows/tdd, bugs/2026-11-11-restored-form-saved-a-duplicate, bugs/_index, index · #99
 - 2026-11-11 · ScannerScreen.kt line links moved by one (the stringResource import) · features/barcode-scanner · PR #138 review

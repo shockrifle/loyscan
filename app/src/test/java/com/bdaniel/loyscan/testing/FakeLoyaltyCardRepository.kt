@@ -10,10 +10,14 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import java.time.Instant
 
-/** In-memory [LoyaltyCardRepository]. Set [cards] to drive what observers see. */
+/**
+ * In-memory [LoyaltyCardRepository]. Set [cards] to drive what observers see. With [photos], [update] deletes the photos
+ * the edit drops from it, as the Room repository does (#141); without, photo files are left alone.
+ */
 class FakeLoyaltyCardRepository(
     cards: List<LoyaltyCard> = emptyList(),
     private val now: Instant = SOME_INSTANT,
+    private val photos: FakeCardPhotos? = null,
 ) : LoyaltyCardRepository {
 
     val cards = MutableStateFlow(cards)
@@ -62,10 +66,18 @@ class FakeLoyaltyCardRepository(
         cards.value += card
     }
 
-    /** Like the Room repository: only the store, label, number, scanned format, note, photos and `updatedAt` change. */
+    /**
+     * Like the Room repository: only the store, label, number, scanned format, note, photos and `updatedAt` change, and
+     * a photo the edit replaces or removes is deleted from [photos].
+     */
     override suspend fun update(card: LoyaltyCard) {
         updateGate?.await()
         updateFailure?.let { throw it }
+        val stored = cards.value.firstOrNull { it.id == card.id }
+        if (stored != null) {
+            val kept = setOf(card.frontPhotoPath, card.backPhotoPath)
+            photos?.delete(listOfNotNull(stored.frontPhotoPath, stored.backPhotoPath).filterNot { it in kept })
+        }
         cards.value = cards.value.map {
             if (it.id != card.id) it
             else it.copy(
