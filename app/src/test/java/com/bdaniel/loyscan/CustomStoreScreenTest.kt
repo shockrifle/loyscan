@@ -5,6 +5,9 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -17,6 +20,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.testing.FakeLoyaltyCardRepository
 import com.bdaniel.loyscan.testing.FakeStoreRepository
+import com.bdaniel.loyscan.testing.ShownTexts
 import com.bdaniel.loyscan.testing.aLoyaltyCard
 import com.bdaniel.loyscan.testing.cardId
 import com.bdaniel.loyscan.testing.SOME_INSTANT
@@ -26,6 +30,7 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.annotation.Config
 import java.time.Clock
 import java.time.ZoneOffset
 
@@ -53,8 +58,10 @@ class CustomStoreScreenTest {
     fun theFirstColourAndCode128_arePickedAtFirst() {
         setScreen()
 
-        composeRule.onNodeWithContentDescription(CustomStoreViewModel.COLORS[0].name).assertIsSelected()
-        composeRule.onNodeWithContentDescription(CustomStoreViewModel.COLORS[1].name).assertIsNotSelected()
+        composeRule.onNodeWithContentDescription("Blue") // COLORS[0]
+            .assertIsSelected()
+        composeRule.onNodeWithContentDescription("Red") // COLORS[1]
+            .assertIsNotSelected()
         composeRule.onNodeWithText(BarcodeFormat.CODE_128.displayName).performScrollTo().assertIsSelected()
     }
 
@@ -74,7 +81,7 @@ class CustomStoreScreenTest {
         val color = CustomStoreViewModel.COLORS[3]
 
         composeRule.onNodeWithTag(CUSTOM_STORE_NAME_TAG).performTextInput("My Shop")
-        composeRule.onNodeWithContentDescription(color.name).performClick()
+        composeRule.onNodeWithContentDescription("Orange").performClick() // COLORS[3]
         composeRule.onNodeWithText(BarcodeFormat.EAN_13.displayName).performScrollTo().performClick()
         composeRule.onNodeWithText("Create").performScrollTo().performClick()
 
@@ -115,7 +122,8 @@ class CustomStoreScreenTest {
 
         composeRule.onNodeWithText("Edit store").assertIsDisplayed()
         composeRule.onNodeWithText("My Shop").assertIsDisplayed()
-        composeRule.onNodeWithContentDescription(CustomStoreViewModel.COLORS[2].name).assertIsSelected()
+        composeRule.onNodeWithContentDescription("Green") // COLORS[2]
+            .assertIsSelected()
         composeRule.onNodeWithText("Create").assertDoesNotExist()
         composeRule.onNodeWithText(BarcodeFormat.QR_CODE.displayName).performScrollTo().performClick()
         composeRule.onNodeWithText("Save").performScrollTo().performClick()
@@ -211,6 +219,84 @@ class CustomStoreScreenTest {
         setScreen()
 
         composeRule.onNodeWithContentDescription("Delete").assertDoesNotExist()
+    }
+
+    @Test
+    @Config(qualifiers = "+hu")
+    fun inHungarian_everyTextOnTheNewStoreForm_isTranslated() { // #72
+        stores.addFailure = IllegalStateException("insert failed")
+        setScreen()
+        val shown = ShownTexts(composeRule)
+        shown.collect()
+
+        composeRule.onNodeWithTag(CUSTOM_STORE_NAME_TAG).performTextInput("My Shop")
+        composeRule.onNodeWithText("Létrehozás").performScrollTo().performClick()
+        shown.collect()
+
+        shown.assertSeen(
+            "Új bolt", "Vissza", "Bolt neve", "Szín", "Kék", "Szürke", "Vonalkód a beírt számokhoz", "QR-kód",
+            "A beolvasott kártya megtartja a saját vonalkódját.", "Nem sikerült menteni a boltot. Próbáld újra.",
+            "Létrehozás",
+        )
+        // Symbology names other than the QR ones are proper names (wiki: 2026-11-09-ui-language).
+        val symbologyNames = CustomStoreViewModel.FORMATS.filter { it != BarcodeFormat.QR_CODE }.map { it.displayName }
+        shown.assertEveryTextIsTranslated("My Shop", *symbologyNames.toTypedArray())
+    }
+
+    @Test
+    @Config(qualifiers = "+hu")
+    fun inHungarian_everyTextOnTheEditForm_andItsDeleteDialog_isTranslated() { // #72
+        val store = aStore(id = "custom", name = "My Shop", isCustom = true)
+        stores.stores.value = listOf(store)
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store), aLoyaltyCard(id = cardId(2), store = store))
+        setScreen(CustomStore("custom"))
+        val shown = ShownTexts(composeRule)
+        shown.collect()
+
+        composeRule.onNodeWithContentDescription("Törlés").performClick()
+        shown.collect()
+        stores.deleteFailure = IllegalStateException("delete failed")
+        composeRule.onNode(hasText("Törlés") and hasAnyAncestor(isDialog())).performClick()
+        shown.collect()
+
+        shown.assertSeen(
+            "Bolt szerkesztése", "Mentés", "Törlés", "Törlöd ezt a boltot: My Shop?",
+            "A hozzá tartozó 2 kártya is törlődik vele.", "Mégse", "Nem sikerült törölni a boltot. Próbáld újra.",
+        )
+        val symbologyNames = CustomStoreViewModel.FORMATS.filter { it != BarcodeFormat.QR_CODE }.map { it.displayName }
+        shown.assertEveryTextIsTranslated("My Shop", *symbologyNames.toTypedArray())
+    }
+
+    @Test
+    @Config(qualifiers = "+hu")
+    fun inHungarian_deletingAStoreWithOneCard_saysSo() { // #72
+        val store = aStore(id = "custom", name = "My Shop", isCustom = true)
+        stores.stores.value = listOf(store)
+        cards.cards.value = listOf(aLoyaltyCard(store = store))
+        setScreen(CustomStore("custom"))
+
+        composeRule.onNodeWithContentDescription("Törlés").performClick()
+
+        composeRule.onNodeWithText("A kártyája is törlődik vele.").assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = "+hu")
+    fun inHungarian_deletingAStoreWithoutCards_saysSo() { // #72
+        stores.stores.value = listOf(aStore(id = "custom", name = "My Shop", isCustom = true))
+        setScreen(CustomStore("custom"))
+
+        composeRule.onNodeWithContentDescription("Törlés").performClick()
+
+        composeRule.onNodeWithText("Nincs hozzá kártya.").assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = "+hu")
+    fun inHungarian_editingAStoreThatIsGone_saysSo() { // #72
+        setScreen(CustomStore("gone"))
+
+        composeRule.onNodeWithText("Ez a bolt már nem létezik.").assertIsDisplayed()
     }
 
     private fun setScreen(route: CustomStore = CustomStore()) {

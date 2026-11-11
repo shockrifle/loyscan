@@ -55,9 +55,9 @@ class MinifiedAppSmokeTest {
         // Add: a custom store, the scanner for it, then the number typed in.
         click(By.desc(string("add_card")))
         click(By.text(string("other_card")))
-        await(By.text("New store"))
+        await(By.text(string("new_store")))
         fields()[0].text = STORE
-        click(By.text("Create"))
+        click(By.text(string("create")))
         await(By.text("Scan card"))
         // Stay while the camera runs: each frame goes through the analyzer and zxing-cpp's JNI read (no barcode in
         // view, so it finds none). A crash there under R8 ends the process, and the scanner is no longer on screen.
@@ -110,9 +110,9 @@ class MinifiedAppSmokeTest {
 
             // The picker holds the scan; "Other card" carries it on to a new store's form.
             click(By.text(string("other_card")))
-            await(By.text("New store"))
+            await(By.text(string("new_store")))
             fields()[0].text = SHARED_STORE
-            click(By.text("Create"))
+            click(By.text(string("create")))
             await(By.text("Scanned · EAN-13"))
             await(By.text(BARCODE))
         } finally {

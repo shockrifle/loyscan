@@ -1,5 +1,6 @@
 package com.bdaniel.loyscan
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -208,19 +209,19 @@ class CustomStoreViewModel @Inject constructor(
         val saved: Boolean = false,
     )
 
-    /** A colour a custom store can have; [name] is what a screen reader says. */
-    data class Swatch(val name: String, val hex: String)
+    /** A colour a custom store can have; [name] is what a screen reader says, as a string resource (#72). */
+    data class Swatch(@StringRes val name: Int, val hex: String)
 
     companion object {
         val COLORS: List<Swatch> = listOf(
-            Swatch("Blue", "#1E5AA8"),
-            Swatch("Red", "#C62828"),
-            Swatch("Green", "#2E7D32"),
-            Swatch("Orange", "#EF6C00"),
-            Swatch("Purple", "#6A1B9A"),
-            Swatch("Teal", "#00796B"),
-            Swatch("Brown", "#5D4037"),
-            Swatch("Grey", "#455A64"),
+            Swatch(R.string.colour_blue, "#1E5AA8"),
+            Swatch(R.string.colour_red, "#C62828"),
+            Swatch(R.string.colour_green, "#2E7D32"),
+            Swatch(R.string.colour_orange, "#EF6C00"),
+            Swatch(R.string.colour_purple, "#6A1B9A"),
+            Swatch(R.string.colour_teal, "#00796B"),
+            Swatch(R.string.colour_brown, "#5D4037"),
+            Swatch(R.string.colour_grey, "#455A64"),
         )
 
         /** Decided in #47: [BarcodeFormat.forCustomStores]. */

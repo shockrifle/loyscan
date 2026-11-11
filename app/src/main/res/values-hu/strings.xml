@@ -67,4 +67,31 @@
     <string name="edit_store_named">%1$s szerkesztése</string>
     <string name="search_stores">Boltok keresése</string>
     <string name="no_store_matches">Nincs ilyen bolt: „%1$s”</string>
+
+    <!-- Custom store form -->
+    <string name="new_store">Új bolt</string>
+    <string name="edit_store">Bolt szerkesztése</string>
+    <string name="store_gone">Ez a bolt már nem létezik.</string>
+    <string name="store_name">Bolt neve</string>
+    <string name="store_colour">Szín</string>
+    <string name="barcode_for_typed_numbers">Vonalkód a beírt számokhoz</string>
+    <string name="scanned_card_keeps_its_barcode">A beolvasott kártya megtartja a saját vonalkódját.</string>
+    <string name="store_save_failed">Nem sikerült menteni a boltot. Próbáld újra.</string>
+    <string name="save">Mentés</string>
+    <string name="create">Létrehozás</string>
+    <string name="delete_store_question">Törlöd ezt a boltot: %1$s?</string>
+    <string name="delete_store_failed">Nem sikerült törölni a boltot. Próbáld újra.</string>
+    <string name="store_has_no_cards">Nincs hozzá kártya.</string>
+    <plurals name="store_cards_deleted_with_it">
+        <item quantity="one">A kártyája is törlődik vele.</item>
+        <item quantity="other">A hozzá tartozó %d kártya is törlődik vele.</item>
+    </plurals>
+    <string name="colour_blue">Kék</string>
+    <string name="colour_red">Piros</string>
+    <string name="colour_green">Zöld</string>
+    <string name="colour_orange">Narancs</string>
+    <string name="colour_purple">Lila</string>
+    <string name="colour_teal">Türkiz</string>
+    <string name="colour_brown">Barna</string>
+    <string name="colour_grey">Szürke</string>
 </resources>

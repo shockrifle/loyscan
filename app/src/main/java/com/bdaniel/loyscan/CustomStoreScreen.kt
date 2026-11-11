@@ -37,11 +37,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.bdaniel.loyscan.ui.barcodeFormatName
 import com.bdaniel.loyscan.ui.theme.icons.Icons
 import com.bdaniel.loyscan.ui.toBrandColorOrNull
 
@@ -71,16 +74,16 @@ fun CustomStoreScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (state.editing) "Edit store" else "New store") },
+                title = { Text(stringResource(if (state.editing) R.string.edit_store else R.string.new_store)) },
                 navigationIcon = {
                     IconButton(onClick = directions.toBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 actions = {
                     if (state.editing && state.ready) {
                         IconButton(onClick = { confirmingDelete = true }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Delete")
+                            Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete))
                         }
                     }
                 },
@@ -89,7 +92,7 @@ fun CustomStoreScreen(
         containerColor = Color.Transparent,
     ) { innerPadding ->
         if (state.storeGone) {
-            Text("This store is no longer available.", modifier = Modifier.padding(innerPadding).padding(16.dp))
+            Text(stringResource(R.string.store_gone), modifier = Modifier.padding(innerPadding).padding(16.dp))
         }
         if (confirmingDelete && state.ready && state.deletion != Deletion.DELETED) {
             ConfirmDelete(
@@ -113,13 +116,14 @@ fun CustomStoreScreen(
                 value = state.name,
                 onValueChange = viewModel::onNameChange,
                 modifier = Modifier.fillMaxWidth().testTag(CUSTOM_STORE_NAME_TAG),
-                label = { Text("Store name") },
+                label = { Text(stringResource(R.string.store_name)) },
                 singleLine = true,
             )
-            Text("Colour", style = MaterialTheme.typography.titleSmall)
+            Text(stringResource(R.string.store_colour), style = MaterialTheme.typography.titleSmall)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 CustomStoreViewModel.COLORS.forEach { swatch ->
                     val selected = swatch.hex == state.color
+                    val swatchName = stringResource(swatch.name)
                     Box(
                         Modifier
                             .size(40.dp)
@@ -132,33 +136,33 @@ fun CustomStoreScreen(
                             .selectable(selected = selected, role = Role.RadioButton) {
                                 viewModel.onColorChange(swatch.hex)
                             }
-                            .semantics { contentDescription = swatch.name }
+                            .semantics { contentDescription = swatchName }
                     )
                 }
             }
-            Text("Barcode for typed numbers", style = MaterialTheme.typography.titleSmall)
+            Text(stringResource(R.string.barcode_for_typed_numbers), style = MaterialTheme.typography.titleSmall)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 CustomStoreViewModel.FORMATS.forEach { format ->
                     FilterChip(
                         selected = format == state.format,
                         onClick = { viewModel.onFormatChange(format) },
-                        label = { Text(format.displayName) },
+                        label = { Text(barcodeFormatName(format)) },
                     )
                 }
             }
             Text(
-                "A scanned card keeps the barcode it was scanned in.",
+                stringResource(R.string.scanned_card_keeps_its_barcode),
                 style = MaterialTheme.typography.bodyMedium,
             )
             if (state.saveFailed) {
                 Text(
-                    "The store couldn't be saved. Try again.",
+                    stringResource(R.string.store_save_failed),
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodyMedium,
                 )
             }
             Button(onClick = viewModel::save, enabled = state.canSave, modifier = Modifier.fillMaxWidth()) {
-                Text(if (state.editing) "Save" else "Create")
+                Text(stringResource(if (state.editing) R.string.save else R.string.create))
             }
         }
     }
@@ -176,19 +180,19 @@ private fun ConfirmDelete(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Delete $storeName?") },
+        title = { Text(stringResource(R.string.delete_store_question, storeName)) },
         text = {
             Text(
                 when {
-                    failed -> "The store couldn't be deleted. Try again."
-                    cardCount == 0 -> "It has no cards."
-                    cardCount == 1 -> "Its card is deleted with it."
-                    else -> "Its $cardCount cards are deleted with it."
+                    failed -> stringResource(R.string.delete_store_failed)
+                    // Not a plural's "zero": English and Hungarian use "other" for 0.
+                    cardCount == 0 -> stringResource(R.string.store_has_no_cards)
+                    else -> pluralStringResource(R.plurals.store_cards_deleted_with_it, cardCount, cardCount)
                 },
                 color = if (failed) MaterialTheme.colorScheme.error else Color.Unspecified,
             )
         },
-        confirmButton = { TextButton(onClick = onConfirm, enabled = !deleting) { Text("Delete") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        confirmButton = { TextButton(onClick = onConfirm, enabled = !deleting) { Text(stringResource(R.string.delete)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
     )
 }

@@ -69,4 +69,31 @@
     <string name="edit_store_named">Edit %1$s</string>
     <string name="search_stores">Search stores</string>
     <string name="no_store_matches">No store matches “%1$s”</string>
+
+    <!-- Custom store form -->
+    <string name="new_store">New store</string>
+    <string name="edit_store">Edit store</string>
+    <string name="store_gone">This store is no longer available.</string>
+    <string name="store_name">Store name</string>
+    <string name="store_colour">Colour</string>
+    <string name="barcode_for_typed_numbers">Barcode for typed numbers</string>
+    <string name="scanned_card_keeps_its_barcode">A scanned card keeps the barcode it was scanned in.</string>
+    <string name="store_save_failed">The store couldn\'t be saved. Try again.</string>
+    <string name="save">Save</string>
+    <string name="create">Create</string>
+    <string name="delete_store_question">Delete %1$s?</string>
+    <string name="delete_store_failed">The store couldn\'t be deleted. Try again.</string>
+    <string name="store_has_no_cards">It has no cards.</string>
+    <plurals name="store_cards_deleted_with_it">
+        <item quantity="one">Its card is deleted with it.</item>
+        <item quantity="other">Its %d cards are deleted with it.</item>
+    </plurals>
+    <string name="colour_blue">Blue</string>
+    <string name="colour_red">Red</string>
+    <string name="colour_green">Green</string>
+    <string name="colour_orange">Orange</string>
+    <string name="colour_purple">Purple</string>
+    <string name="colour_teal">Teal</string>
+    <string name="colour_brown">Brown</string>
+    <string name="colour_grey">Grey</string>
 </resources>

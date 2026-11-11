@@ -28,7 +28,7 @@ resource, in English in `app/src/main/res/values/strings.xml` and in Hungarian i
 ## Not translated yet
 
 The move is done screen by screen (#72). Until it is finished, a Hungarian phone shows the translated screens (the
-card list, the card screen, the store picker and the card form's "Choose store" dialog) in Hungarian and the others in
+card list, the card screen, the store picker, the card form's "Choose store" dialog and the custom store form) in Hungarian and the others in
 English. Texts shared with a screen not translated yet show in Hungarian there already: the photo descriptions
 ("Front photo") and the barcode format's name ("Scanned · QR-kód") on the card form, whose own texts are still English.
 The card form's "This isn't a valid … number." still names the format with `BarcodeFormat.displayName`, since it is

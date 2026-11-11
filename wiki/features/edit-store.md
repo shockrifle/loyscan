@@ -49,6 +49,13 @@ Catalogue stores have no Edit button and can't be changed or deleted. Issue [#53
   `anEditStillSavingWhenTheFormCloses_…`, `aDeleteStillRunningWhenTheFormCloses_…`.
 - **A store that isn't there** (deleted, or a catalogue store's id in the route): the form says "This store is no
   longer available." and can't be saved. The card form says the same for a deleted store ([[add-card]], #51).
+- **Language** (#72): every text on the form and its delete dialog is a string resource, in English or Hungarian by
+  the phone's language; the store's name is data. The card count is a plural (`one`, `other`), with its own string for
+  no cards, since English and Hungarian say 0 with `other`. The colour swatches' names come from the ViewModel as
+  resource ids (`CustomStoreViewModel.Swatch.name`), and the format chips are named by `barcodeFormatName`
+  ([[2026-11-09-ui-language]]: only the QR names are translated). Tests: `CustomStoreScreenTest.inHungarian_…` (the
+  new form with a failed create, the edit form with its delete dialog and a failed delete, one card, no cards, a store
+  that is gone).
 
 ## Tests
 
