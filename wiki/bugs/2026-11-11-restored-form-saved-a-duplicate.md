@@ -30,6 +30,12 @@ Not covered: a restored form whose save starts while the first insert is still r
 add; Room's primary key rejects the second (`@Insert` aborts on conflict), the form says the card couldn't be saved,
 and the retry updates. The window is one insert against an activity being recreated.
 
+Accepted: a restored form's Save writes the form's fields over the card, so an edit made to that card elsewhere in
+the meantime (opened from the widget or the list, then Back to the old form) is overwritten. Before the fix that Save
+added a duplicate instead. Removing or re-cropping, in the restored form, a photo the first save stored deletes that
+file at once, as it did before the fix; if the form is then left without saving, the card names a missing file and
+shows no photo for that side (#87).
+
 ## Lessons
 
 - State a restored screen must know goes into the saved state **before** the work it describes starts, not when it
