@@ -52,4 +52,15 @@
     <string name="number_copied">Szám másolva</string>
     <string name="front_photo">Előoldali fotó</string>
     <string name="back_photo">Hátoldali fotó</string>
+
+    <!-- Store picker -->
+    <string name="choose_store">Válassz boltot</string>
+    <string name="other_card">Egyéb kártya</string>
+    <string name="other_card_hint">Egy bolt, ami nincs a listán</string>
+    <string name="suggested_stores">Javasolt</string>
+    <string name="frequently_added_stores">Gyakran hozzáadott</string>
+    <string name="all_stores">Minden bolt</string>
+    <string name="edit_store_named">%1$s szerkesztése</string>
+    <string name="search_stores">Boltok keresése</string>
+    <string name="no_store_matches">Nincs ilyen bolt: „%1$s”</string>
 </resources>

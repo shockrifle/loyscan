@@ -31,6 +31,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -61,11 +62,11 @@ fun StoreSearchList(
             value = query,
             onValueChange = onQueryChange,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp).testTag(STORE_SEARCH_TAG),
-            placeholder = { Text("Search stores") },
+            placeholder = { Text(stringResource(R.string.search_stores)) },
             singleLine = true,
         )
         if (stores.isEmpty() && query.isNotBlank()) {
-            Text("No store matches “${query.trim()}”", modifier = Modifier.padding(16.dp))
+            Text(stringResource(R.string.no_store_matches, query.trim()), modifier = Modifier.padding(16.dp))
         }
         LazyColumn {
             header()
@@ -105,10 +106,10 @@ fun StoreChooser(
             Scaffold(
                 topBar = {
                     TopAppBar(
-                        title = { Text("Choose store") },
+                        title = { Text(stringResource(R.string.choose_store)) },
                         navigationIcon = {
                             IconButton(onClick = onDismiss) {
-                                Icon(Icons.Default.Close, contentDescription = "Close")
+                                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.close))
                             }
                         },
                     )

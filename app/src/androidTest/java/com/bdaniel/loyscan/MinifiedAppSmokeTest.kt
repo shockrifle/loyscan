@@ -54,7 +54,7 @@ class MinifiedAppSmokeTest {
     fun aCardTyped_opens_isEdited_andIsDeleted() {
         // Add: a custom store, the scanner for it, then the number typed in.
         click(By.desc(string("add_card")))
-        click(By.text("Other card"))
+        click(By.text(string("other_card")))
         await(By.text("New store"))
         fields()[0].text = STORE
         click(By.text("Create"))
@@ -109,7 +109,7 @@ class MinifiedAppSmokeTest {
             instrumentation.targetContext.startActivity(share)
 
             // The picker holds the scan; "Other card" carries it on to a new store's form.
-            click(By.text("Other card"))
+            click(By.text(string("other_card")))
             await(By.text("New store"))
             fields()[0].text = SHARED_STORE
             click(By.text("Create"))
