@@ -680,7 +680,7 @@ class CardFormScreenTest {
 
         shown.assertEveryTextIsTranslated("Ruled Store")
         shown.assertSeen(
-            "A LoyScan nem használhatja a kamerát. Az alkalmazás beállításaiban engedélyezheted.",
+            "A LoyScan nem férhet hozzá a kamerához. Az alkalmazás beállításaiban engedélyezheted.",
             "Beállítások megnyitása",
         )
     }
@@ -717,7 +717,7 @@ class CardFormScreenTest {
         composeRule.onNodeWithTag(CARD_NUMBER_TAG).performTextInput(number)
     }
 
-    private fun setScreen(route: CardForm,camera: FakePhotoCamera = FakePhotoCamera(available = false)) {
+    private fun setScreen(route: CardForm, camera: FakePhotoCamera = FakePhotoCamera(available = false)) {
         val viewModel = CardFormViewModel(
             SavedStateHandle(route = route),
             stores,
