@@ -63,6 +63,11 @@ after the store picker of [[add-card]]; a scan or "Enter manually" replaces it w
   usable again; the late picture is dropped (#79, [[zxing-cpp]] → Reading a picture). A read in progress isn't kept
   over process death; the user picks the picture again.
 - **Enter manually** is always at the bottom, with or without the camera.
+- **Language** (#72): every text on the scanner is a string resource, in English or Hungarian by the phone's language
+  ([[add-a-string]]). A picture's problem is one whole string per case ("No barcode was found in that picture. Try
+  another picture, …"), not a reason with a shared tail added. Tests: `ScannerScreenTest.inHungarian_…`, one per
+  state (the camera running with its torch, hint and a picture being read; each permission state; a camera failure;
+  an unavailable camera; each picture problem).
 
 ## Tests
 

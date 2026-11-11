@@ -17,6 +17,7 @@ import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.domain.ScannedBarcode
 import com.bdaniel.loyscan.testing.FakeCameraPermission
 import com.bdaniel.loyscan.testing.FakePictureReader
+import com.bdaniel.loyscan.testing.ShownTexts
 import com.bdaniel.loyscan.ui.scanner.CameraEvents
 import com.bdaniel.loyscan.ui.scanner.CameraPermission.Status
 import com.bdaniel.loyscan.ui.scanner.PicturePicker
@@ -27,6 +28,7 @@ import kotlinx.coroutines.CompletableDeferred
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.annotation.Config
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -357,5 +359,121 @@ class ScannerScreenTest {
         composeRule.onNodeWithText("Scan from image").performClick()
 
         composeRule.runOnIdle { assertThat(scanned).containsExactly(first) }
+    }
+
+    @Test
+    @Config(qualifiers = "+hu")
+    fun inHungarian_withTheCamera_isTranslated() { // #72
+        setScreen(FakeCameraPermission(Status.GRANTED), hintDelay = Duration.ZERO)
+        val shown = ShownTexts(composeRule)
+
+        composeRule.runOnIdle { events!!.onStarted(true) }
+        shown.collect()
+        composeRule.onNodeWithContentDescription("Zseblámpa bekapcsolása").performClick()
+        shown.collect()
+        pictureReader.gate = CompletableDeferred() // never completed: the picture stays "being read"
+        composeRule.onNodeWithText("Beolvasás képről").performClick()
+        shown.collect()
+
+        shown.assertEveryTextIsTranslated()
+        shown.assertSeen(
+            "Kártya beolvasása",
+            "Vissza",
+            "Zseblámpa bekapcsolása",
+            "Zseblámpa kikapcsolása",
+            "Nem olvassa be a kártyát? Tartsd laposan és mozdulatlanul, kb. 15 cm-re a kamerától, jó fényben. " +
+                "Próbáld a zseblámpával, vagy írd be a számot kézzel.",
+            "Beolvasás képről",
+            "Beírás kézzel",
+            "A kép beolvasása…",
+        )
+    }
+
+    @Test
+    @Config(qualifiers = "+hu")
+    fun inHungarian_withoutThePermission_asksForIt() { // #72
+        setScreen(FakeCameraPermission(Status.DENIED))
+        val shown = ShownTexts(composeRule)
+
+        shown.collect()
+
+        shown.assertEveryTextIsTranslated()
+        shown.assertSeen(
+            "A kártyád vonalkódjának beolvasásához a LoyScannek szüksége van a kamerára. A képeket a telefonod " +
+                "olvassa be, és sehol nem tárolja, sehova nem küldi el őket.",
+            "Kamera engedélyezése",
+        )
+    }
+
+    @Test
+    @Config(qualifiers = "+hu")
+    fun inHungarian_permissionDeniedForGood_offersTheSettings() { // #72
+        setScreen(FakeCameraPermission(Status.DENIED_PERMANENTLY))
+        val shown = ShownTexts(composeRule)
+
+        shown.collect()
+
+        shown.assertEveryTextIsTranslated()
+        shown.assertSeen(
+            "A LoyScan nem férhet hozzá a kamerához. Az alkalmazás beállításaiban engedélyezheted.",
+            "Beállítások megnyitása",
+        )
+    }
+
+    @Test
+    @Config(qualifiers = "+hu")
+    fun inHungarian_aCameraFailure_saysSo() { // #72
+        setScreen(FakeCameraPermission(Status.GRANTED))
+        val shown = ShownTexts(composeRule)
+
+        composeRule.runOnIdle { events!!.onFailed() }
+        shown.collect()
+
+        shown.assertEveryTextIsTranslated()
+        shown.assertSeen("Nem sikerült megnyitni a kamerát. Írd be inkább a kártyán lévő számot.")
+    }
+
+    @Test
+    @Config(qualifiers = "+hu")
+    fun inHungarian_anUnavailableCamera_saysSo() { // #72
+        setScreen(FakeCameraPermission(Status.GRANTED))
+        val shown = ShownTexts(composeRule)
+
+        composeRule.runOnIdle { events!!.onStarted(true) }
+        composeRule.runOnIdle { events!!.onAvailable(false) }
+        shown.collect()
+
+        shown.assertEveryTextIsTranslated()
+        shown.assertSeen(
+            "A kamera nem érhető el. Lehet, hogy egy másik alkalmazás használja. Írd be inkább a kártyán lévő számot."
+        )
+    }
+
+    @Test
+    @Config(qualifiers = "+hu")
+    fun inHungarian_aPictureWithoutABarcode_saysSo() { // #72
+        pictureReader.result = PictureScan.NoBarcode
+        setScreen(FakeCameraPermission(Status.GRANTED))
+        val shown = ShownTexts(composeRule)
+
+        composeRule.onNodeWithText("Beolvasás képről").performClick()
+        shown.collect()
+
+        shown.assertEveryTextIsTranslated()
+        shown.assertSeen("Ezen a képen nem található vonalkód. Próbálj ki egy másik képet, vagy írd be a számot kézzel.")
+    }
+
+    @Test
+    @Config(qualifiers = "+hu")
+    fun inHungarian_aPictureThatCannotBeRead_saysSo() { // #72
+        pictureReader.result = PictureScan.Unreadable
+        setScreen(FakeCameraPermission(Status.GRANTED))
+        val shown = ShownTexts(composeRule)
+
+        composeRule.onNodeWithText("Beolvasás képről").performClick()
+        shown.collect()
+
+        shown.assertEveryTextIsTranslated()
+        shown.assertSeen("Nem sikerült megnyitni a képet. Próbálj ki egy másik képet, vagy írd be a számot kézzel.")
     }
 }

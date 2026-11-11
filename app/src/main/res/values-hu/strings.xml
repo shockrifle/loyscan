@@ -130,4 +130,19 @@
     <!-- Photo crop screen -->
     <string name="use_whole_photo">Az egész fotó</string>
     <string name="crop_photo">Kivágás</string>
+
+    <!-- Scanner -->
+    <string name="scan_card">Kártya beolvasása</string>
+    <string name="turn_on_torch">Zseblámpa bekapcsolása</string>
+    <string name="turn_off_torch">Zseblámpa kikapcsolása</string>
+    <string name="camera_failed">Nem sikerült megnyitni a kamerát. Írd be inkább a kártyán lévő számot.</string>
+    <string name="camera_unavailable">A kamera nem érhető el. Lehet, hogy egy másik alkalmazás használja. Írd be inkább a kártyán lévő számot.</string>
+    <string name="scanner_picture_no_barcode">Ezen a képen nem található vonalkód. Próbálj ki egy másik képet, vagy írd be a számot kézzel.</string>
+    <string name="scanner_picture_unreadable">Nem sikerült megnyitni a képet. Próbálj ki egy másik képet, vagy írd be a számot kézzel.</string>
+    <string name="scan_hint">Nem olvassa be a kártyát? Tartsd laposan és mozdulatlanul, kb. 15 cm-re a kamerától, jó fényben. Próbáld a zseblámpával, vagy írd be a számot kézzel.</string>
+    <string name="reading_picture">A kép beolvasása…</string>
+    <string name="scan_from_image">Beolvasás képről</string>
+    <string name="enter_manually">Beírás kézzel</string>
+    <string name="camera_needed_for_scan">A kártyád vonalkódjának beolvasásához a LoyScannek szüksége van a kamerára. A képeket a telefonod olvassa be, és sehol nem tárolja, sehova nem küldi el őket.</string>
+    <string name="allow_camera">Kamera engedélyezése</string>
 </resources>

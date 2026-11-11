@@ -31,9 +31,9 @@ with the picture's barcode (#77, below). Everything runs offline on the local da
   [[2026-10-30-frequently-added-stores]]) lists the catalogue stores flagged `frequentlyAdded` whose `countryCodes`
   contain the user's country (`UserCountry`: SIM, then network, then locale), by name, between "Other card" and an
   "All stores" heading; they stay in the full list too. With none for the country, neither heading is shown.
-- **Language** (#72): every text on the store picker, its search, the card form (its problem messages, photo slots
-  and "Choose store" dialog) and the photo crop screen is a string resource, in English or Hungarian by the phone's
-  language; store names are data and aren't translated ([[add-a-string]]). The scanner isn't translated yet. Tests:
+- **Language** (#72): every text on the store picker, its search, the scanner ([[barcode-scanner]]), the card form
+  (its problem messages, photo slots and "Choose store" dialog) and the photo crop screen is a string resource, in
+  English or Hungarian by the phone's language; store names are data and aren't translated ([[add-a-string]]). Tests:
   `StorePickerScreenTest.inHungarian_everyTextOnThePicker_isTranslated`, `CardFormScreenTest.inHungarian_…`
   (`everyTextOnTheNewCardForm_isTranslated` walks the number checks, the photo menu, the crop screen and a failed
   save; one small test per other state).
