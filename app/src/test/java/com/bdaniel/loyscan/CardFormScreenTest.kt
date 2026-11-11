@@ -174,6 +174,14 @@ class CardFormScreenTest {
     }
 
     @Test
+    @Config(qualifiers = "+hu")
+    fun inHungarian_aScannedQrCode_namesItsFormatInHungarian() { // #72; the line's prefix moves with the form
+        setScreen(CardForm("plain", scannedContent = "ABC-123", scannedFormat = BarcodeFormat.QR_CODE))
+
+        composeRule.onNodeWithText("Scanned · QR-kód").assertIsDisplayed()
+    }
+
+    @Test
     fun aScanShownAsPrinted_isReadOnly_andCanBeTypedInstead() {
         setScreen(CardForm("plain", scannedContent = "0109501101530003" + "\u001D" + "10ABC", scannedFormat = BarcodeFormat.GS1_128))
 

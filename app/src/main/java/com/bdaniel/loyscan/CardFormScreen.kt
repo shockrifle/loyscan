@@ -57,8 +57,8 @@ import com.bdaniel.loyscan.ui.PhotoCamera
 import com.bdaniel.loyscan.ui.PhotoCropScreen
 import com.bdaniel.loyscan.ui.rememberPhotoCamera
 import com.bdaniel.loyscan.ui.hiltImageLoader
-import com.bdaniel.loyscan.ui.scanner.PicturePicker
 import com.bdaniel.loyscan.ui.barcodeFormatName
+import com.bdaniel.loyscan.ui.scanner.PicturePicker
 import com.bdaniel.loyscan.ui.scanner.rememberPicturePicker
 import com.bdaniel.loyscan.ui.theme.icons.Icons
 
