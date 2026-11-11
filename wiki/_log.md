@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-11 · CI runs lintDebug (errors fail the run), and lintDebug joins the local gate · workflows/ci, workflows/build-and-run, workflows/tdd, workflows/code-review, architecture · #126
 - 2026-11-11 · a string used outside composition (a toast) is read with stringResource into a val, not LocalContext.getString; a screen test can swap LocalConfiguration/LocalResources under a running screen · workflows/add-a-string (corrected: it recommended the pattern lint rejects), workflows/tdd · #126
 - 2026-11-10 · /next-task and /dependency-pr pick the master CI run by the merged SHA, since master runs now overlap · (no wiki page change; workflows/ci already says it) · PR #130 review
 - 2026-11-10 · CI: only a pull request's runs cancel each other; every run on master (and every manual run) has its own concurrency group and is never cancelled · workflows/ci · #119

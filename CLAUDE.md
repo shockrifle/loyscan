@@ -37,7 +37,7 @@ type-safe route/Directions). Use it as the template. Each layer there starts wit
   Gradle needs JDK 17+. CI uses JDK 21, as does Android Studio's JBR (`/c/Program Files/Android/Android Studio/jbr`),
   the safe `JAVA_HOME` for a terminal build — see `wiki/workflows/build-and-run.md`.
 - **Test-first.** Write the failing test before the code, and see it fail. A bug fix starts with a failing
-  regression test. `./gradlew testDebugUnitTest koverVerify` must pass before committing; raise the Kover
+  regression test. `./gradlew testDebugUnitTest koverVerify lintDebug` must pass before committing; raise the Kover
   `minBound` when coverage rises. How: `wiki/workflows/tdd.md`; why: `wiki/decisions/2026-10-12-tdd-and-coverage.md`.
 - Remote: GitHub `shockrifle/loyscan` (`origin`, SSH). **Changes land through pull requests**: a branch off `master`,
   a PR that closes the issue, review, rebase-merge after green CI; nothing is committed to `master` directly. How

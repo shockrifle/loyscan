@@ -56,8 +56,8 @@ rule, a `Flow` that never emits or emits `EMPTY` first, configuration change and
 
 ### Tests
 LoyScan is test-first (`wiki/decisions/2026-10-12-tdd-and-coverage.md`, how-to in `wiki/workflows/tdd.md`).
-- Run `./gradlew testDebugUnitTest koverVerify` (set `JAVA_HOME` first — see root `CLAUDE.md`) and report both
-  results. Failing or newly skipped (`@Ignore`) tests, and a failing coverage gate, are **blockers**.
+- Run `./gradlew testDebugUnitTest koverVerify lintDebug` (set `JAVA_HOME` first — see root `CLAUDE.md`) and report both
+  results. Failing or newly skipped (`@Ignore`) tests, a failing coverage gate, and a lint error are **blockers**.
 - **New logic without tests is a major finding**, in every layer: domain, mapper, DAO, repository, ViewModel,
   screen and navigation each have a harness (the per-layer table in `wiki/workflows/tdd.md`). Logic means a branch,
   a calculation, a query, a mapping or a state change. Pure wiring (DI bindings, theme values) is exempt.
@@ -95,7 +95,8 @@ an unqualified `List<…>` in the root package) or copy the pattern into new cod
 
 ### Build
 Run `./gradlew assembleDebug` and report the result; new compiler warnings in touched files are worth a mention.
-No formatter or linter is configured, so style is judged against the surrounding code, not general taste.
+No formatter is configured, and Android lint (in the gate above) checks correctness, not style, so style is judged
+against the surrounding code, not general taste.
 
 ### Build side effects
 Room exports its schema at build time (`room.schemaLocation` in `app/build.gradle.kts`), so a build can rewrite

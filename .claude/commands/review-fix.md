@@ -26,7 +26,7 @@ For each claim, read the code it refers to — the current version, not only the
 - A claim about an external library's behaviour (Coil, Navigation, Hilt, Room) → check the version in `gradle/libs.versions.toml` and `wiki/integrations/`; don't assume the behaviour of a different version.
 - A claim about requirements or scope → check the GitHub issue (`gh issue view <n>`, read-only) and the `wiki/features/` / `wiki/decisions/` page for the area. A known shortcut may already be recorded in `wiki/hacks/` or `wiki/tech-debt/`.
 - A claim about behaviour → trace it through the code; run the relevant unit tests if that settles it.
-- A claim about style → check it against the root `CLAUDE.md`, `wiki/architecture.md` and the surrounding code's idiom, not general taste. No formatter or linter is configured in this repo, so there is no tool to defer to.
+- A claim about style → check it against the root `CLAUDE.md`, `wiki/architecture.md` and the surrounding code's idiom, not general taste. No formatter is configured in this repo, and Android lint checks correctness, not style, so there is no tool to defer to.
 
 Give each claim a verdict:
 
@@ -74,7 +74,7 @@ it. If the test passes before the fix, the claim was wrong: stop and tell me.
 
 Then:
 
-- set `JAVA_HOME` to Android Studio's JBR first (see root `CLAUDE.md`), then run `./gradlew testDebugUnitTest koverVerify assembleDebug` and make sure it passes; raise the Kover
+- set `JAVA_HOME` to Android Studio's JBR first (see root `CLAUDE.md`), then run `./gradlew testDebugUnitTest koverVerify lintDebug assembleDebug` and make sure it passes; raise the Kover
   `minBound` if coverage rose (`wiki/decisions/2026-10-09-coverage-gate-kover.md`)
 - update the wiki pages from the plan in the same commit as the code, and append a line to `wiki/_log.md`
 - commit locally on the change's branch, never on `master`; do not push, do not comment on the PR or issue, and do not create, edit or close GitHub issues — report back and I will answer the reviewer myself. Out-of-scope findings go in the report as suggested follow-up issues.

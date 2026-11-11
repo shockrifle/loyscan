@@ -1,7 +1,7 @@
 # Continuous integration (GitHub Actions)
 
-Every pull request into `master`, and every push to it (a merged PR), runs the unit tests and the Kover coverage
-gate on GitHub Actions. A PR is merged only when its run is green ([[code-review]]). A red run on `master` means
+Every pull request into `master`, and every push to it (a merged PR), runs the unit tests, the Kover coverage
+gate and lint on GitHub Actions. A PR is merged only when its run is green ([[code-review]]). A red run on `master` means
 `master` is broken, so fix it before merging anything else. Workflow: `.github/workflows/tests.yml` (added for #29).
 
 ## What runs
@@ -27,7 +27,8 @@ The single build step:
 
 `--continue` makes Gradle still write the coverage report when the gate fails (a failing test skips it).
 
-A second step, **Minified release build**, runs after it: `./gradlew assembleRelease compileSmokeAndroidTestKotlin`.
+A **Lint** step follows: `./gradlew lintDebug`. A lint error fails the run, warnings don't (#126). Then
+**Minified release build**: `./gradlew assembleRelease compileSmokeAndroidTestKotlin`.
 R8 must succeed on release, and the on-device smoke test must compile. The smoke test itself doesn't run on CI
 ([[2026-11-05-r8-smoke-test-on-a-device]], #73).
 
@@ -58,7 +59,8 @@ Caches:
 
 On the run's page (Actions → Tests → the run), under **Artifacts**, kept for 14 days:
 - `coverage-report`: Kover HTML (`htmlDebug/index.html`) and XML. Uploaded on every run, including failed ones.
-- `test-reports`: the Gradle test HTML report and the JUnit XML. Uploaded only when the run fails.
+- `test-reports`: the Gradle test HTML report, the JUnit XML and lint's report (`lint-results-debug.html`, also
+  `.txt`, `.xml`, `.sarif`). Uploaded only when the run fails.
 
 With `gh`:
 - `gh run list --limit 5`
@@ -70,7 +72,7 @@ With `gh`:
 Run the same command with `JAVA_HOME` set to Android Studio's JBR 21 (see [[build-and-run]]):
 
 ```sh
-./gradlew testDebugUnitTest koverVerify
+./gradlew testDebugUnitTest koverVerify lintDebug
 ```
 
 CI uses Linux and Temurin, while local builds use Windows and the JBR. A test that passes locally but fails only
@@ -94,6 +96,13 @@ for the failing assertion before changing the test.
   one running and one pending run, and a newer run replaces the pending one, so a third quick merge would still
   cancel the second's run. Hence a unique group per non-PR run. The cost: overlapping `master` runs use more Actions
   minutes, and both may try to save the same cache key, which `actions/cache` only warns about.
+- **Lint runs on CI, `lintDebug` only** (#126). Until 2026-11-11 CI ran no lint, and `./gradlew check` failed on
+  `master` with a lint error nobody saw (`LocalContextGetResourceValueCall`, `DetailScreen.kt`). The step fails on
+  errors only; the 23 warnings at the time (unused resources, newer dependency versions, …) don't. One variant:
+  `lintRelease` and `lintSmoke` lint the same sources and reported the same single error, and each variant costs
+  about a minute. It runs after the tests, so a test failure is reported first, and before the release build. It is
+  also in the local gate ([[tdd]]). The cost: about a minute per run, and a dependency bump (AGP, androidx) can add
+  an error-level check, so a Dependabot PR can turn red on lint and need a code fix before it merges.
 - **Basic Gradle caching** (`cache-provider: basic`). `setup-gradle` v6 defaults to a proprietary "enhanced"
   cache, which is a free preview for private repos with pricing announced for later. The basic provider is MIT and
   uses `actions/cache`.
