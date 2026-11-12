@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-12 · GitHub ignores the _log.md union merge driver, so parallel PRs that each add a log line conflict; rebase locally and push again · workflows/code-review · PRs #146, #147
 - 2026-11-12 · widget refresh after a card edit and a re-sort verified on a device (ASUS AI2302, Android 15); previously only unit-tested · apps/card-widget · #11
 - 2026-11-12 · the gate command is written out only in root CLAUDE.md; wiki pages, commands and skills name "the gate" and point there (/next-task and /review-fix add assembleDebug after it) · architecture, workflows/ci, workflows/code-review, workflows/tdd · #132
 - 2026-11-12 · CI runtime figures re-measured: warm 10–14 min with lint and the minified build; cold not yet measured with lint, last cold runs (2026-11-10) given · workflows/ci · #135
