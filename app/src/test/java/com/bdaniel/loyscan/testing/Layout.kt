@@ -20,12 +20,21 @@ import androidx.compose.ui.text.TextLayoutResult
  * text. Horizontal only: a text scrolled below the screen is not clipped. Text fields' input is skipped (a field's
  * label floats over its border by design). [fitsByDesign] lists texts that are meant to end in "…" when they don't fit,
  * and auto-sized ones: their semantics report the layout at the largest size, not the size they are drawn at.
+ * With [under], only the texts under that node count: an overlay over a screen still holding its own texts.
  * The test class needs `@GraphicsMode(NATIVE)`: in Robolectric's default mode every text measures a few pixels wide.
  */
-fun SemanticsNodeInteractionsProvider.assertTextFitsAndDoesNotOverlap(fitsByDesign: Set<String> = emptySet()) {
+fun SemanticsNodeInteractionsProvider.assertTextFitsAndDoesNotOverlap(
+    fitsByDesign: Set<String> = emptySet(),
+    under: SemanticsMatcher? = null,
+) {
     val root = onRoot().fetchSemanticsNode().boundsInRoot
-    val texts = onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsProperties.Text), useUnmergedTree = true)
-        .fetchSemanticsNodes()
+    val candidates = if (under == null) {
+        onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsProperties.Text), useUnmergedTree = true).fetchSemanticsNodes()
+    } else {
+        onNode(under, useUnmergedTree = true).fetchSemanticsNode().descendants()
+            .filter { SemanticsProperties.Text in it.config }
+    }
+    val texts = candidates
         .filter { it.config.getOrNull(SemanticsProperties.EditableText) == null }
         .filter { it.boundsInRoot.width > 0f && it.boundsInRoot.height > 0f }
     val problems = mutableListOf<String>()
@@ -49,6 +58,8 @@ fun SemanticsNodeInteractionsProvider.assertTextFitsAndDoesNotOverlap(fitsByDesi
 /** Half a pixel either way: bounds are rounded. */
 private const val SLACK = 0.5f
 
+private fun SemanticsNode.descendants(): List<SemanticsNode> = children.flatMap { listOf(it) + it.descendants() }
+
 private fun SemanticsNode.text() = config[SemanticsProperties.Text].joinToString(" ")
 
 private fun SemanticsNode.layout(): TextLayoutResult? {
@@ -58,11 +69,12 @@ private fun SemanticsNode.layout(): TextLayoutResult? {
 }
 
 /**
- * Whether the text doesn't all show: it has more lines than it may, a line ends in "…", or a line runs past the text's
- * own width. Not `hasVisualOverflow`, which compares with the width the text was offered, not the width it took.
+ * Whether the text doesn't all show: it has more lines than it may, a line ends in "…", or a line is wider than the
+ * text's own width. Its left and right are measured in the width the text was offered, so centred text sits further
+ * right. Not `hasVisualOverflow`, which compares with the width the text was offered, not the width it took.
  */
 private fun TextLayoutResult.cutsOff() =
-    didOverflowHeight || (0 until lineCount).any { isLineEllipsized(it) || getLineRight(it) > size.width + SLACK }
+    didOverflowHeight || (0 until lineCount).any { isLineEllipsized(it) || getLineRight(it) - getLineLeft(it) > size.width + SLACK }
 
 /** Whether [this] lies within [outer], to half a pixel. */
 fun Rect.isWithin(outer: Rect) =

@@ -10,10 +10,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -34,25 +35,31 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.DpSize
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.bdaniel.loyscan.R
 import com.bdaniel.loyscan.data.photos.MAX_PHOTO_SIDE
 import com.bdaniel.loyscan.data.photos.PhotoCrop
+import com.bdaniel.loyscan.ui.theme.Spacing
 import kotlin.math.max
 
 /** The full-screen crop overlay, so a test can find it. */
 const val PHOTO_CROP_TAG = "photoCrop"
+
+/** The card-ratio frame the photo is cropped to. */
+const val PHOTO_CROP_FRAME_TAG = "photoCropFrame"
 
 /** The largest the user can zoom a photo in the crop screen. */
 private const val MAX_CROP_ZOOM = 8f
 
 /**
  * Frames a card photo to the card's ratio (#10): the staged [photo] shown full screen behind a card-ratio frame the
- * user pans and pinch-zooms it within. [onConfirm] stores the framed part ([PhotoCrop.WHOLE] keeps the whole picture,
+ * user pans and pinch-zooms it within; the photo shows dimmed around the frame (#108). [onConfirm] stores the framed part ([PhotoCrop.WHOLE] keeps the whole picture,
  * from "Use whole photo"); [onCancel] drops it. Only the app's loader knows where the file is (`hiltImageLoader()`).
  */
 @Composable
@@ -77,70 +84,91 @@ fun PhotoCropScreen(
             .pointerInput(Unit) { detectTapGestures {} }
             .testTag(PHOTO_CROP_TAG),
     ) {
-        BoxWithConstraints(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-            val frameWidthPx = constraints.maxWidth.toFloat()
-            val frameHeightPx = frameWidthPx / CARD_ASPECT_RATIO
+        Column(modifier = Modifier.fillMaxSize().padding(Spacing.l)) {
             val image = painter.intrinsicSize
-
-            Column(modifier = Modifier.fillMaxSize()) {
-                Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .aspectRatio(CARD_ASPECT_RATIO)
-                            .clipToBounds()
-                            // Keyed on the picture and frame: the gesture lambda captures them, and the picture's size is
-                            // unknown until it loads, so this restarts the detector once it is known (else the pan is unclamped).
-                            .pointerInput(image, frameWidthPx, frameHeightPx) {
-                                detectTransformGestures { _, pan, zoom, _ ->
-                                    transform = cropTransform(image.width, image.height, frameWidthPx, frameHeightPx, transform.scale, transform.offset.x, transform.offset.y, pan.x, pan.y, zoom)
-                                }
-                            },
-                    ) {
-                        Image(
-                            painter = painter,
-                            contentDescription = description,
-                            contentScale = ContentScale.Crop, // covers the frame at scale 1; the user zooms in from there
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .graphicsLayer(
-                                    scaleX = transform.scale,
-                                    scaleY = transform.scale,
-                                    translationX = transform.offset.x,
-                                    translationY = transform.offset.y,
-                                ),
-                        )
-                    }
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    TextButton(onClick = onCancel, modifier = Modifier.weight(1f)) {
-                        Text(stringResource(R.string.cancel), color = Color.White)
-                    }
-                    TextButton(onClick = { onConfirm(PhotoCrop.WHOLE) }, modifier = Modifier.weight(1f)) {
-                        Text(stringResource(R.string.use_whole_photo), color = Color.White)
-                    }
-                    Button(
-                        onClick = {
-                            val crop = if (image.hasSize()) {
-                                photoCrop(image.width, image.height, frameWidthPx, frameHeightPx, transform.scale, transform.offset.x, transform.offset.y)
-                            } else {
-                                PhotoCrop.WHOLE
+            // The frame's size as last laid out, for Crop: a plain holder, read only on a tap.
+            val laidOut = remember { FrameHolder() }
+            // The stage: the photo, dimmed outside the card-ratio frame in its middle (#108). Clipped, so a zoomed photo
+            // stays off the buttons; the gestures work anywhere on it.
+            BoxWithConstraints(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .clipToBounds(),
+                contentAlignment = Alignment.Center,
+            ) {
+                val frame = cropFrameSize(constraints.maxWidth.toFloat(), constraints.maxHeight.toFloat())
+                laidOut.size = frame
+                // The picture covers the frame at scale 1, centred on it, and shows past it; the transform zooms and
+                // pans it about the frame's centre, so the crop maths stay relative to the frame.
+                val cover = photoCoverSize(image.width, image.height, frame.width, frame.height)
+                val density = LocalDensity.current
+                Image(
+                    painter = painter,
+                    contentDescription = description,
+                    contentScale = ContentScale.FillBounds,
+                    modifier = Modifier
+                        .requiredSize(with(density) { DpSize(cover.width.toDp(), cover.height.toDp()) })
+                        .graphicsLayer(
+                            scaleX = transform.scale,
+                            scaleY = transform.scale,
+                            translationX = transform.offset.x,
+                            translationY = transform.offset.y,
+                        ),
+                )
+                val cutOut = remember { CardCutOutState() }
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .scrimAround(cutOut)
+                        // Keyed on the picture and frame: the gesture lambda captures them, and the picture's size is
+                        // unknown until it loads, so this restarts the detector once it is known (else the pan is unclamped).
+                        .pointerInput(image, frame) {
+                            detectTransformGestures { _, pan, zoom, _ ->
+                                transform = cropTransform(image.width, image.height, frame.width, frame.height, transform.scale, transform.offset.x, transform.offset.y, pan.x, pan.y, zoom)
                             }
-                            onConfirm(crop)
                         },
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        Text(stringResource(R.string.crop_photo))
-                    }
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Box(
+                        Modifier
+                            .size(with(density) { DpSize(frame.width.toDp(), frame.height.toDp()) })
+                            .cardCutOut(cutOut)
+                            .testTag(PHOTO_CROP_FRAME_TAG)
+                    )
                 }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = Spacing.l),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+            ) {
+                TextButton(onClick = onCancel, modifier = Modifier.weight(1f)) {
+                    Text(stringResource(R.string.cancel), color = Color.White, textAlign = TextAlign.Center)
+                }
+                TextButton(onClick = { onConfirm(PhotoCrop.WHOLE) }, modifier = Modifier.weight(1f)) {
+                    Text(stringResource(R.string.use_whole_photo), color = Color.White, textAlign = TextAlign.Center)
+                }
+            }
+            Button(
+                onClick = {
+                    val crop = if (image.hasSize()) {
+                        photoCrop(image.width, image.height, laidOut.size.width, laidOut.size.height, transform.scale, transform.offset.x, transform.offset.y)
+                    } else {
+                        PhotoCrop.WHOLE
+                    }
+                    onConfirm(crop)
+                },
+                modifier = Modifier.fillMaxWidth().padding(top = Spacing.s),
+            ) {
+                Text(stringResource(R.string.crop_photo))
             }
         }
     }
 }
+
+/** Holds the crop frame's laid-out size outside snapshot state: written while laying out, read on a tap. */
+private class FrameHolder(var size: Size = Size.Zero)
 
 /** Whether a Coil painter has reported its picture's size yet. */
 private fun Size.hasSize() = isSpecified && width > 0f && height > 0f
@@ -215,4 +243,22 @@ fun clampCropOffset(
     val overflowX = (imageWidth * base * scale - frameWidth) / 2f
     val overflowY = (imageHeight * base * scale - frameHeight) / 2f
     return Offset(offsetX.coerceIn(-overflowX, overflowX), offsetY.coerceIn(-overflowY, overflowY))
+}
+
+
+/** The crop frame in a [stageWidth]×[stageHeight] stage: the card's ratio, as wide as the stage, or as tall when it is short. */
+fun cropFrameSize(stageWidth: Float, stageHeight: Float): Size =
+    if (stageWidth / CARD_ASPECT_RATIO <= stageHeight) Size(stageWidth, stageWidth / CARD_ASPECT_RATIO)
+    else Size(stageHeight * CARD_ASPECT_RATIO, stageHeight)
+
+/**
+ * The size an [imageWidth]×[imageHeight] picture is shown at to cover a [frameWidth]×[frameHeight] frame (its shorter side
+ * fills it), before zooming; the frame itself while the picture's size isn't known (still loading, or failed).
+ */
+fun photoCoverSize(imageWidth: Float, imageHeight: Float, frameWidth: Float, frameHeight: Float): Size {
+    if (!imageWidth.isFinite() || !imageHeight.isFinite() || imageWidth <= 0f || imageHeight <= 0f) {
+        return Size(frameWidth, frameHeight)
+    }
+    val base = max(frameWidth / imageWidth, frameHeight / imageHeight)
+    return Size(imageWidth * base, imageHeight * base)
 }

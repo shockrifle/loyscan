@@ -34,9 +34,15 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   These texts and the crop screen's are string resources, in Hungarian on a Hungarian phone ("Előoldali fotó
   hozzáadása", "Kivágás"); each side's label is a whole string, not "Add" + the side's name ([[add-a-string]], #72).
 - **Framing a photo** ([[2026-11-04-card-photos-interactive-crop]]): every picked or taken picture opens full screen in
-  the crop screen (`PhotoCropScreen`, `PHOTO_CROP_TAG`) behind a fixed card-ratio frame. The user pans and pinch-zooms
-  the picture within it (the frame stays covered; up to 8× zoom). **Crop** stores the framed part, **Use whole photo**
-  stores all of it, **Cancel** drops it and adds nothing. The picture is requested at `MAX_PHOTO_SIDE` (not full size,
+  the crop screen (`PhotoCropScreen`, `PHOTO_CROP_TAG`) behind a fixed card-ratio frame. Since #108 the frame is a card
+  cut-out with a white `CardShape` outline (`PHOTO_CROP_FRAME_TAG`, [[design-system]]), as wide as the stage or as tall
+  when the stage is short (`cropFrameSize`), and the picture shows dimmed around it: it is laid out at the size that
+  covers the frame (`photoCoverSize`, the frame's own size until the picture's is known) and centred on it, so the pan
+  and zoom maths keep their frame-relative contract. The stage is clipped, so a zoomed picture stays off the buttons.
+  The user pans and pinch-zooms the picture anywhere on the stage (the frame stays covered; up to 8× zoom). **Crop**
+  (full width, last) stores the framed part, **Use whole photo** stores all of it, **Cancel** drops it and adds nothing
+  (both text buttons above Crop). Tests: `CardFormScreenTest.theCropScreen_showsThePhotoAroundACardRatioFrame`,
+  `theCropScreen_atFontScale2_…`, `PhotoCropTest`. The picture is requested at `MAX_PHOTO_SIDE` (not full size,
   which would OOM a camera photo); the crop frame is a normalised rectangle, applied to the stored file.
 - **What is stored** (#88, #10): not the picked file itself but a JPEG at most 2048 px on its long side (a smaller
   picture keeps its size), cropped to the frame (or whole), turned the way its EXIF orientation says, a transparent

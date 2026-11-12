@@ -8,7 +8,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -29,7 +32,7 @@ class LayoutTest {
 
     @Test
     fun textsThatFit_pass() {
-        composeRule.setContent { Column { Text("One"); Text("Two") } }
+        composeRule.setContent { Column { Text("One"); Text("Two", textAlign = TextAlign.Center) } }
 
         composeRule.assertTextFitsAndDoesNotOverlap()
     }
@@ -58,6 +61,14 @@ class LayoutTest {
 
         val error = assertThrows(AssertionError::class.java) { composeRule.assertTextFitsAndDoesNotOverlap() }
         assertThat(error).hasMessageThat().contains("is clipped")
+    }
+
+    @Test
+    fun under_looksOnlyAtTheTextsUnderThatNode() {
+        composeRule.setContent { Box { Text("Behind"); Box(Modifier.testTag("overlay")) { Text("Front") } } }
+
+        composeRule.assertTextFitsAndDoesNotOverlap(under = hasTestTag("overlay"))
+        assertThrows(AssertionError::class.java) { composeRule.assertTextFitsAndDoesNotOverlap() }
     }
 
     @Test
