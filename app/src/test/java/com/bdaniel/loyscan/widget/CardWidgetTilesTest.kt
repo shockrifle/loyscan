@@ -29,6 +29,13 @@ class CardWidgetTilesTest {
     }
 
     @Test
+    fun toWidgetTiles_carryTheStoresInitials() { // #108: a tile shows them, like the list's plain tile
+        val card = aLoyaltyCard(store = aStore(name = "Shell ClubSmart"))
+
+        assertThat(listOf(card).toWidgetTiles(CardSort.NAME).single().initials).isEqualTo("SC")
+    }
+
+    @Test
     fun toWidgetTiles_labelIsTheCardsLabel_orTheStoreNameWhenItHasNone() {
         val labelled = aLoyaltyCard(id = cardId(1), label = "My Tesco")
         val unlabelled = aLoyaltyCard(id = cardId(2), label = null, store = aStore(name = "Tesco"))
@@ -50,15 +57,15 @@ class CardWidgetTilesTest {
 
     @Test
     fun backgroundColor_isTheBrandColour_orAFallbackWhenItIsEmptyOrMalformed() {
-        assertThat(WidgetTile("c", "#112233", "A").backgroundColor()).isEqualTo(Color(0xFF112233))
-        assertThat(WidgetTile("c", "", "A").backgroundColor()).isEqualTo(Color(0xFF5A5A66))
-        assertThat(WidgetTile("c", "not a colour", "A").backgroundColor()).isEqualTo(Color(0xFF5A5A66))
+        assertThat(WidgetTile("c", "#112233", "A", "A").backgroundColor()).isEqualTo(Color(0xFF112233))
+        assertThat(WidgetTile("c", "", "A", "A").backgroundColor()).isEqualTo(Color(0xFF5A5A66))
+        assertThat(WidgetTile("c", "not a colour", "A", "A").backgroundColor()).isEqualTo(Color(0xFF5A5A66))
     }
 
     @Test
     fun textColor_contrastsWithTheBackground() {
-        assertThat(WidgetTile("c", "#000000", "A").textColor()).isEqualTo(Color.White)
-        assertThat(WidgetTile("c", "#FFFFFF", "A").textColor()).isEqualTo(Color.Black)
+        assertThat(WidgetTile("c", "#000000", "A", "A").textColor()).isEqualTo(Color.White)
+        assertThat(WidgetTile("c", "#FFFFFF", "A", "A").textColor()).isEqualTo(Color.Black)
     }
 
     @Test

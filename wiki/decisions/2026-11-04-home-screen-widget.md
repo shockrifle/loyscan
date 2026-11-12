@@ -23,6 +23,8 @@ intent `MainActivity` reads, not through URI deep links (the share flow, [[add-c
 3. **Brand-colour tiles, no photo (this slice).** A tile is the card's colour box with its list label, mirroring
    the list's non-photo tile. Glance renders RemoteViews, so a photo would mean loading a `Bitmap` into the
    remote view — more work and risk. Deferred to a follow-up.
+   *Amended 2026-11-12 (#108):* the full-width label strips became card-ratio tiles with the store's initials over the
+   label, in one or two columns by width ([[2026-11-12-design-tokens-and-card-shape]]). Still no photo.
 
 ## Why
 

@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-12 · widget: card-ratio tiles with initials in 1–2 columns by width, min resize height 90dp; the widget decision amended · apps/card-widget, decisions/2026-11-04-home-screen-widget, design-system · #108 widget
 - 2026-11-12 · crop frame: the photo shows dimmed around a CardShape frame, Crop full width at the bottom · features/card-photos, workflows/tdd · #108 crop frame
 - 2026-11-12 · scanner viewfinder: card-ratio cut-out under a scrim, the hint below it · features/barcode-scanner, design-system · #108 viewfinder
 - 2026-11-12 · screens moved onto the design values: list insets and gaps, detail groups and barcode surface, CardShape thumbnails; font-scale layout check added · features/card-list, features/card-detail, workflows/tdd, architecture · #108 screens
