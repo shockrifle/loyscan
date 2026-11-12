@@ -3,8 +3,8 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-12 · logo decision corrected after review: Play's permission rule covers brand names too (the name risk is accepted, not exempt); the Audi summary re-sourced; the disclaimer tracked in #150 and #75, the cropped logo in #151 · decisions/2026-11-12-no-bundled-store-logos · PR #149 review
 - 2026-11-12 · store logos researched (EU/HU referential use, Play IP and impersonation policy, public-repo practice, comparable apps, 23 retailers' press kits); bundling ruled out, names and colours kept, non-affiliation note required before release · decisions/2026-11-12-no-bundled-store-logos (new), decisions/2026-10-13-curated-store-catalogue, decisions/_index, features/store-catalogue, workflows/add-a-catalogue-store, faq, index · #109
-
 - 2026-11-12 · GitHub ignores the _log.md union merge driver, so parallel PRs that each add a log line conflict; rebase locally and push again · workflows/code-review · PRs #146, #147
 - 2026-11-12 · widget refresh after a card edit and a re-sort verified on a device (ASUS AI2302, Android 15); previously only unit-tested · apps/card-widget · #11
 - 2026-11-12 · the gate command is written out only in root CLAUDE.md; wiki pages, commands and skills name "the gate" and point there (/next-task and /review-fix add assembleDebug after it) · architecture, workflows/ci, workflows/code-review, workflows/tdd · #132

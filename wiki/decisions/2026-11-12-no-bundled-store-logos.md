@@ -28,9 +28,9 @@ carries the same limitation ([SZTNH English text, 2026](https://www.sztnh.gov.hu
 The Court of Justice reads honest practices as: no impression of a commercial connection with the owner, no
 discrediting the mark, no unfair advantage from its repute, and not presenting the product as a replica
 (Gillette, C-228/03, [summary](https://cms.law/en/gbr/legal-updates/use-of-third-party-trade-marks-permissible-provided-use-is-honest)).
-In Audi, C-334/22 (2024), it held that a use going beyond referring to the owner's product falls outside the
-exception ([judgment notice](https://eur-lex.europa.eu/eli/C/2024/1822/oj/eng),
-[commentary](https://cliffordchance.com/expertise/services/intellectual-property/global-ip-updates/2024/q2/the-court-of-justice-of-the-european-union-sheds-some-light-on-the-interpretation-of-the-referential-use-of-a-trademark.html)).
+In Audi, C-334/22 (2024), it held that the exception did not cover a replacement grille shaped to carry Audi's
+emblem: that use copied the branding instead of referring to Audi's product
+([summary](https://cms.law/en/gbr/legal-updates/pre-branded-spare-parts-cjeu-has-its-say-in-audi-trade-mark-case)).
 Showing a retailer's logo on that retailer's own card is arguably referential. An app made of many retailers' logos
 can still look endorsed, and no case on card-wallet apps was found. *(Inference: referential use is defensible but
 untested here.)*
@@ -43,7 +43,8 @@ permission is told to contact Play before submitting. The
 imply that your app is related to or authorized by someone that it isn't". It applies to icons, descriptions,
 titles and in-app elements. A confusing use "may be suspended", and owners report apps through Google's trademark
 complaint process. Neither page says whether a disclaimer is enough. The policy is stricter than the law: it asks
-for permission for logos, whatever the referential-use defence.
+for permission for third-party marks, whatever the referential-use defence. Because of the "and/or", the permission requirement
+covers brand names as much as logos.
 
 **Public repo.** Icon collections publish brand logos with a per-icon source, a link to the brand's guidelines, a
 separate legal disclaimer, and a takedown route
@@ -51,9 +52,10 @@ separate legal disclaimer, and a takedown route
 [theSVG legal page](https://thesvg.org/legal)). The file licence covers the drawing, not the mark. It can be done,
 but #107 lists logos among the third-party material to keep out of the repo.
 
-**Comparable apps.** Stocard shows retailer logos and describes itself as working with thousands of retailers on
-offers and analytics ([business page](https://stocardapp.com/business)). *(Inference: its logos come with
-commercial relationships we don't have.)* How free card wallets such as Catima handle logos was not found.
+**Comparable apps.** Stocard shows retailer logos. In search listings its business pages describe partnerships with
+thousands of retailers, for offers, advertising and analytics; the pages themselves could not be loaded on
+2026-11-12. *(Inference: its logos come with commercial relationships we don't have.)* How free card wallets such
+as Catima handle logos was not found.
 
 **Asking retailers.** Only 4 of the 23 catalogue retailers offer a logo download, and only one of them states
 terms: editorial use with credit. None publishes a brand-licensing contact a small app could use, apart from Shell's
@@ -88,11 +90,13 @@ whenever a catalogue store is added. Checked 2026-11-12; "none found" means not 
 
 ## Options considered
 - **Bundle logos as referential use**, with a disclaimer: legally arguable, but against Play's "without permission"
-  rule, and it puts third-party material in the public repo.
+  rule in its clearest form (the brand's own artwork), and it puts third-party material in the public repo.
 - **Bundle only with written permission**, per retailer: safe, but impractical for 23 retailers with no licensing
   contact.
 - **Fetch logos at run time** (a URL in the catalogue): the same trademark and Play exposure, plus a network call
   and an outside dependency for an offline app.
+- **A logo the user crops from their own card photo:** no third-party file in the app or repo, but new UI. Not
+  done here; it is [#151](https://github.com/shockrifle/loyscan/issues/151) (Later).
 - **No logos (chosen):** the name on the brand colour, and the user's own card photo as the tile.
 
 ## Decision
@@ -100,8 +104,9 @@ whenever a catalogue store is added. Checked 2026-11-12; "none found" means not 
   (`app/src/main/java/com/bdaniel/loyscan/data/mapper/CatalogueMapper.kt`). Logos are not added on the strength of a
   press kit; a press kit's "editorial use" is not permission for an app.
 - **Names and brand colours stay**, as referential use: they identify which retailer's card it is.
-- **A non-affiliation note is required before the first release**, in the app (about/settings) and in the Play
-  listing (#75): LoyScan is not affiliated with or endorsed by the retailers whose cards it stores, and their names
+- **A non-affiliation note is required before the first release**, in the app
+  ([#150](https://github.com/shockrifle/loyscan/issues/150); the app has no about screen yet) and in the Play
+  listing ([#75](https://github.com/shockrifle/loyscan/issues/75)): LoyScan is not affiliated with or endorsed by the retailers whose cards it stores, and their names
   belong to their owners.
 - The user chose this on 2026-11-12: bundling was ruled out, the press kits of all 23 stores were checked, and the
   disclaimer was made a requirement.
@@ -110,14 +115,16 @@ whenever a catalogue store is added. Checked 2026-11-12; "none found" means not 
 - Play's IP policy asks for permission for logos, and a suspended listing is the realistic risk, more than a court
   case. Permission is not practical to get (see the table).
 - Keeping logos out also keeps the public repo free of third-party marks (#107).
-- Names alone are the weakest form of use, and the app can't work without them. Play also lists "brand names", but
-  only "in a way that could confuse users". The note, and a listing that doesn't present the app as any retailer's,
-  answer that. *(The user accepted this residual risk on 2026-11-12.)*
+- Names carry the same Play exposure as logos: the policy asks for permission for brand names too. They stay
+  because the app can't identify a card without them. Using a name only to say whose card it is matches the
+  referential-use conditions above, and the note plus a listing that doesn't present the app as any retailer's
+  address Play's ban on implied affiliation. A name is also a much weaker use than a logo, which reproduces the
+  brand. The user accepted this residual risk knowingly on 2026-11-12.
 
 ## Consequences
 - Tiles stay the name on the brand colour unless the user adds a front photo ([[card-photos]]). A designed name
   badge is visual polish (#108), not a logo.
-- Play screenshots must use made-up cards, with no retailer logos visible on card photos (already a #75 criterion).
+- Play screenshots must show no retailer logos, including on card photos (a #75 criterion since 2026-11-12).
 - `Store.logo`, the Coil SVG loader and the `INTERNET` permission stay as they are. No shipped store uses them
   ([[coil-image-loading]]). Removing them is out of scope here.
 - Adding a catalogue store adds no logo ([[add-a-catalogue-store]]).
