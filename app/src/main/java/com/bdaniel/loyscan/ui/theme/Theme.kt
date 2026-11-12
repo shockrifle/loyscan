@@ -53,6 +53,7 @@ fun LoyScanTheme(
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
+        shapes = LoyScanShapes,
         content = content
     )
 }
