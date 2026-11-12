@@ -28,8 +28,8 @@ carries the same limitation ([SZTNH English text, 2026](https://www.sztnh.gov.hu
 The Court of Justice reads honest practices as: no impression of a commercial connection with the owner, no
 discrediting the mark, no unfair advantage from its repute, and not presenting the product as a replica
 (Gillette, C-228/03, [summary](https://cms.law/en/gbr/legal-updates/use-of-third-party-trade-marks-permissible-provided-use-is-honest)).
-In Audi, C-334/22 (2024), it held that the exception did not cover a replacement grille shaped to carry Audi's
-emblem: that use copied the branding instead of referring to Audi's product
+In Audi, C-334/22 (2024), it held that the exception did not cover replacement grilles made to resemble Audi's
+original as closely as possible, branding included: that use went beyond referring to Audi's product
 ([summary](https://cms.law/en/gbr/legal-updates/pre-branded-spare-parts-cjeu-has-its-say-in-audi-trade-mark-case)).
 Showing a retailer's logo on that retailer's own card is arguably referential. An app made of many retailers' logos
 can still look endorsed, and no case on card-wallet apps was found. *(Inference: referential use is defensible but
@@ -112,7 +112,7 @@ whenever a catalogue store is added. Checked 2026-11-12; "none found" means not 
   disclaimer was made a requirement.
 
 ## Why
-- Play's IP policy asks for permission for logos, and a suspended listing is the realistic risk, more than a court
+- Play's IP policy asks for permission for third-party marks, logos above all, and a suspended listing is the realistic risk, more than a court
   case. Permission is not practical to get (see the table).
 - Keeping logos out also keeps the public repo free of third-party marks (#107).
 - Names carry the same Play exposure as logos: the policy asks for permission for brand names too. They stay
