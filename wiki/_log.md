@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-12 · widget checked on a 12L tablet: one and two columns right when placed, a stale layout after a resize; the card-ratio-image approach tried and dropped · apps/card-widget · PR #152 device check
 - 2026-11-12 · widget checked on a device: Exact size mode showed a launcher's wrong-size layout, cut; now Responsive with 16 widths and full-width tiles · apps/card-widget, decisions/2026-11-12-design-tokens-and-card-shape · PR #152 device check
 - 2026-11-12 · on-device check of PR #152: crop screen, scan mode and photo viewer kept inside the system bars; inset test pattern · features/card-photos, features/card-detail, workflows/tdd · PR #152 device check
 - 2026-11-12 · review of PR #152: a picture's problem hides the scanner hint again; widget resize floor and its untested wiring stated; decision count · features/barcode-scanner, apps/card-widget, index · PR #152 review
