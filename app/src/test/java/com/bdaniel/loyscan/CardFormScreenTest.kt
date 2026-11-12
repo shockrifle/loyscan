@@ -1,5 +1,10 @@
 package com.bdaniel.loyscan
 
+import com.bdaniel.loyscan.ui.PHOTO_CROP_FRAME_TAG
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.onRoot
 import org.robolectric.annotation.GraphicsMode
 import com.bdaniel.loyscan.testing.WithFontScale
 import com.bdaniel.loyscan.testing.assertTextFitsAndDoesNotOverlap
@@ -397,6 +402,43 @@ class CardFormScreenTest {
         assertThat(crop.right - crop.left).isLessThan(1f) // zoomed in, so less than the whole width is kept
         val ratio = (crop.right - crop.left) / (crop.bottom - crop.top) // the 1×1 picture makes this the crop's own ratio
         assertThat(ratio).isWithin(0.03f).of(CARD_ASPECT_RATIO) // the pan stayed in the picture, so the frame kept its ratio
+    }
+
+    @Test
+    fun theCropScreen_showsThePhotoAroundACardRatioFrame() { // #108
+        // A square picture: shown to cover the card-ratio frame, it reaches past the frame's top and bottom.
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        File(context.filesDir, CardPhotosModule.PHOTO_DIRECTORY).resolve("staged-1").writeOnePixelPng()
+        setScreen(CardForm("ruled"))
+        composeRule.onNodeWithText("Add front photo").performScrollTo().performClick()
+        val loader = EntryPointAccessors.fromApplication(context, ImageLoaderEntryPoint::class.java).getImageLoader()
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) { ShadowLooper.idleMainLooper(); (loader.memoryCache?.size ?: 0) > 0 }
+        composeRule.waitForIdle()
+
+        val frame = composeRule.onNodeWithTag(PHOTO_CROP_FRAME_TAG).fetchSemanticsNode().boundsInRoot
+        val photo = composeRule.onNodeWithContentDescription("Front photo").fetchSemanticsNode().boundsInRoot
+
+        assertThat(frame.width / frame.height).isWithin(0.02f).of(85.60f / 53.98f)
+        assertThat(photo.top).isLessThan(frame.top - 1f)
+        assertThat(photo.bottom).isGreaterThan(frame.bottom + 1f)
+    }
+
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE) // real text measuring
+    fun theCropScreen_atFontScale2_onANarrowScreen_fits_withCropFullWidthAtTheBottom() { // #108
+        setScreen(CardForm("ruled"), fontScale = 2f)
+
+        composeRule.onNodeWithText("Add front photo").performScrollTo().performClick()
+
+        composeRule.assertTextFitsAndDoesNotOverlap(under = hasTestTag(PHOTO_CROP_TAG)) // the form is still under it
+        val crop = composeRule.onNodeWithText("Crop").fetchSemanticsNode().boundsInRoot
+        val cancel = composeRule.onNodeWithText("Cancel").fetchSemanticsNode().boundsInRoot
+        val frame = composeRule.onNodeWithTag(PHOTO_CROP_FRAME_TAG).fetchSemanticsNode().boundsInRoot
+        assertThat(crop.top).isAtLeast(cancel.bottom) // the main action is last, the others above it
+        assertThat(frame.height).isGreaterThan(0f)
+        val button = composeRule.onNode(hasText("Crop") and hasClickAction()).fetchSemanticsNode().boundsInRoot
+        val screen = composeRule.onRoot().fetchSemanticsNode().boundsInRoot
+        assertThat(button.width / screen.width).isGreaterThan(0.85f) // full width, inside the screen's padding
     }
 
     @Test

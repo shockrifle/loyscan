@@ -74,6 +74,38 @@ class PhotoCropTest {
         assertThat(offset.y).isEqualTo(9f)
     }
 
+    @Test
+    fun cropFrameSize_isAsWideAsTheStage_whenTheCardFitsItsHeight() { // #108
+        val frame = cropFrameSize(stageWidth = 320f, stageHeight = 400f)
+
+        assertThat(frame.width).isEqualTo(320f)
+        assertThat(frame.height).isWithin(0.01f).of(201.79f) // 320 × 53.98 / 85.60
+    }
+
+    @Test
+    fun cropFrameSize_isAsTallAsTheStage_whenTheStageIsShort() { // #108: landscape, or a large font
+        val frame = cropFrameSize(stageWidth = 400f, stageHeight = 100f)
+
+        assertThat(frame.width).isWithin(0.01f).of(158.58f) // 100 × 85.60 / 53.98
+        assertThat(frame.height).isEqualTo(100f)
+    }
+
+    @Test
+    fun photoCoverSize_isThePictureScaledToCoverTheFrame() { // #108: what shows around the frame too
+        val size = photoCoverSize(imageWidth = 100f, imageHeight = 100f, frameWidth = 80f, frameHeight = 40f)
+
+        assertThat(size.width).isEqualTo(80f)
+        assertThat(size.height).isEqualTo(80f)
+    }
+
+    @Test
+    fun photoCoverSize_isTheFrame_untilThePictureHasASize() { // #108: not loaded yet, or failed to load
+        val size = photoCoverSize(imageWidth = Float.NaN, imageHeight = Float.NaN, frameWidth = 80f, frameHeight = 40f)
+
+        assertThat(size.width).isEqualTo(80f)
+        assertThat(size.height).isEqualTo(40f)
+    }
+
     private fun assertCrop(crop: PhotoCrop, left: Float, top: Float, right: Float, bottom: Float) {
         assertThat(crop.left).isWithin(1e-4f).of(left)
         assertThat(crop.top).isWithin(1e-4f).of(top)
