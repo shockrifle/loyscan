@@ -46,8 +46,14 @@ after the store picker of [[add-card]]; a scan or "Enter manually" replaces it w
 - **Torch.** A toggle in the top bar, only when the camera has a flash unit. Its state is in the ViewModel, so it
   survives rotation, and it is set again on every resume: CameraX turns the torch off when it closes the camera on
   pause.
-- **Hint.** 8 s after the camera first starts (`ScannerViewModel.HINT_DELAY`), a card says "Card won't scan?" with
-  tips. A camera restart (rotation) doesn't reset the timer.
+- **Viewfinder** (#108). While the camera runs, `Viewfinder` (`ui/scanner/Viewfinder.kt`) dims the preview with a
+  scrim and leaves a clear card-ratio `CardShape` cut-out with a white outline ([[design-system]]). It is visual only:
+  the camera still hands the whole frame to zxing-cpp, so a barcode outside the cut-out scans too (nothing passes the
+  cut-out to `CameraEvents` or the analyzer; checked by hand, not by a test). It is hidden after a failure and while the
+  camera is unavailable. Tests: `ScannerScreenTest.theViewfinder_…`, `theHint_showsBelowTheCutOut_onTheCamera`.
+- **Hint.** 8 s after the camera first starts (`ScannerViewModel.HINT_DELAY`), "Card won't scan?" with tips shows in
+  white under the cut-out. The cut-out and the hint share the height, so at a large font the cut-out shrinks and the
+  hint scrolls (`ScannerScreenTest.atFontScale2_…`). A camera restart (rotation) doesn't reset the timer.
 - **Scan from image** (#76) is always at the bottom, above "Enter manually": with the camera, without the permission,
   after a camera failure, while the camera is unavailable. It opens the system photo picker for images only
   (`rememberPicturePicker`, `PickVisualMedia.ImageOnly`; no storage permission, the app gets a read grant for the one

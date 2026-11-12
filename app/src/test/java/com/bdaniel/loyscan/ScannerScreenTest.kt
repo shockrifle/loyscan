@@ -1,5 +1,10 @@
 package com.bdaniel.loyscan
 
+import org.robolectric.annotation.GraphicsMode
+import com.bdaniel.loyscan.testing.WithFontScale
+import com.bdaniel.loyscan.testing.assertTextFitsAndDoesNotOverlap
+import com.bdaniel.loyscan.testing.isWithin
+import com.bdaniel.loyscan.ui.scanner.VIEWFINDER_TAG
 import android.net.Uri
 import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.Modifier
@@ -67,16 +72,18 @@ class ScannerScreenTest {
         viewModel.onPicturePicked(pickedPicture)
     }
 
-    private fun setScreen(permission: FakeCameraPermission, hintDelay: Duration = 8.seconds) {
+    private fun setScreen(permission: FakeCameraPermission, hintDelay: Duration = 8.seconds, fontScale: Float = 1f) {
         viewModel = ScannerViewModel(hintDelay, pictureReader)
         composeRule.setContent {
-            ScannerScreen(
-                directions = directions,
-                viewModel = viewModel,
-                permission = permission,
-                camera = fakeCamera,
-                picker = fakePicker,
-            )
+            WithFontScale(fontScale) {
+                ScannerScreen(
+                    directions = directions,
+                    viewModel = viewModel,
+                    permission = permission,
+                    camera = fakeCamera,
+                    picker = fakePicker,
+                )
+            }
         }
     }
 
@@ -202,6 +209,61 @@ class ScannerScreenTest {
         composeRule.runOnIdle { events!!.onStarted(false) }
 
         composeRule.onNodeWithText("Card won't scan?", substring = true).assertIsDisplayed()
+    }
+
+    @Test
+    fun theViewfinder_isACardRatioCutOut_overTheWholeCameraPicture() { // #108
+        setScreen(FakeCameraPermission(Status.GRANTED))
+
+        val cutOut = composeRule.onNodeWithTag(VIEWFINDER_TAG).fetchSemanticsNode().boundsInRoot
+        val camera = composeRule.onNodeWithTag("camera").fetchSemanticsNode().boundsInRoot
+
+        // ID-1 cards are 85.60 × 53.98 mm; a pixel of rounding either way.
+        assertThat(cutOut.width / cutOut.height).isWithin(0.02f).of(85.60f / 53.98f)
+        assertThat(cutOut.isWithin(camera)).isTrue()
+        // Visual only: the camera still reads the whole picture around it, which it is handed whole (CameraEvents).
+        assertThat(camera.width).isGreaterThan(cutOut.width)
+        assertThat(camera.height).isGreaterThan(cutOut.height)
+    }
+
+    @Test
+    fun theHint_showsBelowTheCutOut_onTheCamera() { // #108
+        setScreen(FakeCameraPermission(Status.GRANTED), hintDelay = Duration.ZERO)
+
+        composeRule.runOnIdle { events!!.onStarted(false) }
+
+        val cutOut = composeRule.onNodeWithTag(VIEWFINDER_TAG).fetchSemanticsNode().boundsInRoot
+        val hint = composeRule.onNodeWithText("Card won't scan?", substring = true).fetchSemanticsNode().boundsInRoot
+        val camera = composeRule.onNodeWithTag("camera").fetchSemanticsNode().boundsInRoot
+        assertThat(hint.top).isAtLeast(cutOut.bottom)
+        assertThat(hint.isWithin(camera)).isTrue()
+    }
+
+    @Test
+    fun theViewfinder_isNotShown_whenTheCameraFailsOrIsUnavailable() { // #108
+        setScreen(FakeCameraPermission(Status.GRANTED))
+        composeRule.runOnIdle { events!!.onStarted(false) }
+        composeRule.onNodeWithTag(VIEWFINDER_TAG).assertExists()
+
+        composeRule.runOnIdle { events!!.onAvailable(false) }
+
+        composeRule.onNodeWithTag(VIEWFINDER_TAG).assertDoesNotExist()
+    }
+
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE) // real text measuring
+    fun atFontScale2_onANarrowScreen_noTextIsClippedOrOverlaps() { // #108; Robolectric's default screen is 320dp wide
+        setScreen(FakeCameraPermission(Status.GRANTED), hintDelay = Duration.ZERO, fontScale = 2f)
+
+        composeRule.runOnIdle { events!!.onStarted(false) }
+
+        composeRule.assertTextFitsAndDoesNotOverlap()
+        val cutOut = composeRule.onNodeWithTag(VIEWFINDER_TAG).fetchSemanticsNode().boundsInRoot
+        val hint = composeRule.onNodeWithText("Card won't scan?", substring = true).fetchSemanticsNode().boundsInRoot
+        val camera = composeRule.onNodeWithTag("camera").fetchSemanticsNode().boundsInRoot
+        assertThat(cutOut.height).isGreaterThan(0f)
+        assertThat(hint.top).isAtLeast(cutOut.bottom)
+        assertThat(hint.isWithin(camera)).isTrue()
     }
 
     @Test

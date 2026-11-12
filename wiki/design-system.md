@@ -32,6 +32,14 @@ is a named constant next to its screen, not a `.dp` literal.
 (`CARD_CORNER_FRACTION`). Every depiction of the physical card uses it with the card's ratio (`CARD_ASPECT_RATIO`,
 `ui/CardPhoto.kt`), so the card looks the same at every size.
 
+## Card cut-outs
+
+The scanner's viewfinder and the crop frame are a card cut-out (`ui/CardCutOut.kt`): `scrimAround` dims a node's
+area with `CUT_OUT_SCRIM` (black at 60%) except a `CardShape` hole where `cardCutOut` lays out the cut-out, which gets a
+2dp white outline (`CUT_OUT_OUTLINE`). The two nodes record their place in the root in a shared `CardCutOutState`, so
+the hole follows the layout. Robolectric doesn't run draw code, so the scrim and the outline are checked by hand; the
+cut-out's size and place are tested through its node ([[barcode-scanner]]).
+
 ## Type and buttons
 
 Typography and button heights are Material 3's defaults. A screen's main action is a full-width button at the end of the
