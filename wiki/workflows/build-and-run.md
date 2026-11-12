@@ -46,6 +46,9 @@ tasks (Dependencies, below). HTML report:
   `adb shell svc power stayon usb` keeps an unlocked phone awake on USB (`svc power stayon false` undoes it).
 - **When to run it.** Before a release, and after a change to R8 rules, routes, or a library that ships keep rules.
   CI only builds it.
+- **Last run.** 2026-11-12 on an ASUS Zenfone 10 (ASUS_AI2302), Android 15 (API 35): both tests passed with the
+  phone set to Hungarian and again set to English (#139). Since #72 the test finds every text it taps by resource
+  name, so the phone's language doesn't matter.
 - **How.** `./gradlew connectedSmokeAndroidTest`. The smoke app installs as `com.bdaniel.loyscan.smoke`, so a
   phone's own LoyScan and its cards aren't touched, and it's uninstalled after the run.
 - **On failure.** The message lists the texts that were on screen, and a screenshot is left on the device:
