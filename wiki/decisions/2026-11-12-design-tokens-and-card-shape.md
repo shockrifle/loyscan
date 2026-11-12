@@ -55,7 +55,10 @@ For the widget, the choices were **square tiles** or **card-ratio tiles**.
   outline. The pan/zoom maths (`cropTransform`, `photoCrop`) keep their frame-relative contract.
 - **Widget:**
   - Tiles have the card ratio and `CardShape`-like corners. Their height is computed from `LocalSize`, because
-    Glance has no `aspectRatio`.
+    Glance has no `aspectRatio`. *Implementation note (2026-11-12, on a device):* the sizes come from
+    `SizeMode.Responsive` with a fixed set of widths, not `SizeMode.Exact`, and a tile fills its cell's width. With
+    `Exact` a launcher's reported sizes decided the layout, and one that reported sizes the widget didn't have got a
+    layout cut in half ([[card-widget]]).
   - There is one column below 240dp of widget width and two from 240dp (`LazyVerticalGrid`).
   - A tile shows the store's initials and the card's label, like the list's plain tile.
   - The widget background uses `appWidgetBackground()`, and its padding comes from `Spacing`.

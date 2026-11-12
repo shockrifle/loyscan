@@ -35,3 +35,18 @@ fun widgetTileCornerRadius(tile: DpSize): Dp = tile.height * CARD_CORNER_FRACTIO
 
 /** The height of a widget [width] wide that holds exactly one row of tiles: what it may be resized down to. */
 fun widgetHeightForOneTile(width: Dp): Dp = widgetTileSize(width).height + WIDGET_PADDING * 4
+
+/** The height every layout size gives: no more than the smallest the widget can be resized to. */
+private val LAYOUT_HEIGHT = 40.dp
+
+/**
+ * The sizes the widget is laid out for (`SizeMode.Responsive`, #108). From Android 12 the home screen shows the largest
+ * one that fits the widget's real size; their height is the smallest a widget can be, so the width alone decides. The
+ * widths step so finely that a tile, filling its cell's real width with the height worked out for the layout's width,
+ * stays within 10% of the card's ratio up to 440dp (16 sizes, the most a widget may give). On a device, `SizeMode.Exact`
+ * showed a landscape layout squeezed into the portrait widget: the launcher's reported sizes didn't fit the real one.
+ */
+val WIDGET_SIZES: Set<DpSize> =
+    listOf(110, 120, 131, 143, 156, 171, 187, 205, 224, 240, 262, 286, 313, 342, 374, 410)
+        .map { DpSize(it.dp, LAYOUT_HEIGHT) }
+        .toSet()

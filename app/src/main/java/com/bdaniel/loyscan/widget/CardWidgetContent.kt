@@ -19,7 +19,8 @@ import androidx.glance.layout.Box
 import androidx.glance.layout.Column
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.padding
-import androidx.glance.layout.size
+import androidx.glance.layout.fillMaxWidth
+import androidx.glance.layout.height
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
@@ -28,7 +29,9 @@ import com.bdaniel.loyscan.openCardIntent
 
 /**
  * One clickable card-ratio tile per [tiles] entry, each opening its card (#11): the store's initials and the card's label
- * on its brand colour, like the list's plain tile. One column in a narrow widget, two from 240dp (#108, [widgetColumns]).
+ * on its brand colour, like the list's plain tile. One column in a narrow widget, two from 240dp (#108, [widgetColumns]),
+ * laid out for each of [WIDGET_SIZES]; a tile fills its cell, so a layout shown wider or narrower than it was made for
+ * doesn't cut it.
  * Corners are rounded from Android 12; Glance can't round them before. Empty until the first card is added.
  */
 @Composable
@@ -48,7 +51,9 @@ fun CardWidgetContent(tiles: List<WidgetTile>) {
             Box(modifier = GlanceModifier.padding(WIDGET_PADDING)) {
                 Column(
                     modifier = GlanceModifier
-                        .size(tileSize.width, tileSize.height)
+                        // The cell's real width, which can differ from the layout's; the height is the layout's.
+                        .fillMaxWidth()
+                        .height(tileSize.height)
                         .cornerRadius(widgetTileCornerRadius(tileSize))
                         .background(ColorProvider(tile.backgroundColor()))
                         .clickable(actionStartActivity(openCardIntent(context, tile.cardId, tile.color)))
