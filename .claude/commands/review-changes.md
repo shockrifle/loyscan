@@ -56,7 +56,7 @@ rule, a `Flow` that never emits or emits `EMPTY` first, configuration change and
 
 ### Tests
 LoyScan is test-first (`wiki/decisions/2026-10-12-tdd-and-coverage.md`, how-to in `wiki/workflows/tdd.md`).
-- Run `./gradlew testDebugUnitTest koverVerify lintDebug` (set `JAVA_HOME` first — see root `CLAUDE.md`) and report each
+- Run the gate (root `CLAUDE.md`; set `JAVA_HOME` first, as it says) and report each
   result. Failing or newly skipped (`@Ignore`) tests, a failing coverage gate, and a lint error are **blockers**.
 - **New logic without tests is a major finding**, in every layer: domain, mapper, DAO, repository, ViewModel,
   screen and navigation each have a harness (the per-layer table in `wiki/workflows/tdd.md`). Logic means a branch,

@@ -80,7 +80,7 @@ Why it is set up this way:
 ## What the review enforces about tests
 
 The project is test-first ([[2026-10-12-tdd-and-coverage]], [[tdd]]), and `/review-changes` checks it:
-- It runs `./gradlew testDebugUnitTest koverVerify lintDebug`. A failing or newly skipped test, a failing coverage
+- It runs the gate (root `CLAUDE.md`). A failing or newly skipped test, a failing coverage
   gate, or a lint error is a **blocker**, and so is a lowered `minBound`.
 - **New logic without tests** is a major finding in every layer: each has a harness. Pure wiring (DI, theme) is
   exempt.
