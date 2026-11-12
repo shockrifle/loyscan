@@ -1,6 +1,6 @@
 # Home-screen widget: Glance, an intent extra, and a first slice
 
-**Status:** Active · **Date:** 2026-11-04 · **Issue:** [#11](https://github.com/shockrifle/loyscan/issues/11) (open: slice) · **Commits:** 61e9d13, ccbeb60, 3eead59
+**Status:** Active · tile shape and layout amended by [[2026-11-12-design-tokens-and-card-shape]] (#108) · **Date:** 2026-11-04 · **Issue:** [#11](https://github.com/shockrifle/loyscan/issues/11) (open: slice) · **Commits:** 61e9d13, ccbeb60, 3eead59
 
 The home-screen widget ([[card-widget]]), and the three choices that shaped its first slice.
 
