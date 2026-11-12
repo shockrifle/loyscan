@@ -62,5 +62,6 @@ because `allowBackup="false"` is documented to also drop D2D on some devices.
   `loyscan.db` (with its `-wal`/`-shm`), `user_preferences.preferences_pb` and `card_photos/`; after `pm clear` and a
   restore the card came back with its photo and the non-default "Most used" sort order. The same backup in cloud mode
   was rejected again (`Error -1002`). How: [[test-backup-on-a-device]]. Not checked: Android 10–11 (no device), and a
-  real two-phone setup transfer, which goes through Google's D2D transport rather than the local one. The rules'
+  real two-phone setup transfer, which goes through Google's D2D transport rather than the local one; both stay open
+  in #104. The rules'
   correctness is pinned by `BackupRulesTest`; the device checks confirm the platform honours them.
