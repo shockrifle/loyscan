@@ -57,7 +57,10 @@ because `allowBackup="false"` is documented to also drop D2D on some devices.
 - On-device confirmation (#104): the empty-cloud-backup half is **verified** (ASUS AI2302, Android 15, 2026-11-05).
   Against the local transport, `bmgr fullbackup com.bdaniel.loyscan` runs the backup agent but the transport returns
   `TRANSPORT_PACKAGE_REJECTED` (`Error -1002`) and skips the package — the full-backup stream is empty, so no domain
-  (`loyscan.db`, the DataStore prefs, photos) is backed up while the app stays backup-capable. Still owed: a real
-  device-to-device transfer on a second phone carries the cards, the sort preference and the photos (Android 12+, and
-  10–11 if a device is available). The rules' correctness is pinned by `BackupRulesTest`; the device check confirms the
-  platform honours them.
+  (`loyscan.db`, the DataStore prefs, photos) is backed up while the app stays backup-capable. The D2D half is
+  **verified by simulation** (same phone, Android 15, 2026-11-12): the local transport in device-transfer mode backed up
+  `loyscan.db` (with its `-wal`/`-shm`), `user_preferences.preferences_pb` and `card_photos/`; after `pm clear` and a
+  restore the card came back with its photo and the non-default "Most used" sort order. The same backup in cloud mode
+  was rejected again (`Error -1002`). How: [[test-backup-on-a-device]]. Not checked: Android 10–11 (no device), and a
+  real two-phone setup transfer, which goes through Google's D2D transport rather than the local one. The rules'
+  correctness is pinned by `BackupRulesTest`; the device checks confirm the platform honours them.

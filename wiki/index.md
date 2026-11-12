@@ -30,7 +30,7 @@ the way they are, what's fragile, and how to work on it.
 
 ## How-to
 
-- Workflows: [[tdd]] (start here before writing code), [[build-and-run]], [[ci]], [[database-schema-changes]], [[add-a-catalogue-store]], [[add-a-string]], [[code-review]] (PRs, incl. `/next-task`), [[agent-skills]]
+- Workflows: [[tdd]] (start here before writing code), [[build-and-run]], [[ci]], [[database-schema-changes]], [[add-a-catalogue-store]], [[add-a-string]], [[test-backup-on-a-device]], [[code-review]] (PRs, incl. `/next-task`), [[agent-skills]]
 - Runbooks: [[cli-build-jvm-target-mismatch]], [[reset-local-database]]
 - Integrations: [[coil-image-loading]], [[zxing-core]], [[zxing-cpp]]
 - Scripts: [[reviewer-model]] (which model a reviewer subagent really ran on) — see [[scripts/_index|scripts]]
