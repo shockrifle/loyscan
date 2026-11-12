@@ -32,12 +32,18 @@ All paths are under `app/src/main/java/com/bdaniel/loyscan/` unless written in f
   list's sort from Name to Recently used reordered the tiles, and clearing the label put the store name back, each
   without reopening the app.
 - `widget/CardWidgetTiles.kt` — the pure logic, unit-tested: `List<LoyaltyCard>.toWidgetTiles(sort)` sorts with
-  the list's `sortedBy(sort)` ([[card-list]], #7) and maps each card to a `WidgetTile(cardId, color, label)`,
+  the list's `sortedBy(sort)` ([[card-list]], #7) and maps each card to a `WidgetTile(cardId, color, initials, label)`,
   the `label` being the card's label or, when it has none, the store name — the same text the list tile shows.
   `WidgetTile.backgroundColor()` / `.textColor()` reuse [[card-detail]]'s `toBrandColorOrNull()` and
   `contrastingTextColor()`, falling back to a neutral grey for an empty or malformed brand colour.
-- `widget/CardWidgetContent` — the Glance composable: a `LazyColumn` of one clickable `Box` per tile, the box in
-  the brand colour, a `Text` of the label. Each box's `clickable` is `actionStartActivity(openCardIntent(…))`.
+- `widget/CardWidgetContent` — the Glance composable (since #108, [[design-system]]): a `LazyVerticalGrid` of
+  card-ratio tiles, one column below 240dp of widget width and two from 240dp, on `appWidgetBackground()`. A tile is
+  the brand colour with the store's initials over the label, like the list's plain tile; its corners are 6% of its
+  height, rounded from Android 12 (Glance's `cornerRadius` does nothing on 10–11, so they are square there). Glance has
+  no `aspectRatio` or grid spacing, so `widget/WidgetLayout.kt` computes the columns, the tile size from `LocalSize`
+  (`SizeMode.Exact`) and the corner radius, and the 4dp padding of the grid and of each tile makes the gaps. Each
+  tile's `clickable` is `actionStartActivity(openCardIntent(…))`. The widget can't be resized below one tile's height:
+  `minResizeHeight` is 90dp (`res/xml/card_widget_info.xml`; it was 40dp, a thin strip).
 
 ## Opening a card — an intent extra, not a URI deep link
 
@@ -79,10 +85,13 @@ Glance's `@layout/glance_default_loading_layout` as the initial layout). Glance 
 
 ## Tests
 
-- `widget/CardWidgetTilesTest` — the sort order, the label fallback and the colour helpers (Robolectric, because
+- `widget/WidgetLayoutTest` — the column count by width, the tile size and ratio, its corner radius, and the height of
+  one row, against values worked out by hand (plain JUnit). `widget/CardWidgetInfoTest` reads the provider XML through
+  the app's resources and checks `minResizeHeight` fits one tile at `minResizeWidth` (#108).
+- `widget/CardWidgetTilesTest` — the sort order, the label fallback, the initials and the colour helpers (Robolectric, because
   the colour parse goes through `android.graphics.Color`).
 - `widget/CardWidgetContentTest` — `runGlanceAppWidgetUnitTest` (Glance's JVM unit test, `glance-appwidget-testing`):
-  one clickable node per card, each showing its label. A new test seam — see [[tdd]] and [[architecture]]. The Glance
+  one clickable node per card, each showing its initials and label, at a set widget size (`setAppWidgetSize`). A new test seam — see [[tdd]] and [[architecture]]. The Glance
   unit API matches a click by component + `ActionParameters`, not by the intent extras the tile uses, so that a tile
   opens **its own** card is an on-device check, not a unit assertion.
 - `widget/CardWidgetUpdaterTest` — the live-update trigger: it fires when a card or the sort changes the tiles, not on
@@ -102,7 +111,7 @@ the logic it drives is tested above ([[2026-10-09-coverage-gate-kover]]).
 
 ## Not done yet (this slice)
 
-- No front photo on a tile — a tile is the brand-colour box, as the list's non-photo tile is. Photo tiles are a
+- No front photo on a tile — a tile is the brand-colour tile with the initials, as the list's non-photo tile is. Photo tiles are a
   follow-up.
 - No empty-state message: a widget with no cards shows nothing.
 - The live-update trigger only observes while the app process is alive. Cards change only through the running app,

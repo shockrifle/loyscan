@@ -40,6 +40,12 @@ area with `CUT_OUT_SCRIM` (black at 60%) except a `CardShape` hole where `cardCu
 the hole follows the layout. Robolectric doesn't run draw code, so the scrim and the outline are checked by hand; the
 cut-out's size and place are tested through its node ([[barcode-scanner]]).
 
+## The widget
+
+The widget reads `Spacing` too, since it can't read the app's theme: `WIDGET_PADDING` (`xs`) around the grid and each
+tile. Its tiles have the card ratio and corners of `CARD_CORNER_FRACTION` of their height (`widget/WidgetLayout.kt`,
+[[card-widget]]), rounded from Android 12 only.
+
 ## Type and buttons
 
 Typography and button heights are Material 3's defaults. A screen's main action is a full-width button at the end of the
