@@ -69,6 +69,8 @@ android {
             it.inputs.dir("$projectDir/schemas").withPropertyName("roomSchemas").withPathSensitivity(PathSensitivity.RELATIVE)
             // RouteKeepRulesTest reads the app's R8 rules (#73).
             it.inputs.file("$projectDir/proguard-rules.pro").withPropertyName("r8Rules").withPathSensitivity(PathSensitivity.RELATIVE)
+            // DesignValuesTest reads the app's sources for design values used directly (#108).
+            it.inputs.dir("$projectDir/src/main/java").withPropertyName("mainSources").withPathSensitivity(PathSensitivity.RELATIVE)
         }
     }
 }

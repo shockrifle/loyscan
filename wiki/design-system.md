@@ -18,7 +18,8 @@ shape for the card. Why they look like this: [[2026-11-12-design-tokens-and-card
 | `xxl` | 32 | Padding around an empty-state message |
 
 A size that is no step of the scale (a 3dp selection border, the room left for the Add button, the 200dp card header)
-is a named constant next to its screen, not a `.dp` literal.
+is a named constant next to its screen (`val UPPER_CASE = 3.dp`), not a `.dp` literal. `testing/DesignValuesTest`
+fails on a non-zero `.dp` literal or a `RoundedCornerShape` outside `ui/theme/` ([[tdd]]).
 
 ## Shapes
 
@@ -49,4 +50,12 @@ tile. Its tiles have the card ratio and corners of `CARD_CORNER_FRACTION` of the
 ## Type and buttons
 
 Typography and button heights are Material 3's defaults. A screen's main action is a full-width button at the end of the
-screen; secondary actions are `TextButton`s.
+screen (on a form, the last item of the scroll, not pinned); secondary actions are `TextButton`s.
+
+## Checking a layout
+
+There is no screenshot testing. Every screen has a test at font scale 2 on a 320dp-wide screen
+(`assertTextFitsAndDoesNotOverlap`, [[tdd]]), and geometry the design names is asserted through nodes' bounds: the list
+grid's insets and gaps, the barcode surface's group gap, the viewfinder's and crop frame's ratio, the widget's columns
+and tile size. Colours, the scrim and corner rounding are checked by hand (light and dark, a 360×640 and a large phone,
+font scale 2), since Robolectric doesn't draw.

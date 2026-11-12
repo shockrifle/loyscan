@@ -10,6 +10,7 @@ the way they are, what's fragile, and how to work on it.
 ## Start here
 
 - [[architecture]] — layers, DI, data flow, and a worked end-to-end example (the template for new features)
+- [[design-system]] — the spacing scale, shapes and card shape every screen and the widget use (#108)
 - [[glossary]] — vocabulary used in code and in this wiki
 - [[faq]] — questions worth remembering
 - [[android-app]] — the main runtime surface: entry points, manifest, build config
