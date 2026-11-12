@@ -1,5 +1,9 @@
 package com.bdaniel.loyscan
 
+import androidx.compose.ui.platform.LocalView
+import androidx.core.graphics.Insets
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.bdaniel.loyscan.ui.PHOTO_CROP_FRAME_TAG
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.hasTestTag
@@ -442,6 +446,26 @@ class CardFormScreenTest {
     }
 
     @Test
+    fun theCropScreen_keepsItsButtonsAboveTheNavigationBar() { // #108: found on a device, Crop sat under the bar
+        setScreen(CardForm("ruled"))
+        composeRule.onNodeWithText("Add front photo").performScrollTo().performClick()
+        val bar = 96 // px
+
+        // The app draws edge to edge (MainActivity), so the system's bars come to the screen as insets.
+        composeRule.runOnUiThread {
+            val insets = WindowInsetsCompat.Builder()
+                .setInsets(WindowInsetsCompat.Type.navigationBars(), Insets.of(0, 0, 0, bar))
+                .build()
+            ViewCompat.dispatchApplyWindowInsets(hostView!!, insets)
+        }
+        composeRule.waitForIdle()
+
+        val crop = composeRule.onNode(hasText("Crop") and hasClickAction()).fetchSemanticsNode().boundsInRoot
+        val screen = composeRule.onRoot().fetchSemanticsNode().boundsInRoot
+        assertThat(crop.bottom).isAtMost(screen.bottom - bar)
+    }
+
+    @Test
     fun theCropScreen_canBeCancelled_withoutAddingAPhoto() { // #10
         setScreen(CardForm("ruled"))
 
@@ -762,6 +786,9 @@ class CardFormScreenTest {
         composeRule.onNodeWithTag(CARD_NUMBER_TAG).performTextInput(number)
     }
 
+    /** The view the screen is composed in, to send it window insets. */
+    private var hostView: android.view.View? = null
+
     private fun setScreen(route: CardForm, camera: FakePhotoCamera = FakePhotoCamera(available = false), fontScale: Float = 1f) {
         val viewModel = CardFormViewModel(
             SavedStateHandle(route = route),
@@ -772,6 +799,7 @@ class CardFormScreenTest {
         )
         val directions = CardFormDirections(toCard = { id, color -> opened += id to color }, toBack = { backs++ })
         composeRule.setContent {
+            hostView = LocalView.current
             WithFontScale(fontScale) {
                 CardFormScreen(
                     directions = directions,

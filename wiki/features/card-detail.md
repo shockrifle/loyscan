@@ -78,6 +78,8 @@ UUID string.
   `scanMode_inPortrait_keepsA2dBarcodeSquare`, `BarcodeLayoutTest.linear_inATallArea_…`. It keeps the screen on (`KeepScreenOn()`, `FLAG_KEEP_SCREEN_ON`, same
   resumed-only rule as the brightness). A tap anywhere or back closes it. Its open state survives rotation
   (`rememberSaveable`).
+  Its content, and the photo viewer's, keeps inside the system bars (`WindowInsets.safeDrawing`, #108): at a large font
+  the number sat under the navigation bar (`DetailScreenTest.scanMode_andThePhotoViewer_stayAboveTheNavigationBar`).
 - Back arrow → `directions.toBack()` → `navigateUp()`. The Edit icon opens the card form for this card
   (`directions.toEdit(cardId, storeId)`, [[edit-card]]); it is disabled until the card has loaded.
 - **Delete** (#8): the top bar's Delete icon asks "Delete this card?" ("It is removed from this phone for good.").

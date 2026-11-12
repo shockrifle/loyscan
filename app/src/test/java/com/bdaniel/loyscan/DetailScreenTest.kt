@@ -1,5 +1,9 @@
 package com.bdaniel.loyscan
 
+import androidx.compose.ui.platform.LocalView
+import androidx.core.graphics.Insets
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.res.Configuration
@@ -239,6 +243,34 @@ class DetailScreenTest {
         restorationTester.emulateSavedInstanceStateRestore()
 
         composeRule.onNodeWithTag(PHOTO_VIEWER_TAG).assertIsDisplayed()
+    }
+
+    @Test
+    fun scanMode_andThePhotoViewer_stayAboveTheNavigationBar() { // #108: found on a device, the number sat under it
+        var view: android.view.View? = null
+        setScreen(card = card.copy(frontPhotoPath = "front"), wrap = { content -> view = LocalView.current; content() })
+        val bar = 96 // px
+        val sendTheBar = {
+            composeRule.runOnUiThread {
+                val insets = WindowInsetsCompat.Builder()
+                    .setInsets(WindowInsetsCompat.Type.navigationBars(), Insets.of(0, 0, 0, bar))
+                    .build()
+                ViewCompat.dispatchApplyWindowInsets(view!!, insets)
+            }
+            composeRule.waitForIdle()
+        }
+        val screen = composeRule.onRoot().fetchSemanticsNode().boundsInRoot
+
+        composeRule.onNodeWithContentDescription("Barcode").performTouchInput { doubleClick() }
+        sendTheBar()
+        val number = composeRule.onNode(hasText("0042") and hasAnyAncestor(hasTestTag("scanMode")), useUnmergedTree = true)
+        assertThat(number.fetchSemanticsNode().boundsInRoot.bottom).isAtMost(screen.bottom - bar)
+
+        composeRule.onNodeWithTag("scanMode").performClick()
+        composeRule.onNodeWithContentDescription("Front photo").performScrollTo().performClick()
+        sendTheBar()
+        val photo = composeRule.onNode(hasContentDescription("Front photo") and hasAnyAncestor(hasTestTag(PHOTO_VIEWER_TAG)), useUnmergedTree = true)
+        assertThat(photo.fetchSemanticsNode().boundsInRoot.bottom).isAtMost(screen.bottom - bar)
     }
 
     @Test

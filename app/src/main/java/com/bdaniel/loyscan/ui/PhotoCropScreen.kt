@@ -6,6 +6,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -84,7 +87,8 @@ fun PhotoCropScreen(
             .pointerInput(Unit) { detectTapGestures {} }
             .testTag(PHOTO_CROP_TAG),
     ) {
-        Column(modifier = Modifier.fillMaxSize().padding(Spacing.l)) {
+        // Inside the system bars: the app draws edge to edge, and Crop sat under the navigation bar (#108).
+        Column(modifier = Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing).padding(Spacing.l)) {
             val image = painter.intrinsicSize
             // The frame's size as last laid out, for Crop: a plain holder, read only on a tap.
             val laidOut = remember { FrameHolder() }

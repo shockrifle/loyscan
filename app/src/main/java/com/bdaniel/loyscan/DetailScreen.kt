@@ -13,6 +13,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -334,6 +337,8 @@ private fun ScanMode(barcode: EncodedBarcode, number: String, onExit: () -> Unit
             .background(Color.White)
             .clickable(onClickLabel = stringResource(R.string.close_full_screen), onClick = onExit)
             .testTag("scanMode")
+            // Inside the system bars: the app draws edge to edge (#108, the number sat under the navigation bar).
+            .windowInsetsPadding(WindowInsets.safeDrawing)
             .padding(Spacing.xl),
     ) {
         val alongTheHeight = barcode.isLinear && maxHeight > maxWidth
@@ -371,6 +376,7 @@ private fun PhotoViewer(photo: String, description: String, onExit: () -> Unit) 
             .background(Color.Black)
             .clickable(onClickLabel = stringResource(R.string.close_full_screen), onClick = onExit)
             .testTag(PHOTO_VIEWER_TAG)
+            .windowInsetsPadding(WindowInsets.safeDrawing)
             .padding(Spacing.l),
     ) {
         AsyncImage(
