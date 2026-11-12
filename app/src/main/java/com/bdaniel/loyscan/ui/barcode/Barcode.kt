@@ -74,12 +74,15 @@ private fun rectsAcross(barcode: EncodedBarcode, size: Size): List<Rect> {
     }
 }
 
+/** A 1D barcode's height on the card sheet: tall enough for a till's scanner to find. */
+val LINEAR_BARCODE_HEIGHT = 120.dp
+
 /**
  * The size [Barcode] should be laid out at: a 1D one the available width and [linearHeight] high; a 2D one as large as
  * fits at its own aspect ratio, so the full width unless the height is shorter (not `fillMaxWidth`, which would pin
  * the width and push it past the height).
  */
-fun Modifier.barcodeSize(barcode: EncodedBarcode, linearHeight: Dp = 120.dp): Modifier =
+fun Modifier.barcodeSize(barcode: EncodedBarcode, linearHeight: Dp = LINEAR_BARCODE_HEIGHT): Modifier =
     if (barcode.isLinear) fillMaxWidth().height(linearHeight)
     else aspectRatio(barcode.width.toFloat() / barcode.height)
 

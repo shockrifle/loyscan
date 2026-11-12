@@ -24,6 +24,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.bdaniel.loyscan.ui.theme.Spacing
 import com.bdaniel.loyscan.ui.scanner.PictureScan
 import com.bdaniel.loyscan.ui.theme.icons.Icons
 
@@ -57,8 +58,8 @@ fun SharedPictureScreen(
         containerColor = Color.Transparent,
     ) { innerPadding ->
         Column(
-            Modifier.padding(innerPadding).fillMaxSize().padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
+            Modifier.padding(innerPadding).fillMaxSize().padding(Spacing.xl),
+            verticalArrangement = Arrangement.spacedBy(Spacing.l, Alignment.CenterVertically),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             when (val current = scan) {

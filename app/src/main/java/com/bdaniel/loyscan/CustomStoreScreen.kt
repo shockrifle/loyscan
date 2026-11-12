@@ -44,6 +44,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.bdaniel.loyscan.ui.theme.Spacing
 import com.bdaniel.loyscan.ui.barcodeFormatName
 import com.bdaniel.loyscan.ui.theme.icons.Icons
 import com.bdaniel.loyscan.ui.toBrandColorOrNull
@@ -92,7 +93,7 @@ fun CustomStoreScreen(
         containerColor = Color.Transparent,
     ) { innerPadding ->
         if (state.storeGone) {
-            Text(stringResource(R.string.store_gone), modifier = Modifier.padding(innerPadding).padding(16.dp))
+            Text(stringResource(R.string.store_gone), modifier = Modifier.padding(innerPadding).padding(Spacing.l))
         }
         if (confirmingDelete && state.ready && state.deletion != Deletion.DELETED) {
             ConfirmDelete(
@@ -109,8 +110,8 @@ fun CustomStoreScreen(
         }
         if (!state.ready) return@Scaffold
         Column(
-            Modifier.padding(innerPadding).verticalScroll(rememberScrollState()).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            Modifier.padding(innerPadding).verticalScroll(rememberScrollState()).padding(Spacing.l),
+            verticalArrangement = Arrangement.spacedBy(Spacing.l),
         ) {
             OutlinedTextField(
                 value = state.name,
@@ -120,17 +121,17 @@ fun CustomStoreScreen(
                 singleLine = true,
             )
             Text(stringResource(R.string.store_colour), style = MaterialTheme.typography.titleSmall)
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.m), verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
                 CustomStoreViewModel.COLORS.forEach { swatch ->
                     val selected = swatch.hex == state.color
                     val swatchName = stringResource(swatch.name)
                     Box(
                         Modifier
-                            .size(40.dp)
+                            .size(SWATCH_SIZE)
                             .clip(CircleShape)
                             .background(swatch.hex.toBrandColorOrNull() ?: MaterialTheme.colorScheme.surfaceVariant)
                             .then(
-                                if (selected) Modifier.border(3.dp, MaterialTheme.colorScheme.onSurface, CircleShape)
+                                if (selected) Modifier.border(SWATCH_SELECTED_BORDER, MaterialTheme.colorScheme.onSurface, CircleShape)
                                 else Modifier
                             )
                             .selectable(selected = selected, role = Role.RadioButton) {
@@ -141,7 +142,7 @@ fun CustomStoreScreen(
                 }
             }
             Text(stringResource(R.string.barcode_for_typed_numbers), style = MaterialTheme.typography.titleSmall)
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
                 CustomStoreViewModel.FORMATS.forEach { format ->
                     FilterChip(
                         selected = format == state.format,
@@ -196,3 +197,9 @@ private fun ConfirmDelete(
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
     )
 }
+
+/** A colour swatch, large enough to tap. */
+private val SWATCH_SIZE = 40.dp
+
+/** The ring around the chosen swatch. */
+private val SWATCH_SELECTED_BORDER = 3.dp

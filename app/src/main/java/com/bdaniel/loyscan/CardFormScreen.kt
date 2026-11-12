@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -48,6 +47,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.bdaniel.loyscan.ui.theme.CardShape
+import com.bdaniel.loyscan.ui.theme.Spacing
 import com.bdaniel.loyscan.CardFormState.NumberCheck
 import com.bdaniel.loyscan.domain.cardnumber.CardNumberRule
 import com.bdaniel.loyscan.domain.cardnumber.Validation
@@ -112,16 +113,16 @@ fun CardFormScreen(
     ) { innerPadding ->
         if (store == null) {
             if (state.storeGone) {
-                Text(stringResource(R.string.store_gone), modifier = Modifier.padding(innerPadding).padding(16.dp))
+                Text(stringResource(R.string.store_gone), modifier = Modifier.padding(innerPadding).padding(Spacing.l))
             }
             return@Scaffold
         }
         Column(
-            Modifier.padding(innerPadding).verticalScroll(rememberScrollState()).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            Modifier.padding(innerPadding).verticalScroll(rememberScrollState()).padding(Spacing.l),
+            verticalArrangement = Arrangement.spacedBy(Spacing.l),
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                StoreDot(store, 32.dp)
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.m)) {
+                StoreDot(store, STORE_DOT_LARGE)
                 Text(store.name, style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
                 if (state.otherStores.isNotEmpty()) {
                     TextButton(onClick = { choosingStore = true }) { Text(stringResource(R.string.change_store)) }
@@ -181,7 +182,7 @@ fun CardFormScreen(
                 minLines = 2,
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.m)) {
                 CardPhotoSide.entries.forEach { side ->
                     val picker = photoPicker { viewModel.onPhotoPicked(side, it) }
                     PhotoSlot(
@@ -300,7 +301,7 @@ private fun PhotoSlot(
                     modifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(CARD_ASPECT_RATIO)
-                        .clip(RoundedCornerShape(8.dp)),
+                        .clip(CardShape),
                 )
                 Row {
                     IconButton(onClick = onPick, enabled = enabled) {

@@ -34,6 +34,9 @@ tiles, one per row in `loyalty_cards`, live-updating from Room. Sort, search and
   next card added (`ListViewModelTest.deletingTheLastCard_clearsTheQuery`,
   `ListScreenTest.deletingTheLastCard_duringASearch_showsTheEmptyState`). Tests: `ListScreenTest.noCards_…`, `theEmptyState_waitsForTheCardsToLoad`,
   `aSearchThatMatchesNothing_isNotTheEmptyState`.
+- Two columns of card-ratio tiles in `CardShape`, 16dp from the screen's edges with 12dp gaps ([[design-system]], #108;
+  `ListScreenTest.tiles_areInset16dpFromTheScreenEdges_with12dpGaps`); a photo tile and a plain one are the same size
+  (`aPhotoTile_andAPlainTile_haveTheSameSize`).
 - On a phone the list is held in portrait, where a tile always fits the grid; screens 600dp or wider rotate
   ([[2026-10-28-portrait-on-phones]], #63).
 - Grid items are keyed by card id, so a re-sort moves tiles rather than rebinding them. A use counted on opening a
@@ -93,7 +96,7 @@ tiles, one per row in `loyalty_cards`, live-updating from Room. Sort, search and
   `ListScreenTest.inHungarian_everyTextOnTheList_isTranslated`.
 - The Settings icon in the top bar is a no-op (`ListScreen.kt:145`, `/* TODO */`).
 - The "Add card" floating button → `directions.toAddCard()` → the store picker of [[add-card]]. The grid has 88dp of bottom content
-  padding so the button never covers the last row (`ListScreenTest.theLastTile_isNotCoveredByTheAddButtonWhenScrolledToTheEnd`).
+  padding (`ADD_BUTTON_CLEARANCE`) so the button never covers the last row (`ListScreenTest.theLastTile_isNotCoveredByTheAddButtonWhenScrolledToTheEnd`).
 
 ## Known issues
 

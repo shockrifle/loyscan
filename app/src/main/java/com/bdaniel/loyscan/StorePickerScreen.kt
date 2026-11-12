@@ -21,6 +21,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.bdaniel.loyscan.ui.theme.Spacing
 import com.bdaniel.loyscan.ui.theme.icons.Icons
 
 // Not store ids: catalogue ids are slugs and custom ones UUIDs.
@@ -111,6 +112,6 @@ private fun SectionHeading(text: String) {
         text,
         style = MaterialTheme.typography.titleSmall,
         color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 8.dp).semantics { heading() },
+        modifier = Modifier.padding(start = Spacing.l, top = Spacing.l, end = Spacing.l, bottom = Spacing.s).semantics { heading() },
     )
 }

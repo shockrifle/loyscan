@@ -1,5 +1,8 @@
 package com.bdaniel.loyscan
 
+import org.robolectric.annotation.GraphicsMode
+import com.bdaniel.loyscan.testing.WithFontScale
+import com.bdaniel.loyscan.testing.assertTextFitsAndDoesNotOverlap
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onAllNodesWithText
@@ -218,7 +221,15 @@ class StorePickerScreenTest {
         shown.assertEveryTextIsTranslated("Reads It", "Tesco", "My Shop", "xyz")
     }
 
-    private fun setScreen(vararg stores: Store, route: StorePicker = StorePicker(), country: String? = "HU") {
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE) // real text measuring
+    fun atFontScale2_onANarrowScreen_noTextIsClippedOrOverlaps() { // #108; Robolectric's default screen is 320dp wide
+        setScreen(aStore(id = "first", name = "First Store"), aStore(id = "second", name = "Second Store"), fontScale = 2f)
+
+        composeRule.assertTextFitsAndDoesNotOverlap()
+    }
+
+    private fun setScreen(vararg stores: Store, route: StorePicker = StorePicker(), country: String? = "HU", fontScale: Float = 1f) {
         val viewModel = StorePickerViewModel(FakeStoreRepository(stores.toList()), route) { country }
         val directions = StorePickerDirections(
             toStore = { picked += it },
@@ -226,6 +237,6 @@ class StorePickerScreenTest {
             toEditStore = { edited += it },
             toBack = { backs++ },
         )
-        composeRule.setContent { StorePickerScreen(directions = directions, viewModel = viewModel) }
+        composeRule.setContent { WithFontScale(fontScale) { StorePickerScreen(directions = directions, viewModel = viewModel) } }
     }
 }
