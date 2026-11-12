@@ -30,7 +30,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.bdaniel.loyscan.ScannerViewModel.PictureProblem
 import com.bdaniel.loyscan.ui.scanner.CameraEvents
@@ -41,6 +40,8 @@ import com.bdaniel.loyscan.ui.scanner.PicturePicker
 import com.bdaniel.loyscan.ui.scanner.rememberPicturePicker
 import com.bdaniel.loyscan.ui.scanner.ScannerCamera
 import com.bdaniel.loyscan.ui.scanner.rememberCameraPermission
+import com.bdaniel.loyscan.ui.scanner.Viewfinder
+import com.bdaniel.loyscan.ui.theme.Spacing
 import com.bdaniel.loyscan.ui.theme.icons.Icons
 
 /**
@@ -108,6 +109,9 @@ fun ScannerScreen(
                             )
                         }
                         camera(state.torchOn, events, Modifier.fillMaxSize().background(Color.Black))
+                        if (!state.cameraUnavailable) {
+                            Viewfinder(hint = if (state.showHint) stringResource(R.string.scan_hint) else null)
+                        }
                         // Over the camera, which stays open: CameraX opens it again when the error clears (#40).
                         if (state.cameraUnavailable) {
                             Box(
@@ -121,11 +125,10 @@ fun ScannerScreen(
                 }
             }
             Column(
-                Modifier.fillMaxWidth().padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                Modifier.fillMaxWidth().padding(Spacing.l),
+                verticalArrangement = Arrangement.spacedBy(Spacing.m),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                val cameraRunning = permission.status == Status.GRANTED && !state.cameraFailed && !state.cameraUnavailable
                 val pictureProblem = state.pictureProblem
                 if (pictureProblem != null) {
                     Card(Modifier.fillMaxWidth()) {
@@ -136,15 +139,7 @@ fun ScannerScreen(
                                     PictureProblem.UNREADABLE -> R.string.scanner_picture_unreadable
                                 }
                             ),
-                            modifier = Modifier.padding(16.dp),
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
-                    }
-                } else if (state.showHint && cameraRunning) {
-                    Card(Modifier.fillMaxWidth()) {
-                        Text(
-                            stringResource(R.string.scan_hint),
-                            modifier = Modifier.padding(16.dp),
+                            modifier = Modifier.padding(Spacing.l),
                             style = MaterialTheme.typography.bodyMedium,
                         )
                     }
@@ -167,8 +162,8 @@ fun ScannerScreen(
 @Composable
 private fun PermissionRationale(permission: CameraPermission) {
     Column(
-        Modifier.padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        Modifier.padding(Spacing.xl),
+        verticalArrangement = Arrangement.spacedBy(Spacing.l),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
@@ -191,5 +186,5 @@ private fun PermissionRationale(permission: CameraPermission) {
 
 @Composable
 private fun Message(text: String) {
-    Text(text, modifier = Modifier.padding(24.dp), textAlign = TextAlign.Center)
+    Text(text, modifier = Modifier.padding(Spacing.xl), textAlign = TextAlign.Center)
 }

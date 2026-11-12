@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-12 · scanner viewfinder: card-ratio cut-out under a scrim, the hint below it · features/barcode-scanner, design-system · #108 viewfinder
 - 2026-11-12 · screens moved onto the design values: list insets and gaps, detail groups and barcode surface, CardShape thumbnails; font-scale layout check added · features/card-list, features/card-detail, workflows/tdd, architecture · #108 screens
 - 2026-11-12 · design values added: Spacing scale, explicit M3 shapes, CardShape · design-system (new) · #108 theme values
 - 2026-11-12 · visual polish grilled: spacing object, M3 shapes, proportional CardShape, visual-only viewfinder, crop frame, card-ratio widget tiles in 1–2 columns · decisions/2026-11-12-design-tokens-and-card-shape (new), decisions/2026-11-04-home-screen-widget, decisions/_index · #108 grilling session
