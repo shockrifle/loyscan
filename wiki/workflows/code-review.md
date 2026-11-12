@@ -19,6 +19,12 @@ files hold the steps; this page holds the loop and why it looks this way.
    `gh pr merge <p> --rebase --delete-branch`. Each commit lands on `master` as it is, so each must pass the gate
    on its own. CI runs again on `master`; a red run there means `master` is broken and comes first.
 
+**Two open PRs that both add a [[_log]] line conflict once the first one merges.** The `merge=union` driver in
+`.gitattributes` runs only in a local git merge or rebase. GitHub ignores it, so `gh pr merge` fails with "Pull Request
+has merge conflicts" even with CI green. Rebase the second branch locally (`git rebase origin/master`, where the union
+driver keeps both lines), push it with `--force-with-lease`, and merge once CI is green on the new head. Seen
+2026-11-12 with #146 and #147.
+
 GitHub doesn't enforce any of this: branch protection needs a paid plan for a private repo. The commands follow it.
 
 Dependabot's PRs have no issue and go through `/dependency-pr` instead ([[ci]] → Dependabot).
