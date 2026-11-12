@@ -56,8 +56,12 @@ Caches:
   **Save Robolectric jars** stores the new set under its own key; the next run restores it. When the two lists match,
   nothing was downloaded and the save step is skipped. A toml change (a Robolectric bump) starts this cache cold.
 
-**Runtime** (measured 2026-10-12): about 2 minutes with a warm Gradle cache (2m4s), and about 5 minutes cold
-(4m57s–5m32s, the first run, or after setup-gradle's cache key changes, e.g. a dependency bump).
+**Runtime** (job time, measured 2026-11-12; the 2026-10-12 figures of 2 and 5 minutes predate lint and the minified
+build): about **10–14 minutes with a warm Gradle cache** (587–851 s over six runs on 2026-11-11 and 2026-11-12, e.g.
+43191093845, 43189465936, 43051061277). The unit tests and coverage gate take 4–5½ minutes, lint 1½–2¼ and the minified
+release build 3½–6. **Cold**, when setup-gradle's cache key changes (a dependency bump), no run with the lint step has
+been measured yet. The last cold runs, on 2026-11-10 before lint was added, took 685–854 s (42783746385,
+42785399324, 42785742119). With lint added, expect roughly 13–17 minutes (an estimate).
 
 ## Where the reports are
 
