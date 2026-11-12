@@ -202,6 +202,6 @@ Each step is red → green → refactor: the test is written and seen failing be
    [[card-transition]]). Test: `createComposeRule()`, a fake-backed ViewModel, recording directions.
 6. Anything the first frame needs (e.g. colors for a transition) goes in the route, not just the ViewModel.
 7. Images: always pass `imageLoader = hiltImageLoader()` to `AsyncImage`.
-8. `./gradlew testDebugUnitTest koverVerify lintDebug` passes; raise `minBound` if coverage rose
+8. The gate (root `CLAUDE.md`) passes; raise `minBound` if coverage rose
    ([[2026-10-09-coverage-gate-kover]]).
 9. Update this wiki per [[CLAUDE]].

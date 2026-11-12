@@ -1,6 +1,6 @@
 # Test-driven development in LoyScan
 
-Every change starts with a failing test, and `./gradlew testDebugUnitTest koverVerify lintDebug` passes before every commit
+Every change starts with a failing test, and the gate (root `CLAUDE.md`) passes before every commit
 (lint, since #126: CI runs it, [[ci]]).
 The rules and why: [[2026-10-12-tdd-and-coverage]]. This page is the how.
 
@@ -14,9 +14,9 @@ The rules and why: [[2026-10-12-tdd-and-coverage]]. This page is the how.
    test compiles and fails on its assertion.
 3. **Green.** Write the least code that passes. Run the class again.
 4. **Refactor** with the tests green: names, duplication, moving code to the right layer.
-5. Repeat until the criteria are covered. Then run the whole suite and the gate:
-   `./gradlew testDebugUnitTest koverVerify lintDebug`. If coverage rose, raise `minBound` in `app/build.gradle.kts` to the
-   new whole percent in the same commit ([[2026-10-09-coverage-gate-kover]]).
+5. Repeat until the criteria are covered. Then run the whole suite and the gate (root `CLAUDE.md`). If coverage
+   rose, raise `minBound` in `app/build.gradle.kts` to the new whole percent in the same commit
+   ([[2026-10-09-coverage-gate-kover]]).
 6. **Commit** with the wiki update. Say what the red step was in the message when it isn't obvious.
 
 **Bug fix:** step 2 is a regression test that reproduces the bug through the public API. Run it and keep the

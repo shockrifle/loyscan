@@ -69,7 +69,7 @@ them with AskUserQuestion: the recommended one first, each with a one-line reaso
 - `git switch -c <n>-<short-slug> origin/master` (e.g. `116-pull-request-workflow`).
 - Follow `wiki/workflows/tdd.md`: for each criterion write the failing test, run it and see it fail for the right
   reason, then make it pass. Set `JAVA_HOME` first (root `CLAUDE.md`). Before committing,
-  `./gradlew testDebugUnitTest koverVerify lintDebug assembleDebug` must pass; raise the Kover `minBound` if coverage rose.
+  the gate (root `CLAUDE.md`) and `./gradlew assembleDebug` must pass; raise the Kover `minBound` if coverage rose.
 - Commit on the branch: one focused commit per logical change, the repo's message style, wiki updates and the
   `wiki/_log.md` line in the same commit as the code. The PR is rebase-merged, so every commit lands on `master`
   as it is: each one must build and pass the gate. The commit that completes the issue says `Fixes #<n>`; earlier
@@ -123,7 +123,7 @@ Gates, all required:
 - the reviewer really ran on Sonnet at high effort
   (`python -I .claude/scripts/reviewer_model.py <agent id> --expect claude-sonnet-5-5 --effort high` exits 0; if
   not, stop and show me its output)
-- `./gradlew testDebugUnitTest koverVerify lintDebug assembleDebug` passes locally, and the working tree is clean
+- the gate (root `CLAUDE.md`) and `./gradlew assembleDebug` pass locally, and the working tree is clean
 - every commit follows the "Public-safe" rule in `wiki/CLAUDE.md`
 - the branch is pushed, contains `origin/master`, and CI is green on the PR's head commit
   (`gh pr checks <p> --watch`)

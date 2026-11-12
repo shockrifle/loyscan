@@ -73,11 +73,7 @@ With `gh`:
 
 ## Reproduce a failure locally
 
-Run the same command with `JAVA_HOME` set to Android Studio's JBR 21 (see [[build-and-run]]):
-
-```sh
-./gradlew testDebugUnitTest koverVerify lintDebug
-```
+Run the gate (root `CLAUDE.md`) with `JAVA_HOME` set to Android Studio's JBR 21 (see [[build-and-run]]).
 
 CI uses Linux and Temurin, while local builds use Windows and the JBR. A test that passes locally but fails only
 in CI usually depends on the platform: path separators, line endings (`core.autocrlf` gives Windows checkouts

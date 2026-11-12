@@ -74,7 +74,7 @@ it. If the test passes before the fix, the claim was wrong: stop and tell me.
 
 Then:
 
-- set `JAVA_HOME` to Android Studio's JBR first (see root `CLAUDE.md`), then run `./gradlew testDebugUnitTest koverVerify lintDebug assembleDebug` and make sure it passes; raise the Kover
+- set `JAVA_HOME` to Android Studio's JBR first (see root `CLAUDE.md`), then run the gate (root `CLAUDE.md`) and `./gradlew assembleDebug` and make sure they pass; raise the Kover
   `minBound` if coverage rose (`wiki/decisions/2026-10-09-coverage-gate-kover.md`)
 - update the wiki pages from the plan in the same commit as the code, and append a line to `wiki/_log.md`
 - commit locally on the change's branch, never on `master`; do not push, do not comment on the PR or issue, and do not create, edit or close GitHub issues — report back and I will answer the reviewer myself. Out-of-scope findings go in the report as suggested follow-up issues.
