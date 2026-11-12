@@ -27,8 +27,10 @@ All paths are under `app/src/main/java/com/bdaniel/loyscan/` unless written in f
   read the cards or redraw is logged, not thrown (an app-scope `CoroutineExceptionHandler` and per-emission
   `try`/`catch`): the widget is optional and must not crash the app. **On-device check (#102): verified on a device
   (ASUS AI2302, Android 15, 2026-11-05).** A widget placed mid-session (app already running) drew the current cards at
-  once; adding a card made its tile appear and deleting one made its tile disappear, without reopening the app. (Edit
-  and re-sort go through the same `CardWidgetUpdater` trigger, unit-tested in `CardWidgetUpdaterTest`.)
+  once; adding a card made its tile appear and deleting one made its tile disappear, without reopening the app. **Edit and
+  re-sort verified on the same device on 2026-11-12:** giving a card a label redrew its tile with the label, switching the
+  list's sort from Name to Recently used reordered the tiles, and clearing the label put the store name back, each
+  without reopening the app.
 - `widget/CardWidgetTiles.kt` — the pure logic, unit-tested: `List<LoyaltyCard>.toWidgetTiles(sort)` sorts with
   the list's `sortedBy(sort)` ([[card-list]], #7) and maps each card to a `WidgetTile(cardId, color, label)`,
   the `label` being the card's label or, when it has none, the store name — the same text the list tile shows.
@@ -106,6 +108,6 @@ the logic it drives is tested above ([[2026-10-09-coverage-gate-kover]]).
 - The live-update trigger only observes while the app process is alive. Cards change only through the running app,
   so that covers every real change; a widget added while the app is dead renders current cards when it is next shown.
 - The on-device checks above (live refresh, warm/repeat tap, a tile opening its own card) were the open part of
-  #11 after this slice; they passed on a device on 2026-11-05 (#102).
+  #11 after this slice; they passed on a device on 2026-11-05 (#102), and edit and re-sort on 2026-11-12.
 
 See [[2026-11-04-home-screen-widget]] for the decisions.
