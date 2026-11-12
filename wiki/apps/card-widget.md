@@ -42,8 +42,12 @@ All paths are under `app/src/main/java/com/bdaniel/loyscan/` unless written in f
   height, rounded from Android 12 (Glance's `cornerRadius` does nothing on 10–11, so they are square there). Glance has
   no `aspectRatio` or grid spacing, so `widget/WidgetLayout.kt` computes the columns, the tile size from `LocalSize`
   (`SizeMode.Exact`) and the corner radius, and the 4dp padding of the grid and of each tile makes the gaps. Each
-  tile's `clickable` is `actionStartActivity(openCardIntent(…))`. The widget can't be resized below one tile's height:
-  `minResizeHeight` is 90dp (`res/xml/card_widget_info.xml`; it was 40dp, a thin strip).
+  tile's `clickable` is `actionStartActivity(openCardIntent(…))`. At its narrowest (110dp) the widget can't be resized
+  below one tile's height: `minResizeHeight` is 90dp (`res/xml/card_widget_info.xml`; it was 40dp, a thin strip). A wider
+  one-column widget has taller tiles, so resized to 90dp it cuts its tile; the launcher has no per-width minimum.
+  Glance's unit test can't see a node's size or the grid's columns, so the composable's use of `widgetColumns` and
+  `widgetTileSize` is checked on a device, and only the functions are tested. Nor is the widget checked at a large font
+  scale: a small tile's two lines can be cut there.
 
 ## Opening a card — an intent extra, not a URI deep link
 

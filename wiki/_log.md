@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-12 · review of PR #152: a picture's problem hides the scanner hint again; widget resize floor and its untested wiring stated; decision count · features/barcode-scanner, apps/card-widget, index · PR #152 review
 - 2026-11-12 · design values enforced on the sources: DesignValuesTest, shared source blanker; design-system page completed and linked · design-system, workflows/tdd, architecture, index · #108
 - 2026-11-12 · widget: card-ratio tiles with initials in 1–2 columns by width, min resize height 90dp; the widget decision amended · apps/card-widget, decisions/2026-11-04-home-screen-widget, design-system · #108 widget
 - 2026-11-12 · crop frame: the photo shows dimmed around a CardShape frame, Crop full width at the bottom · features/card-photos, workflows/tdd · #108 crop frame
