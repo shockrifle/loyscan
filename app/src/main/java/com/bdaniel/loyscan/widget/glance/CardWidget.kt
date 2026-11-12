@@ -12,6 +12,7 @@ import com.bdaniel.loyscan.data.repository.UserPreferencesRepository
 import com.bdaniel.loyscan.domain.CardSort
 import com.bdaniel.loyscan.widget.CardWidgetContent
 import com.bdaniel.loyscan.widget.CardWidgetUpdater
+import com.bdaniel.loyscan.widget.WIDGET_SIZES
 import com.bdaniel.loyscan.widget.toWidgetTiles
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
@@ -27,7 +28,7 @@ import dagger.hilt.components.SingletonComponent
  */
 class CardWidget : GlanceAppWidget() {
 
-    override val sizeMode: SizeMode = SizeMode.Exact
+    override val sizeMode: SizeMode = SizeMode.Responsive(WIDGET_SIZES)
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val entryPoint = EntryPointAccessors.fromApplication(context, CardWidgetEntryPoint::class.java)

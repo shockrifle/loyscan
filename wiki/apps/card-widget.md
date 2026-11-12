@@ -40,13 +40,20 @@ All paths are under `app/src/main/java/com/bdaniel/loyscan/` unless written in f
   card-ratio tiles, one column below 240dp of widget width and two from 240dp, on `appWidgetBackground()`. A tile is
   the brand colour with the store's initials over the label, like the list's plain tile; its corners are 6% of its
   height, rounded from Android 12 (Glance's `cornerRadius` does nothing on 10–11, so they are square there). Glance has
-  no `aspectRatio` or grid spacing, so `widget/WidgetLayout.kt` computes the columns, the tile size from `LocalSize`
-  (`SizeMode.Exact`) and the corner radius, and the 4dp padding of the grid and of each tile makes the gaps. Each
+  no `aspectRatio` or grid spacing, so `widget/WidgetLayout.kt` computes the columns, the tile height from `LocalSize`
+  and the corner radius, and the 4dp padding of the grid and of each tile makes the gaps. A tile fills its cell's real
+  width. The widget is laid out for 16 sizes (`SizeMode.Responsive(WIDGET_SIZES)`), widths from 110 to 410dp, each
+  40dp high, so from Android 12 the home screen picks the widest that fits the widget's real width; the steps keep a
+  tile within 10% of the card's ratio up to 440dp (`WidgetLayoutTest.theLayoutChosenForAnyPhoneWidth_…`), and a wider
+  widget's tiles are flatter. It was `SizeMode.Exact`, which lays out the sizes the launcher reports: on a device
+  (2026-11-12, Nova launcher) it reported 131×432dp and a landscape 263dp-wide size for a widget about 131×386dp, none
+  fit, Android showed the smallest, the landscape layout, and its fixed-width tile was cut to half. Each
   tile's `clickable` is `actionStartActivity(openCardIntent(…))`. At its narrowest (110dp) the widget can't be resized
   below one tile's height: `minResizeHeight` is 90dp (`res/xml/card_widget_info.xml`; it was 40dp, a thin strip). A wider
   one-column widget has taller tiles, so resized to 90dp it cuts its tile; the launcher has no per-width minimum.
   Glance's unit test can't see a node's size or the grid's columns, so the composable's use of `widgetColumns` and
-  `widgetTileSize` is checked on a device, and only the functions are tested. Nor is the widget checked at a large font
+  `widgetTileSize` is checked on a device (2026-11-12: one column at ~131dp, two at ~278dp, tiles uncut), and only the
+  functions are tested. Nor is the widget checked at a large font
   scale: a small tile's two lines can be cut there.
 
 ## Opening a card — an intent extra, not a URI deep link
