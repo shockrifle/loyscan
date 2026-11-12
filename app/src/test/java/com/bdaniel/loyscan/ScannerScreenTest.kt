@@ -376,6 +376,19 @@ class ScannerScreenTest {
     }
 
     @Test
+    fun aPictureProblem_takesTheHintsPlace() { // as before the viewfinder (review of #108): one message at a time
+        pictureReader.result = PictureScan.NoBarcode
+        setScreen(FakeCameraPermission(Status.GRANTED), hintDelay = Duration.ZERO)
+        composeRule.runOnIdle { events!!.onStarted(false) }
+        composeRule.onNodeWithText("Card won't scan?", substring = true).assertIsDisplayed()
+
+        composeRule.onNodeWithText("Scan from image").performClick()
+
+        composeRule.onNodeWithText("No barcode was found in that picture", substring = true).assertIsDisplayed()
+        composeRule.onNodeWithText("Card won't scan?", substring = true).assertDoesNotExist()
+    }
+
+    @Test
     fun aPictureThatCannotBeRead_saysSo() {
         pictureReader.result = PictureScan.Unreadable
         setScreen(FakeCameraPermission(Status.DENIED))

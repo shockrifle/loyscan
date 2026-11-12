@@ -110,7 +110,8 @@ fun ScannerScreen(
                         }
                         camera(state.torchOn, events, Modifier.fillMaxSize().background(Color.Black))
                         if (!state.cameraUnavailable) {
-                            Viewfinder(hint = if (state.showHint) stringResource(R.string.scan_hint) else null)
+                            // A picture's problem takes the hint's place: one message at a time.
+                            Viewfinder(hint = if (state.showHint && state.pictureProblem == null) stringResource(R.string.scan_hint) else null)
                         }
                         // Over the camera, which stays open: CameraX opens it again when the error clears (#40).
                         if (state.cameraUnavailable) {

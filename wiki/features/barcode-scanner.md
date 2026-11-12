@@ -52,7 +52,8 @@ after the store picker of [[add-card]]; a scan or "Enter manually" replaces it w
   cut-out to `CameraEvents` or the analyzer; checked by hand, not by a test). It is hidden after a failure and while the
   camera is unavailable. Tests: `ScannerScreenTest.theViewfinder_…`, `theHint_showsBelowTheCutOut_onTheCamera`.
 - **Hint.** 8 s after the camera first starts (`ScannerViewModel.HINT_DELAY`), "Card won't scan?" with tips shows in
-  white under the cut-out. The cut-out and the hint share the height, so at a large font the cut-out shrinks and the
+  white under the cut-out, unless a picked picture's problem is showing
+  (`aPictureProblem_takesTheHintsPlace`). The cut-out and the hint share the height, so at a large font the cut-out shrinks and the
   hint scrolls (`ScannerScreenTest.atFontScale2_…`). A camera restart (rotation) doesn't reset the timer.
 - **Scan from image** (#76) is always at the bottom, above "Enter manually": with the camera, without the permission,
   after a camera failure, while the camera is unavailable. It opens the system photo picker for images only
