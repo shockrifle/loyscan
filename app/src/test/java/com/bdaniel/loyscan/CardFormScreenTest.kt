@@ -1,5 +1,8 @@
 package com.bdaniel.loyscan
 
+import org.robolectric.annotation.GraphicsMode
+import com.bdaniel.loyscan.testing.WithFontScale
+import com.bdaniel.loyscan.testing.assertTextFitsAndDoesNotOverlap
 import android.net.Uri
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.SemanticsMatcher
@@ -717,7 +720,7 @@ class CardFormScreenTest {
         composeRule.onNodeWithTag(CARD_NUMBER_TAG).performTextInput(number)
     }
 
-    private fun setScreen(route: CardForm, camera: FakePhotoCamera = FakePhotoCamera(available = false)) {
+    private fun setScreen(route: CardForm, camera: FakePhotoCamera = FakePhotoCamera(available = false), fontScale: Float = 1f) {
         val viewModel = CardFormViewModel(
             SavedStateHandle(route = route),
             stores,
@@ -727,14 +730,24 @@ class CardFormScreenTest {
         )
         val directions = CardFormDirections(toCard = { id, color -> opened += id to color }, toBack = { backs++ })
         composeRule.setContent {
-            CardFormScreen(
-                directions = directions,
-                viewModel = viewModel,
-                // The system picker, answered at once with PICKED.
-                photoPicker = { onPicked -> PicturePicker { onPicked(PICKED) } },
-                photoCamera = { onResult -> camera.also { it.onResult = onResult } },
-            )
+            WithFontScale(fontScale) {
+                CardFormScreen(
+                    directions = directions,
+                    viewModel = viewModel,
+                    // The system picker, answered at once with PICKED.
+                    photoPicker = { onPicked -> PicturePicker { onPicked(PICKED) } },
+                    photoCamera = { onResult -> camera.also { it.onResult = onResult } },
+                )
+            }
         }
+    }
+
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE) // real text measuring
+    fun atFontScale2_onANarrowScreen_noTextIsClippedOrOverlaps() { // #108; Robolectric's default screen is 320dp wide
+        setScreen(CardForm("ruled"), fontScale = 2f)
+
+        composeRule.assertTextFitsAndDoesNotOverlap()
     }
 
     private companion object {

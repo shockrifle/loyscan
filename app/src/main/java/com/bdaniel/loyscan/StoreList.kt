@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.bdaniel.loyscan.ui.theme.Spacing
 import com.bdaniel.loyscan.domain.Store
 import com.bdaniel.loyscan.domain.search
 import com.bdaniel.loyscan.ui.theme.icons.Icons
@@ -61,12 +62,12 @@ fun StoreSearchList(
         OutlinedTextField(
             value = query,
             onValueChange = onQueryChange,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp).testTag(STORE_SEARCH_TAG),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.l, vertical = Spacing.s).testTag(STORE_SEARCH_TAG),
             placeholder = { Text(stringResource(R.string.search_stores)) },
             singleLine = true,
         )
         if (stores.isEmpty() && query.isNotBlank()) {
-            Text(stringResource(R.string.no_store_matches, query.trim()), modifier = Modifier.padding(16.dp))
+            Text(stringResource(R.string.no_store_matches, query.trim()), modifier = Modifier.padding(Spacing.l))
         }
         LazyColumn {
             header()
@@ -82,7 +83,7 @@ fun StoreSearchList(
 fun StoreRow(store: Store, onClick: () -> Unit, trailing: (@Composable () -> Unit)? = null) {
     ListItem(
         headlineContent = { Text(store.name) },
-        leadingContent = { StoreDot(store, 24.dp) },
+        leadingContent = { StoreDot(store, STORE_DOT_SMALL) },
         trailingContent = trailing,
         modifier = Modifier.clickable(onClick = onClick),
     )
@@ -126,6 +127,12 @@ fun StoreChooser(
         }
     }
 }
+
+/** A store's colour dot in a list row. */
+val STORE_DOT_SMALL = 24.dp
+
+/** A store's colour dot beside its name as a heading (the card form). */
+val STORE_DOT_LARGE = 32.dp
 
 /** The store's brand colour as a dot, or the surface variant when it has none. */
 @Composable

@@ -1,5 +1,8 @@
 package com.bdaniel.loyscan
 
+import org.robolectric.annotation.GraphicsMode
+import com.bdaniel.loyscan.testing.WithFontScale
+import com.bdaniel.loyscan.testing.assertTextFitsAndDoesNotOverlap
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -299,9 +302,17 @@ class CustomStoreScreenTest {
         composeRule.onNodeWithText("Ez a bolt már nem létezik.").assertIsDisplayed()
     }
 
-    private fun setScreen(route: CustomStore = CustomStore()) {
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE) // real text measuring
+    fun atFontScale2_onANarrowScreen_noTextIsClippedOrOverlaps() { // #108; Robolectric's default screen is 320dp wide
+        setScreen(fontScale = 2f)
+
+        composeRule.assertTextFitsAndDoesNotOverlap()
+    }
+
+    private fun setScreen(route: CustomStore = CustomStore(), fontScale: Float = 1f) {
         val viewModel = CustomStoreViewModel(SavedStateHandle(route = route), stores, cards, Clock.fixed(SOME_INSTANT, ZoneOffset.UTC))
         val directions = CustomStoreDirections(onCreated = { scanned += it }, toBack = { backs++ })
-        composeRule.setContent { CustomStoreScreen(directions = directions, viewModel = viewModel) }
+        composeRule.setContent { WithFontScale(fontScale) { CustomStoreScreen(directions = directions, viewModel = viewModel) } }
     }
 }

@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -65,6 +64,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.bdaniel.loyscan.ui.theme.CardShape
+import com.bdaniel.loyscan.ui.theme.Spacing
 import com.bdaniel.loyscan.domain.LoyaltyCard
 import com.bdaniel.loyscan.ui.CARD_ASPECT_RATIO
 import com.bdaniel.loyscan.ui.CardPhoto
@@ -82,6 +83,15 @@ import com.bdaniel.loyscan.ui.theme.icons.Icons
 import kotlinx.coroutines.launch
 
 const val PHOTO_VIEWER_TAG = "photoViewer"
+
+/** The brand-colour header above the card sheet. */
+private val HEADER_HEIGHT = 200.dp
+
+/** A 1D barcode's height in scan mode, when it runs across the screen (landscape). */
+private val SCAN_MODE_LINEAR_HEIGHT = 200.dp
+
+/** The barcode's white surface on the card sheet. */
+const val BARCODE_SURFACE_TAG = "barcodeSurface"
 
 
 @OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3Api::class)
@@ -169,7 +179,7 @@ fun SharedTransitionScope.DetailScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(200.dp)
+                        .height(HEADER_HEIGHT)
                         .background(brandColor),
                     contentAlignment = Alignment.Center
                 ) {
@@ -180,7 +190,7 @@ fun SharedTransitionScope.DetailScreen(
                             imageLoader = hiltImageLoader(),
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(16.dp)
+                                .padding(Spacing.l)
                         )
                     } else {
                         Text(
@@ -197,7 +207,7 @@ fun SharedTransitionScope.DetailScreen(
                     Column(
                         modifier = Modifier
                             .verticalScroll(rememberScrollState())
-                            .padding(16.dp),
+                            .padding(Spacing.l),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         card.label?.let { Text(text = it, style = MaterialTheme.typography.titleMedium) }
@@ -206,13 +216,14 @@ fun SharedTransitionScope.DetailScreen(
                             val showFullScreen = stringResource(R.string.show_full_screen)
                             Box(
                                 modifier = Modifier
-                                    .padding(top = 16.dp)
+                                    .padding(top = Spacing.xl)
                                     .fillMaxWidth()
                                     // White whatever the theme, with a margin for the quiet zone: scanners need it.
-                                    .background(Color.White, RoundedCornerShape(8.dp))
+                                    .background(Color.White, MaterialTheme.shapes.medium)
+                                    .testTag(BARCODE_SURFACE_TAG)
                                     .pointerInput(Unit) { detectTapGestures(onDoubleTap = { scanMode = true }) }
                                     .semantics { onClick(label = showFullScreen) { scanMode = true; true } }
-                                    .padding(16.dp),
+                                    .padding(Spacing.l),
                                 contentAlignment = Alignment.Center,
                             ) {
                                 Barcode(barcode, Modifier.barcodeSize(barcode))
@@ -222,13 +233,14 @@ fun SharedTransitionScope.DetailScreen(
                                 Text(
                                     text = stringResource(R.string.barcode_shown_as, barcodeFormatName(barcode.format)),
                                     style = MaterialTheme.typography.bodySmall,
-                                    modifier = Modifier.padding(top = 8.dp),
+                                    modifier = Modifier.padding(top = Spacing.xs),
                                 )
                             }
                         }
                         CopyableNumber(
                             number = card.displayNumber,
-                            modifier = Modifier.padding(top = 16.dp),
+                            // With the barcode: the till reads one or the other.
+                            modifier = Modifier.padding(top = Spacing.m),
                         )
                         // Under the number, so the barcode keeps its place at the top (#9).
                         card.note?.let {
@@ -236,7 +248,7 @@ fun SharedTransitionScope.DetailScreen(
                                 text = it,
                                 style = MaterialTheme.typography.bodyMedium,
                                 modifier = Modifier
-                                    .padding(top = 16.dp)
+                                    .padding(top = Spacing.xl)
                                     .fillMaxWidth()
                                     .testTag(CARD_NOTE_TAG),
                             )
@@ -245,8 +257,9 @@ fun SharedTransitionScope.DetailScreen(
                         val photos = CardPhotoSide.entries.mapNotNull { side -> card.photo(side)?.let { side to it } }
                         if (photos.isNotEmpty()) {
                             Row(
-                                modifier = Modifier.padding(top = 16.dp).fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                // With the note when there is one, a group of their own after the number.
+                                modifier = Modifier.padding(top = if (card.note != null) Spacing.m else Spacing.xl).fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(Spacing.m),
                             ) {
                                 photos.forEach { (side, name) ->
                                     AsyncImage(
@@ -257,7 +270,7 @@ fun SharedTransitionScope.DetailScreen(
                                         modifier = Modifier
                                             .weight(1f)
                                             .aspectRatio(CARD_ASPECT_RATIO)
-                                            .clip(RoundedCornerShape(8.dp))
+                                            .clip(CardShape)
                                             .clickable(onClickLabel = stringResource(R.string.show_full_screen)) { openPhoto = side },
                                     )
                                 }
@@ -321,7 +334,7 @@ private fun ScanMode(barcode: EncodedBarcode, number: String, onExit: () -> Unit
             .background(Color.White)
             .clickable(onClickLabel = stringResource(R.string.close_full_screen), onClick = onExit)
             .testTag("scanMode")
-            .padding(24.dp),
+            .padding(Spacing.xl),
     ) {
         val alongTheHeight = barcode.isLinear && maxHeight > maxWidth
         Column(
@@ -333,13 +346,13 @@ private fun ScanMode(barcode: EncodedBarcode, number: String, onExit: () -> Unit
             Barcode(
                 barcode,
                 if (alongTheHeight) Modifier.weight(1f).fillMaxWidth()
-                else Modifier.weight(1f, fill = false).barcodeSize(barcode, linearHeight = 200.dp),
+                else Modifier.weight(1f, fill = false).barcodeSize(barcode, linearHeight = SCAN_MODE_LINEAR_HEIGHT),
             )
             Text(
                 text = number,
                 color = Color.Black,
                 style = MaterialTheme.typography.headlineLarge,
-                modifier = Modifier.padding(top = 24.dp),
+                modifier = Modifier.padding(top = Spacing.xl),
             )
         }
     }
@@ -358,7 +371,7 @@ private fun PhotoViewer(photo: String, description: String, onExit: () -> Unit) 
             .background(Color.Black)
             .clickable(onClickLabel = stringResource(R.string.close_full_screen), onClick = onExit)
             .testTag(PHOTO_VIEWER_TAG)
-            .padding(16.dp),
+            .padding(Spacing.l),
     ) {
         AsyncImage(
             model = CardPhoto(photo),

@@ -63,6 +63,11 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
+import com.bdaniel.loyscan.testing.assertTextFitsAndDoesNotOverlap
+import com.bdaniel.loyscan.testing.WithFontScale
+import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.onAllNodesWithText
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 // A typical phone: Robolectric's default 320x470dp screen is shorter than the header, barcode and number together.
@@ -115,6 +120,34 @@ class DetailScreenTest {
 
         composeRule.onNodeWithText("Gold card").assertIsDisplayed()
         composeRule.onNodeWithText("0042").assertIsDisplayed()
+    }
+
+    @Test
+    fun theBarcode_isAGroupOfItsOwn_insetFromTheSheet() { // #108
+        setScreen()
+
+        val surface = composeRule.onNodeWithTag(BARCODE_SURFACE_TAG).fetchSemanticsNode().boundsInRoot
+        // The store's name on the sheet: the header and the top bar show it too, further up.
+        val store = composeRule.onAllNodesWithText("Test Store").fetchSemanticsNodes().map { it.boundsInRoot }
+            .filter { it.bottom <= surface.top }.maxBy { it.bottom }
+        val screen = composeRule.onRoot().fetchSemanticsNode().boundsInRoot
+        val dp = composeRule.density.density
+
+        assertThat((surface.top - store.bottom) / dp).isWithin(1f).of(24f) // a group gap above it
+        assertThat(surface.left / dp).isAtLeast(16f)
+        assertThat((screen.right - surface.right) / dp).isAtLeast(16f)
+    }
+
+    @Test
+    @Config(qualifiers = "w320dp-h470dp")
+    @GraphicsMode(GraphicsMode.Mode.NATIVE) // real text measuring
+    fun atFontScale2_onANarrowScreen_noTextIsClippedOrOverlaps() { // #108
+        setScreen(
+            card = card.copy(note = "PIN hint: birthday"),
+            wrap = { content -> WithFontScale(2f, content) },
+        )
+
+        composeRule.assertTextFitsAndDoesNotOverlap()
     }
 
     @Test

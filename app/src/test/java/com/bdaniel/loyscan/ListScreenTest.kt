@@ -62,6 +62,10 @@ import dagger.hilt.android.EntryPointAccessors
 import androidx.compose.ui.test.onAllNodesWithText
 import org.robolectric.shadows.ShadowLooper
 import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
+import com.bdaniel.loyscan.testing.assertTextFitsAndDoesNotOverlap
+import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.onAllNodesWithTag
 import java.io.File
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.CompletableDeferred
@@ -186,6 +190,52 @@ class ListScreenTest {
 
         composeRule.onNodeWithText("SC").assertIsDisplayed()
         composeRule.onNodeWithText("Shell ClubSmart").assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = "w411dp-h891dp")
+    fun tiles_areInset16dpFromTheScreenEdges_with12dpGaps() { // #108
+        val cards = (1..4).map { aLoyaltyCard(id = cardId(it), store = aStore(name = "Store $it")) }
+        setScreen(*cards.toTypedArray())
+
+        val tiles = composeRule.onAllNodesWithTag(CARD_TILE_TAG, useUnmergedTree = true).fetchSemanticsNodes().map { it.boundsInRoot }
+        val screen = composeRule.onRoot().fetchSemanticsNode().boundsInRoot
+        val dp = composeRule.density.density
+        val (topLeft, topRight, bottomLeft) = Triple(tiles[0], tiles[1], tiles[2])
+
+        assertThat(topLeft.left / dp).isWithin(1f).of(16f)
+        assertThat((screen.right - topRight.right) / dp).isWithin(1f).of(16f)
+        assertThat((topRight.left - topLeft.right) / dp).isWithin(1f).of(12f)
+        assertThat((bottomLeft.top - topLeft.bottom) / dp).isWithin(1f).of(12f)
+    }
+
+    @Test
+    fun aPhotoTile_andAPlainTile_haveTheSameSize() { // #108
+        storedPhoto("front")
+        setScreen(
+            aLoyaltyCard(id = cardId(1), store = aStore(name = "Apple"), frontPhotoPath = "front"),
+            aLoyaltyCard(id = cardId(2), store = aStore(name = "Berry")),
+            photos = FakeCardPhotos("front"),
+        )
+        val loader = EntryPointAccessors.fromApplication(composeRule.activity, ImageLoaderEntryPoint::class.java).getImageLoader()
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) { ShadowLooper.idleMainLooper(); (loader.memoryCache?.size ?: 0) > 0 }
+
+        val (photo, plain) = composeRule.onAllNodesWithTag(CARD_TILE_TAG, useUnmergedTree = true).fetchSemanticsNodes().map { it.boundsInRoot.size }
+        composeRule.onNodeWithTag(CARD_TILE_PHOTO_TAG, useUnmergedTree = true).assertIsDisplayed()
+        assertThat(photo).isEqualTo(plain)
+    }
+
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE) // real text measuring
+    fun atFontScale2_onANarrowScreen_noTextIsClippedOrOverlaps() { // #108; Robolectric's default screen is 320dp wide
+        setScreen(
+            aLoyaltyCard(id = cardId(1), store = aStore(name = "Shell ClubSmart"), label = "Work car"),
+            aLoyaltyCard(id = cardId(2), store = aStore(name = "Penny Market")),
+            fontScale = 2f,
+        )
+
+        // A tile's label ends in "…" when it doesn't fit, and its initials shrink to fit, by design.
+        composeRule.assertTextFitsAndDoesNotOverlap(fitsByDesign = setOf("Work car", "Penny Market", "SC", "PM"))
     }
 
     @Test

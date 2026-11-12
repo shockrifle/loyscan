@@ -77,6 +77,9 @@ content descriptions, so it needs no seam in the app ([[2026-11-05-r8-smoke-test
   `CardPhotos` (`FakeCardPhotos`, [[card-photos]]). The camera app that takes a card photo is a `photoCamera` factory
   returning a `PhotoCamera` (`FakePhotoCamera`); the real `rememberPhotoCamera` is tested over a test
   `ActivityResultRegistry` (`PhotoCameraTest`).
+- **Layout at a large font scale** is checked through the screen's semantics: `testing/Layout.kt`
+  (`WithFontScale`, `assertTextFitsAndDoesNotOverlap`) reads every text node's bounds and text layout, under
+  `@GraphicsMode(NATIVE)` so text is measured for real ([[tdd]], [[design-system]], #108).
 - **Device facts behind a seam.** The user's country is a `fun interface UserCountry` (`data/device/UserCountry.kt`), so
   a ViewModel test passes a lambda (`StorePickerViewModel(repository) { "HU" }`) and only `DeviceUserCountry` reads
   the phone, tested on Robolectric's telephony shadow (`DeviceUserCountryTest`).

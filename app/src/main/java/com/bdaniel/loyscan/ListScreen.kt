@@ -74,6 +74,8 @@ import com.bdaniel.loyscan.ui.CARD_ASPECT_RATIO
 import com.bdaniel.loyscan.ui.CardPhoto
 import com.bdaniel.loyscan.ui.PHOTO_LABEL_SCRIM
 import com.bdaniel.loyscan.ui.hiltImageLoader
+import com.bdaniel.loyscan.ui.theme.CardShape
+import com.bdaniel.loyscan.ui.theme.Spacing
 import com.bdaniel.loyscan.ui.theme.icons.Icons
 import com.bdaniel.loyscan.ui.contrastingTextColor
 import com.bdaniel.loyscan.ui.toBrandColorOrNull
@@ -166,20 +168,19 @@ fun SharedTransitionScope.ListScreen(
             OutlinedTextField(
                 value = query,
                 onValueChange = viewModel::onQueryChange,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp).testTag(CARD_SEARCH_TAG),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.l, vertical = Spacing.s).testTag(CARD_SEARCH_TAG),
                 placeholder = { Text(stringResource(R.string.search_cards)) },
                 singleLine = true,
             )
             if (cards?.isEmpty() == true) {
-                Text(stringResource(R.string.no_card_matches, query.trim()), modifier = Modifier.padding(16.dp))
+                Text(stringResource(R.string.no_card_matches, query.trim()), modifier = Modifier.padding(Spacing.l))
             }
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
                 state = gridState,
-                // Room below the last row for the floating "Add card" button (56dp + its 16dp margin, and a gap).
-                contentPadding = PaddingValues(bottom = 88.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                contentPadding = PaddingValues(start = Spacing.l, end = Spacing.l, bottom = ADD_BUTTON_CLEARANCE),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.m),
+                verticalArrangement = Arrangement.spacedBy(Spacing.m)
             ) {
                 items(cards.orEmpty(), key = { it.id }) { card ->
                     CardItem(
@@ -274,8 +275,8 @@ private data class OpenedTile(val cardId: String, val offset: Int, val screen: S
 @Composable
 private fun EmptyCardList(onAddCard: () -> Unit, modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier.fillMaxSize().padding(32.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
+        modifier = modifier.fillMaxSize().padding(Spacing.xxl),
+        verticalArrangement = Arrangement.spacedBy(Spacing.l, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(stringResource(R.string.no_cards_yet), style = MaterialTheme.typography.headlineSmall)
@@ -320,6 +321,12 @@ private fun SortMenu(sort: CardSort, onSortChange: (CardSort) -> Unit) {
     }
 }
 
+/** Room below the last row for the floating "Add card" button: 56dp, its 16dp margin, and a gap. */
+private val ADD_BUTTON_CLEARANCE = 88.dp
+
+/** The outline of a selected tile. */
+private val SELECTION_BORDER = 3.dp
+
 const val CARD_SEARCH_TAG = "cardSearch"
 const val CARD_TILE_TAG = "cardTile"
 const val CARD_TILE_PHOTO_TAG = "cardTilePhoto"
@@ -349,7 +356,8 @@ fun SharedTransitionScope.CardItem(
             .fillMaxWidth()
             .semantics { this.selected = selected }
             .combinedClickable(onClick = onClick, onLongClick = onLongClick, onLongClickLabel = stringResource(R.string.select_card)),
-        border = if (selected) BorderStroke(3.dp, MaterialTheme.colorScheme.primary) else null,
+        shape = CardShape,
+        border = if (selected) BorderStroke(SELECTION_BORDER, MaterialTheme.colorScheme.primary) else null,
     ) {
         Box {
             Box(
@@ -378,7 +386,7 @@ fun SharedTransitionScope.CardItem(
                 }
                 Column(Modifier.fillMaxSize()) {
                     // The initials take the room the label leaves, shrinking to fit it at large font scales.
-                    Box(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 8.dp), contentAlignment = Alignment.Center) {
+                    Box(Modifier.weight(1f).fillMaxWidth().padding(horizontal = Spacing.s), contentAlignment = Alignment.Center) {
                         when {
                             photo != null -> Unit // the photo shows the card itself
                             !card.store.logo.isNullOrBlank() -> AsyncImage(
@@ -397,13 +405,13 @@ fun SharedTransitionScope.CardItem(
                         }
                     }
                     // On a photo, the scrim fades in above the label and is at full strength behind the text.
-                    if (photo != null) Spacer(Modifier.fillMaxWidth().height(16.dp).background(PHOTO_SCRIM_FADE))
+                    if (photo != null) Spacer(Modifier.fillMaxWidth().height(Spacing.l).background(PHOTO_SCRIM_FADE))
                     Text(
                         text = card.label ?: card.store.name,
                         modifier = Modifier
                             .fillMaxWidth()
                             .then(if (photo != null) Modifier.background(PHOTO_LABEL_SCRIM) else Modifier)
-                            .padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
+                            .padding(start = Spacing.s, end = Spacing.s, bottom = Spacing.s),
                         style = MaterialTheme.typography.bodyMedium,
                         color = textColor,
                         maxLines = 1,
@@ -418,7 +426,7 @@ fun SharedTransitionScope.CardItem(
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .padding(6.dp)
+                        .padding(Spacing.s)
                         .background(MaterialTheme.colorScheme.surface, CircleShape),
                 )
             }
