@@ -41,7 +41,9 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   and zoom maths keep their frame-relative contract. The stage is clipped, so a zoomed picture stays off the buttons.
   The user pans and pinch-zooms the picture anywhere on the stage (the frame stays covered; up to 8× zoom). **Crop**
   (full width, last) stores the framed part, **Use whole photo** stores all of it, **Cancel** drops it and adds nothing
-  (both text buttons above Crop). Tests: `CardFormScreenTest.theCropScreen_showsThePhotoAroundACardRatioFrame`,
+  (both text buttons above Crop). The overlay's content keeps inside the system bars (`WindowInsets.safeDrawing`): the
+  app draws edge to edge, and on a device Crop sat under the navigation bar (`theCropScreen_keepsItsButtonsAboveTheNavigationBar`,
+  which sends the screen's view a navigation-bar inset). Tests: `CardFormScreenTest.theCropScreen_showsThePhotoAroundACardRatioFrame`,
   `theCropScreen_atFontScale2_…`, `PhotoCropTest`. The picture is requested at `MAX_PHOTO_SIDE` (not full size,
   which would OOM a camera photo); the crop frame is a normalised rectangle, applied to the stored file.
 - **What is stored** (#88, #10): not the picked file itself but a JPEG at most 2048 px on its long side (a smaller
