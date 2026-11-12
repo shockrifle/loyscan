@@ -38,6 +38,8 @@ logos. The SQL demo seed was removed, and the demo cards now exist only in debug
   provisional until confirmed on real cards ([#31](https://github.com/shockrifle/loyscan/issues/31)). A rule was
   kept even where unconfirmed, because no rule is just as unconfirmed: it asserts that the barcode is the typed number.
 - **No bundled logos.** `logo` is `null` for catalogue stores, and tiles show the name on the brand colour.
+  (Amended 2026-11-12: re-examined after research into trademark law, Play policy and the retailers' press kits, and
+  kept, with a non-affiliation note required before release: [[2026-11-12-no-bundled-store-logos]].)
 - **Country-prefixed slug ids** (`hu-ikea-family`): the same chain can issue a different card in each country, and
   each needs its own entry and rule. The id never changes once shipped, because cards reference it.
 - **Synced in `onOpen`, synchronously, in one transaction.** Rows are inserted or updated by id, and `updatedAt`

@@ -43,7 +43,7 @@ never the answer to copy.
   EAN-13 starting `999`), list them in `coreStartsWith` once confirmed, so other stores' cards don't match the rule.
   If the barcode leaves out leading printed digits (`hu-tesco`), keep them in the core and set `dropLeading` to their
   count; they must also be in `coreStartsWith`, so a scan can put them back.
-- No `logo`: the catalogue ships none ([[2026-10-13-curated-store-catalogue]]).
+- No `logo`: the catalogue ships none, not even from a retailer's press kit ([[2026-11-12-no-bundled-store-logos]]).
 - **`frequentlyAdded`:** optional, `false` by default. Set it to `true` only as an editorial pick for the store's
   country; the current picks and who made them are on [[store-catalogue]] ([[2026-10-30-frequently-added-stores]]).
 - Keep the array sorted by id.

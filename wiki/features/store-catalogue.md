@@ -3,7 +3,8 @@
 The app ships a curated list of stores in `app/src/main/assets/catalogue/stores.json`. Each time the database is
 opened, the catalogue stores are inserted or brought up to date in the `stores` table, before anything reads it.
 Users pick these stores when they add a card (#6). How to add an entry: [[add-a-catalogue-store]]. Why it is curated,
-why it has no logos, and why it is loaded this way: [[2026-10-13-curated-store-catalogue]].
+why it has no logos, and why it is loaded this way: [[2026-10-13-curated-store-catalogue]]. The logo question was
+researched again on 2026-11-12 and the answer kept: [[2026-11-12-no-bundled-store-logos]].
 
 ## Entry points
 
