@@ -47,7 +47,12 @@ All paths are under `app/src/main/java/com/bdaniel/loyscan/` unless written in f
   tile within 10% of the card's ratio up to 440dp (`WidgetLayoutTest.theLayoutChosenForAnyPhoneWidth_…`), and a wider
   widget's tiles are flatter. It was `SizeMode.Exact`, which lays out the sizes the launcher reports: on a device
   (2026-11-12, Nova launcher) it reported 131×432dp and a landscape 263dp-wide size for a widget about 131×386dp, none
-  fit, Android showed the smallest, the landscape layout, and its fixed-width tile was cut to half. Each
+  fit, Android showed the smallest, the landscape layout, and its fixed-width tile was cut to half.
+  A launcher can still show a layout made for another width: the Android 12L launcher on a tablet kept the 410dp
+  layout after the widget was resized to ~215dp (2026-11-12). Tiles fill their cells, so nothing is cut, but they are
+  taller than a card until the next update. Giving tiles a native ratio instead (a card-ratio image that fills the cell
+  with `ContentScale.Fit`, which turns on `adjustViewBounds`) was tried and failed: in the grid the image kept its
+  intrinsic height. A widget can't measure its real size, so this is as far as the layout goes. Each
   tile's `clickable` is `actionStartActivity(openCardIntent(…))`. At its narrowest (110dp) the widget can't be resized
   below one tile's height: `minResizeHeight` is 90dp (`res/xml/card_widget_info.xml`; it was 40dp, a thin strip). A wider
   one-column widget has taller tiles, so resized to 90dp it cuts its tile; the launcher has no per-width minimum.
