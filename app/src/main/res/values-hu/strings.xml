@@ -151,4 +151,14 @@
     <string name="shared_picture_no_barcode">Ezen a képen nem található vonalkód. A kártyán lévő számot kézzel is beírhatod.</string>
     <string name="shared_picture_unreadable">Nem sikerült megnyitni a képet. A kártyán lévő számot kézzel is beírhatod.</string>
     <string name="enter_number_by_hand">A szám beírása kézzel</string>
+    <!-- Store logo (#151) -->
+    <string name="store_logo">Bolt logója</string>
+    <string name="store_logo_hint">Ez a logó látszik a bolt minden kártyáján.</string>
+    <string name="logo_of_store">%1$s logója</string>
+    <string name="choose_image">Kép kiválasztása</string>
+    <string name="find_logo_online">Logó keresése az interneten</string>
+    <string name="remove_logo">Logó eltávolítása</string>
+    <string name="logo_failed">Nem sikerült felhasználni a képet. Próbáld újra.</string>
+    <string name="logo_picture">Logó képe</string>
+    <string name="use_whole_image">Az egész kép</string>
 </resources>

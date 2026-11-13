@@ -1,0 +1,165 @@
+package com.bdaniel.loyscan
+
+import android.net.Uri
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
+import com.bdaniel.loyscan.data.photos.CardPhotos
+import com.bdaniel.loyscan.data.photos.PhotoCrop
+import com.bdaniel.loyscan.data.repository.StoreRepository
+import com.bdaniel.loyscan.domain.Store
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import timber.log.Timber
+import javax.inject.Inject
+
+/** What a store's logo screen shows (#151). */
+data class StoreLogoState(
+    /** The store, its [Store.logo] `null` when it has none or its file is missing; `null` while loading or gone. */
+    val store: Store? = null,
+    /** The store has loaded. */
+    val ready: Boolean = false,
+    /** No store has the routed id (deleted while the screen was open). */
+    val storeGone: Boolean = false,
+    /** The staged picture the crop screen is open on, or `null`. */
+    val cropping: String? = null,
+    /** A picture is being copied in or stored, or the logo saved or removed: nothing else can start. */
+    val working: Boolean = false,
+    /** The last picture couldn't be used, or the logo couldn't be saved or removed. */
+    val failed: Boolean = false,
+) {
+    val canChange: Boolean get() = ready && !working && cropping == null
+}
+
+/**
+ * A store's logo (#151): the user picks a picture, frames it in a square crop, and it becomes the logo every card of
+ * the store shows; or removes it. Like the card form's photos ([CardFormViewModel]), a pick is staged at once and the
+ * staged name kept in the [SavedStateHandle], so the crop screen survives process death. The logo is stored and saved
+ * in one non-cancellable step, so leaving the screen doesn't lose it, and a logo that can't be saved is deleted.
+ */
+@HiltViewModel
+class StoreLogoViewModel @Inject constructor(
+    private val savedStateHandle: SavedStateHandle,
+    private val storeRepository: StoreRepository,
+    private val photos: CardPhotos,
+) : ViewModel() {
+
+    private val storeId = savedStateHandle.toRoute<StoreLogo>().storeId
+
+    private val found: StateFlow<Found> = storeRepository.getAll()
+        .map { stores ->
+            stores.firstOrNull { it.id == storeId }
+                ?.let { store -> Found.Store(store.copy(logo = store.logo?.takeIf { photos.exists(it) })) }
+                ?: Found.Gone
+        }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, Found.Loading)
+
+    private val cropping = savedStateHandle.getStateFlow<String?>(CROP_LOGO, null)
+    private val progress = MutableStateFlow(Progress())
+
+    val state: StateFlow<StoreLogoState> = combine(found, cropping, progress) { found, cropping, progress ->
+        StoreLogoState(
+            store = (found as? Found.Store)?.store,
+            ready = found is Found.Store,
+            storeGone = found is Found.Gone,
+            cropping = cropping,
+            working = progress.working,
+            failed = progress.failed,
+        )
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, StoreLogoState())
+
+    /** A picture picked for the logo, `null` when the picker was cancelled: copied in, then the crop screen opens on it. */
+    fun onPicked(picture: Uri?) {
+        if (picture == null || !canChange()) return
+        progress.value = Progress(working = true)
+        viewModelScope.launch {
+            val staged = try {
+                photos.stage(picture)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.e(e, "Couldn't copy the logo picture in")
+                progress.value = Progress(failed = true)
+                return@launch
+            }
+            savedStateHandle[CROP_LOGO] = staged
+            progress.value = Progress()
+        }
+    }
+
+    /** Stores the staged picture framed by [crop] as the store's logo; the logo it replaces is deleted by the repository. */
+    fun confirmCrop(crop: PhotoCrop) {
+        val staged = savedStateHandle.get<String>(CROP_LOGO) ?: return
+        savedStateHandle[CROP_LOGO] = null
+        progress.value = Progress(working = true)
+        viewModelScope.launch {
+            progress.value = try {
+                withContext(NonCancellable) { // finished even if the screen closes meanwhile (#65)
+                    val logo = photos.cropLogo(staged, crop)
+                    try {
+                        storeRepository.setLogo(storeId, logo)
+                    } catch (e: Exception) {
+                        photos.discard(listOf(logo)) // nothing names it
+                        throw e
+                    }
+                }
+                Progress()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.e(e, "Couldn't store the logo")
+                Progress(failed = true)
+            }
+        }
+    }
+
+    /** Closes the crop screen without keeping the picture: the staged file is deleted. */
+    fun cancelCrop() {
+        val staged = savedStateHandle.get<String>(CROP_LOGO) ?: return
+        savedStateHandle[CROP_LOGO] = null
+        photos.discard(listOf(staged))
+    }
+
+    /** Removes the store's logo, which brings back the name on the brand colour; the repository deletes its file. */
+    fun removeLogo() {
+        if (!canChange() || (found.value as? Found.Store)?.store?.logo == null) return
+        progress.value = Progress(working = true)
+        viewModelScope.launch {
+            progress.value = try {
+                withContext(NonCancellable) { storeRepository.setLogo(storeId, null) }
+                Progress()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.e(e, "Couldn't remove the logo")
+                Progress(failed = true)
+            }
+        }
+    }
+
+    // Reads the inputs, not `state`, so a guard holds whatever the screen observes.
+    private fun canChange() =
+        found.value is Found.Store && !progress.value.working && savedStateHandle.get<String>(CROP_LOGO) == null
+
+    private data class Progress(val working: Boolean = false, val failed: Boolean = false)
+
+    private sealed interface Found {
+        data object Loading : Found
+        data object Gone : Found
+        data class Store(val store: com.bdaniel.loyscan.domain.Store) : Found
+    }
+
+    private companion object {
+        const val CROP_LOGO = "cropLogo"
+    }
+}
