@@ -41,6 +41,8 @@ data class StoreLogoState(
     val failed: Boolean = false,
     /** The front photos of the store's cards, a source for the logo; only those whose file is there. */
     val cardPhotos: List<CardPhotoChoice> = emptyList(),
+    /** [cardPhotos] has loaded: an empty list before then says nothing about the store's cards. */
+    val cardPhotosLoaded: Boolean = false,
 ) {
     val canChange: Boolean get() = ready && !working && cropping == null
 }
@@ -72,7 +74,7 @@ class StoreLogoViewModel @Inject constructor(
         }
         .stateIn(viewModelScope, SharingStarted.Eagerly, Found.Loading)
 
-    private val cardPhotos: StateFlow<List<CardPhotoChoice>> = cardRepository.getAllWithStore()
+    private val cardPhotos: StateFlow<List<CardPhotoChoice>?> = cardRepository.getAllWithStore()
         .map { cards ->
             cards.filter { it.store.id == storeId && it.frontPhotoPath != null }
                 .let { photos.withoutMissing(it) }
@@ -80,7 +82,7 @@ class StoreLogoViewModel @Inject constructor(
                     card.frontPhotoPath?.let { CardPhotoChoice(card.id, card.label ?: card.displayNumber, it) }
                 }
         }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     private val cropping = savedStateHandle.getStateFlow<String?>(CROP_LOGO, null)
     private val progress = MutableStateFlow(Progress())
@@ -93,7 +95,8 @@ class StoreLogoViewModel @Inject constructor(
             cropping = cropping,
             working = progress.working,
             failed = progress.failed,
-            cardPhotos = cardPhotos,
+            cardPhotos = cardPhotos.orEmpty(),
+            cardPhotosLoaded = cardPhotos != null,
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, StoreLogoState())
 
@@ -109,7 +112,7 @@ class StoreLogoViewModel @Inject constructor(
      * meanwhile) is refused, and says so.
      */
     fun onCardPhoto(photo: String) {
-        if (cardPhotos.value.none { it.photo == photo }) {
+        if (cardPhotos.value.orEmpty().none { it.photo == photo }) {
             if (canChange()) progress.value = Progress(failed = true)
             return
         }

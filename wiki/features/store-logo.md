@@ -38,7 +38,8 @@ open for them): the logo slot in a custom store's form, and an image shared to L
   "Which card's photo?" lists them with a thumbnail, and the one tapped opens the crop; **Cancel** closes it. The photo
   is copied in (`CardPhotos.stagePhoto`), so the crop works on the copy and the card keeps its own photo. The dialog
   closes when its list empties meanwhile; a photo no longer on the list, or one that can't be copied, says "The
-  picture couldn't be used. Try again.". Its open state is `rememberSaveable`.
+  picture couldn't be used. Try again.". Its open state is `rememberSaveable`, and it closes for an empty list only once
+  the list has loaded (`cardPhotosLoaded`), so after process death it doesn't close before the cards come.
 - **Find a logo online** opens a Google Images search for "<store name> logo" in the browser (`logoSearchUri`), the
   user's choice on 2026-11-13; a setting for the search engine is not implemented. With no app to open it, a toast
   says "No app can open the web search.". The user saves an image there and picks it with Choose image.
@@ -61,7 +62,8 @@ open for them): the logo slot in a custom store's form, and an image shared to L
   Find a logo online; Remove logo; a failure; the buttons waiting; a store that is gone; Back; Hungarian (the "Which
   card's photo?" dialog open); font scale 2 (the screen with the card photo button; the dialog's own layout isn't
   measured, as `assertTextFitsAndDoesNotOverlap` reads one window). Use a card's photo: no button without one; one card →
-  straight to the square crop; several → the dialog, the choice cropped; Cancel; the dialog closing when the list empties.
+  straight to the square crop; several → the dialog, the choice cropped; Cancel; the dialog closing when the list empties;
+  the dialog still open after process death when the store loads before the cards (`StateRestorationTester`).
 - `StorePickerScreenTest.aCatalogueStoresLogoButton_…`, `aFrequentlyAddedStore_hasItsLogoButtonInItsSectionToo`;
   `AddCardDirectionsTest.aStoresLogoButton_opensItsLogoScreenOverThePicker_andBackReturnsToIt`;
   end to end `AppNavigationTest.aCatalogueStoresLogoScreen_opensFromThePicker_andBackReturnsToIt`.

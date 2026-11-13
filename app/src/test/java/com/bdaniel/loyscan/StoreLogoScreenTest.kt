@@ -8,6 +8,7 @@ import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -200,6 +201,25 @@ class StoreLogoScreenTest {
     }
 
     @Test
+    fun theWhichCardQuestion_isStillOpenAfterProcessDeath_whenTheStoreLoadsBeforeTheCards() { // #151 review
+        givenCardPhotos("Mine", "Partner's")
+        val restoration = StateRestorationTester(composeRule)
+        var viewModel = StoreLogoViewModel(SavedStateHandle(route = StoreLogo("shop")), stores, cards, photos)
+        restoration.setContent { StoreLogoScreen(directions(), viewModel, testPicker(), testLogoSearch()) }
+        composeRule.onNodeWithText("Use a card's photo").performScrollTo().performClick()
+
+        // A new process: a new ViewModel whose cards come after its store.
+        val gate = kotlinx.coroutines.CompletableDeferred<Unit>()
+        cards.loadGate = gate
+        viewModel = StoreLogoViewModel(SavedStateHandle(route = StoreLogo("shop")), stores, cards, photos)
+        restoration.emulateSavedInstanceStateRestore()
+        composeRule.waitForIdle()
+        gate.complete(Unit)
+
+        composeRule.onNodeWithText("Which card's photo?").assertIsDisplayed()
+    }
+
+    @Test
     fun findALogoOnline_searchesForTheStoresName() {
         setScreen()
 
@@ -318,16 +338,18 @@ class StoreLogoScreenTest {
         composeRule.waitUntil(WAIT_TIMEOUT_MS) { ShadowLooper.idleMainLooper(); (loader.memoryCache?.size ?: 0) > 0 }
     }
 
+    private fun directions() = StoreLogoDirections(toBack = { backs++ })
+
+    private fun testPicker(): @androidx.compose.runtime.Composable ((Uri?) -> Unit) -> PicturePicker =
+        { onPicked -> PicturePicker { onPicked(picked) } }
+
+    private fun testLogoSearch() = LogoSearch { searches += it }
+
     private fun setScreen(fontScale: Float = 1f) {
         val viewModel = StoreLogoViewModel(SavedStateHandle(route = StoreLogo("shop")), stores, cards, photos)
         composeRule.setContent {
             WithFontScale(fontScale) {
-                StoreLogoScreen(
-                    directions = StoreLogoDirections(toBack = { backs++ }),
-                    viewModel = viewModel,
-                    picker = { onPicked -> PicturePicker { onPicked(picked) } },
-                    logoSearch = LogoSearch { searches += it },
-                )
+                StoreLogoScreen(directions(), viewModel, testPicker(), testLogoSearch())
             }
         }
     }
