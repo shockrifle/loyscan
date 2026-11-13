@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-13 · logo screen offers "Use a card's photo": the store's cards' front photos, copied and framed in the square crop · features/store-logo, decisions/2026-11-13-user-supplied-store-logos · #151 card photo source
 - 2026-11-13 · CardPhotos.stagePhoto copies a stored photo in for a crop, so a card's photo can be framed as a logo without losing it · features/card-photos, workflows/tdd · #151 card photo source
 - 2026-11-13 · review of PR #156: catalogue-store glossary entry no longer says the whole row is rewritten; the list checks a store's logo file once · glossary, features/card-list · PR #156 review
 - 2026-11-13 · store logo screen from the picker: choose image, square crop that zooms out to fit, find online, remove; new feature page; decision completed · features/store-logo, features/_index, features/add-card, index, glossary, decisions/2026-11-13-user-supplied-store-logos, workflows/tdd · #151 logo screen
