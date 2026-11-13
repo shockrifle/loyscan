@@ -96,7 +96,8 @@ whenever a catalogue store is added. Checked 2026-11-12; "none found" means not 
 - **Fetch logos at run time** (a URL in the catalogue): the same trademark and Play exposure, plus a network call
   and an outside dependency for an offline app.
 - **A logo the user crops from their own card photo:** no third-party file in the app or repo, but new UI. Not
-  done here; it is [#151](https://github.com/shockrifle/loyscan/issues/151) (Later).
+  done here; it is [#151](https://github.com/shockrifle/loyscan/issues/151), since taken up:
+  [[2026-11-13-user-supplied-store-logos]].
 - **No logos (chosen):** the name on the brand colour, and the user's own card photo as the tile.
 
 ## Decision

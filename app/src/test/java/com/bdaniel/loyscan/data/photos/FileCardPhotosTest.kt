@@ -256,6 +256,103 @@ class FileCardPhotosTest {
     }
 
     @Test
+    fun crop_ofAFrameReachingPastThePicture_throws_andLeavesNoFile() = runTest { // #151: only a logo is framed zoomed out
+        val staged = photos.stage(Uri.fromFile(aPicture(40, 20)))
+
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking { photos.crop(staged, PhotoCrop(-0.5f, 0f, 1.5f, 1f)) }
+        }
+
+        assertThat(directory.listFiles().orEmpty()).isEmpty()
+    }
+
+    @Test
+    fun cropLogo_storesAPng_inThePhotoDirectory_andDeletesTheStagedSource() = runTest { // #151: backed up as photos are
+        val staged = photos.stage(Uri.fromFile(aPicture(40, 20)))
+
+        val logo = photos.cropLogo(staged, PhotoCrop.WHOLE)
+
+        assertThat(photos.file(logo).parentFile).isEqualTo(directory)
+        assertThat(directory.list()).asList().containsExactly(logo)
+        assertThat(photos.file(logo).mimeType()).isEqualTo("image/png")
+    }
+
+    @Test
+    fun cropLogo_scalesALargePictureDown_toItsLongSideLimit() = runTest { // #151
+        val wide = photos.cropLogo(photos.stage(Uri.fromFile(aPicture(2000, 1000, "wide.jpg"))), PhotoCrop.WHOLE)
+        val small = photos.cropLogo(photos.stage(Uri.fromFile(aPicture(300, 200, "small.jpg"))), PhotoCrop.WHOLE)
+
+        assertThat(photos.file(wide).size()).isEqualTo(512 to 256)
+        assertThat(photos.file(small).size()).isEqualTo(300 to 200)
+    }
+
+    @Test
+    fun cropLogo_keepsTransparency() = runTest { // #151: a logo shows on the brand colour
+        val transparent = Bitmap.createBitmap(10, 10, Bitmap.Config.ARGB_8888)
+        val picked = temporaryFolder.newFile("transparent.png").apply {
+            outputStream().use { transparent.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        }
+
+        val logo = photos.file(photos.cropLogo(photos.stage(Uri.fromFile(picked)), PhotoCrop.WHOLE))
+
+        assertThat(Color.alpha(BitmapFactory.decodeFile(logo.path).getPixel(5, 5))).isEqualTo(0)
+    }
+
+    @Test
+    fun cropLogo_storesOnlyTheFramedPart() = runTest { // #151
+        val staged = photos.stage(Uri.fromFile(aPicture(40, 20)))
+
+        val logo = photos.cropLogo(staged, PhotoCrop(0.5f, 0f, 1f, 1f))
+
+        assertThat(photos.file(logo).shown()).isEqualTo(Shown(20, 20, Color.GREEN, Color.GREEN, Color.YELLOW))
+    }
+
+    @Test
+    fun cropLogo_isInTheUprightPicture() = runTest { // #151
+        val rotated = aPicture(40, 20, "rotated.jpg")
+            .withExif(ExifInterface.TAG_ORIENTATION to ExifInterface.ORIENTATION_ROTATE_90.toString())
+
+        val logo = photos.cropLogo(photos.stage(Uri.fromFile(rotated)), PhotoCrop.WHOLE)
+
+        assertThat(photos.file(logo).shown()).isEqualTo(Shown(20, 40, Color.BLUE, Color.RED, Color.YELLOW))
+    }
+
+    @Test
+    fun cropLogo_ofAFrameReachingPastThePicture_isTransparentOutsideIt() = runTest { // #151: a wide logo framed whole
+        val staged = photos.stage(Uri.fromFile(aPicture(40, 20)))
+
+        // A frame twice the picture's width, centred on it: a quarter of the picture's width is empty on each side.
+        val logo = BitmapFactory.decodeFile(photos.file(photos.cropLogo(staged, PhotoCrop(-0.5f, 0f, 1.5f, 1f))).path)
+
+        assertThat(logo.width to logo.height).isEqualTo(80 to 20)
+        assertThat(Color.alpha(logo.getPixel(5, 10))).isEqualTo(0)
+        assertThat(logo.getPixel(25, 5).nearest()).isEqualTo(Color.RED)
+        assertThat(logo.getPixel(55, 15).nearest()).isEqualTo(Color.YELLOW)
+        assertThat(Color.alpha(logo.getPixel(75, 10))).isEqualTo(0)
+    }
+
+    @Test
+    fun cropLogo_dropsThePicturesMetadata() = runTest { // #151, as for photos (#88)
+        val picked = aPicture(40, 20).withExif(ExifInterface.TAG_GPS_LATITUDE to "47/1,30/1,0/1", ExifInterface.TAG_MAKE to "Maker")
+
+        val logo = photos.file(photos.cropLogo(photos.stage(Uri.fromFile(picked)), PhotoCrop.WHOLE))
+
+        val exif = ExifInterface(logo.path)
+        assertThat(exif.getAttribute(ExifInterface.TAG_GPS_LATITUDE)).isNull()
+        assertThat(exif.getAttribute(ExifInterface.TAG_MAKE)).isNull()
+    }
+
+    @Test
+    fun cropLogo_ofANonPictureStagedFile_throws_andLeavesNoFile() = runTest { // #151
+        val capture = photos.newCapture()
+        File(capture.uri.path!!).writeBytes(byteArrayOf(1, 2, 3))
+
+        assertThrows(IOException::class.java) { runBlocking { photos.cropLogo(capture.name, PhotoCrop.WHOLE) } }
+
+        assertThat(directory.listFiles().orEmpty()).isEmpty()
+    }
+
+    @Test
     fun newCapture_isAFileInThePhotoDirectory_underANewName() = runTest { // #10: the camera app writes it, then crop stores it
         val first = photos.newCapture()
         val second = photos.newCapture()
@@ -380,6 +477,12 @@ class FileCardPhotosTest {
         val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         BitmapFactory.decodeFile(path, bounds)
         return bounds.outWidth to bounds.outHeight
+    }
+
+    private fun File.mimeType(): String? {
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeFile(path, bounds)
+        return bounds.outMimeType
     }
 
     /** A picture as shown: its size, and its colours a quarter of the way in from three corners. */

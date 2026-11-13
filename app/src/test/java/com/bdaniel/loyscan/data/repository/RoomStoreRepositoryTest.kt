@@ -155,6 +155,89 @@ class RoomStoreRepositoryTest {
         assertThat(front.exists()).isTrue()
     }
 
+    @Test
+    fun setLogo_isTheLogoOfTheStoresCards() = runTest { // #151
+        db.loyaltyCardDao().insert(aLoyaltyCardEntity(id = cardId(1), storeId = "first"))
+
+        repository.setLogo("first", "logo")
+
+        assertThat(repository.getAll().first().single { it.id == "first" }.logo).isEqualTo("logo")
+        assertThat(db.loyaltyCardDao().getAllWithStore().first().single().toDomainModel().store.logo).isEqualTo("logo")
+    }
+
+    @Test
+    fun setLogo_ofACustomStore_setsIt() = runTest { // #151: any store, custom or catalogue
+        repository.add(aStore(id = "custom", isCustom = true))
+
+        repository.setLogo("custom", "logo")
+
+        assertThat(repository.getAll().first().single { it.id == "custom" }.logo).isEqualTo("logo")
+    }
+
+    @Test
+    fun setLogo_replacingALogo_deletesTheOldFile() = runTest { // #151
+        val old = storedPhoto("old")
+        val new = storedPhoto("new")
+        repository.setLogo("first", "old")
+
+        repository.setLogo("first", "new")
+
+        assertThat(old.exists()).isFalse()
+        assertThat(new.exists()).isTrue()
+    }
+
+    @Test
+    fun setLogo_null_removesTheLogo_andDeletesItsFile() = runTest { // #151
+        val logo = storedPhoto("logo")
+        repository.setLogo("first", "logo")
+
+        repository.setLogo("first", null)
+
+        assertThat(repository.getAll().first().single { it.id == "first" }.logo).isNull()
+        assertThat(logo.exists()).isFalse()
+    }
+
+    @Test
+    fun setLogo_theSameLogoAgain_keepsItsFile() = runTest { // #151
+        val logo = storedPhoto("logo")
+        repository.setLogo("first", "logo")
+
+        repository.setLogo("first", "logo")
+
+        assertThat(logo.exists()).isTrue()
+    }
+
+    @Test
+    fun setLogo_ofAStoreThatIsGone_deletesTheNewFile() = runTest { // #151: nothing would name it
+        val logo = storedPhoto("logo")
+
+        repository.setLogo("gone", "logo")
+
+        assertThat(logo.exists()).isFalse()
+        assertThat(repository.getAll().first().map { it.id }).containsExactly("first", "second")
+    }
+
+    @Test
+    fun delete_deletesTheStoresLogo() = runTest { // #151
+        repository.add(aStore(id = "custom", isCustom = true))
+        val logo = storedPhoto("logo")
+        repository.setLogo("custom", "logo")
+
+        repository.delete("custom")
+
+        assertThat(logo.exists()).isFalse()
+    }
+
+    @Test
+    fun delete_ofACatalogueStore_keepsItsLogo() = runTest { // #151: the store stays
+        val logo = storedPhoto("logo")
+        repository.setLogo("first", "logo")
+
+        repository.delete("first")
+
+        assertThat(logo.exists()).isTrue()
+    }
+
     /** A photo file as [FileCardPhotos] keeps it, named [name]. */
     private fun storedPhoto(name: String): File = photos.file(name).apply { writeBytes(byteArrayOf(1)) }
 }

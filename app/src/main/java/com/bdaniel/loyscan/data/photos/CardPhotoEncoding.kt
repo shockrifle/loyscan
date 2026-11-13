@@ -16,6 +16,9 @@ import kotlin.math.roundToInt
 /** The longest side, in pixels, a card photo is stored at (#88). */
 internal const val MAX_PHOTO_SIDE = 2048
 
+/** The longest side, in pixels, a store logo is stored at (#151): it is drawn at most tile-sized. */
+const val MAX_LOGO_SIDE = 512
+
 /** A card photo's JPEG quality: re-encoded once, on import. */
 private const val PHOTO_JPEG_QUALITY = 90
 
@@ -27,10 +30,16 @@ private const val PHOTO_JPEG_QUALITY = 90
  */
 data class PhotoCrop(val left: Float, val top: Float, val right: Float, val bottom: Float) {
     init {
-        require(left in 0f..right && right <= 1f) { "left..right must be within 0..1: $left..$right" }
-        require(top in 0f..bottom && bottom <= 1f) { "top..bottom must be within 0..1: $top..$bottom" }
+        require(listOf(left, top, right, bottom).all(Float::isFinite)) { "the crop must be finite: $left, $top, $right, $bottom" }
         require(right > left && bottom > top) { "the crop must have an area: $left..$right, $top..$bottom" }
     }
+
+    /**
+     * Whether the crop lies within the picture. Only a logo's may reach past it (#151): framed zoomed out, so that a wide
+     * wordmark fits a square frame whole; a card photo's frame is always covered.
+     */
+    val isWithinPicture: Boolean
+        get() = left >= 0f && top >= 0f && right <= 1f && bottom <= 1f
 
     companion object {
         val WHOLE = PhotoCrop(0f, 0f, 1f, 1f)
@@ -44,6 +53,28 @@ data class PhotoCrop(val left: Float, val top: Float, val right: Float, val bott
  * and would show it black. Throws an [IOException] if [source] isn't a picture that can be decoded.
  */
 internal fun encodeCardPhoto(source: File, target: File, crop: PhotoCrop = PhotoCrop.WHOLE, maxSide: Int = MAX_PHOTO_SIDE) {
+    require(crop.isWithinPicture) { "A card photo's crop must be within the picture: $crop" }
+    encodePicture(source, target, crop, maxSide, background = Color.WHITE, Bitmap.CompressFormat.JPEG, PHOTO_JPEG_QUALITY)
+}
+
+/**
+ * Writes the picture in [source] to [target] as a store's logo (#151): a PNG at most [MAX_LOGO_SIDE] pixels on its long
+ * side, never enlarged, upright, cropped to [crop] and without metadata, like a card photo, but keeping its transparency
+ * so it shows on the brand colour. Where [crop] reaches past the picture, the logo is transparent.
+ */
+internal fun encodeStoreLogo(source: File, target: File, crop: PhotoCrop = PhotoCrop.WHOLE) =
+    encodePicture(source, target, crop, MAX_LOGO_SIDE, background = null, Bitmap.CompressFormat.PNG, quality = 100)
+
+/** The shared encoding of [encodeCardPhoto] and [encodeStoreLogo]; [background] fills the canvas first, `null` leaves it transparent. */
+private fun encodePicture(
+    source: File,
+    target: File,
+    crop: PhotoCrop,
+    maxSide: Int,
+    background: Int?,
+    format: Bitmap.CompressFormat,
+    quality: Int,
+) {
     // From a stream closed here: under Robolectric on Windows, decodeFile left the file open, so it couldn't be deleted.
     fun decode(options: BitmapFactory.Options) = source.inputStream().use { BitmapFactory.decodeStream(it, null, options) }
     val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }.also(::decode)
@@ -71,10 +102,10 @@ internal fun encodeCardPhoto(source: File, target: File, crop: PhotoCrop = Photo
         val photo = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         try {
             Canvas(photo).apply {
-                drawColor(Color.WHITE)
+                background?.let(::drawColor)
                 drawBitmap(decoded, transform, Paint(Paint.FILTER_BITMAP_FLAG))
             }
-            val encoded = target.outputStream().use { photo.compress(Bitmap.CompressFormat.JPEG, PHOTO_JPEG_QUALITY, it) }
+            val encoded = target.outputStream().use { photo.compress(format, quality, it) }
             if (!encoded) throw IOException("Couldn't encode the photo")
         } finally {
             photo.recycle()

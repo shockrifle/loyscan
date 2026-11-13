@@ -17,7 +17,8 @@ import java.time.Clock
  *
  * Rows are matched by slug id, inserted when missing and updated in place when a field differs; `updatedAt` moves
  * only on a real change. Never `REPLACE`: that deletes the row first, and the foreign key would delete its cards.
- * Stores that are not in the catalogue (custom ones, entries dropped from it) are left alone.
+ * Stores that are not in the catalogue (custom ones, entries dropped from it) are left alone. So is a store's `logo`:
+ * the catalogue ships none, and a logo there is the user's own (#151), which must survive a restart and a changed entry.
  */
 class CatalogueDatabaseCallback(
     private val loadCatalogue: () -> String,
@@ -45,19 +46,24 @@ class CatalogueDatabaseCallback(
 
     private fun sync(db: SupportSQLiteDatabase, row: ContentValues) {
         val id = row.getAsString("id")
-        val compared = row.keySet() - setOf("id", "updatedAt")
+        val compared = row.keySet() - setOf("id", "updatedAt", USER_COLUMN)
         val stored = db.query("SELECT ${compared.joinToString()} FROM stores WHERE id = ?", arrayOf(id)).use { cursor ->
             if (cursor.moveToFirst()) compared.associateWith { cursor.getString(cursor.getColumnIndexOrThrow(it)) } else null
         }
         when {
             stored == null -> db.insert("stores", SQLiteDatabase.CONFLICT_ABORT, row)
-            compared.any { stored[it] != row.getAsString(it) } ->
+            compared.any { stored[it] != row.getAsString(it) } -> {
+                row.remove(USER_COLUMN)
                 db.update("stores", SQLiteDatabase.CONFLICT_ABORT, row, "id = ?", arrayOf(id))
+            }
         }
     }
 
     companion object {
         const val CATALOGUE_ASSET = "catalogue/stores.json"
+
+        /** The column the user owns on a catalogue row: its logo (#151). Inserted empty, never rewritten. */
+        private const val USER_COLUMN = "logo"
 
         fun fromAssets(context: Context) = CatalogueDatabaseCallback({ readShippedCatalogue(context) })
 

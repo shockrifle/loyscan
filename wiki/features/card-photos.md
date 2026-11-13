@@ -97,9 +97,12 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   a back photo, or a front photo that can't be loaded, keeps the initials.
 - **On the card** ([[card-detail]]): under the note, the photos it has, front first; a tap shows one full screen
   on black (`PhotoViewer`, `PHOTO_VIEWER_TAG`), and a tap or Back closes it.
+- **Store logos live here too** (#151, [[2026-11-13-user-supplied-store-logos]]): `cropLogo` stores a staged picture
+  as a store's logo, a PNG with transparency at most 512 px, in the same directory, so it is backed up and loaded as a
+  photo is. Its crop may reach past the picture (transparent there); a card photo's may not (`crop` throws).
 - **Orphans:** a process killed with a form open (swiped from Recents) skips `onCleared`. On every database open
-  `CardPhotoSweepCallback` (`data/local/db/`, added in `di/DatabaseModule.kt`) deletes photo files that no card names
-  and that are over a day old; newer ones may belong to a form still open or about to be restored. A save drops a
+  `CardPhotoSweepCallback` (`data/local/db/`, added in `di/DatabaseModule.kt`) deletes photo files that no card (and no
+  store, as its logo) names and that are over a day old; newer ones may belong to a form still open or about to be restored. A save drops a
   picked photo whose file has gone since, and keeps the card's own photo for that side ([[2026-11-03-card-photos-as-private-files]]).
 - **A photo whose file is missing** (its file was deleted or otherwise lost while the row still names it) is
   treated as no photo (#87). `CardPhotos.withoutMissing(card)` (`data/photos/CardPhotos.kt`) drops such a name from
@@ -115,7 +118,8 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   - replacing or removing a photo in an edit ([[edit-card]]);
   - deleting a card from its screen ([[card-detail]]);
   - deleting cards by multi-select ([[card-list]]);
-  - deleting a custom store with its cards ([[edit-store]]).
+  - deleting a custom store with its cards ([[edit-store]]), its logo too;
+  - replacing or removing a store's logo (`StoreRepository.setLogo`).
 
   A catalogue store can't be deleted, so its cards' photos stay.
 
@@ -160,6 +164,10 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   `aFrontPhotoThatCantBeLoaded_showsTheInitials`,
   `ListViewModelTest.aFrontPhotoWhoseFileIsMissing_isLeftOffTheTile` (#89). End to end:
   `AppNavigationTest.aCardsFrontPhoto_isLoadedOntoItsTile_byTheAppsImageLoader`.
+- Logos: `FileCardPhotosTest.cropLogo_…` (PNG in the photo directory, the 512 px limit, transparency, the framed part,
+  upright, a frame past the picture, no metadata, a failure leaves no file), `crop_ofAFrameReachingPastThePicture_throws_…`;
+  `RoomStoreRepositoryTest.setLogo_…`, `delete_deletesTheStoresLogo`, `delete_ofACatalogueStore_keepsItsLogo`;
+  `CardPhotoSweepCallbackTest.reopen_keepsAnOldLogoAStoreNames`.
 - `CardPhotoSweepCallbackTest` (on-disk database, closed and reopened), `DatabaseModuleTest.opening_sweepsAnOldPhotoNoCardNames`,
   `FileCardPhotosTest.deleteUnnamed_…`, `exists_…` (a name that isn't a photo name is `false`, not a throw, #87), `delete_skipsANameThatIsntAPhotoName_…`; `CardFormViewModelTest.aPickedPhotoWhoseFileIsGone_isNotSaved`.
 - `BackupRulesTest`: cloud backup excludes every domain and includes nothing (Android 12+); the 10–11 rules are

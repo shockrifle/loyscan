@@ -64,6 +64,20 @@ class CardPhotoSweepCallbackTest {
     }
 
     @Test
+    fun reopen_keepsAnOldLogoAStoreNames() = runTest { // #151: logos live with the photos
+        open(sweep = false).apply {
+            storeDao().insert(aStoreEntity(id = "store"))
+            storeDao().setLogoReturningDropped("store", "logo")
+        }
+        opened.forEach { it.close() }
+        val logo = photo("logo", modified = NOW - Duration.ofDays(30))
+
+        open(sweep = true).loyaltyCardDao().getAllWithStore().first()
+
+        assertThat(logo.exists()).isTrue()
+    }
+
+    @Test
     fun aDatabaseWithoutPhotos_opens() = runTest {
         val db = open(sweep = true)
 

@@ -12,7 +12,10 @@ data class Store(
     val name: String,
     /** Brand colour as `#RRGGBB`; parsed at render time with a fallback. */
     val color: String,
-    /** Logo URL; `null` means an initials tile. */
+    /**
+     * The user's own logo for the store (#151): a file name in the card photos' private storage, never a URL (the app
+     * ships no logos). `null` shows the name on the brand colour.
+     */
     val logo: String?,
     /** Other names the store is searched by. */
     val aliases: List<String>,

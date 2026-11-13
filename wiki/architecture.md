@@ -30,7 +30,8 @@ multi-select, #7: one `DELETE … WHERE id IN (:ids)`), and
 DAO's `@Transaction` methods (`…ReturningPhotos`, `updateReturningDroppedPhotos`) return the names ([[card-photos]],
 [[2026-11-03-card-photos-as-private-files]]).
 `StoreRepository` reads every store (`getAll`), adds one (`add(store)`, a custom store, #6; mapped with
-`Store.toEntity()`) and edits or deletes a custom store (`update(store)`, `delete(id)`, #53: `StoreDao.updateCustom` / `deleteCustom`,
+`Store.toEntity()`), sets any store's logo (`setLogo(storeId, logo)`, #151: `StoreDao.setLogoReturningDropped`, which
+names the file to delete, [[2026-11-13-user-supplied-store-logos]]) and edits or deletes a custom store (`update(store)`, `delete(id)`, #53: `StoreDao.updateCustom` / `deleteCustom`,
 `… AND isCustom = 1`, so a catalogue row is never touched; the cards go by `ON DELETE CASCADE`, [[edit-store]]), an
 interface with `RoomStoreRepository` behind it since #6; its
 unused entity-taking `insert` was dropped then, and `getById` once the card form needed every store (2026-10-22). `StoreDao.getById` stays: no production code
