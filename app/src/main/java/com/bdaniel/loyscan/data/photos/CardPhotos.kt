@@ -35,6 +35,13 @@ interface CardPhotos {
     suspend fun stage(picture: Uri): String
 
     /**
+     * Copies the stored photo [name] (a card's front photo) to a new staged file, as [stage] copies a pick, for the crop
+     * screen to frame it as a store's logo (#151): [cropLogo] deletes its source, so the card keeps its own photo.
+     * Throws if [name] isn't a photo's name, its file is missing or it isn't a picture; nothing is left behind then.
+     */
+    suspend fun stagePhoto(name: String): String
+
+    /**
      * Stores the staged photo [name] (from [stage] or a [newCapture] the camera app answered) re-encoded and cropped to
      * [crop] (#10, #88): a JPEG, downscaled, upright and without its metadata. Returns the new photo's name and deletes
      * the staged file. Throws if it can't be decoded or encoded; nothing is left behind then, the staged file included.
@@ -108,16 +115,25 @@ class FileCardPhotos(
      * written one left by a failure, a cancel or a killed process is deleted, or swept with the orphans. A file that
      * isn't a picture is refused here, so the crop screen only ever shows one that can be shown ([encodeCardPhoto]).
      */
-    override suspend fun stage(picture: Uri): String {
+    override suspend fun stage(picture: Uri): String =
+        copyIn(picture) { openPicture(picture) ?: throw FileNotFoundException("Can't open $picture") }
+
+    /** As [stage] copies a pick (#151); [file] refuses a name that isn't a photo's, and a missing one can't be opened. */
+    override suspend fun stagePhoto(name: String): String {
+        val photo = file(name)
+        return copyIn(name) { photo.inputStream() }
+    }
+
+    /** Copies what [open] reads to a new staged file and checks it is a picture; [source] names it in a failure. */
+    private suspend fun copyIn(source: Any, open: () -> InputStream): String {
         val name = UUID.randomUUID().toString()
         val file = file(name)
         try {
             withContext(ioDispatcher) {
                 directory.mkdirs()
-                val input = openPicture(picture) ?: throw FileNotFoundException("Can't open $picture")
-                input.use { from -> file.outputStream().use { from.copyTo(it) } }
+                open().use { from -> file.outputStream().use { from.copyTo(it) } }
                 ensureActive()
-                if (!isPicture(file)) throw IOException("Not a picture: $picture")
+                if (!isPicture(file)) throw IOException("Not a picture: $source")
             }
             return name
         } catch (e: Throwable) { // cancelled too: a half-written or unused file mustn't stay
