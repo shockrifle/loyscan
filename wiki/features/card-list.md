@@ -69,6 +69,8 @@ tiles, one per row in `loyalty_cards`, live-updating from Room. Sort, search and
   `aTileWhoseFrontPhotoFileIsMissing_showsTheInitials`, `aFrontPhotoThatCantBeLoaded_showsTheInitials`, `ListViewModelTest.aFrontPhotoWhoseFileIsMissing_isLeftOffTheTile`,
   the logo (#151): `aCardWhoseStoreHasALogo_showsItOnItsTile_inPlaceOfTheInitials`, `aFrontPhoto_takesPrecedenceOverTheStoresLogo`,
   `aLogoThatCantBeLoaded_showsTheInitials`, `aLogoWhoseFileIsMissing_showsTheInitials`,
+  `ListViewModelTest.aStoresLogoWhoseFileIsMissing_isLeftOffItsTiles`, `aStoresLogo_isLookedUpOnce_forAllItsCards` (the
+  list's `withoutMissing(cards)` checks each store's logo file once per emission, not once per card),
   end to end `AppNavigationTest.aCardsFrontPhoto_isLoadedOntoItsTile_byTheAppsImageLoader` (only the app's loader can
   map a `CardPhoto` to its file, so the photo reaches its memory cache).
 - The colored box is the shared element `card/{id}` — [[card-transition]].

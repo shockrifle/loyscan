@@ -17,5 +17,8 @@ class CardPhotoMapper(private val photos: FileCardPhotos) : Mapper<CardPhoto, Fi
 /** Behind a label on a card photo (the list tile): white text on it reads even over a white photo, at 5.7:1. */
 val PHOTO_LABEL_SCRIM = Color.Black.copy(alpha = 0.6f)
 
+/** How much of a card-shaped tile a store's logo takes (#151): the list's tiles and the logo screen's preview. */
+const val TILE_LOGO_FRACTION = 0.6f
+
 /** Width / height of a payment-size card (ISO/IEC 7810 ID-1, 85.60 × 53.98 mm): how a card photo is framed. */
 const val CARD_ASPECT_RATIO = 85.60f / 53.98f

@@ -33,8 +33,9 @@ Also travels in the `Detail` route — see [[2025-12-12-brand-color-in-route]].
 colour. Loaded with Coil — [[coil-image-loading]].
 
 **Catalogue store** — A store from the shipped catalogue `app/src/main/assets/catalogue/stores.json`
-(`domain/catalogue/CatalogueEntry`): slug id like `hu-ikea-family`, no logo, `isCustom = false`. Its row is rewritten
-from the catalogue on every DB open. See [[store-catalogue]].
+(`domain/catalogue/CatalogueEntry`): slug id like `hu-ikea-family`, shipped with no logo, `isCustom = false`. Its row is
+rewritten from the catalogue on every DB open, except `logo`: the user may give it one, which the sync never touches
+(#151). See [[store-catalogue]].
 
 **Card-number rule** — `domain/cardnumber/CardNumberRule`: per-store JSON rule for validating, formatting and
 building barcode content from a core number, and matching scanned content back to one.
