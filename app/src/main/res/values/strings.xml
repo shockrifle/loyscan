@@ -52,6 +52,7 @@
     <string name="copy_number">Copy number</string>
     <string name="card_number_clip_label">Card number</string>
     <string name="number_copied">Number copied</string>
+    <string name="no_app_for_web_search">No app can open the web search.</string>
     <string name="front_photo">Front photo</string>
     <string name="back_photo">Back photo</string>
 

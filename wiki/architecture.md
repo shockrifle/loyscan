@@ -78,6 +78,9 @@ content descriptions, so it needs no seam in the app ([[2026-11-05-r8-smoke-test
   `CardPhotos` (`FakeCardPhotos`, [[card-photos]]). The camera app that takes a card photo is a `photoCamera` factory
   returning a `PhotoCamera` (`FakePhotoCamera`); the real `rememberPhotoCamera` is tested over a test
   `ActivityResultRegistry` (`PhotoCameraTest`).
+- **Another app opened for the user** (the browser for "Find a logo online", #151) is a `fun interface LogoSearch`
+  parameter, so a screen test passes a recording lambda; the real `rememberLogoSearch` (`ui/LogoSearch.kt`) is tested on
+  Robolectric through the started intent, and with `checkActivities(true)` for no browser (`LogoSearchTest`).
 - **Layout at a large font scale** is checked through the screen's semantics: `testing/Layout.kt`
   (`WithFontScale`, `assertTextFitsAndDoesNotOverlap`) reads every text node's bounds and text layout, under
   `@GraphicsMode(NATIVE)` so text is measured for real ([[tdd]], [[design-system]], #108).
