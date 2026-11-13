@@ -50,6 +50,7 @@
     <string name="copy_number">Szám másolása</string>
     <string name="card_number_clip_label">Kártyaszám</string>
     <string name="number_copied">Szám másolva</string>
+    <string name="no_app_for_web_search">Nincs olyan alkalmazás, amely megnyitná a webes keresést.</string>
     <string name="front_photo">Előoldali fotó</string>
     <string name="back_photo">Hátoldali fotó</string>
 
