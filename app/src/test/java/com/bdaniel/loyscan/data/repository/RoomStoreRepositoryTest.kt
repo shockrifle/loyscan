@@ -83,6 +83,18 @@ class RoomStoreRepositoryTest {
     }
 
     @Test
+    fun update_keepsACustomStoresLogo() = runTest { // #151: the edit form saves a store whose logo may be stale or none
+        repository.add(aStore(id = "custom", name = "Custom Store", countryCodes = emptyList(), isCustom = true))
+        repository.setLogo("custom", "logo")
+
+        repository.update(aStore(id = "custom", name = "Renamed Store", countryCodes = emptyList(), isCustom = true, logo = null))
+
+        val saved = repository.getAll().first().single { it.id == "custom" }
+        assertThat(saved.name).isEqualTo("Renamed Store")
+        assertThat(saved.logo).isEqualTo("logo")
+    }
+
+    @Test
     fun update_leavesACatalogueStoreAsItIs() = runTest { // #53: only custom stores are edited
         val before = repository.getAll().first()
 

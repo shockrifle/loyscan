@@ -71,9 +71,10 @@ const val STORE_LOGO_PREVIEW_IMAGE_TAG = "storeLogoPreviewImage"
 
 
 /**
- * A store's logo (#151), reached from the store picker: a preview of the store's tile, "Choose image" (the system
- * photo picker, then a square crop that can zoom out so a wide logo fits whole), "Find a logo online" (a web image
- * search in the browser) and, with a logo, "Remove logo". The [picker] and [logoSearch] are parameters, fakes in tests.
+ * A store's logo (#151), reached from the store picker or a custom store's edit form: a preview of the store's tile,
+ * "Choose image" (the system photo picker, then a square crop that can zoom out so a wide logo fits whole), "Find a
+ * logo online" (a web image search in the browser) and, with a logo, "Remove logo". The [picker] and [logoSearch] are
+ * parameters, fakes in tests.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
