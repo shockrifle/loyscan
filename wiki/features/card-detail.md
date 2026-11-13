@@ -16,7 +16,12 @@ UUID string.
   when Room emits. Why: [[2025-12-12-brand-color-in-route]].
 - If no card has the route's id (deleted, or a stale route), the screen stays on `LoyaltyCard.EMPTY`, or on the
   last card it showed. It doesn't crash: [[2026-10-09-missing-card-throws-from-room]].
-- The logo uses `hiltImageLoader()` (SVG-capable, logs failures) — [[coil-image-loading]].
+- The header shows the store's logo when the user gave it one (#151, [[2026-11-13-user-supplied-store-logos]]): a
+  `CardPhoto` file through `hiltImageLoader()` ([[coil-image-loading]]), described by the store's name
+  (`STORE_LOGO_TAG`, in `STORE_HEADER_TAG`). A logo that can't be loaded, or whose file is missing
+  (`CardPhotos.withoutMissing` in `DetailViewModel`), shows the name instead. Tests:
+  `DetailScreenTest.aStoresLogo_isShownInTheHeader_inPlaceOfItsName`, `aLogoThatCantBeLoaded_showsTheStoreName`,
+  `aLogoWhoseFileIsMissing_showsTheStoreName`.
 - The brand colour is parsed with `toBrandColorOrNull()`. An empty or malformed colour falls back to `surfaceVariant`
   instead of crashing ([[empty-brand-color-crash]], resolved).
 - Header text color: black or white, whichever contrasts more with the brand color (`contrastingTextColor()`, the

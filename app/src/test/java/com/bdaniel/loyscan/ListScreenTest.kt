@@ -169,6 +169,51 @@ class ListScreenTest {
     }
 
     @Test
+    fun aCardWhoseStoreHasALogo_showsItOnItsTile_inPlaceOfTheInitials() { // #151
+        storedPhoto("logo")
+        setScreen(aLoyaltyCard(store = aStore(name = "Shell ClubSmart", logo = "logo"), label = "Work car"), photos = FakeCardPhotos("logo"))
+        waitForAnImageToLoad()
+
+        composeRule.onNodeWithTag(CARD_TILE_LOGO_TAG, useUnmergedTree = true).assertIsDisplayed()
+        composeRule.onNodeWithText("SC").assertDoesNotExist()
+        composeRule.onNodeWithText("Work car").assertIsDisplayed()
+    }
+
+    @Test
+    fun aFrontPhoto_takesPrecedenceOverTheStoresLogo() { // #151: the card's own photo is still its tile
+        storedPhoto("front")
+        storedPhoto("logo")
+        setScreen(
+            aLoyaltyCard(store = aStore(name = "Shell ClubSmart", logo = "logo"), frontPhotoPath = "front"),
+            photos = FakeCardPhotos("front", "logo"),
+        )
+        waitForAnImageToLoad()
+
+        composeRule.onNodeWithTag(CARD_TILE_PHOTO_TAG, useUnmergedTree = true).assertIsDisplayed()
+        composeRule.onNodeWithTag(CARD_TILE_LOGO_TAG, useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun aLogoThatCantBeLoaded_showsTheInitials() { // #151: not an empty brand-colour box
+        // The fake says the logo exists, but the app's loader finds no file to decode.
+        setScreen(aLoyaltyCard(store = aStore(name = "Shell ClubSmart", logo = "broken")), photos = FakeCardPhotos("broken"))
+
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) {
+            ShadowLooper.idleMainLooper() // the loader's result comes on the main looper
+            composeRule.onAllNodesWithText("SC").fetchSemanticsNodes().isNotEmpty()
+        }
+        composeRule.onNodeWithTag(CARD_TILE_LOGO_TAG, useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun aLogoWhoseFileIsMissing_showsTheInitials() { // #151, as a missing photo (#89)
+        setScreen(aLoyaltyCard(store = aStore(name = "Shell ClubSmart", logo = "lost")), photos = FakeCardPhotos())
+
+        composeRule.onNodeWithTag(CARD_TILE_LOGO_TAG, useUnmergedTree = true).assertDoesNotExist()
+        composeRule.onNodeWithText("SC").assertIsDisplayed()
+    }
+
+    @Test
     fun aCardWithOnlyABackPhoto_showsTheInitialsOnItsTile() { // #10: the back is the card screen's
         setScreen(aLoyaltyCard(store = aStore(name = "Shell ClubSmart"), backPhotoPath = "back"), photos = FakeCardPhotos("back"))
 
@@ -862,6 +907,12 @@ class ListScreenTest {
     }
 
     /** A decodable photo [name] where the app's image loader looks for card photos. */
+    /** Waits for the app's loader to have loaded a picture, so a failed load (which shows the initials) would have shown. */
+    private fun waitForAnImageToLoad() {
+        val loader = EntryPointAccessors.fromApplication(composeRule.activity, ImageLoaderEntryPoint::class.java).getImageLoader()
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) { ShadowLooper.idleMainLooper(); (loader.memoryCache?.size ?: 0) > 0 }
+    }
+
     private fun storedPhoto(name: String) =
         File(composeRule.activity.filesDir, CardPhotosModule.PHOTO_DIRECTORY).resolve(name).writeOnePixelPng()
 

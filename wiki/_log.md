@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-13 · tile and card header draw the store's logo file, falling back to the initials or name; Store.logo is no longer a URL · apps/android-app, features/card-list, features/card-detail, features/card-photos, integrations/coil-image-loading, integrations/_index, decisions/2026-11-13-user-supplied-store-logos · #151 display
 - 2026-11-13 · store logos stored: a file with the card photos named by `stores.logo`, kept by the catalogue sync and the sweep, deleted on replace/remove/store delete; new decision · decisions/2026-11-13-user-supplied-store-logos, decisions/2026-11-12-no-bundled-store-logos, decisions/_index, features/store-catalogue, features/card-photos, architecture, workflows/tdd · #151 data layer
 - 2026-11-12 · widget checked on a 12L tablet: one and two columns right when placed, a stale layout after a resize; the card-ratio-image approach tried and dropped · apps/card-widget · PR #152 device check
 - 2026-11-12 · widget checked on a device: Exact size mode showed a launcher's wrong-size layout, cut; now Responsive with 16 widths and full-width tiles · apps/card-widget, decisions/2026-11-12-design-tokens-and-card-shape · PR #152 device check

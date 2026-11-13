@@ -1,15 +1,19 @@
-# Coil image loading (brand logos)
+# Coil image loading
 
-Brand logos are remote URLs loaded with **Coil 2.7.0** (`io.coil-kt:coil-compose`, `coil-svg`). No shipped store
-has a logo today: the catalogue ships none ([[store-catalogue]]), and the debug demo stores that pointed at
-**picsum.photos** placeholders were removed in #55 ([[seed-data]]).
-This requires `android.permission.INTERNET`.
+Images are loaded with **Coil 2.7.0** (`io.coil-kt:coil-compose`, `coil-svg`) through one app-wide loader. Since #151
+every image the app shows is a private file: a card photo ([[card-photos]]) or the store logo the user gave a store
+([[2026-11-13-user-supplied-store-logos]]). No shipped store has a logo, and none is fetched
+([[2026-11-12-no-bundled-store-logos]]); the debug demo stores that pointed at **picsum.photos** placeholders were removed
+in #55 ([[seed-data]]).
 
 ## Contract
 
-- `Store.logo` is a nullable URL string. **`null` or blank means no logo**, and the screens render the store name instead.
-- The app-wide `ImageLoader` is a Hilt `@Singleton` with the SVG decoder and an `EventListener` that logs
-  failures at WARN via Timber (`app/src/main/java/com/bdaniel/loyscan/di/ImageLoaderModule.kt:22-39`). Get it in
+- `Store.logo` is a file name in the card photos' directory, or `null` (the screens render the store name or initials
+  instead). It was a URL until #151; nothing ever stored one but the removed demo stores.
+- Both a photo and a logo are shown as a `CardPhoto(name)` model, which only the app's loader maps to its file
+  (`CardPhotoMapper`, `ui/CardPhoto.kt`).
+- The app-wide `ImageLoader` is a Hilt `@Singleton` with the SVG decoder, the `CardPhotoMapper` and an `EventListener`
+  that logs failures at WARN via Timber (`app/src/main/java/com/bdaniel/loyscan/di/ImageLoaderModule.kt`). Get it in
   Compose with `hiltImageLoader()` and pass it to `AsyncImage(imageLoader = …)` —
   [[2025-12-12-singleton-image-loader]].
 
@@ -20,5 +24,7 @@ This requires `android.permission.INTERNET`.
 - `AsyncImage` **without** `imageLoader =` silently uses Coil's own default singleton, which has no SVG support,
   no logging and no `CardPhotoMapper`, so a card photo fails on it. The list tiles did this until #10
   ([[list-screen-bypasses-image-loader]], resolved); every `AsyncImage` now passes `hiltImageLoader()`.
-- No placeholder or error drawable is set, so a logo that can't load (e.g. offline) shows an empty box. The former
-  demo stores used `picsum.photos` placeholders ([[seed-data]], removed in #55).
+- No placeholder or error drawable is set. A tile or header whose photo or logo can't load sets an `onError` flag and
+  falls back to the initials or the name.
+- The SVG decoder and the `INTERNET` permission no longer serve any store field: the decision to keep or remove them
+  is [[2026-11-12-no-bundled-store-logos]] → Consequences.

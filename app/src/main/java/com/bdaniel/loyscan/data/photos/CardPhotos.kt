@@ -71,11 +71,13 @@ data class PhotoCapture(val name: String, val uri: Uri)
 
 /**
  * [card] without the photos whose files are missing, e.g. a file deleted or otherwise lost while the row still names it
- * (#87). Shown as no photo; a saved edit then clears the name.
+ * (#87). Shown as no photo; a saved edit then clears the name. Its store's logo goes the same way when its file is
+ * missing (#151): the name on the brand colour shows instead.
  */
 suspend fun CardPhotos.withoutMissing(card: LoyaltyCard): LoyaltyCard = card.copy(
     frontPhotoPath = card.frontPhotoPath?.takeIf { exists(it) },
     backPhotoPath = card.backPhotoPath?.takeIf { exists(it) },
+    store = card.store.copy(logo = card.store.logo?.takeIf { exists(it) }),
 )
 
 /**

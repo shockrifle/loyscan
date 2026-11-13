@@ -45,7 +45,9 @@ tiles, one per row in `loyalty_cards`, live-updating from Room. Sort, search and
 - Tile (`CardItem`): a `Card` containing a box in bank-card (ID-1, 85.60 × 53.98 mm) proportions filled with the brand
   color (or `surfaceVariant` if the color string is empty or malformed, via `toBrandColorOrNull()`). Inside: the store's
   initials, large (`Store.initials`: the first letter or digit of the name's first two words, upper case;
-  `StoreTest`), or the store logo via Coil at 60% size when the store has one (none does today). Below them, one line
+  `StoreTest`), or the store's logo at 60% size when the user gave the store one (#151, [[2026-11-13-user-supplied-store-logos]]):
+  a `CardPhoto` file through the app's loader, tagged `CARD_TILE_LOGO_TAG`; a logo that can't be loaded, or whose file is
+  missing (`CardPhotos.withoutMissing`), falls back to the initials. Below them, one line
   at the bottom left: the card's label, or the store name when there is no label, so two cards of one store can be told
   apart. The box is a `Column`: the initials take the height the label leaves and shrink to fit it (`autoSize`), so
   they don't run into the label at large font scales (`ListScreenTest.aTilesInitials_andLabel_doNotOverlap_…`;
@@ -65,6 +67,8 @@ tiles, one per row in `loyalty_cards`, live-updating from Room. Sort, search and
   images, photo and logo, load through `hiltImageLoader()` ([[coil-image-loading]]). Tests:
   `ListScreenTest.aCardWithAFrontPhoto_showsItOnItsTile_inPlaceOfTheInitials`, `aCardWithOnlyABackPhoto_…`,
   `aTileWhoseFrontPhotoFileIsMissing_showsTheInitials`, `aFrontPhotoThatCantBeLoaded_showsTheInitials`, `ListViewModelTest.aFrontPhotoWhoseFileIsMissing_isLeftOffTheTile`,
+  the logo (#151): `aCardWhoseStoreHasALogo_showsItOnItsTile_inPlaceOfTheInitials`, `aFrontPhoto_takesPrecedenceOverTheStoresLogo`,
+  `aLogoThatCantBeLoaded_showsTheInitials`, `aLogoWhoseFileIsMissing_showsTheInitials`,
   end to end `AppNavigationTest.aCardsFrontPhoto_isLoadedOntoItsTile_byTheAppsImageLoader` (only the app's loader can
   map a `CardPhoto` to its file, so the photo reaches its memory cache).
 - The colored box is the shared element `card/{id}` — [[card-transition]].
