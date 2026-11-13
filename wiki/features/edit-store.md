@@ -46,7 +46,7 @@ Catalogue stores have no Edit button and can't be changed or deleted. Issue [#53
   logo on it (`CustomStoreState.logo`; a logo whose file is missing is none, checked once per store-list update), and
   **Change logo**, which opens the store's logo screen over the form (`CustomStoreDirections.toStoreLogo`); Back
   returns to the form with its unsaved edits, and a logo set there shows at once. Save leaves the logo as it is
-  (`updateCustom` doesn't write it). The new-store form has no slot ([[2026-11-13-user-supplied-store-logos]]).
+  (`updateCustom` doesn't write it; `RoomStoreRepositoryTest.update_keepsACustomStoresLogo`). The new-store form has no slot ([[2026-11-13-user-supplied-store-logos]]).
 - **Back during a save or delete** (#65): the user stays where Back took them, and the store is still created,
   saved or deleted. `customStoreDirections(entry)` navigates (to the scanner, or back) only while the form's own
   back-stack entry is current, and the writes run in `withContext(NonCancellable)`, as the card form's do
