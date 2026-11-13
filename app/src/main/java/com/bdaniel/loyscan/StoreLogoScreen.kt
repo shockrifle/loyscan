@@ -48,7 +48,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
-import com.bdaniel.loyscan.domain.Store
 import com.bdaniel.loyscan.ui.CARD_ASPECT_RATIO
 import com.bdaniel.loyscan.ui.CardPhoto
 import com.bdaniel.loyscan.ui.TILE_LOGO_FRACTION
@@ -114,7 +113,7 @@ fun StoreLogoScreen(
                 Modifier.padding(innerPadding).verticalScroll(rememberScrollState()).padding(Spacing.l),
                 verticalArrangement = Arrangement.spacedBy(Spacing.l),
             ) {
-                LogoPreview(store)
+                LogoPreview(name = store.name, color = store.color, logo = store.logo)
                 Text(stringResource(R.string.store_logo_hint), style = MaterialTheme.typography.bodyMedium)
                 if (state.working) LinearProgressIndicator(Modifier.fillMaxWidth())
                 if (state.failed) {
@@ -210,25 +209,28 @@ private fun CardPhotoChoiceDialog(
 
 private val CARD_PHOTO_CHOICE_WIDTH = 72.dp
 
-/** The store as its cards' tiles show it: the logo on the brand colour, or the name when it has none or it can't load. */
+/**
+ * The store as its cards' tiles show it: the [logo] on the brand [color], or the [name] when it has none or it can't
+ * load. Also the custom store form's logo slot (#151), drawn with the form's name and colour as typed.
+ */
 @Composable
-private fun LogoPreview(store: Store) {
-    val color = store.color.toBrandColorOrNull() ?: MaterialTheme.colorScheme.surfaceVariant
-    var logoFailed by remember(store.logo) { mutableStateOf(false) }
-    val logo = store.logo?.takeUnless { logoFailed }
-    val description = stringResource(R.string.logo_of_store, store.name)
+internal fun LogoPreview(name: String, color: String, logo: String?) {
+    val background = color.toBrandColorOrNull() ?: MaterialTheme.colorScheme.surfaceVariant
+    var logoFailed by remember(logo) { mutableStateOf(false) }
+    val shown = logo?.takeUnless { logoFailed }
+    val description = stringResource(R.string.logo_of_store, name)
     Box(
         Modifier
             .fillMaxWidth()
             .aspectRatio(CARD_ASPECT_RATIO)
             .clip(CardShape)
-            .background(color)
+            .background(background)
             .testTag(STORE_LOGO_PREVIEW_TAG),
         contentAlignment = Alignment.Center,
     ) {
-        if (logo != null) {
+        if (shown != null) {
             AsyncImage(
-                model = CardPhoto(logo),
+                model = CardPhoto(shown),
                 contentDescription = null,
                 imageLoader = hiltImageLoader(),
                 onError = { logoFailed = true },
@@ -239,9 +241,9 @@ private fun LogoPreview(store: Store) {
             )
         } else {
             Text(
-                store.name,
+                name,
                 style = MaterialTheme.typography.headlineLarge,
-                color = color.contrastingTextColor(),
+                color = background.contrastingTextColor(),
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(Spacing.l),
             )

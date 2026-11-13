@@ -4,6 +4,7 @@ import android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 import android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
 import android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_FULL
 import android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasContentDescription
@@ -20,6 +21,7 @@ import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -400,6 +402,26 @@ class AppNavigationTest {
 
         waitForTextToGo("Store logo")
         waitForText("Choose store")
+    }
+
+    @Test
+    fun aCustomStoresLogoScreen_opensFromItsForm_andBackReturnsToTheFormAsLeft() { // #151
+        runBlocking { db.storeDao().insert(aStoreEntity(id = "custom", name = "My Shop", isCustom = true)) }
+        composeRule.onNodeWithContentDescription("Add card").performClick()
+        waitForText("My Shop")
+        composeRule.onNodeWithContentDescription("Edit My Shop").performClick()
+        waitForTheStoreFormToLoad()
+        composeRule.onNodeWithTag(CUSTOM_STORE_NAME_TAG).performTextReplacement("My Shop 2") // not saved
+
+        composeRule.onNodeWithText("Change logo").performScrollTo().performClick()
+        waitForText("Every card of this store shows this logo.")
+        composeRule.onNodeWithText("Store logo").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Back").performClick()
+
+        waitForTextToGo("Store logo")
+        waitForTheStoreFormToLoad()
+        composeRule.onNodeWithText("Edit store").assertIsDisplayed()
+        composeRule.onNodeWithTag(CUSTOM_STORE_NAME_TAG).assert(hasText("My Shop 2"))
     }
 
     @Test

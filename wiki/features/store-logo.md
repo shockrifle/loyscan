@@ -5,14 +5,16 @@ The user gives a store a logo of their own, and every card of that store shows i
 logo files ([[2026-11-12-no-bundled-store-logos]]); why it is stored the way it is:
 [[2026-11-13-user-supplied-store-logos]]. Issue [#151](https://github.com/shockrifle/loyscan/issues/151).
 
-**Done so far:** a catalogue store's logo screen, reached from the store picker, set from an image on the device
-(slice 1) or from a crop of the front photo of one of the store's cards (slice 2). **Not implemented yet** (#151 stays
-open for them): the logo slot in a custom store's form, and an image shared to LoyScan as the source.
+**Done so far:** a store's logo screen, reached from the store picker for a catalogue store and from the edit form's
+logo slot for a custom store (slice 3, [[edit-store]]), set from an image on the device (slice 1) or from a crop of
+the front photo of one of the store's cards (slice 2). The new-store form has no slot (see the decision). **Not
+implemented yet** (#151 stays open for it): an image shared to LoyScan as the source.
 
 **Entry points** (under `app/src/main/java/com/bdaniel/loyscan/`):
 - `StorePickerScreen.kt`: a catalogue store's row has a trailing image icon, "Logo of <name>", in every section
   (Suggested, Frequently added, All stores) → `StorePickerDirections.toStoreLogo(storeId)` → `StoreLogo(storeId)`
-  (`Navigation.kt`). A custom store's row keeps its Edit button ([[edit-store]]) and has no logo button.
+  (`Navigation.kt`). A custom store's row keeps its Edit button ([[edit-store]]) and has no logo button: its edit
+  form's **Change logo** → `CustomStoreDirections.toStoreLogo(storeId)` → the same `StoreLogo(storeId)`, over the form.
 - `StoreLogoScreen.kt`, `StoreLogoViewModel.kt`: the screen and its state.
 - `ui/LogoSearch.kt`: "Find a logo online".
 - `data/repository/StoreRepository.kt` (`setLogo`), `data/photos/CardPhotos.kt` (`cropLogo`): storage, see the decision.
@@ -64,6 +66,11 @@ open for them): the logo slot in a custom store's form, and an image shared to L
   measured, as `assertTextFitsAndDoesNotOverlap` reads one window). Use a card's photo: no button without one; one card →
   straight to the square crop; several → the dialog, the choice cropped; Cancel; the dialog closing when the list empties;
   the dialog still open after process death when the store loads before the cards (`StateRestorationTester`).
+- From a custom store's form: `CustomStoreViewModelTest` (`editingAStore_showsItsLogo`, `aLogoWhoseFileIsMissing_…`,
+  `aLogoSetWhileTheFormIsOpen_isShown`, `aNewStore_hasNoLogo`, `savingAnEdit_keepsTheStoresLogo`),
+  `CustomStoreScreenTest` (the slot with and without a logo, Change logo, none on the new-store form or for a store
+  that is gone, Hungarian, font scale 2), `AddCardDirectionsTest.aCustomStoresLogoButton_…`,
+  `aSecondTapOnTheFormsLogoButton_…`, `AppNavigationTest.aCustomStoresLogoScreen_opensFromItsForm_…`.
 - `StorePickerScreenTest.aCatalogueStoresLogoButton_…`, `aFrequentlyAddedStore_hasItsLogoButtonInItsSectionToo`;
   `AddCardDirectionsTest.aStoresLogoButton_opensItsLogoScreenOverThePicker_andBackReturnsToIt`;
   end to end `AppNavigationTest.aCatalogueStoresLogoScreen_opensFromThePicker_andBackReturnsToIt`.

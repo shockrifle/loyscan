@@ -41,7 +41,12 @@ shows it. The catalogue sync never touches that column.
 - **A card's front photo as the source:** the logo screen offers the front photos of the store's cards; the chosen one
   is copied to a staged file (`CardPhotos.stagePhoto`) and framed in the same square crop, so the card keeps its photo
   (`cropLogo` deletes its source). Only the front photo, as the issue asks: it is the side that carries the brand.
-- #151 is done in slices: the custom store form's slot and an image shared to the app are not implemented yet.
+- **A custom store's form:** its edit form has a logo slot, the store's tile preview (the form's name and colour as
+  typed, with the logo) and **Change logo**, which opens the same logo screen for the store. The new-store form has no
+  slot, the owner's choice on 2026-11-13: a store has no id before Create, which goes straight to the scanner, so a
+  slot there would need its own copy of the sources and the crop holding a logo for a store not yet saved; the logo is
+  set afterwards through Edit.
+- #151 is done in slices: an image shared to the app is not implemented yet.
 
 ## Why
 - Reusing the photos' directory gives a logo the same private storage, backup handling ([[2026-11-05-no-cloud-backup-in-v1]]:

@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-13 · a custom store's edit form gets a logo slot opening its logo screen; the new-store form has none, by the owner's choice · features/edit-store, features/store-logo, decisions/2026-11-13-user-supplied-store-logos · #151 custom store slot
 - 2026-11-13 · review of PR #160: the card-photo question closes for an empty list only once the list has loaded · features/store-logo · PR #160 review
 - 2026-11-13 · logo screen offers "Use a card's photo": the store's cards' front photos, copied and framed in the square crop · features/store-logo, decisions/2026-11-13-user-supplied-store-logos · #151 card photo source
 - 2026-11-13 · CardPhotos.stagePhoto copies a stored photo in for a crop, so a card's photo can be framed as a logo without losing it · features/card-photos, workflows/tdd · #151 card photo source

@@ -104,14 +104,17 @@ fun NavController.storePickerDirections(picker: NavBackStackEntry) = StorePicker
     toStoreLogo = { storeId -> whileCurrent(picker) { navigate(StoreLogo(storeId)) } },
 )
 
-/** A store's logo (#151): the user's own picture, shown on every card of the store. Reached from the store picker. */
+/**
+ * A store's logo (#151): the user's own picture, shown on every card of the store. Reached from the store picker (a
+ * catalogue store) or a custom store's edit form.
+ */
 @Serializable
 data class StoreLogo(val storeId: String)
 
 @Immutable
 data class StoreLogoDirections(val toBack: () -> Unit)
 
-/** Back to the picker, only while [logo], the screen's own entry, is current (#66). */
+/** Back to the picker or the form, only while [logo], the screen's own entry, is current (#66). */
 fun NavController.storeLogoDirections(logo: NavBackStackEntry) = StoreLogoDirections(
     toBack = { whileCurrent(logo) { navigateUp() } },
 )
@@ -132,7 +135,9 @@ data class CustomStore(
 @Immutable
 data class CustomStoreDirections(
     val onCreated: (storeId: String) -> Unit,
-    val toBack: () -> Unit
+    val toBack: () -> Unit,
+    /** Opens the logo screen of the edited store [storeId] over the form (#151). */
+    val toStoreLogo: (storeId: String) -> Unit,
 )
 
 /**
@@ -149,7 +154,8 @@ fun NavController.customStoreDirections(form: NavBackStackEntry) = CustomStoreDi
             }
         }
     },
-    toBack = { whileCurrent(form) { navigateUp() } }
+    toBack = { whileCurrent(form) { navigateUp() } },
+    toStoreLogo = { storeId -> whileCurrent(form) { navigate(StoreLogo(storeId)) } },
 )
 
 

@@ -5,6 +5,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.bdaniel.loyscan.data.photos.CardPhotos
 import com.bdaniel.loyscan.data.repository.LoyaltyCardRepository
 import com.bdaniel.loyscan.data.repository.StoreRepository
 import com.bdaniel.loyscan.domain.BarcodeFormat
@@ -52,6 +53,10 @@ data class CustomStoreState(
     val cardCount: Int = 0,
     /** Where deleting the edited store stands; [Deletion.DELETED] once it is gone. */
     val deletion: Deletion = Deletion.NONE,
+    /** The edited store's id, which its logo screen opens on (#151); `null` when creating. */
+    val storeId: String? = null,
+    /** The edited store's logo (#151), `null` when it has none, its file is missing, or the store is new. */
+    val logo: String? = null,
 ) {
     val canSave: Boolean get() = ready && name.isNotBlank() && !saving && createdStoreId == null && !saved
 }
@@ -60,13 +65,14 @@ data class CustomStoreState(
  * "Other card" in the store picker (#6): a store that isn't in the catalogue, with a name, a colour and the barcode
  * format its typed numbers are drawn in. Creating it saves it, so the card is then added for it like for any store.
  * With [CustomStore.storeId] it edits that custom store instead (#53): the form starts as the store, which can also be
- * deleted with its cards.
+ * deleted with its cards, and its logo shown and changed on its logo screen (#151).
  */
 @HiltViewModel
 class CustomStoreViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val storeRepository: StoreRepository,
     cardRepository: LoyaltyCardRepository,
+    photos: CardPhotos,
     private val clock: Clock,
 ) : ViewModel() {
 
@@ -76,7 +82,12 @@ class CustomStoreViewModel @Inject constructor(
     private val edited: StateFlow<Edited> =
         route.storeId?.let { id ->
             storeRepository.getAll()
-                .map { stores -> stores.firstOrNull { it.id == id && it.isCustom }?.let(Edited::Found) ?: Edited.Gone }
+                .map { stores ->
+                    // A logo whose file is missing is no logo (#151), checked once per list update, not per keystroke.
+                    stores.firstOrNull { it.id == id && it.isCustom }
+                        ?.let { store -> Edited.Found(store.copy(logo = store.logo?.takeIf { photos.exists(it) })) }
+                        ?: Edited.Gone
+                }
                 .stateIn(viewModelScope, SharingStarted.Eagerly, Edited.Loading)
         } ?: MutableStateFlow(Edited.New)
 
@@ -108,11 +119,13 @@ class CustomStoreViewModel @Inject constructor(
                 storedName = (edited as? Edited.Found)?.store?.name,
                 cardCount = cardCount,
                 deletion = deletion,
+                storeId = route.storeId,
+                logo = (edited as? Edited.Found)?.store?.logo,
             )
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = CustomStoreState(editing = route.storeId != null, ready = route.storeId == null)
+            initialValue = CustomStoreState(editing = route.storeId != null, ready = route.storeId == null, storeId = route.storeId)
         )
 
     fun onNameChange(name: String) {

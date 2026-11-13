@@ -21,6 +21,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -42,6 +43,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.bdaniel.loyscan.ui.theme.Spacing
@@ -54,7 +56,7 @@ const val CUSTOM_STORE_NAME_TAG = "customStoreName"
 /**
  * "Other card": a store that isn't listed, with a name, a colour and the barcode format for its typed numbers.
  * Creating it opens the scanner for it. Editing a custom store (#53) saves it and goes back; it can also be deleted,
- * after a confirmation that says how many cards go with it.
+ * after a confirmation that says how many cards go with it, and its logo is shown with a way to its logo screen (#151).
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -155,6 +157,14 @@ fun CustomStoreScreen(
                 stringResource(R.string.scanned_card_keeps_its_barcode),
                 style = MaterialTheme.typography.bodyMedium,
             )
+            val storeId = state.storeId
+            if (storeId != null) { // the edit form only: a new store has no id before Create (#151)
+                Text(stringResource(R.string.logo), style = MaterialTheme.typography.titleSmall)
+                LogoPreview(name = state.name, color = state.color, logo = state.logo)
+                OutlinedButton(onClick = { directions.toStoreLogo(storeId) }, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.change_logo), textAlign = TextAlign.Center)
+                }
+            }
             if (state.saveFailed) {
                 Text(
                     stringResource(R.string.store_save_failed),
