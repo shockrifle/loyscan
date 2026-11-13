@@ -27,6 +27,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -86,8 +87,10 @@ fun StoreLogoScreen(
     val state by viewModel.state.collectAsState()
     val pick = picker(viewModel::onPicked)
     var choosingCard by rememberSaveable { mutableStateOf(false) }
-    // Its list emptied (the cards deleted or their photos removed meanwhile): nothing is left to ask about.
-    if (choosingCard && state.ready && state.cardPhotos.isEmpty()) choosingCard = false
+    // Its list emptied (the cards deleted or their photos removed meanwhile): nothing is left to ask about. Not before
+    // the list has loaded, or a question restored after process death would close before its cards come (#151 review).
+    val noCardPhotos = state.cardPhotosLoaded && state.cardPhotos.isEmpty()
+    LaunchedEffect(noCardPhotos) { if (noCardPhotos) choosingCard = false }
 
     Box {
         Scaffold(
