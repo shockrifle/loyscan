@@ -72,6 +72,7 @@ import com.bdaniel.loyscan.domain.CardSort
 import com.bdaniel.loyscan.domain.LoyaltyCard
 import com.bdaniel.loyscan.ui.CARD_ASPECT_RATIO
 import com.bdaniel.loyscan.ui.CardPhoto
+import com.bdaniel.loyscan.ui.TILE_LOGO_FRACTION
 import com.bdaniel.loyscan.ui.PHOTO_LABEL_SCRIM
 import com.bdaniel.loyscan.ui.hiltImageLoader
 import com.bdaniel.loyscan.ui.theme.CardShape
@@ -334,8 +335,6 @@ const val CARD_TILE_PHOTO_TAG = "cardTilePhoto"
 /** A tile's store logo (#151), shown when the card has no front photo. */
 const val CARD_TILE_LOGO_TAG = "cardTileLogo"
 
-/** How much of the room above the label a tile's logo takes (#151). */
-private const val LOGO_FRACTION = 0.6f
 
 /** The shared-element key that pairs a card's tile with its detail screen ([DetailScreen]). */
 fun cardTransitionKey(cardId: String) = "card/$cardId"
@@ -403,7 +402,7 @@ fun SharedTransitionScope.CardItem(
                                 contentDescription = null, // The tile is described as a whole.
                                 imageLoader = hiltImageLoader(),
                                 onError = { logoFailed = true },
-                                modifier = Modifier.fillMaxSize(LOGO_FRACTION).testTag(CARD_TILE_LOGO_TAG),
+                                modifier = Modifier.fillMaxSize(TILE_LOGO_FRACTION).testTag(CARD_TILE_LOGO_TAG),
                             )
                             else -> Text(
                                 text = card.store.initials,

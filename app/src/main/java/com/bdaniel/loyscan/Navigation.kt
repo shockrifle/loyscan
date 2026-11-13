@@ -79,7 +79,7 @@ data class StorePickerDirections(
     val toEditStore: (storeId: String) -> Unit,
     val toBack: () -> Unit,
     /** Opens the logo screen of the catalogue store [storeId] (#151). */
-    val toStoreLogo: (storeId: String) -> Unit = {},
+    val toStoreLogo: (storeId: String) -> Unit,
 )
 
 /**

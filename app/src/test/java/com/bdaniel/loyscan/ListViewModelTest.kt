@@ -322,6 +322,28 @@ class ListViewModelTest {
     }
 
     @Test
+    fun aStoresLogo_isLookedUpOnce_forAllItsCards() = runTest { // #151 review: not one file check per card
+        photos.stored += "logo"
+        val store = aStore(id = "shop", logo = "logo")
+        repository.cards.value = (1..3).map { aLoyaltyCard(id = cardId(it), store = store) }
+
+        viewModel().cards.test {
+            assertThat(awaitItem()!!.map { it.store.logo }).containsExactly("logo", "logo", "logo")
+        }
+
+        assertThat(photos.existsCalls.count { it == "logo" }).isEqualTo(1)
+    }
+
+    @Test
+    fun aStoresLogoWhoseFileIsMissing_isLeftOffItsTiles() = runTest { // #151
+        repository.cards.value = listOf(apple.copy(store = apple.store.copy(logo = "lost")))
+
+        viewModel().cards.test {
+            assertThat(awaitItem()!!.single().store.logo).isNull()
+        }
+    }
+
+    @Test
     fun dismissingAFailedDelete_forgetsTheFailure() = runTest {
         repository.deleteFailure = IllegalStateException("disk I/O error")
         repository.cards.value = listOf(apple)

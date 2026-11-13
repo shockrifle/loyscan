@@ -61,7 +61,13 @@ class FakeCardPhotos(vararg stored: String) : CardPhotos {
         stored -= names.toSet()
     }
 
-    override suspend fun exists(name: String) = name in stored
+    /** Every name [exists] was asked about, in order. */
+    val existsCalls = mutableListOf<String>()
+
+    override suspend fun exists(name: String): Boolean {
+        existsCalls += name
+        return name in stored
+    }
 
     /** The captures made so far, in order. */
     val captures = mutableListOf<PhotoCapture>()

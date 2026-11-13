@@ -42,6 +42,7 @@ import coil.compose.AsyncImage
 import com.bdaniel.loyscan.domain.Store
 import com.bdaniel.loyscan.ui.CARD_ASPECT_RATIO
 import com.bdaniel.loyscan.ui.CardPhoto
+import com.bdaniel.loyscan.ui.TILE_LOGO_FRACTION
 import com.bdaniel.loyscan.ui.LogoSearch
 import com.bdaniel.loyscan.ui.PhotoCropScreen
 import com.bdaniel.loyscan.ui.contrastingTextColor
@@ -60,8 +61,6 @@ const val STORE_LOGO_PREVIEW_TAG = "storeLogoPreview"
 /** The logo in the preview, when the store has one that loads. */
 const val STORE_LOGO_PREVIEW_IMAGE_TAG = "storeLogoPreviewImage"
 
-/** How much of the preview the logo takes, as on a card's tile. */
-private const val LOGO_FRACTION = 0.6f
 
 /**
  * A store's logo (#151), reached from the store picker: a preview of the store's tile, "Choose image" (the system
@@ -161,7 +160,7 @@ private fun LogoPreview(store: Store) {
                 imageLoader = hiltImageLoader(),
                 onError = { logoFailed = true },
                 modifier = Modifier
-                    .fillMaxSize(LOGO_FRACTION)
+                    .fillMaxSize(TILE_LOGO_FRACTION)
                     .semantics { contentDescription = description }
                     .testTag(STORE_LOGO_PREVIEW_IMAGE_TAG),
             )

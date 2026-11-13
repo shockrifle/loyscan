@@ -57,7 +57,7 @@ class ListViewModel @Inject constructor(
                 // With no card left (the last one deleted), an old search would hide the empty state and the next card.
                 .onEach { if (it.isEmpty()) savedStateHandle[QUERY] = "" }
                 // A front photo whose file is missing is no tile photo, not an empty image (#89).
-                .map { cards -> cards.map { photos.withoutMissing(it) } },
+                .map { cards -> photos.withoutMissing(cards) },
             userPreferencesRepository.cardSort,
             query,
         ) { cards, sort, query ->

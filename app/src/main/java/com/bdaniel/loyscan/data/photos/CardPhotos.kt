@@ -74,11 +74,19 @@ data class PhotoCapture(val name: String, val uri: Uri)
  * (#87). Shown as no photo; a saved edit then clears the name. Its store's logo goes the same way when its file is
  * missing (#151): the name on the brand colour shows instead.
  */
-suspend fun CardPhotos.withoutMissing(card: LoyaltyCard): LoyaltyCard = card.copy(
-    frontPhotoPath = card.frontPhotoPath?.takeIf { exists(it) },
-    backPhotoPath = card.backPhotoPath?.takeIf { exists(it) },
-    store = card.store.copy(logo = card.store.logo?.takeIf { exists(it) }),
-)
+suspend fun CardPhotos.withoutMissing(card: LoyaltyCard): LoyaltyCard = withoutMissing(listOf(card)).single()
+
+/** [cards] each [withoutMissing]; a store's logo is checked once, however many of its cards there are (#151). */
+suspend fun CardPhotos.withoutMissing(cards: List<LoyaltyCard>): List<LoyaltyCard> {
+    val logos = cards.mapNotNullTo(mutableSetOf()) { it.store.logo }.filterTo(mutableSetOf()) { exists(it) }
+    return cards.map { card ->
+        card.copy(
+            frontPhotoPath = card.frontPhotoPath?.takeIf { exists(it) },
+            backPhotoPath = card.backPhotoPath?.takeIf { exists(it) },
+            store = card.store.copy(logo = card.store.logo?.takeIf { it in logos }),
+        )
+    }
+}
 
 /**
  * [CardPhotos] as files in [directory] (`files/card_photos`), never in a shared folder. [openPicture] opens a picked
