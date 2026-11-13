@@ -50,6 +50,8 @@ import com.bdaniel.loyscan.data.photos.MAX_PHOTO_SIDE
 import com.bdaniel.loyscan.data.photos.PhotoCrop
 import com.bdaniel.loyscan.ui.theme.Spacing
 import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.abs
 
 /** The full-screen crop overlay, so a test can find it. */
 const val PHOTO_CROP_TAG = "photoCrop"
@@ -64,6 +66,8 @@ private const val MAX_CROP_ZOOM = 8f
  * Frames a card photo to the card's ratio (#10): the staged [photo] shown full screen behind a card-ratio frame the
  * user pans and pinch-zooms it within; the photo shows dimmed around the frame (#108). [onConfirm] stores the framed part ([PhotoCrop.WHOLE] keeps the whole picture,
  * from "Use whole photo"); [onCancel] drops it. Only the app's loader knows where the file is (`hiltImageLoader()`).
+ * A logo (#151) is framed the same way, to a square [aspectRatio]; with [zoomOutToFit] the picture zooms out until it
+ * fits the frame whole, so a wide wordmark can be kept. [useWholeLabel] names the button that keeps the whole picture.
  */
 @Composable
 fun PhotoCropScreen(
@@ -71,6 +75,9 @@ fun PhotoCropScreen(
     description: String,
     onConfirm: (PhotoCrop) -> Unit,
     onCancel: () -> Unit,
+    aspectRatio: Float = CARD_ASPECT_RATIO,
+    zoomOutToFit: Boolean = false,
+    useWholeLabel: String = stringResource(R.string.use_whole_photo),
 ) {
     // Bounded to MAX_PHOTO_SIDE, not Size.ORIGINAL: a full-sensor camera photo decoded whole (hundreds of MB as ARGB)
     // would OOM. The crop maths uses only the picture's ratio, so a downscaled intrinsic size is fine.
@@ -101,7 +108,8 @@ fun PhotoCropScreen(
                     .clipToBounds(),
                 contentAlignment = Alignment.Center,
             ) {
-                val frame = cropFrameSize(constraints.maxWidth.toFloat(), constraints.maxHeight.toFloat())
+                val frame = cropFrameSize(constraints.maxWidth.toFloat(), constraints.maxHeight.toFloat(), aspectRatio)
+                val minScale = if (zoomOutToFit) fitCropScale(image.width, image.height, frame.width, frame.height) else 1f
                 laidOut.size = frame
                 // The picture covers the frame at scale 1, centred on it, and shows past it; the transform zooms and
                 // pans it about the frame's centre, so the crop maths stay relative to the frame.
@@ -127,9 +135,9 @@ fun PhotoCropScreen(
                         .scrimAround(cutOut)
                         // Keyed on the picture and frame: the gesture lambda captures them, and the picture's size is
                         // unknown until it loads, so this restarts the detector once it is known (else the pan is unclamped).
-                        .pointerInput(image, frame) {
+                        .pointerInput(image, frame, minScale) {
                             detectTransformGestures { _, pan, zoom, _ ->
-                                transform = cropTransform(image.width, image.height, frame.width, frame.height, transform.scale, transform.offset.x, transform.offset.y, pan.x, pan.y, zoom)
+                                transform = cropTransform(image.width, image.height, frame.width, frame.height, transform.scale, transform.offset.x, transform.offset.y, pan.x, pan.y, zoom, minScale)
                             }
                         },
                     contentAlignment = Alignment.Center,
@@ -151,7 +159,7 @@ fun PhotoCropScreen(
                     Text(stringResource(R.string.cancel), color = Color.White, textAlign = TextAlign.Center)
                 }
                 TextButton(onClick = { onConfirm(PhotoCrop.WHOLE) }, modifier = Modifier.weight(1f)) {
-                    Text(stringResource(R.string.use_whole_photo), color = Color.White, textAlign = TextAlign.Center)
+                    Text(useWholeLabel, color = Color.White, textAlign = TextAlign.Center)
                 }
             }
             Button(
@@ -180,7 +188,10 @@ private fun Size.hasSize() = isSpecified && width > 0f && height > 0f
 /** The scale and offset after a pan-and-zoom gesture, zoom coerced to [1, [MAX_CROP_ZOOM]] and the pan kept in the picture. */
 data class CropTransform(val scale: Float, val offset: Offset)
 
-/** Applies a pan ([panX], [panY]) and pinch [zoom] to the crop screen's current [scale]/[offsetX]/[offsetY]. Pure, so it is tested. */
+/**
+ * Applies a pan ([panX], [panY]) and pinch [zoom] to the crop screen's current [scale]/[offsetX]/[offsetY], zoom kept at
+ * [minScale] or more: 1 covers the frame, a logo's crop goes lower ([fitCropScale], #151). Pure, so it is tested.
+ */
 fun cropTransform(
     imageWidth: Float,
     imageHeight: Float,
@@ -192,8 +203,9 @@ fun cropTransform(
     panX: Float,
     panY: Float,
     zoom: Float,
+    minScale: Float = 1f,
 ): CropTransform {
-    val newScale = (scale * zoom).coerceIn(1f, MAX_CROP_ZOOM)
+    val newScale = (scale * zoom).coerceIn(minScale, MAX_CROP_ZOOM)
     val offset = clampCropOffset(imageWidth, imageHeight, frameWidth, frameHeight, newScale, offsetX + panX, offsetY + panY)
     return CropTransform(newScale, offset)
 }
@@ -201,7 +213,7 @@ fun cropTransform(
 /**
  * The part of an [imageWidth]×[imageHeight] picture under a [frameWidth]×[frameHeight] crop frame, as a [PhotoCrop],
  * when the picture is shown to cover the frame (its shorter side fills it, [ContentScale.Crop]), then zoomed by [scale]
- * (≥ 1) and panned by ([offsetX], [offsetY]) px from centred. Pure, so the crop maths is tested without a device.
+ * (below 1 only for a logo, [fitCropScale]) and panned by ([offsetX], [offsetY]) px from centred. Pure, so the crop maths is tested without a device.
  */
 fun photoCrop(
     imageWidth: Float,
@@ -218,11 +230,14 @@ fun photoCrop(
     // The picture's top-left in the frame's coordinates (frame origin top-left), centred then panned.
     val left = (frameWidth - shownWidth) / 2f + offsetX
     val top = (frameHeight - shownHeight) / 2f + offsetY
+    // Covering the frame, the crop is within the picture (coerced against rounding); zoomed out below that (a logo's,
+    // #151), it reaches past the picture where the frame does.
+    fun Float.inPicture() = if (scale >= 1f) coerceIn(0f, 1f) else this
     return PhotoCrop(
-        left = ((0f - left) / shownWidth).coerceIn(0f, 1f),
-        top = ((0f - top) / shownHeight).coerceIn(0f, 1f),
-        right = ((frameWidth - left) / shownWidth).coerceIn(0f, 1f),
-        bottom = ((frameHeight - top) / shownHeight).coerceIn(0f, 1f),
+        left = ((0f - left) / shownWidth).inPicture(),
+        top = ((0f - top) / shownHeight).inPicture(),
+        right = ((frameWidth - left) / shownWidth).inPicture(),
+        bottom = ((frameHeight - top) / shownHeight).inPicture(),
     )
 }
 
@@ -244,16 +259,32 @@ fun clampCropOffset(
         return Offset(offsetX, offsetY)
     }
     val base = max(frameWidth / imageWidth, frameHeight / imageHeight)
-    val overflowX = (imageWidth * base * scale - frameWidth) / 2f
-    val overflowY = (imageHeight * base * scale - frameHeight) / 2f
+    // Zoomed out (#151), a side smaller than the frame moves within it: the picture stays inside the frame.
+    val overflowX = abs(imageWidth * base * scale - frameWidth) / 2f
+    val overflowY = abs(imageHeight * base * scale - frameHeight) / 2f
     return Offset(offsetX.coerceIn(-overflowX, overflowX), offsetY.coerceIn(-overflowY, overflowY))
 }
 
 
-/** The crop frame in a [stageWidth]×[stageHeight] stage: the card's ratio, as wide as the stage, or as tall when it is short. */
-fun cropFrameSize(stageWidth: Float, stageHeight: Float): Size =
-    if (stageWidth / CARD_ASPECT_RATIO <= stageHeight) Size(stageWidth, stageWidth / CARD_ASPECT_RATIO)
-    else Size(stageHeight * CARD_ASPECT_RATIO, stageHeight)
+/**
+ * The zoom, relative to covering the frame, at which an [imageWidth]×[imageHeight] picture fits a [frameWidth]×[frameHeight]
+ * frame whole (its longer side fills it): the lowest a logo's crop zooms out to (#151), so a wide wordmark fits a square
+ * frame. 1 while the picture's size isn't known yet.
+ */
+fun fitCropScale(imageWidth: Float, imageHeight: Float, frameWidth: Float, frameHeight: Float): Float {
+    if (!imageWidth.isFinite() || !imageHeight.isFinite() || imageWidth <= 0f || imageHeight <= 0f) return 1f
+    val cover = max(frameWidth / imageWidth, frameHeight / imageHeight)
+    val fit = min(frameWidth / imageWidth, frameHeight / imageHeight)
+    return fit / cover
+}
+
+/**
+ * The crop frame in a [stageWidth]×[stageHeight] stage: [aspectRatio] (the card's, or a logo's square, #151), as wide as
+ * the stage, or as tall when it is short.
+ */
+fun cropFrameSize(stageWidth: Float, stageHeight: Float, aspectRatio: Float = CARD_ASPECT_RATIO): Size =
+    if (stageWidth / aspectRatio <= stageHeight) Size(stageWidth, stageWidth / aspectRatio)
+    else Size(stageHeight * aspectRatio, stageHeight)
 
 /**
  * The size an [imageWidth]×[imageHeight] picture is shown at to cover a [frameWidth]×[frameHeight] frame (its shorter side

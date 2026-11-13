@@ -46,6 +46,11 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   which sends the screen's view a navigation-bar inset). Tests: `CardFormScreenTest.theCropScreen_showsThePhotoAroundACardRatioFrame`,
   `theCropScreen_atFontScale2_…`, `PhotoCropTest`. The picture is requested at `MAX_PHOTO_SIDE` (not full size,
   which would OOM a camera photo); the crop frame is a normalised rectangle, applied to the stored file.
+- **A store logo's crop** (#151) is the same screen with `aspectRatio = 1f` (a square frame, `cropFrameSize`) and
+  `zoomOutToFit`: the picture can zoom out below covering the frame, down to `fitCropScale` where it fits whole, and then
+  stays inside the frame (`clampCropOffset`); `photoCrop` then reaches past the picture, which the logo leaves
+  transparent. `useWholeLabel` renames "Use whole photo". Tests: `PhotoCropTest.cropFrameSize_ofASquare_…`,
+  `fitCropScale_…`, `cropTransform_withALowerMinimum_…`, `clampCropOffset_zoomedOut_…`, `photoCrop_zoomedOut_…`.
 - **What is stored** (#88, #10): not the picked file itself but a JPEG at most 2048 px on its long side (a smaller
   picture keeps its size), cropped to the frame (or whole), turned the way its EXIF orientation says, a transparent
   picture on white, and with no EXIF (no location). A picked file that isn't a picture can't be added. Why:
