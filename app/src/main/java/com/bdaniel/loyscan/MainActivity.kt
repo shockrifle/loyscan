@@ -123,6 +123,9 @@ fun SharedTransitionScope.AppNavigation(
         composable<CustomStore> {
             CustomStoreScreen(directions = navController.customStoreDirections(it))
         }
+        composable<StoreLogo> {
+            StoreLogoScreen(directions = navController.storeLogoDirections(it))
+        }
         composable<Scanner> {
             ScannerScreen(directions = navController.scannerDirections(it.toRoute<Scanner>().storeId, it))
         }

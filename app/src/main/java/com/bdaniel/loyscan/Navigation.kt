@@ -77,7 +77,9 @@ data class StorePickerDirections(
     val toCustomStore: () -> Unit,
     /** Edits the custom store [storeId] (#53). */
     val toEditStore: (storeId: String) -> Unit,
-    val toBack: () -> Unit
+    val toBack: () -> Unit,
+    /** Opens the logo screen of the catalogue store [storeId] (#151). */
+    val toStoreLogo: (storeId: String) -> Unit = {},
 )
 
 /**
@@ -98,7 +100,20 @@ fun NavController.storePickerDirections(picker: NavBackStackEntry) = StorePicker
         }
     },
     toEditStore = { storeId -> whileCurrent(picker) { navigate(CustomStore(storeId)) } },
-    toBack = { whileCurrent(picker) { navigateUp() } }
+    toBack = { whileCurrent(picker) { navigateUp() } },
+    toStoreLogo = { storeId -> whileCurrent(picker) { navigate(StoreLogo(storeId)) } },
+)
+
+/** A store's logo (#151): the user's own picture, shown on every card of the store. Reached from the store picker. */
+@Serializable
+data class StoreLogo(val storeId: String)
+
+@Immutable
+data class StoreLogoDirections(val toBack: () -> Unit)
+
+/** Back to the picker, only while [logo], the screen's own entry, is current (#66). */
+fun NavController.storeLogoDirections(logo: NavBackStackEntry) = StoreLogoDirections(
+    toBack = { whileCurrent(logo) { navigateUp() } },
 )
 
 

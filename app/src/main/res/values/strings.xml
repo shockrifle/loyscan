@@ -153,4 +153,14 @@
     <string name="shared_picture_no_barcode">No barcode was found in that picture. You can enter the number from the card by hand.</string>
     <string name="shared_picture_unreadable">That picture couldn\'t be opened. You can enter the number from the card by hand.</string>
     <string name="enter_number_by_hand">Enter the number by hand</string>
+    <!-- Store logo (#151) -->
+    <string name="store_logo">Store logo</string>
+    <string name="store_logo_hint">Every card of this store shows this logo.</string>
+    <string name="logo_of_store">Logo of %1$s</string>
+    <string name="choose_image">Choose image</string>
+    <string name="find_logo_online">Find a logo online</string>
+    <string name="remove_logo">Remove logo</string>
+    <string name="logo_failed">The picture couldn\'t be used. Try again.</string>
+    <string name="logo_picture">Logo picture</string>
+    <string name="use_whole_image">Use whole image</string>
 </resources>

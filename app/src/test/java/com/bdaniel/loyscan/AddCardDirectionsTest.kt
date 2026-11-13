@@ -42,6 +42,7 @@ class AddCardDirectionsTest {
                 composable<CardForm> {}
                 composable<Detail> {}
                 composable<SharedPicture> {}
+                composable<StoreLogo> {}
             }
         }
         composeRule.runOnIdle { navController.listDirections(navController.currentBackStackEntry!!).toAddCard() }
@@ -91,6 +92,19 @@ class AddCardDirectionsTest {
             assertThat(navController.currentBackStackEntry!!.toRoute<CustomStore>()).isEqualTo(CustomStore("custom-store"))
             assertThat(navController.previousBackStackEntry?.destination?.hasRoute(StorePicker::class)).isTrue()
         }
+    }
+
+    @Test
+    fun aStoresLogoButton_opensItsLogoScreenOverThePicker_andBackReturnsToIt() { // #151
+        composeRule.runOnIdle { navController.storePickerDirections(navController.currentBackStackEntry!!).toStoreLogo("hu-tesco") }
+
+        composeRule.runOnIdle {
+            assertThat(navController.currentBackStackEntry!!.toRoute<StoreLogo>()).isEqualTo(StoreLogo("hu-tesco"))
+            assertThat(navController.previousBackStackEntry?.destination?.hasRoute(StorePicker::class)).isTrue()
+        }
+        composeRule.runOnIdle { navController.storeLogoDirections(navController.currentBackStackEntry!!).toBack() }
+
+        composeRule.runOnIdle { assertThat(currentIs<StorePicker>()).isTrue() }
     }
 
     @Test

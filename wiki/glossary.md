@@ -28,8 +28,9 @@ Drives card tile and detail header backgrounds; text on it is black or white, wh
 ratio (`contrastingTextColor()`; black above a luminance of about 0.18).
 Also travels in the `Detail` route — see [[2025-12-12-brand-color-in-route]].
 
-**Brand logo** — `Store.logo`, a nullable image URL (no shipped store has one today). `null` or
-blank means "show the store name as text instead". Loaded with Coil — [[coil-image-loading]].
+**Store logo** — `Store.logo`: the user's own picture for a store, a file name in the card photos' directory
+([[store-logo]], #151); never a URL, and no shipped store has one. `null` shows the store's name (or initials) on its
+colour. Loaded with Coil — [[coil-image-loading]].
 
 **Catalogue store** — A store from the shipped catalogue `app/src/main/assets/catalogue/stores.json`
 (`domain/catalogue/CatalogueEntry`): slug id like `hu-ikea-family`, no logo, `isCustom = false`. Its row is rewritten

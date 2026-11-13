@@ -388,6 +388,21 @@ class AppNavigationTest {
     }
 
     @Test
+    fun aCatalogueStoresLogoScreen_opensFromThePicker_andBackReturnsToIt() { // #151
+        runBlocking { db.storeDao().insert(aStoreEntity(id = "hu-shop", name = "Shop")) }
+        composeRule.onNodeWithContentDescription("Add card").performClick()
+        waitForText("Shop")
+
+        composeRule.onNodeWithContentDescription("Logo of Shop").performClick()
+        waitForText("Store logo")
+        waitForText("Every card of this store shows this logo.")
+        composeRule.onNodeWithContentDescription("Back").performClick()
+
+        waitForTextToGo("Store logo")
+        waitForText("Choose store")
+    }
+
+    @Test
     fun aCustomStoresNewFormat_redrawsItsTypedCard() { // #53
         runBlocking {
             db.storeDao().insert(aStoreEntity(id = "custom", name = "My Shop", isCustom = true))

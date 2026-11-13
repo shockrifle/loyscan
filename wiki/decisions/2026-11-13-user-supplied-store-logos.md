@@ -34,6 +34,12 @@ shows it. The catalogue sync never touches that column.
 - `StoreRepository.setLogo(storeId, logo)` sets or removes it on any store and deletes the file it replaces; a store
   that is gone gets nothing, and the new file is deleted. Deleting a custom store deletes its logo.
 - The orphan sweep keeps a file a store names as its logo ([[card-photos]] → Orphans).
+- **The logo screen** ([[store-logo]]): a square crop frame that can zoom out until the picture fits it whole, so a
+  wide wordmark is kept (the user's choice on 2026-11-13, over a crop that only zooms in, where "Use whole image" would
+  have been the only way). "Find a logo online" opens a Google Images search for "<name> logo" in the browser; the app
+  stores no URL. The user chose Google as the default on 2026-11-13; a setting to pick the engine is not implemented.
+- #151 is done in slices: the custom store form's slot, a crop of a card's front photo and an image shared to the app
+  are not implemented yet.
 
 ## Why
 - Reusing the photos' directory gives a logo the same private storage, backup handling ([[2026-11-05-no-cloud-backup-in-v1]]:
@@ -43,6 +49,9 @@ shows it. The catalogue sync never touches that column.
 - PNG, not JPEG: a logo is drawn on the brand colour, and a JPEG would put a transparent logo on a white box. 512 px
   is more than a tile or the detail header draws it at.
 - The user chose PNG with transparency on 2026-11-13.
+- Square, because a logo is mostly a mark or a badge, drawn fitted in a card-shaped tile; zooming out covers the wide
+  ones. A browser search keeps the app out of fetching or linking third-party marks
+  ([[2026-11-12-no-bundled-store-logos]]).
 
 ## Consequences
 - The name in `logo` is a file name like a photo's, so `CardPhotos.exists` and the loader's `CardPhotoMapper` work for

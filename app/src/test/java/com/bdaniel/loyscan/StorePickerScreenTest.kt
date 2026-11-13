@@ -7,6 +7,7 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -34,6 +35,7 @@ class StorePickerScreenTest {
     private var backs = 0
     private var customStores = 0
     private val edited = mutableListOf<String>()
+    private val logos = mutableListOf<String>()
 
     @Test
     fun showsEveryStore() {
@@ -98,6 +100,28 @@ class StorePickerScreenTest {
         assertThat(edited).containsExactly("custom")
         assertThat(picked).isEmpty()
         composeRule.onNodeWithContentDescription("Edit First Store").assertDoesNotExist()
+    }
+
+    @Test
+    fun aCatalogueStoresLogoButton_opensItsLogoScreen_andACustomStoreHasNone() { // #151: a custom store's is its form's
+        setScreen(aStore(id = "first", name = "First Store"), aStore(id = "custom", name = "My Shop", isCustom = true))
+
+        composeRule.onNodeWithContentDescription("Logo of First Store").performClick()
+
+        assertThat(logos).containsExactly("first")
+        assertThat(picked).isEmpty()
+        composeRule.onNodeWithContentDescription("Logo of My Shop").assertDoesNotExist()
+    }
+
+    @Test
+    fun aFrequentlyAddedStore_hasItsLogoButtonInItsSectionToo() { // #151: the stores a user sees first
+        setScreen(aStore(id = "hu-zeta", name = "Zeta"), aStore(id = "hu-tesco", name = "Tesco", frequentlyAdded = true))
+
+        val buttons = composeRule.onAllNodesWithContentDescription("Logo of Tesco")
+        buttons.assertCountEquals(2) // in both sections
+        buttons[0].performClick()
+
+        assertThat(logos).containsExactly("hu-tesco")
     }
 
     @Test
@@ -216,7 +240,7 @@ class StorePickerScreenTest {
 
         shown.assertSeen(
             "Válassz boltot", "Vissza", "Boltok keresése", "Egyéb kártya", "Egy bolt, ami nincs a listán", "Javasolt",
-            "Gyakran hozzáadott", "Minden bolt", "My Shop szerkesztése", "Nincs ilyen bolt: „xyz”",
+            "Gyakran hozzáadott", "Minden bolt", "My Shop szerkesztése", "Tesco logója", "Nincs ilyen bolt: „xyz”",
         )
         shown.assertEveryTextIsTranslated("Reads It", "Tesco", "My Shop", "xyz")
     }
@@ -236,6 +260,7 @@ class StorePickerScreenTest {
             toCustomStore = { customStores++ },
             toEditStore = { edited += it },
             toBack = { backs++ },
+            toStoreLogo = { logos += it },
         )
         composeRule.setContent { WithFontScale(fontScale) { StorePickerScreen(directions = directions, viewModel = viewModel) } }
     }

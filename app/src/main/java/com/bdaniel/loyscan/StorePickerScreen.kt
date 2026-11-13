@@ -21,6 +21,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.bdaniel.loyscan.domain.Store
 import com.bdaniel.loyscan.ui.theme.Spacing
 import com.bdaniel.loyscan.ui.theme.icons.Icons
 
@@ -33,7 +34,8 @@ private const val ALL_STORES_KEY = "all stores"
 /**
  * First step of adding a card: pick the store, searching by name or alias, or "Other card" for one that isn't listed.
  * While nothing is searched, the frequently added stores of the user's country come first (#6), after the stores
- * suggested for a shared picture's barcode (#77). A custom store has an Edit button (#53).
+ * suggested for a shared picture's barcode (#77). A custom store has an Edit button (#53), a catalogue store a Logo
+ * button (#151).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,6 +47,22 @@ fun StorePickerScreen(
     val stores by viewModel.stores.collectAsState()
     val suggested by viewModel.suggested.collectAsState()
     val frequentlyAdded by viewModel.frequentlyAdded.collectAsState()
+    // A custom store is edited in its form (#53); a catalogue store's logo has its own screen (#151). In every section.
+    val trailing: (Store) -> (@Composable () -> Unit)? = { store ->
+        if (store.isCustom) {
+            {
+                IconButton(onClick = { directions.toEditStore(store.id) }) {
+                    Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.edit_store_named, store.name))
+                }
+            }
+        } else {
+            {
+                IconButton(onClick = { directions.toStoreLogo(store.id) }) {
+                    Icon(Icons.Default.Image, contentDescription = stringResource(R.string.logo_of_store, store.name))
+                }
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -78,30 +96,20 @@ fun StorePickerScreen(
                 if (suggested.isNotEmpty()) {
                     item(key = SUGGESTED_KEY) { SectionHeading(stringResource(R.string.suggested_stores)) }
                     items(suggested, key = { "$SUGGESTED_KEY/${it.id}" }) { store ->
-                        StoreRow(store, onClick = { directions.toStore(store.id) })
+                        StoreRow(store, onClick = { directions.toStore(store.id) }, trailing = trailing(store))
                     }
                 }
                 if (frequentlyAdded.isNotEmpty()) {
                     item(key = FREQUENTLY_ADDED_KEY) { SectionHeading(stringResource(R.string.frequently_added_stores)) }
                     items(frequentlyAdded, key = { "$FREQUENTLY_ADDED_KEY/${it.id}" }) { store ->
-                        StoreRow(store, onClick = { directions.toStore(store.id) })
+                        StoreRow(store, onClick = { directions.toStore(store.id) }, trailing = trailing(store))
                     }
                 }
                 if (suggested.isNotEmpty() || frequentlyAdded.isNotEmpty()) {
                     item(key = ALL_STORES_KEY) { SectionHeading(stringResource(R.string.all_stores)) }
                 }
             },
-            trailing = { store ->
-                if (store.isCustom) {
-                    {
-                        IconButton(onClick = { directions.toEditStore(store.id) }) {
-                            Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.edit_store_named, store.name))
-                        }
-                    }
-                } else {
-                    null
-                }
-            },
+            trailing = trailing,
         )
     }
 }

@@ -27,7 +27,7 @@ with the picture's barcode (#77, below). Everything runs offline on the local da
   (`StoreSearch.search`: NFD, combining marks removed), so "mobelix" finds "Möbelix". Sorting uses the same key. With
   no match the screen says "No store matches “…”". Tapping a store opens the scanner for it. "Other card", first in
   the list and shown whatever the search, opens the custom-store form. A custom store's row has an Edit button
-  ([[edit-store]]). While nothing is searched, "Frequently added" (step 1 of #6,
+  ([[edit-store]]); a catalogue store's, in every section, a logo button ([[store-logo]], #151). While nothing is searched, "Frequently added" (step 1 of #6,
   [[2026-10-30-frequently-added-stores]]) lists the catalogue stores flagged `frequentlyAdded` whose `countryCodes`
   contain the user's country (`UserCountry`: SIM, then network, then locale), by name, between "Other card" and an
   "All stores" heading; they stay in the full list too. With none for the country, neither heading is shown.

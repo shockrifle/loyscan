@@ -138,6 +138,8 @@ Shared helpers are in `testing/`:
   from a JSON error asserts the root cause is exactly `IllegalArgumentException` (what `require` throws): since
   kotlinx-serialization 1.12 the check's exception is wrapped in a `JsonException`, and a JSON error's root is the
   `JsonException` itself (`CardNumberRulesTest.parse_rejectsInvalidRuleDefinitions`, #115).
+- **`writeOnePixelPng()` / `writeWidePng()`** (`testing/PhotoFiles.kt`): a real 1×1 or 2×1 PNG written where the app's
+  loader finds it; the wide one is a wordmark-shaped picture for the logo crop's zoom-out (#151).
 - **`WAIT_TIMEOUT_MS`** (`testing/Waits.kt`, 10 s): the timeout every `waitUntil*` passes, in screen and app tests alike. `WaitTimeoutsTest` fails on one that doesn't (#59).
 - **`MainDispatcherRule`** for anything that uses `viewModelScope`. A timer in a ViewModel takes its duration as a
   constructor parameter (`ScannerViewModel(hintDelay)`): `advanceTimeBy` tests it in virtual time, and a screen test
