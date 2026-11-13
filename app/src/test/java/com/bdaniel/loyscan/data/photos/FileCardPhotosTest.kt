@@ -278,6 +278,52 @@ class FileCardPhotosTest {
     }
 
     @Test
+    fun stagePhoto_copiesAStoredPhotoForTheCrop_andKeepsTheOriginal() = runTest { // #151: a card's photo as a logo
+        val photo = importWhole(Uri.fromFile(aPicture(40, 20)))
+        val original = photos.file(photo).readBytes()
+
+        val staged = photos.stagePhoto(photo)
+
+        assertThat(staged).isNotEqualTo(photo)
+        assertThat(photos.file(staged).parentFile).isEqualTo(directory)
+        assertThat(photos.file(staged).readBytes()).isEqualTo(original)
+        assertThat(photos.file(photo).readBytes()).isEqualTo(original)
+    }
+
+    @Test
+    fun cropLogo_ofAStagedPhotoCopy_keepsTheCardsPhoto() = runTest { // #151: the crop deletes its source, the copy
+        val photo = importWhole(Uri.fromFile(aPicture(40, 20)))
+
+        val logo = photos.cropLogo(photos.stagePhoto(photo), PhotoCrop.WHOLE)
+
+        assertThat(directory.list()).asList().containsExactly(photo, logo)
+    }
+
+    @Test
+    fun stagePhoto_ofAMissingPhoto_throws_andLeavesNoFile() = runTest { // #151
+        assertThrows(FileNotFoundException::class.java) { runBlocking { photos.stagePhoto("gone") } }
+
+        assertThat(directory.listFiles().orEmpty()).isEmpty()
+    }
+
+    @Test
+    fun stagePhoto_ofAFileThatIsntAPicture_throws_andLeavesOnlyIt() = runTest { // #151: a corrupt photo isn't copied
+        directory.mkdirs()
+        File(directory, "corrupt").writeBytes(byteArrayOf(1, 2, 3))
+
+        assertThrows(IOException::class.java) { runBlocking { photos.stagePhoto("corrupt") } }
+
+        assertThat(directory.list()).asList().containsExactly("corrupt")
+    }
+
+    @Test
+    fun stagePhoto_ofANameThatIsntAPhotoName_throws_andLeavesNoFile() = runTest { // #151: it comes from a card's row
+        assertThrows(IllegalArgumentException::class.java) { runBlocking { photos.stagePhoto("../escape") } }
+
+        assertThat(directory.listFiles().orEmpty()).isEmpty()
+    }
+
+    @Test
     fun cropLogo_scalesALargePictureDown_toItsLongSideLimit() = runTest { // #151
         val wide = photos.cropLogo(photos.stage(Uri.fromFile(aPicture(2000, 1000, "wide.jpg"))), PhotoCrop.WHOLE)
         val small = photos.cropLogo(photos.stage(Uri.fromFile(aPicture(300, 200, "small.jpg"))), PhotoCrop.WHOLE)

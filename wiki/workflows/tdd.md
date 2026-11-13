@@ -125,7 +125,8 @@ Shared helpers are in `testing/`:
 - **`FakeCardPhotos`** stands in for `CardPhotos` in ViewModel and screen tests: `stored` is the set of photo names
   that exist. `stage` names staged files `staged-1`, `staged-2`… (listed in `staged`), `crop` names the framed photo
   `photo-1`, `photo-2`… (the pairs in `cropped`) and drops the staged one; `cropLogo` does the same for a store logo,
-  named `logo-1`… (pairs in `croppedLogos`, #151); `importFailure` / `importGate` make a copy
+  named `logo-1`… (pairs in `croppedLogos`, #151); `stagePhoto` copies a stored photo to `staged-N` too (listed in
+  `stagedPhotos`; a name not in `stored` throws); `importFailure` / `importGate` make either copy
   fail or hold, `cropFailure` makes the crop fail. `newCapture` names captures `capture-1`… with a
   `content://photos.test/…` Uri, lists them in `captures` and adds them to `stored`. Because a pick stages then crops
   asynchronously, a crop-flow test asserts on `viewModel.state.value` after driving both steps (a `getStateFlow` reads

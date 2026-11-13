@@ -27,7 +27,19 @@ class FakeCardPhotos(vararg stored: String) : CardPhotos {
         importGate?.await()
         importFailure?.let { throw it }
         staged += picture
-        return "staged-${staged.size}".also { stored += it }
+        return "staged-${staged.size + stagedPhotos.size}".also { stored += it }
+    }
+
+    /** The stored photos copied in for a crop so far, in order; a copy is named `staged-N` too, counted with [staged]. */
+    val stagedPhotos = mutableListOf<String>()
+
+    /** As [stage], from a stored photo: fails with [importFailure], waits for [importGate], and throws when [name] isn't stored. */
+    override suspend fun stagePhoto(name: String): String {
+        importGate?.await()
+        importFailure?.let { throw it }
+        if (name !in stored) throw java.io.FileNotFoundException(name)
+        stagedPhotos += name
+        return "staged-${staged.size + stagedPhotos.size}".also { stored += it }
     }
 
     /** The crops made so far, in order: the staged name and the frame it was cropped to. */
