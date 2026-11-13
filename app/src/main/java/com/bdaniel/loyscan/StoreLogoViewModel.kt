@@ -7,6 +7,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.bdaniel.loyscan.data.photos.CardPhotos
 import com.bdaniel.loyscan.data.photos.PhotoCrop
+import com.bdaniel.loyscan.data.photos.withoutMissing
+import com.bdaniel.loyscan.data.repository.LoyaltyCardRepository
 import com.bdaniel.loyscan.data.repository.StoreRepository
 import com.bdaniel.loyscan.domain.Store
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -37,9 +39,14 @@ data class StoreLogoState(
     val working: Boolean = false,
     /** The last picture couldn't be used, or the logo couldn't be saved or removed. */
     val failed: Boolean = false,
+    /** The front photos of the store's cards, a source for the logo; only those whose file is there. */
+    val cardPhotos: List<CardPhotoChoice> = emptyList(),
 ) {
     val canChange: Boolean get() = ready && !working && cropping == null
 }
+
+/** A card's front photo offered as the logo's source (#151): [title] is its label, or its number when it has none. */
+data class CardPhotoChoice(val cardId: String, val title: String, val photo: String)
 
 /**
  * A store's logo (#151): the user picks a picture, frames it in a square crop, and it becomes the logo every card of
@@ -51,6 +58,7 @@ data class StoreLogoState(
 class StoreLogoViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val storeRepository: StoreRepository,
+    cardRepository: LoyaltyCardRepository,
     private val photos: CardPhotos,
 ) : ViewModel() {
 
@@ -64,10 +72,20 @@ class StoreLogoViewModel @Inject constructor(
         }
         .stateIn(viewModelScope, SharingStarted.Eagerly, Found.Loading)
 
+    private val cardPhotos: StateFlow<List<CardPhotoChoice>> = cardRepository.getAllWithStore()
+        .map { cards ->
+            cards.filter { it.store.id == storeId && it.frontPhotoPath != null }
+                .let { photos.withoutMissing(it) }
+                .mapNotNull { card ->
+                    card.frontPhotoPath?.let { CardPhotoChoice(card.id, card.label ?: card.displayNumber, it) }
+                }
+        }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
     private val cropping = savedStateHandle.getStateFlow<String?>(CROP_LOGO, null)
     private val progress = MutableStateFlow(Progress())
 
-    val state: StateFlow<StoreLogoState> = combine(found, cropping, progress) { found, cropping, progress ->
+    val state: StateFlow<StoreLogoState> = combine(found, cardPhotos, cropping, progress) { found, cardPhotos, cropping, progress ->
         StoreLogoState(
             store = (found as? Found.Store)?.store,
             ready = found is Found.Store,
@@ -75,16 +93,36 @@ class StoreLogoViewModel @Inject constructor(
             cropping = cropping,
             working = progress.working,
             failed = progress.failed,
+            cardPhotos = cardPhotos,
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, StoreLogoState())
 
     /** A picture picked for the logo, `null` when the picker was cancelled: copied in, then the crop screen opens on it. */
     fun onPicked(picture: Uri?) {
-        if (picture == null || !canChange()) return
+        if (picture == null) return
+        stageForCrop { photos.stage(picture) }
+    }
+
+    /**
+     * The front photo [photo] of one of the store's cards chosen for the logo: a copy is staged, so the card keeps its
+     * photo, and the crop screen opens on it. A photo that isn't one of [StoreLogoState.cardPhotos] (the list changed
+     * meanwhile) is refused, and says so.
+     */
+    fun onCardPhoto(photo: String) {
+        if (cardPhotos.value.none { it.photo == photo }) {
+            if (canChange()) progress.value = Progress(failed = true)
+            return
+        }
+        stageForCrop { photos.stagePhoto(photo) }
+    }
+
+    /** Copies a picture in with [stage], then opens the crop screen on it; one at a time. */
+    private fun stageForCrop(stage: suspend () -> String) {
+        if (!canChange()) return
         progress.value = Progress(working = true)
         viewModelScope.launch {
             val staged = try {
-                photos.stage(picture)
+                stage()
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {

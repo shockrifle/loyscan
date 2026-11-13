@@ -7,8 +7,10 @@ import androidx.navigation.testing.invoke
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.bdaniel.loyscan.data.photos.PhotoCrop
 import com.bdaniel.loyscan.testing.FakeCardPhotos
+import com.bdaniel.loyscan.testing.FakeLoyaltyCardRepository
 import com.bdaniel.loyscan.testing.FakeStoreRepository
 import com.bdaniel.loyscan.testing.MainDispatcherRule
+import com.bdaniel.loyscan.testing.aLoyaltyCard
 import com.bdaniel.loyscan.testing.aStore
 import com.bdaniel.loyscan.testing.keep
 import com.google.common.truth.Truth.assertThat
@@ -28,6 +30,7 @@ class StoreLogoViewModelTest {
 
     private val stores = FakeStoreRepository(listOf(aStore(id = "shop", name = "Shop"), aStore(id = "other", name = "Other")))
     private val photos = FakeCardPhotos()
+    private val cards = FakeLoyaltyCardRepository()
     private val picked: Uri = Uri.parse("content://media/picker/0/1")
     private val square = PhotoCrop(0.25f, 0f, 0.75f, 1f)
 
@@ -77,6 +80,85 @@ class StoreLogoViewModelTest {
         assertThat(viewModel.state.value.store?.logo).isEqualTo("logo-1")
         assertThat(viewModel.state.value.cropping).isNull()
         assertThat(viewModel.state.value.working).isFalse()
+    }
+
+    @Test
+    fun theCardPhotos_areTheFrontPhotosOfThisStoresCards() = runTest { // #151: a card's photo as the logo's source
+        val shop = stores.stores.value.single { it.id == "shop" }
+        val other = stores.stores.value.single { it.id == "other" }
+        photos.stored += listOf("front-a", "front-d", "back-b", "front-o")
+        cards.cards.value = listOf(
+            aLoyaltyCard(id = "a", store = shop, label = "Mine", frontPhotoPath = "front-a"),
+            aLoyaltyCard(id = "b", store = shop, backPhotoPath = "back-b"), // a back photo only
+            aLoyaltyCard(id = "c", store = shop, frontPhotoPath = "lost"), // its file is missing
+            aLoyaltyCard(id = "d", store = shop, number = "999", frontPhotoPath = "front-d"), // no label: its number
+            aLoyaltyCard(id = "o", store = other, frontPhotoPath = "front-o"),
+        )
+
+        val state = viewModel().state.value
+
+        assertThat(state.cardPhotos).containsExactly(
+            CardPhotoChoice(cardId = "a", title = "Mine", photo = "front-a"),
+            CardPhotoChoice(cardId = "d", title = "999", photo = "front-d"),
+        ).inOrder()
+    }
+
+    @Test
+    fun aCardsPhoto_opensTheCropOnACopy_andTheCropBecomesTheLogo() = runTest { // #151
+        givenACardPhoto()
+        val viewModel = viewModel()
+
+        viewModel.onCardPhoto("front")
+        assertThat(viewModel.state.value.cropping).isEqualTo("staged-1")
+        viewModel.confirmCrop(square)
+
+        assertThat(photos.stagedPhotos).containsExactly("front")
+        assertThat(photos.croppedLogos).containsExactly("staged-1" to square)
+        assertThat(photos.stored).contains("front") // the card keeps its photo
+        assertThat(stores.stores.value.single { it.id == "shop" }.logo).isEqualTo("logo-1")
+    }
+
+    @Test
+    fun aPhotoThatIsntOneOfThisStoresCards_isRefused_andSaysSo() = runTest { // #151: the list changed meanwhile
+        photos.stored += "elsewhere"
+        val viewModel = viewModel()
+
+        viewModel.onCardPhoto("elsewhere")
+
+        assertThat(photos.stagedPhotos).isEmpty()
+        assertThat(viewModel.state.value.cropping).isNull()
+        assertThat(viewModel.state.value.failed).isTrue()
+    }
+
+    @Test
+    fun aCardPhotoThatCantBeCopied_saysSo() = runTest { // #151
+        givenACardPhoto()
+        photos.importFailure = IOException("not a picture")
+        val viewModel = viewModel()
+
+        viewModel.onCardPhoto("front")
+
+        assertThat(viewModel.state.value.failed).isTrue()
+        assertThat(viewModel.state.value.working).isFalse()
+        assertThat(viewModel.state.value.cropping).isNull()
+    }
+
+    @Test
+    fun whileACardPhotoIsCopied_noOtherPictureIsTaken() = runTest { // #151
+        givenACardPhoto()
+        val gate = CompletableDeferred<Unit>()
+        photos.importGate = gate
+        val viewModel = viewModel()
+
+        viewModel.onCardPhoto("front")
+        assertThat(viewModel.state.value.working).isTrue()
+        viewModel.onPicked(picked)
+        viewModel.onCardPhoto("front")
+        gate.complete(Unit)
+
+        assertThat(photos.stagedPhotos).containsExactly("front")
+        assertThat(photos.staged).isEmpty()
+        assertThat(viewModel.state.value.cropping).isEqualTo("staged-1")
     }
 
     @Test
@@ -182,7 +264,7 @@ class StoreLogoViewModelTest {
         val handle = SavedStateHandle(route = StoreLogo("shop"))
         viewModel(handle).onPicked(picked)
 
-        val restored = StoreLogoViewModel(SavedStateHandle(handle.keys().associateWith { handle.get<Any?>(it) }), stores, photos)
+        val restored = StoreLogoViewModel(SavedStateHandle(handle.keys().associateWith { handle.get<Any?>(it) }), stores, cards, photos)
 
         assertThat(restored.state.value.cropping).isEqualTo("staged-1")
     }
@@ -224,5 +306,12 @@ class StoreLogoViewModelTest {
 
     private fun viewModel(storeId: String = "shop") = viewModel(SavedStateHandle(route = StoreLogo(storeId)))
 
-    private fun viewModel(handle: SavedStateHandle) = StoreLogoViewModel(handle, stores, photos)
+    private fun viewModel(handle: SavedStateHandle) = StoreLogoViewModel(handle, stores, cards, photos)
+
+    private fun givenACardPhoto() {
+        photos.stored += "front"
+        cards.cards.value = listOf(
+            aLoyaltyCard(id = "card", store = stores.stores.value.single { it.id == "shop" }, frontPhotoPath = "front"),
+        )
+    }
 }

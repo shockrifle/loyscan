@@ -38,8 +38,10 @@ shows it. The catalogue sync never touches that column.
   wide wordmark is kept (the user's choice on 2026-11-13, over a crop that only zooms in, where "Use whole image" would
   have been the only way). "Find a logo online" opens a Google Images search for "<name> logo" in the browser; the app
   stores no URL. The user chose Google as the default on 2026-11-13; a setting to pick the engine is not implemented.
-- #151 is done in slices: the custom store form's slot, a crop of a card's front photo and an image shared to the app
-  are not implemented yet.
+- **A card's front photo as the source:** the logo screen offers the front photos of the store's cards; the chosen one
+  is copied to a staged file (`CardPhotos.stagePhoto`) and framed in the same square crop, so the card keeps its photo
+  (`cropLogo` deletes its source). Only the front photo, as the issue asks: it is the side that carries the brand.
+- #151 is done in slices: the custom store form's slot and an image shared to the app are not implemented yet.
 
 ## Why
 - Reusing the photos' directory gives a logo the same private storage, backup handling ([[2026-11-05-no-cloud-backup-in-v1]]:

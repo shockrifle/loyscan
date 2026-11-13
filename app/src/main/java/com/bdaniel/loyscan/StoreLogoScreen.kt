@@ -2,15 +2,19 @@ package com.bdaniel.loyscan
 
 import android.net.Uri
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -27,16 +31,20 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.bdaniel.loyscan.domain.Store
@@ -77,6 +85,9 @@ fun StoreLogoScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val pick = picker(viewModel::onPicked)
+    var choosingCard by rememberSaveable { mutableStateOf(false) }
+    // Its list emptied (the cards deleted or their photos removed meanwhile): nothing is left to ask about.
+    if (choosingCard && state.ready && state.cardPhotos.isEmpty()) choosingCard = false
 
     Box {
         Scaffold(
@@ -113,6 +124,17 @@ fun StoreLogoScreen(
                 Button(onClick = pick::pick, enabled = state.canChange, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.choose_image), textAlign = TextAlign.Center)
                 }
+                if (state.cardPhotos.isNotEmpty()) {
+                    OutlinedButton(
+                        onClick = {
+                            state.cardPhotos.singleOrNull()?.let { viewModel.onCardPhoto(it.photo) } ?: run { choosingCard = true }
+                        },
+                        enabled = state.canChange,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(stringResource(R.string.use_card_photo), textAlign = TextAlign.Center)
+                    }
+                }
                 OutlinedButton(onClick = { logoSearch.open(store.name) }, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.find_logo_online), textAlign = TextAlign.Center)
                 }
@@ -122,6 +144,13 @@ fun StoreLogoScreen(
                     }
                 }
             }
+        }
+        if (choosingCard && state.cardPhotos.isNotEmpty()) {
+            CardPhotoChoiceDialog(
+                choices = state.cardPhotos,
+                onChoose = { choosingCard = false; viewModel.onCardPhoto(it.photo) },
+                onDismiss = { choosingCard = false },
+            )
         }
         state.cropping?.let { cropping ->
             PhotoCropScreen(
@@ -136,6 +165,47 @@ fun StoreLogoScreen(
         }
     }
 }
+
+/** "Which card's photo?": the front photos of the store's cards, each with its label or number; the one tapped is chosen. */
+@Composable
+private fun CardPhotoChoiceDialog(
+    choices: List<CardPhotoChoice>,
+    onChoose: (CardPhotoChoice) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.which_card_photo)) },
+        text = {
+            Column(Modifier.verticalScroll(rememberScrollState())) {
+                choices.forEach { choice ->
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .clip(CardShape)
+                            .clickable(role = Role.Button) { onChoose(choice) }
+                            .padding(vertical = Spacing.s),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.m),
+                    ) {
+                        AsyncImage(
+                            model = CardPhoto(choice.photo),
+                            contentDescription = null,
+                            imageLoader = hiltImageLoader(),
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.width(CARD_PHOTO_CHOICE_WIDTH).aspectRatio(CARD_ASPECT_RATIO).clip(CardShape),
+                        )
+                        Text(choice.title, modifier = Modifier.weight(1f))
+                    }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
+    )
+}
+
+private val CARD_PHOTO_CHOICE_WIDTH = 72.dp
 
 /** The store as its cards' tiles show it: the logo on the brand colour, or the name when it has none or it can't load. */
 @Composable

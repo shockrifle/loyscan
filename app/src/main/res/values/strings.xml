@@ -163,4 +163,6 @@
     <string name="logo_failed">The picture couldn\'t be used. Try again.</string>
     <string name="logo_picture">Logo picture</string>
     <string name="use_whole_image">Use whole image</string>
+    <string name="use_card_photo">Use a card\'s photo</string>
+    <string name="which_card_photo">Which card\'s photo?</string>
 </resources>

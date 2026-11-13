@@ -22,10 +22,12 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.bdaniel.loyscan.di.CardPhotosModule
 import com.bdaniel.loyscan.di.ImageLoaderEntryPoint
 import com.bdaniel.loyscan.testing.FakeCardPhotos
+import com.bdaniel.loyscan.testing.FakeLoyaltyCardRepository
 import com.bdaniel.loyscan.testing.FakeStoreRepository
 import com.bdaniel.loyscan.testing.ShownTexts
 import com.bdaniel.loyscan.testing.WAIT_TIMEOUT_MS
 import com.bdaniel.loyscan.testing.WithFontScale
+import com.bdaniel.loyscan.testing.aLoyaltyCard
 import com.bdaniel.loyscan.testing.aStore
 import com.bdaniel.loyscan.testing.assertTextFitsAndDoesNotOverlap
 import com.bdaniel.loyscan.testing.writeOnePixelPng
@@ -57,6 +59,7 @@ class StoreLogoScreenTest {
     private val context: Context = ApplicationProvider.getApplicationContext()
     private val stores = FakeStoreRepository(listOf(aStore(id = "shop", name = "Shop", color = "#336699")))
     private val photos = FakeCardPhotos()
+    private val cards = FakeLoyaltyCardRepository()
     private val picked: Uri = Uri.parse("content://media/picker/0/1")
     private val searches = mutableListOf<String>()
     private var backs = 0
@@ -73,6 +76,7 @@ class StoreLogoScreenTest {
         composeRule.onNodeWithText("Choose image").assertIsDisplayed()
         composeRule.onNodeWithText("Find a logo online").assertIsDisplayed()
         composeRule.onNodeWithText("Remove logo").assertDoesNotExist()
+        composeRule.onNodeWithText("Use a card's photo").assertDoesNotExist() // no card of it has a front photo
     }
 
     @Test
@@ -140,6 +144,62 @@ class StoreLogoScreenTest {
     }
 
     @Test
+    fun aCardsPhoto_withOneCard_opensASquareCropOnIt_andCropSetsTheLogo() { // #151
+        givenCardPhotos("Mine")
+        setScreen()
+
+        composeRule.onNodeWithText("Use a card's photo").performScrollTo().performClick()
+        val frame = composeRule.onNodeWithTag(PHOTO_CROP_FRAME_TAG).fetchSemanticsNode().size
+        assertThat(abs(frame.width - frame.height)).isAtMost(1)
+        composeRule.onNodeWithText("Crop").performClick()
+
+        assertThat(photos.stagedPhotos).containsExactly("front-1")
+        assertThat(stores.stores.value.single().logo).isEqualTo("logo-1")
+        assertThat(photos.stored).contains("front-1") // the card keeps its photo
+    }
+
+    @Test
+    fun aCardsPhoto_withSeveralCards_asksWhichCard_andTheChoiceOpensTheCrop() { // #151
+        givenCardPhotos("Mine", "Partner's")
+        setScreen()
+
+        composeRule.onNodeWithText("Use a card's photo").performScrollTo().performClick()
+        composeRule.onNodeWithText("Which card's photo?").assertIsDisplayed()
+        composeRule.onNodeWithText("Mine").assertIsDisplayed()
+        composeRule.onNodeWithText("Partner's").performClick()
+        composeRule.onNodeWithText("Crop").performClick()
+
+        composeRule.onNodeWithText("Which card's photo?").assertDoesNotExist()
+        assertThat(photos.stagedPhotos).containsExactly("front-2")
+        assertThat(stores.stores.value.single().logo).isEqualTo("logo-1")
+    }
+
+    @Test
+    fun theWhichCardQuestion_canBeCancelled() { // #151
+        givenCardPhotos("Mine", "Partner's")
+        setScreen()
+
+        composeRule.onNodeWithText("Use a card's photo").performScrollTo().performClick()
+        composeRule.onNodeWithText("Cancel").performClick()
+
+        composeRule.onNodeWithText("Which card's photo?").assertDoesNotExist()
+        composeRule.onNodeWithTag(PHOTO_CROP_TAG).assertDoesNotExist()
+        assertThat(photos.stagedPhotos).isEmpty()
+    }
+
+    @Test
+    fun theWhichCardQuestion_closesWhenNoCardPhotoIsLeft() { // #151: the cards deleted meanwhile, e.g. from another screen
+        givenCardPhotos("Mine", "Partner's")
+        setScreen()
+        composeRule.onNodeWithText("Use a card's photo").performScrollTo().performClick()
+
+        cards.cards.value = emptyList()
+
+        composeRule.onNodeWithText("Which card's photo?").assertDoesNotExist()
+        composeRule.onNodeWithText("Use a card's photo").assertDoesNotExist()
+    }
+
+    @Test
     fun findALogoOnline_searchesForTheStoresName() {
         setScreen()
 
@@ -204,6 +264,7 @@ class StoreLogoScreenTest {
     @Config(qualifiers = "+hu")
     fun inHungarian_everyTextOnTheLogoScreen_isTranslated() {
         givenALogo()
+        givenCardPhotos("Mine", "Partner's")
         setScreen()
         val shown = ShownTexts(composeRule)
         shown.collect()
@@ -214,19 +275,22 @@ class StoreLogoScreenTest {
         photos.importFailure = IOException("not a picture")
         composeRule.onNodeWithText("Kép kiválasztása").performClick()
         shown.collect()
+        composeRule.onNodeWithText("Kártya fotójának használata").performScrollTo().performClick()
+        shown.collect()
 
         shown.assertSeen(
             "Bolt logója", "Vissza", "Kép kiválasztása", "Logó keresése az interneten", "Logó eltávolítása",
             "Ez a logó látszik a bolt minden kártyáján.", "Az egész kép", "Kivágás", "Mégse",
-            "Nem sikerült felhasználni a képet. Próbáld újra.",
+            "Nem sikerült felhasználni a képet. Próbáld újra.", "Kártya fotójának használata", "Melyik kártya fotója?",
         )
-        shown.assertEveryTextIsTranslated("Shop")
+        shown.assertEveryTextIsTranslated("Shop", "Mine", "Partner's")
     }
 
     @Test
     @GraphicsMode(GraphicsMode.Mode.NATIVE) // real text measuring
     fun atFontScale2_onANarrowScreen_noTextIsClippedOrOverlaps() { // Robolectric's default screen is 320dp wide
         givenALogo()
+        givenCardPhotos("Mine")
         setScreen(fontScale = 2f)
 
         composeRule.assertTextFitsAndDoesNotOverlap()
@@ -238,13 +302,24 @@ class StoreLogoScreenTest {
         photos.stored += "logo"
     }
 
+    /** A card of the store for each label, with a front photo `front-1`, `front-2`… whose file is there. */
+    private fun givenCardPhotos(vararg labels: String) {
+        val store = stores.stores.value.single()
+        cards.cards.value = labels.mapIndexed { i, label ->
+            val photo = "front-${i + 1}"
+            File(context.filesDir, CardPhotosModule.PHOTO_DIRECTORY).resolve(photo).writeOnePixelPng()
+            photos.stored += photo
+            aLoyaltyCard(id = "card-${i + 1}", store = store, label = label, frontPhotoPath = photo)
+        }
+    }
+
     private fun waitForAnImageToLoad() {
         val loader = EntryPointAccessors.fromApplication(context, ImageLoaderEntryPoint::class.java).getImageLoader()
         composeRule.waitUntil(WAIT_TIMEOUT_MS) { ShadowLooper.idleMainLooper(); (loader.memoryCache?.size ?: 0) > 0 }
     }
 
     private fun setScreen(fontScale: Float = 1f) {
-        val viewModel = StoreLogoViewModel(SavedStateHandle(route = StoreLogo("shop")), stores, photos)
+        val viewModel = StoreLogoViewModel(SavedStateHandle(route = StoreLogo("shop")), stores, cards, photos)
         composeRule.setContent {
             WithFontScale(fontScale) {
                 StoreLogoScreen(
