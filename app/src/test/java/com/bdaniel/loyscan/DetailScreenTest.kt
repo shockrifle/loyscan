@@ -1,5 +1,11 @@
 package com.bdaniel.loyscan
 
+import java.io.File
+import org.robolectric.shadows.ShadowLooper
+import dagger.hilt.android.EntryPointAccessors
+import com.bdaniel.loyscan.di.ImageLoaderEntryPoint
+import com.bdaniel.loyscan.di.CardPhotosModule
+import com.bdaniel.loyscan.testing.writeOnePixelPng
 import androidx.compose.ui.platform.LocalView
 import androidx.core.graphics.Insets
 import androidx.core.view.ViewCompat
@@ -29,6 +35,7 @@ import androidx.compose.ui.unit.height
 import androidx.compose.ui.unit.width
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextEquals
@@ -83,6 +90,9 @@ class DetailScreenTest {
     val composeRule = createAndroidComposeRule<ComponentActivity>()
 
     private val card = aLoyaltyCard(label = "Gold card", store = aStore(name = "Test Store"), number = "0042")
+
+    /** The store's name in the header, not the top bar's (#151). */
+    private val headerName = hasText("Test Store") and hasAnyAncestor(hasTestTag(STORE_HEADER_TAG))
 
     private val keepsScreenOn get() = composeRule.activity.window.attributes.flags and FLAG_KEEP_SCREEN_ON != 0
 
@@ -180,6 +190,37 @@ class DetailScreenTest {
         composeRule.onNodeWithContentDescription("Back photo").assertExists()
         assertThat(front.getUnclippedBoundsInRoot().top)
             .isAtLeast(composeRule.onNodeWithText("0042").getUnclippedBoundsInRoot().bottom)
+    }
+
+    @Test
+    fun aStoresLogo_isShownInTheHeader_inPlaceOfItsName() { // #151
+        File(composeRule.activity.filesDir, CardPhotosModule.PHOTO_DIRECTORY).resolve("logo").writeOnePixelPng()
+        setScreen(card = card.copy(store = card.store.copy(logo = "logo")), photos = FakeCardPhotos("logo"))
+        val loader = EntryPointAccessors.fromApplication(composeRule.activity, ImageLoaderEntryPoint::class.java).getImageLoader()
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) { ShadowLooper.idleMainLooper(); (loader.memoryCache?.size ?: 0) > 0 }
+
+        composeRule.onNodeWithTag(STORE_LOGO_TAG, useUnmergedTree = true).assertIsDisplayed()
+        composeRule.onNodeWithTag(STORE_LOGO_TAG, useUnmergedTree = true).assertContentDescriptionEquals("Test Store")
+        composeRule.onNode(headerName).assertDoesNotExist()
+    }
+
+    @Test
+    fun aLogoThatCantBeLoaded_showsTheStoreName() { // #151
+        setScreen(card = card.copy(store = card.store.copy(logo = "broken")), photos = FakeCardPhotos("broken"))
+
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) {
+            ShadowLooper.idleMainLooper()
+            composeRule.onAllNodes(headerName).fetchSemanticsNodes().isNotEmpty()
+        }
+        composeRule.onNodeWithTag(STORE_LOGO_TAG, useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun aLogoWhoseFileIsMissing_showsTheStoreName() { // #151
+        setScreen(card = card.copy(store = card.store.copy(logo = "lost")), photos = FakeCardPhotos())
+
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) { composeRule.onAllNodes(headerName).fetchSemanticsNodes().isNotEmpty() }
+        composeRule.onNodeWithTag(STORE_LOGO_TAG, useUnmergedTree = true).assertDoesNotExist()
     }
 
     @Test

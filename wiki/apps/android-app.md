@@ -17,7 +17,7 @@ versionName `1.0` (versionCode 1). minSdk 29, targetSdk 36, compileSdk 37, Java/
 
 ## Manifest facts
 
-- `android.permission.INTERNET` — added in `c4d6bdc` for brand logos ([[coil-image-loading]]).
+- `android.permission.INTERNET` — added in `c4d6bdc` for remote brand logos; since #151 no store field uses it ([[coil-image-loading]]).
 - `MainActivity` has the default `standard` launch mode and takes `ACTION_SEND` for `image/*`: Share → LoyScan
   ([[add-card]], [[2026-11-03-share-in-standard-launch-mode]], #77, #83).
 - `android.permission.CAMERA` for the [[barcode-scanner]], asked for at runtime. Declaring it also makes Android refuse

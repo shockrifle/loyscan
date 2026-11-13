@@ -331,6 +331,12 @@ const val CARD_SEARCH_TAG = "cardSearch"
 const val CARD_TILE_TAG = "cardTile"
 const val CARD_TILE_PHOTO_TAG = "cardTilePhoto"
 
+/** A tile's store logo (#151), shown when the card has no front photo. */
+const val CARD_TILE_LOGO_TAG = "cardTileLogo"
+
+/** How much of the room above the label a tile's logo takes (#151). */
+private const val LOGO_FRACTION = 0.6f
+
 /** The shared-element key that pairs a card's tile with its detail screen ([DetailScreen]). */
 fun cardTransitionKey(cardId: String) = "card/$cardId"
 
@@ -349,6 +355,9 @@ fun SharedTransitionScope.CardItem(
     // loads, the brand colour shows: initials there would flash on every tile that has a photo.
     var photoFailed by remember(card.frontPhotoPath) { mutableStateOf(false) }
     val photo = card.frontPhotoPath?.takeUnless { photoFailed }
+    // The store's logo (#151) when it loads; one that can't be loaded shows the initials, as a missing one does.
+    var logoFailed by remember(card.store.logo) { mutableStateOf(false) }
+    val logo = card.store.logo?.takeUnless { logoFailed }
     // On a photo, the label sits on a dark scrim, so it is white whatever the photo's colours.
     val textColor = if (photo != null) Color.White else cardColor.contrastingTextColor()
     Card(
@@ -389,11 +398,12 @@ fun SharedTransitionScope.CardItem(
                     Box(Modifier.weight(1f).fillMaxWidth().padding(horizontal = Spacing.s), contentAlignment = Alignment.Center) {
                         when {
                             photo != null -> Unit // the photo shows the card itself
-                            !card.store.logo.isNullOrBlank() -> AsyncImage(
-                                model = card.store.logo,
+                            logo != null -> AsyncImage(
+                                model = CardPhoto(logo),
                                 contentDescription = null, // The tile is described as a whole.
                                 imageLoader = hiltImageLoader(),
-                                modifier = Modifier.fillMaxSize(0.6f),
+                                onError = { logoFailed = true },
+                                modifier = Modifier.fillMaxSize(LOGO_FRACTION).testTag(CARD_TILE_LOGO_TAG),
                             )
                             else -> Text(
                                 text = card.store.initials,

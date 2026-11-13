@@ -87,6 +87,12 @@ import kotlinx.coroutines.launch
 
 const val PHOTO_VIEWER_TAG = "photoViewer"
 
+/** The store's logo in the card screen's header (#151). */
+const val STORE_LOGO_TAG = "storeLogo"
+
+/** The card screen's header: the store's logo, or its name, on the brand colour (#151). */
+const val STORE_HEADER_TAG = "storeHeader"
+
 /** The brand-colour header above the card sheet. */
 private val HEADER_HEIGHT = 200.dp
 
@@ -179,21 +185,27 @@ fun SharedTransitionScope.DetailScreen(
                     .fillMaxSize()
                     .padding(paddingValues)
             ) {
+                // The store's logo (#151) when it loads; one that can't be loaded shows the name, as a missing one does.
+                var logoFailed by remember(card.store.logo) { mutableStateOf(false) }
+                val logo = card.store.logo?.takeUnless { logoFailed }
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(HEADER_HEIGHT)
-                        .background(brandColor),
+                        .background(brandColor)
+                        .testTag(STORE_HEADER_TAG),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (!card.store.logo.isNullOrBlank()) {
+                    if (logo != null) {
                         AsyncImage(
-                            model = card.store.logo,
+                            model = CardPhoto(logo),
                             contentDescription = card.store.name,
                             imageLoader = hiltImageLoader(),
+                            onError = { logoFailed = true },
                             modifier = Modifier
                                 .fillMaxSize()
                                 .padding(Spacing.l)
+                                .testTag(STORE_LOGO_TAG)
                         )
                     } else {
                         Text(

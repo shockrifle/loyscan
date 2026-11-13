@@ -105,7 +105,7 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   store, as its logo) names and that are over a day old; newer ones may belong to a form still open or about to be restored. A save drops a
   picked photo whose file has gone since, and keeps the card's own photo for that side ([[2026-11-03-card-photos-as-private-files]]).
 - **A photo whose file is missing** (its file was deleted or otherwise lost while the row still names it) is
-  treated as no photo (#87). `CardPhotos.withoutMissing(card)` (`data/photos/CardPhotos.kt`) drops such a name from
+  treated as no photo (#87), and a store logo whose file is missing as no logo (#151). `CardPhotos.withoutMissing(card)` (`data/photos/CardPhotos.kt`) drops such a name from
   the card `DetailViewModel` shows, from the cards `ListViewModel` lists, and from the card `CardFormViewModel` edits. So
   the card screen shows no thumbnail or viewer for it, the tile shows the initials (#89), and the form shows that side
   as "Add … photo". Saving the edit writes the side as `null`, which
