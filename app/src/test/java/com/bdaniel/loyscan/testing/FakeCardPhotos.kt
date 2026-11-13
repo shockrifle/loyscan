@@ -43,6 +43,16 @@ class FakeCardPhotos(vararg stored: String) : CardPhotos {
         return "photo-${cropped.size}".also { stored += it }
     }
 
+    /** The logos cropped so far, in order: the staged name and the frame. A logo is named `logo-1`, `logo-2`… */
+    val croppedLogos = mutableListOf<Pair<String, PhotoCrop>>()
+
+    override suspend fun cropLogo(name: String, crop: PhotoCrop): String {
+        croppedLogos += name to crop
+        stored -= name // the staged source goes, however the crop ends
+        cropFailure?.let { throw it }
+        return "logo-${croppedLogos.size}".also { stored += it }
+    }
+
     override suspend fun delete(names: Collection<String>) {
         stored -= names.toSet()
     }

@@ -41,6 +41,14 @@ interface CardPhotos {
      */
     suspend fun crop(name: String, crop: PhotoCrop): String
 
+    /**
+     * Stores the staged picture [name] as a store's logo (#151), cropped to [crop]: a PNG that keeps its transparency,
+     * at most [MAX_LOGO_SIDE] pixels on its long side, upright and without its metadata. [crop] may reach past the
+     * picture (a logo framed zoomed out); that part is transparent. Returns the logo's name, in the photos' directory,
+     * and deletes the staged file. Throws if it can't be decoded or encoded; nothing is left behind then.
+     */
+    suspend fun cropLogo(name: String, crop: PhotoCrop): String
+
     /** Deletes these photos. A name without a file, or one that isn't a photo's name, is skipped. */
     suspend fun delete(names: Collection<String>)
 
@@ -113,12 +121,17 @@ class FileCardPhotos(
      * metadata (#88) and framed to the card (#10). The staged file goes once the photo is written; a half-written final
      * left by a failure is deleted, and the staged file with it.
      */
-    override suspend fun crop(name: String, crop: PhotoCrop): String {
+    override suspend fun crop(name: String, crop: PhotoCrop): String = encodeStaged(name) { staged, file ->
+        encodeCardPhoto(staged, file, crop)
+    }
+
+    /** Encodes the staged file [name] into a new file with [encode]; a half-written new file and the staged one are deleted. */
+    private suspend fun encodeStaged(name: String, encode: (staged: File, target: File) -> Unit): String {
         val staged = file(name)
         val cropped = UUID.randomUUID().toString()
         val file = file(cropped)
         try {
-            withContext(ioDispatcher) { encodeCardPhoto(staged, file, crop) }
+            withContext(ioDispatcher) { encode(staged, file) }
             return cropped
         } catch (e: Throwable) {
             withContext(NonCancellable + ioDispatcher) { file.delete() }
@@ -126,6 +139,11 @@ class FileCardPhotos(
         } finally {
             withContext(NonCancellable + ioDispatcher) { staged.delete() }
         }
+    }
+
+    /** Stores the staged picture as a logo ([encodeStoreLogo]), as [crop] stores a photo: the staged file goes either way. */
+    override suspend fun cropLogo(name: String, crop: PhotoCrop): String = encodeStaged(name) { staged, file ->
+        encodeStoreLogo(staged, file, crop)
     }
 
     /**

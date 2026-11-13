@@ -17,6 +17,13 @@ interface StoreRepository {
      */
     suspend fun update(store: Store)
 
-    /** Deletes a custom store and its cards with their photos (#53, #10). Does nothing for a catalogue store or an unknown id. */
+    /**
+     * Sets any store's logo (#151), catalogue or custom: a file name in the photos' storage
+     * ([com.bdaniel.loyscan.data.photos.CardPhotos.cropLogo]); `null` removes it. The file of the logo it replaces is
+     * deleted, and [logo]'s own when there is no such store.
+     */
+    suspend fun setLogo(storeId: String, logo: String?)
+
+    /** Deletes a custom store and its cards with their photos (#53, #10), and its logo (#151). Does nothing for a catalogue store or an unknown id. */
     suspend fun delete(id: String)
 }

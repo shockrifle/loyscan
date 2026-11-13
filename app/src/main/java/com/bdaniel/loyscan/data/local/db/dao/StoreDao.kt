@@ -33,12 +33,16 @@ interface StoreDao {
     @Query("DELETE FROM stores WHERE id = :id AND isCustom = 1")
     suspend fun deleteCustom(id: String)
 
-    /** Deletes a custom store, as [deleteCustom] does, and returns the photo names of the cards that went with it (#10). */
+    /**
+     * Deletes a custom store, as [deleteCustom] does, and returns the photo names of the cards that went with it (#10)
+     * and its logo's (#151).
+     */
     @Transaction
     suspend fun deleteCustomReturningCardPhotos(id: String): List<String> {
         val photos = cardPhotosOfCustomStore(id)
+        val logo = logoOfCustom(id)
         deleteCustom(id)
-        return photos.flatMap { it.names }
+        return photos.flatMap { it.names } + listOfNotNull(logo)
     }
 
     @Query(
@@ -46,6 +50,22 @@ interface StoreDao {
             "WHERE storeId = :id AND storeId IN (SELECT id FROM stores WHERE isCustom = 1)"
     )
     suspend fun cardPhotosOfCustomStore(id: String): List<CardPhotoNames>
+
+    /** Sets the store's logo (#151) and returns the logo files nothing names any more. */
+    @Transaction
+    suspend fun setLogoReturningDropped(id: String, logo: String?): List<String> {
+        val old = logoOf(id)
+        return if (updateLogo(id, logo) == 0) listOfNotNull(logo) else listOfNotNull(old).filter { it != logo }
+    }
+
+    @Query("UPDATE stores SET logo = :logo WHERE id = :id")
+    suspend fun updateLogo(id: String, logo: String?): Int
+
+    @Query("SELECT logo FROM stores WHERE id = :id")
+    suspend fun logoOf(id: String): String?
+
+    @Query("SELECT logo FROM stores WHERE id = :id AND isCustom = 1")
+    suspend fun logoOfCustom(id: String): String?
 
     @Query("SELECT * FROM stores")
     fun getAll(): Flow<List<StoreEntity>>

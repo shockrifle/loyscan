@@ -25,6 +25,11 @@ class RoomStoreRepository @Inject constructor(
         storeDao.updateCustom(store.id, store.name, store.color, store.defaultBarcodeFormat, store.updatedAt)
     }
 
+    /** Deletes the file of a replaced or removed logo, or the new one if the store is gone (#151). */
+    override suspend fun setLogo(storeId: String, logo: String?) {
+        photos.delete(storeDao.setLogoReturningDropped(storeId, logo))
+    }
+
     override suspend fun delete(id: String) {
         photos.delete(storeDao.deleteCustomReturningCardPhotos(id))
     }

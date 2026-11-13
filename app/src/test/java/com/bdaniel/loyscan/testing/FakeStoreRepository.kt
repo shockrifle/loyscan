@@ -43,6 +43,19 @@ class FakeStoreRepository(stores: List<Store> = emptyList()) : StoreRepository {
         stores.value = stores.value.filterNot { it.id == id && it.isCustom }
     }
 
+    /** When set, [setLogo] throws it instead of saving. */
+    var setLogoFailure: Exception? = null
+
+    /** When set, [setLogo] suspends until it completes. */
+    var setLogoGate: CompletableDeferred<Unit>? = null
+
+    /** Like the Room repository: any store's logo; the files are the photos fake's. */
+    override suspend fun setLogo(storeId: String, logo: String?) {
+        setLogoGate?.await()
+        setLogoFailure?.let { throw it }
+        stores.value = stores.value.map { if (it.id == storeId) it.copy(logo = logo) else it }
+    }
+
     /** When set, [update] throws it instead of saving. */
     var updateFailure: Exception? = null
 

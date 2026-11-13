@@ -13,7 +13,7 @@ import java.time.Duration
  * also runs when the activity is destroyed with the form still on the back stack, which the restored form must survive
  * (#95). It also catches a process killed with the form open (swiped from Recents, a low-memory kill never returned to),
  * which skips `onCleared` too. Recent files stay: a form may still be open in another task, or come back after process
- * death, and save them.
+ * death, and save them. Store logos live with the photos (#151), so a file a store names as its logo is kept too.
  */
 class CardPhotoSweepCallback(
     private val photos: FileCardPhotos,
@@ -29,6 +29,9 @@ class CardPhotoSweepCallback(
                 while (cursor.moveToNext()) {
                     for (column in 0..1) if (!cursor.isNull(column)) named += cursor.getString(column)
                 }
+            }
+            db.query("SELECT logo FROM stores WHERE logo IS NOT NULL").use { cursor ->
+                while (cursor.moveToNext()) named += cursor.getString(0)
             }
             photos.deleteUnnamed(named, olderThan = clock.instant() - minAge)
         } catch (e: Exception) { // a failed sweep mustn't keep the app from opening its cards

@@ -119,6 +119,28 @@ class CatalogueDatabaseCallbackTest {
     }
 
     @Test
+    fun reopen_keepsTheLogoTheUserGaveACatalogueStore() = runTest { // #151
+        open(catalogue(entry("hu-one")), at = FIRST).storeDao().setLogoReturningDropped("hu-one", "logo.png")
+        closeAll()
+
+        val db = open(catalogue(entry("hu-one")), at = SECOND)
+
+        assertThat(db.storeDao().getById("hu-one").first()?.logo).isEqualTo("logo.png")
+    }
+
+    @Test
+    fun reopen_changedEntry_keepsTheLogoTheUserGaveIt() = runTest { // #151
+        open(catalogue(entry("hu-one")), at = FIRST).storeDao().setLogoReturningDropped("hu-one", "logo.png")
+        closeAll()
+
+        val db = open(catalogue(entry("hu-one", name = "Renamed")), at = SECOND)
+
+        assertThat(db.storeDao().getById("hu-one").first()).isEqualTo(
+            store("hu-one", name = "Renamed", updatedAt = SECOND).copy(logo = "logo.png")
+        )
+    }
+
+    @Test
     fun invalidCatalogue_failsTheFirstQuery_andWritesNothing() = runTest {
         val db = open(catalogue(entry("hu-one"), entry("hu-one")), at = FIRST)
 

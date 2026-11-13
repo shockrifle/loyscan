@@ -37,6 +37,7 @@ inferred whys as inferred.
 - [[2026-11-09-pull-request-workflow]] — every change lands through a PR, rebase-merged by the agent after review and green CI; a plan critic and the user's confirmation before code; Dependabot PRs reviewed and merged by `/dependency-pr` (#116)
 - [[2026-11-09-adapted-third-party-skills]] — four of Matt Pocock's MIT skills (`diagnosing-bugs`, `writing-for-agents`, `grilling`, `retro`) copied into `.claude/skills/` and adapted; no plugin install, nothing from unlicensed `ai-utils`
 - [[2026-11-12-no-bundled-store-logos]] — no bundled or fetched retailer logos (Play's IP policy asks for permission; 23 retailers checked, none practical); names and brand colours stay; a non-affiliation note in the app and Play listing before release (#109)
+- [[2026-11-13-user-supplied-store-logos]] — a store's logo is the user's own picture, a PNG with transparency in the card photos' directory named by the existing `logo` column; the catalogue sync never touches it (#151)
 - [[2026-11-12-design-tokens-and-card-shape]] — a plain `Spacing` object shared with the widget, M3 default `Shapes`, one ID-1-proportional `CardShape` (6%) for every depiction of the card; a visual-only scanner viewfinder; card-ratio widget tiles in 1–2 columns, square corners on API 29–30 (#108)
 
 ## Superseded
