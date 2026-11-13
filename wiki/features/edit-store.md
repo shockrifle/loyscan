@@ -40,7 +40,13 @@ Catalogue stores have no Edit button and can't be changed or deleted. Issue [#53
   while its delete is under way isn't reported as gone (found in review; `aStoreGoneBeforeItsDeleteReturns_…`). This
   is the same lifecycle as deleting a card ([[card-detail]]): both use the `Deletion` enum
   (`Deletion.kt`). This also removes a store abandoned before its first card ([[2026-10-22-custom-stores]]).
-- The deleted cards' photo files are deleted too ([[card-photos]]).
+- The deleted cards' photo files are deleted too ([[card-photos]]), and the store's logo file.
+- **Logo** (#151, [[store-logo]]): the edit form, once the store has loaded, has a "Logo" section: the store's tile
+  preview (`LogoPreview`, shared with the logo screen) drawn with the form's name and colour as typed, the store's
+  logo on it (`CustomStoreState.logo`; a logo whose file is missing is none, checked once per store-list update), and
+  **Change logo**, which opens the store's logo screen over the form (`CustomStoreDirections.toStoreLogo`); Back
+  returns to the form with its unsaved edits, and a logo set there shows at once. Save leaves the logo as it is
+  (`updateCustom` doesn't write it). The new-store form has no slot ([[2026-11-13-user-supplied-store-logos]]).
 - **Back during a save or delete** (#65): the user stays where Back took them, and the store is still created,
   saved or deleted. `customStoreDirections(entry)` navigates (to the scanner, or back) only while the form's own
   back-stack entry is current, and the writes run in `withContext(NonCancellable)`, as the card form's do
@@ -62,7 +68,8 @@ Catalogue stores have no Edit button and can't be changed or deleted. Issue [#53
 - `CustomStoreViewModelTest` (Robolectric, since it reads its route): `editingAStore_startsAsTheStore`,
   `savingAnEdit_…`, `aFailedEdit_…`, `editingAStoreThatIsGone_…`, `aCatalogueStore_cantBeEdited`,
   `anEdit_isRestoredAfterProcessDeath`, `editingAStore_saysHowManyCardsItHas`, `delete_…`,
-  `aSecondDeleteWhileTheFirstIsDeleting_deletesOnce`, `aFailedDelete_…`, `aNewStore_orOneThatIsGone_isNotDeleted`.
+  `aSecondDeleteWhileTheFirstIsDeleting_deletesOnce`, `aFailedDelete_…`, `aNewStore_orOneThatIsGone_isNotDeleted`;
+  the logo tests are listed on [[store-logo]].
   `CustomStoreScreenTest`: `editingAStore_…`, `editingAStoreThatIsGone_…`, `deletingAStore…` (the three card-count
   texts, Cancel), `theDeleteDialog_namesTheStoreAsSaved_…`, `aDeleteThatFails_…`, `aNewStore_hasNoDeleteAction`.
 - `RoomStoreRepositoryTest`: `update_savesACustomStoresNameColourAndFormat`, `update_leavesACatalogueStoreAsItIs`,

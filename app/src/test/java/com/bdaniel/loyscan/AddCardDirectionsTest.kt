@@ -108,6 +108,31 @@ class AddCardDirectionsTest {
     }
 
     @Test
+    fun aCustomStoresLogoButton_opensItsLogoScreenOverItsForm_andBackReturnsToIt() { // #151
+        composeRule.runOnIdle { navController.storePickerDirections(navController.currentBackStackEntry!!).toEditStore("custom-store") }
+        composeRule.runOnIdle { navController.customStoreDirections(navController.currentBackStackEntry!!).toStoreLogo("custom-store") }
+
+        composeRule.runOnIdle {
+            assertThat(navController.currentBackStackEntry!!.toRoute<StoreLogo>()).isEqualTo(StoreLogo("custom-store"))
+            assertThat(navController.previousBackStackEntry!!.toRoute<CustomStore>()).isEqualTo(CustomStore("custom-store"))
+        }
+        composeRule.runOnIdle { navController.storeLogoDirections(navController.currentBackStackEntry!!).toBack() }
+
+        composeRule.runOnIdle { assertThat(navController.currentBackStackEntry!!.toRoute<CustomStore>()).isEqualTo(CustomStore("custom-store")) }
+    }
+
+    @Test
+    fun aSecondTapOnTheFormsLogoButton_opensOneLogoScreen() { // #151, as #69
+        composeRule.runOnIdle { navController.storePickerDirections(navController.currentBackStackEntry!!).toEditStore("custom-store") }
+        val form = composeRule.runOnIdle { navController.customStoreDirections(navController.currentBackStackEntry!!) }
+        composeRule.runOnIdle { form.toStoreLogo("custom-store") }
+
+        composeRule.runOnIdle { form.toStoreLogo("custom-store") }
+
+        composeRule.runOnIdle { assertThat(navController.previousBackStackEntry?.destination?.hasRoute(CustomStore::class)).isTrue() }
+    }
+
+    @Test
     fun backFromTheCustomStoreForm_returnsToThePicker() {
         composeRule.runOnIdle { navController.storePickerDirections(navController.currentBackStackEntry!!).toCustomStore() }
         composeRule.runOnIdle { navController.customStoreDirections(navController.currentBackStackEntry!!).toBack() }

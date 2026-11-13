@@ -3,12 +3,14 @@ package com.bdaniel.loyscan
 import org.robolectric.annotation.GraphicsMode
 import com.bdaniel.loyscan.testing.WithFontScale
 import com.bdaniel.loyscan.testing.assertTextFitsAndDoesNotOverlap
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -17,8 +19,19 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.performTextInput
+import android.content.Context
 import androidx.lifecycle.SavedStateHandle
+import androidx.test.core.app.ApplicationProvider
+import com.bdaniel.loyscan.di.CardPhotosModule
+import com.bdaniel.loyscan.di.ImageLoaderEntryPoint
+import com.bdaniel.loyscan.testing.FakeCardPhotos
+import com.bdaniel.loyscan.testing.WAIT_TIMEOUT_MS
+import com.bdaniel.loyscan.testing.writeOnePixelPng
+import dagger.hilt.android.EntryPointAccessors
+import org.robolectric.shadows.ShadowLooper
+import java.io.File
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.testing.FakeLoyaltyCardRepository
@@ -45,6 +58,12 @@ class CustomStoreScreenTest {
 
     private val stores = FakeStoreRepository()
     private val cards = FakeLoyaltyCardRepository()
+    private val photos = FakeCardPhotos()
+    private val context: Context = ApplicationProvider.getApplicationContext()
+    private val logoScreens = mutableListOf<String>()
+
+    /** The store's name in the logo slot's preview, not in the name field. */
+    private val previewName = hasText("My Shop") and hasAnyAncestor(hasTestTag(STORE_LOGO_PREVIEW_TAG))
     private val scanned = mutableListOf<String>()
     private var backs = 0
 
@@ -124,7 +143,7 @@ class CustomStoreScreenTest {
         setScreen(CustomStore("custom"))
 
         composeRule.onNodeWithText("Edit store").assertIsDisplayed()
-        composeRule.onNodeWithText("My Shop").assertIsDisplayed()
+        composeRule.onNodeWithTag(CUSTOM_STORE_NAME_TAG).assert(hasText("My Shop"))
         composeRule.onNodeWithContentDescription("Green") // COLORS[2]
             .assertIsSelected()
         composeRule.onNodeWithText("Create").assertDoesNotExist()
@@ -218,6 +237,57 @@ class CustomStoreScreenTest {
     }
 
     @Test
+    fun editingAStoreWithALogo_showsItInTheLogoSlot() { // #151
+        givenACustomStoreWithALogo()
+        setScreen(CustomStore("custom"))
+        waitForAnImageToLoad()
+
+        composeRule.onNodeWithText("Logo").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithTag(STORE_LOGO_PREVIEW_IMAGE_TAG, useUnmergedTree = true).performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Logo of My Shop", useUnmergedTree = true).assertExists()
+        composeRule.onNode(previewName).assertDoesNotExist()
+    }
+
+    @Test
+    fun editingAStoreWithoutALogo_showsItsNameInTheLogoSlot_asTyped() { // #151: the form's current name and colour
+        stores.stores.value = listOf(aStore(id = "custom", name = "My Shop", isCustom = true))
+        setScreen(CustomStore("custom"))
+
+        composeRule.onNode(previewName).performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithTag(CUSTOM_STORE_NAME_TAG).performTextReplacement("My Shop 2")
+        composeRule.onNode(hasText("My Shop 2") and hasAnyAncestor(hasTestTag(STORE_LOGO_PREVIEW_TAG))).assertExists()
+        composeRule.onNodeWithTag(STORE_LOGO_PREVIEW_IMAGE_TAG, useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun changeLogo_opensTheStoresLogoScreen() { // #151
+        stores.stores.value = listOf(aStore(id = "custom", name = "My Shop", isCustom = true))
+        setScreen(CustomStore("custom"))
+
+        composeRule.onNodeWithText("Change logo").performScrollTo().performClick()
+
+        assertThat(logoScreens).containsExactly("custom")
+    }
+
+    @Test
+    fun aNewStore_hasNoLogoSlot() { // #151: it has no id before Create; its logo is set through Edit
+        setScreen()
+
+        composeRule.onNodeWithText("Logo").assertDoesNotExist()
+        composeRule.onNodeWithText("Change logo").assertDoesNotExist()
+        composeRule.onNodeWithTag(STORE_LOGO_PREVIEW_TAG).assertDoesNotExist()
+    }
+
+    @Test
+    fun aStoreThatIsGone_hasNoLogoSlot() { // #151
+        setScreen(CustomStore("gone"))
+
+        composeRule.onNodeWithText("This store is no longer available.").assertIsDisplayed()
+        composeRule.onNodeWithText("Change logo").assertDoesNotExist()
+        composeRule.onNodeWithTag(STORE_LOGO_PREVIEW_TAG).assertDoesNotExist()
+    }
+
+    @Test
     fun aNewStore_hasNoDeleteAction() { // #53
         setScreen()
 
@@ -256,6 +326,8 @@ class CustomStoreScreenTest {
         val shown = ShownTexts(composeRule)
         shown.collect()
 
+        composeRule.onNodeWithText("Logó módosítása").performScrollTo()
+        shown.collect()
         composeRule.onNodeWithContentDescription("Törlés").performClick()
         shown.collect()
         stores.deleteFailure = IllegalStateException("delete failed")
@@ -263,7 +335,7 @@ class CustomStoreScreenTest {
         shown.collect()
 
         shown.assertSeen(
-            "Bolt szerkesztése", "Mentés", "Törlés", "Törlöd ezt a boltot: My Shop?",
+            "Bolt szerkesztése", "Mentés", "Törlés", "Törlöd ezt a boltot: My Shop?", "Logó", "Logó módosítása",
             "A hozzá tartozó 2 kártya is törlődik vele.", "Mégse", "Nem sikerült törölni a boltot. Próbáld újra.",
         )
         val symbologyNames = CustomStoreViewModel.FORMATS.filter { it != BarcodeFormat.QR_CODE }.map { it.displayName }
@@ -310,9 +382,30 @@ class CustomStoreScreenTest {
         composeRule.assertTextFitsAndDoesNotOverlap()
     }
 
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE) // real text measuring
+    fun atFontScale2_onANarrowScreen_theEditFormsTextIncludingItsLogoSlot_fits() { // #151
+        stores.stores.value = listOf(aStore(id = "custom", name = "Corner Shop And Bakery", isCustom = true))
+        setScreen(CustomStore("custom"), fontScale = 2f)
+
+        composeRule.onNodeWithText("Change logo").assertExists()
+        composeRule.assertTextFitsAndDoesNotOverlap()
+    }
+
+    private fun givenACustomStoreWithALogo() {
+        File(context.filesDir, CardPhotosModule.PHOTO_DIRECTORY).resolve("logo").writeOnePixelPng()
+        photos.stored += "logo"
+        stores.stores.value = listOf(aStore(id = "custom", name = "My Shop", isCustom = true, logo = "logo"))
+    }
+
+    private fun waitForAnImageToLoad() {
+        val loader = EntryPointAccessors.fromApplication(context, ImageLoaderEntryPoint::class.java).getImageLoader()
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) { ShadowLooper.idleMainLooper(); (loader.memoryCache?.size ?: 0) > 0 }
+    }
+
     private fun setScreen(route: CustomStore = CustomStore(), fontScale: Float = 1f) {
-        val viewModel = CustomStoreViewModel(SavedStateHandle(route = route), stores, cards, Clock.fixed(SOME_INSTANT, ZoneOffset.UTC))
-        val directions = CustomStoreDirections(onCreated = { scanned += it }, toBack = { backs++ })
+        val viewModel = CustomStoreViewModel(SavedStateHandle(route = route), stores, cards, photos, Clock.fixed(SOME_INSTANT, ZoneOffset.UTC))
+        val directions = CustomStoreDirections(onCreated = { scanned += it }, toBack = { backs++ }, toStoreLogo = { logoScreens += it })
         composeRule.setContent { WithFontScale(fontScale) { CustomStoreScreen(directions = directions, viewModel = viewModel) } }
     }
 }

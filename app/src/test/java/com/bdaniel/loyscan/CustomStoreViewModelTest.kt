@@ -6,6 +6,7 @@ import androidx.navigation.testing.invoke
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.cash.turbine.test
 import com.bdaniel.loyscan.domain.BarcodeFormat
+import com.bdaniel.loyscan.testing.FakeCardPhotos
 import com.bdaniel.loyscan.testing.FakeLoyaltyCardRepository
 import com.bdaniel.loyscan.testing.FakeStoreRepository
 import com.bdaniel.loyscan.testing.aLoyaltyCard
@@ -34,6 +35,7 @@ class CustomStoreViewModelTest {
     private val now = Instant.parse("2026-10-22T10:00:00Z")
     private val stores = FakeStoreRepository(listOf(aStore(id = "existing", name = "Existing Store")))
     private val cards = FakeLoyaltyCardRepository()
+    private val photos = FakeCardPhotos()
 
     @Test
     fun theForm_startsWithNoName_theFirstColourAndCode128_andCantBeCreated() = runTest {
@@ -188,6 +190,68 @@ class CustomStoreViewModelTest {
             assertThat(state.format).isEqualTo(BarcodeFormat.EAN_13)
             assertThat(state.canSave).isTrue()
         }
+    }
+
+    @Test
+    fun editingAStore_showsItsLogo() = runTest { // #151
+        photos.stored += "logo-1.png"
+        stores.stores.value += custom.copy(logo = "logo-1.png")
+
+        editViewModel().state.test {
+            val state = expectMostRecentItem()
+            assertThat(state.logo).isEqualTo("logo-1.png")
+            assertThat(state.storeId).isEqualTo("custom")
+        }
+    }
+
+    @Test
+    fun aLogoWhoseFileIsMissing_isNoLogo() = runTest { // #151
+        stores.stores.value += custom.copy(logo = "logo-1.png")
+
+        editViewModel().state.test {
+            val state = expectMostRecentItem()
+            assertThat(state.ready).isTrue()
+            assertThat(state.logo).isNull()
+        }
+    }
+
+    @Test
+    fun aLogoSetWhileTheFormIsOpen_isShown() = runTest { // #151: on the logo screen, opened from the form
+        stores.stores.value += custom
+        val viewModel = editViewModel()
+
+        viewModel.state.test {
+            assertThat(expectMostRecentItem().logo).isNull()
+            photos.stored += "logo-1.png"
+            stores.setLogo("custom", "logo-1.png")
+
+            assertThat(awaitItem().logo).isEqualTo("logo-1.png")
+        }
+    }
+
+    @Test
+    fun aNewStore_hasNoLogo() = runTest { // #151: its logo is set after creating, through Edit
+        viewModel().state.test {
+            val state = expectMostRecentItem()
+            assertThat(state.logo).isNull()
+            assertThat(state.storeId).isNull()
+        }
+    }
+
+    @Test
+    fun savingAnEdit_keepsTheStoresLogo() = runTest { // #151
+        photos.stored += "logo-1.png"
+        stores.stores.value += custom.copy(logo = "logo-1.png")
+        val viewModel = editViewModel()
+
+        viewModel.state.test {
+            skipItems(1)
+            viewModel.onNameChange("My Gym")
+            viewModel.save()
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        assertThat(stores.stores.value.single { it.id == "custom" }.logo).isEqualTo("logo-1.png")
     }
 
     @Test
@@ -446,5 +510,5 @@ class CustomStoreViewModelTest {
     private fun editViewModel(storeId: String = custom.id) = viewModel(SavedStateHandle(route = CustomStore(storeId)))
 
     private fun viewModel(handle: SavedStateHandle = SavedStateHandle()) =
-        CustomStoreViewModel(handle, stores, cards, Clock.fixed(now, ZoneOffset.UTC))
+        CustomStoreViewModel(handle, stores, cards, photos, Clock.fixed(now, ZoneOffset.UTC))
 }
