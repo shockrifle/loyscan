@@ -328,6 +328,20 @@ class StoreLogoViewModelTest {
     }
 
     @Test
+    fun aPicturePickedWhileTheRoutesPictureIsChecked_staysInTheCrop_andTheRoutesIsDiscarded() = runTest { // #151 review
+        photos.stored += "shared"
+        val gate = CompletableDeferred<Unit>()
+        photos.existsGate = gate
+        val viewModel = viewModel(SavedStateHandle(route = StoreLogo("shop", picture = "shared")))
+
+        viewModel.onPicked(picked)
+        gate.complete(Unit)
+
+        assertThat(viewModel.state.value.cropping).isEqualTo("staged-1")
+        assertThat(photos.stored).doesNotContain("shared")
+    }
+
+    @Test
     fun aPictureInTheRoute_whoseFileIsMissing_opensNoCrop() = runTest { // #151: e.g. swept while the app was away
         val viewModel = viewModel(SavedStateHandle(route = StoreLogo("shop", picture = "shared")))
 
