@@ -118,7 +118,10 @@ class StoreLogoViewModel @Inject constructor(
             savedStateHandle[ROUTE_PICTURE_TAKEN] = true
             when {
                 found is Found.Gone -> photos.discard(listOf(picture))
-                photos.exists(picture) -> savedStateHandle[CROP_LOGO] = picture
+                !photos.exists(picture) -> Unit
+                // A picture picked while the file was checked is in the crop already: the user's latest choice stays.
+                savedStateHandle.get<String>(CROP_LOGO) != null -> photos.discard(listOf(picture))
+                else -> savedStateHandle[CROP_LOGO] = picture
             }
         }
     }

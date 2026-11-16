@@ -76,8 +76,12 @@ class FakeCardPhotos(vararg stored: String) : CardPhotos {
     /** Every name [exists] was asked about, in order. */
     val existsCalls = mutableListOf<String>()
 
+    /** When set, [exists] suspends until it completes, as a file check on the disk does. */
+    var existsGate: CompletableDeferred<Unit>? = null
+
     override suspend fun exists(name: String): Boolean {
         existsCalls += name
+        existsGate?.await()
         return name in stored
     }
 

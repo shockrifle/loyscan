@@ -52,7 +52,8 @@ logo". Done in four slices, 2026-11-13 to 2026-11-16.
 - **A picture in the route** (`StoreLogo.picture`, a staged name; for a picture shared to LoyScan, chosen for a store in
   the store picker's logo mode, [[add-card]]): the screen opens
   the square crop on it once (`routePictureTaken` in the `SavedStateHandle`), so Cancel, Crop or process death
-  doesn't bring it back. For a store that is gone it is discarded; one whose file is no longer there opens nothing.
+  doesn't bring it back. For a store that is gone it is discarded; one whose file is no longer there opens nothing; a
+  picture the user picks while its file is checked keeps the crop, and the route's is discarded (PR #165 review).
 - **A picture shared to LoyScan** (#151): the share sheet lists two LoyScan targets for one image, LoyScan itself
   (adds a card, [[add-card]], unchanged) and **Set as store logo**, an `activity-alias` of `MainActivity` with the
   same `SEND image/*` filter, the owner's choice on 2026-11-16. The alias is the intent's component
@@ -80,7 +81,7 @@ logo". Done in four slices, 2026-11-13 to 2026-11-16.
   missing file left out, a card's number for one without a label); a card's photo → a copy → crop → logo; a photo
   not on the list refused; a copy that fails; working while copying it; a picture in the route → the crop → the logo,
   cancelled and not offered again, still in the crop after process death, not offered again once cropped, discarded
-  for a store that is gone, nothing for a missing file.
+  for a store that is gone, nothing for a missing file, a pick made meanwhile kept.
 - `StoreLogoScreenTest`: the preview with and without a logo; Choose image → a square frame → Crop sets it; a wide
   picture (`writeWidePng`, 2×1) pinched out is cropped whole (`top` −0.5, `bottom` 1.5); Use whole image and Cancel;
   Find a logo online; Remove logo; a failure; the buttons waiting; a store that is gone; Back; Hungarian (the "Which

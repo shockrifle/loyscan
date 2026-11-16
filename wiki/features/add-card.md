@@ -12,11 +12,12 @@ with the picture's barcode (#77, below). Everything runs offline on the local da
 - `CustomStoreScreen.kt`, `CustomStoreViewModel.kt` ("Other card"); formats in `BarcodeFormat.forCustomStores`.
 - [[barcode-scanner]] (`ScannerScreen.kt`), unchanged except for where its directions lead.
 - `CardFormScreen.kt`, `CardFormViewModel.kt` (`CardFormState`).
-- Routes and directions in `Navigation.kt`: `StorePicker(scannedContent?, scannedFormat?, manualEntry)`,
+- Routes and directions in `Navigation.kt`: `StorePicker(scannedContent?, scannedFormat?, manualEntry, logoPicture?)`,
   `CustomStore(storeId?, scannedContent?, scannedFormat?, manualEntry)`, `Scanner(storeId)`,
   `CardForm(storeId, scannedContent?, scannedFormat?)`; `ListDirections.toAddCard` starts the flow. Saving uses
   `LoyaltyCardRepository.add`.
-- Share → LoyScan (#77): `Intent.sharedPicture()` and the share handling in `MainActivity.kt:44-50, 118-146` (incl. `forwardToATaskOfItsOwn`);
+- Share → LoyScan (#77): `Intent.sharedPicture()` and the share handling in `MainActivity.kt` (`onCreate`'s
+  `sharedPictures`, `forwardToATaskOfItsOwn`);
   `SharedPictureScreen.kt`, `SharedPictureViewModel.kt`; route `SharedPicture(uri)`, `openSharedPicture` and
   `sharedPictureDirections` in `Navigation.kt`.
 
