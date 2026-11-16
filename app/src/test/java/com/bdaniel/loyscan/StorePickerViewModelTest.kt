@@ -22,6 +22,14 @@ class StorePickerViewModelTest {
     private val repository = FakeStoreRepository(listOf(second, first))
 
     @Test
+    fun aPictureForALogo_putsThePickerInLogoMode_andAddingACardDoesNot() { // #151
+        val repository = FakeStoreRepository(emptyList())
+
+        assertThat(StorePickerViewModel(repository, StorePicker(logoPicture = "staged-1")) { "HU" }.logoMode).isTrue()
+        assertThat(StorePickerViewModel(repository) { "HU" }.logoMode).isFalse()
+    }
+
+    @Test
     fun stores_areEveryStoreByName_andFollowTheRepository() = runTest {
         val viewModel = StorePickerViewModel(repository) { "HU" }
 

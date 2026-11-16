@@ -69,6 +69,8 @@ data class StorePicker(
     val scannedContent: String? = null,
     val scannedFormat: BarcodeFormat? = null,
     val manualEntry: Boolean = false,
+    /** A staged picture shared to LoyScan as a store logo (#151): the picker asks which store it is for. */
+    val logoPicture: String? = null,
 )
 
 @Immutable
@@ -90,7 +92,12 @@ fun NavController.storePickerDirections(picker: NavBackStackEntry) = StorePicker
     toStore = { storeId ->
         whileCurrent(picker) {
             val route = picker.toRoute<StorePicker>()
-            navigate(addCardStep(storeId, route.scannedContent, route.scannedFormat, route.manualEntry))
+            if (route.logoPicture != null) {
+                // A picture shared as a store logo (#151): the store's logo screen crops it, and Back returns to the list.
+                navigate(StoreLogo(storeId, picture = route.logoPicture)) { popUpTo<StorePicker> { inclusive = true } }
+            } else {
+                navigate(addCardStep(storeId, route.scannedContent, route.scannedFormat, route.manualEntry))
+            }
         }
     },
     toCustomStore = {

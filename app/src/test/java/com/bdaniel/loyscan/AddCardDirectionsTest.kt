@@ -133,6 +133,28 @@ class AddCardDirectionsTest {
     }
 
     @Test
+    fun aStoreTappedInLogoMode_opensItsLogoScreenWithThePicture_inPlaceOfThePicker() { // #151
+        composeRule.runOnIdle { navController.navigateUp(); navController.navigate(StorePicker(logoPicture = "staged-1")) }
+        composeRule.runOnIdle { navController.storePickerDirections(navController.currentBackStackEntry!!).toStore("hu-tesco") }
+
+        composeRule.runOnIdle {
+            assertThat(navController.currentBackStackEntry!!.toRoute<StoreLogo>()).isEqualTo(StoreLogo("hu-tesco", picture = "staged-1"))
+            assertThat(navController.previousBackStackEntry?.destination?.hasRoute(CardList::class)).isTrue()
+        }
+    }
+
+    @Test
+    fun aSecondTapOnAStoreInLogoMode_opensOneLogoScreen() { // #151, as #69
+        composeRule.runOnIdle { navController.navigateUp(); navController.navigate(StorePicker(logoPicture = "staged-1")) }
+        val picker = composeRule.runOnIdle { navController.storePickerDirections(navController.currentBackStackEntry!!) }
+        composeRule.runOnIdle { picker.toStore("hu-tesco") }
+
+        composeRule.runOnIdle { picker.toStore("hu-tesco") }
+
+        composeRule.runOnIdle { assertThat(navController.previousBackStackEntry?.destination?.hasRoute(CardList::class)).isTrue() }
+    }
+
+    @Test
     fun backFromTheCustomStoreForm_returnsToThePicker() {
         composeRule.runOnIdle { navController.storePickerDirections(navController.currentBackStackEntry!!).toCustomStore() }
         composeRule.runOnIdle { navController.customStoreDirections(navController.currentBackStackEntry!!).toBack() }
