@@ -46,7 +46,11 @@ shows it. The catalogue sync never touches that column.
   slot, the owner's choice on 2026-11-13: a store has no id before Create, which goes straight to the scanner, so a
   slot there would need its own copy of the sources and the crop holding a logo for a store not yet saved; the logo is
   set afterwards through Edit.
-- #151 is done in slices: an image shared to the app is not implemented yet.
+- **A picture shared to the app:** a second share target, "Set as store logo" (an `activity-alias` of the one
+  activity), the owner's choice on 2026-11-16 over asking after every share or offering it only when a picture has no
+  barcode: the add-card share (#77) stays one tap, and a picture with a barcode can still become a logo. The picture
+  is copied in before the store is asked for, so the share's read grant can't lapse meanwhile; the store is any store
+  in the picker's logo mode. A copy abandoned on the way is left to the photo orphan sweep rather than tracked.
 
 ## Why
 - Reusing the photos' directory gives a logo the same private storage, backup handling ([[2026-11-05-no-cloud-backup-in-v1]]:

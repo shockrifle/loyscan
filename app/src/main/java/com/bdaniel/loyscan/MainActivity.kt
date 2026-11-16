@@ -1,5 +1,6 @@
 package com.bdaniel.loyscan
 
+import android.content.ComponentName
 import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
@@ -41,6 +42,9 @@ class MainActivity : ComponentActivity() {
     /** Pictures shared to LoyScan (#77), each opened once by [AppNavigation]. */
     private val sharedPictures = Channel<Uri>(Channel.UNLIMITED)
 
+    /** Pictures shared to LoyScan as a store logo (#151), each opened once by [AppNavigation]. */
+    private val sharedLogos = Channel<Uri>(Channel.UNLIMITED)
+
     /** Cards the home-screen widget asked to open (#11), each opened once by [AppNavigation]. */
     private val openCards = Channel<OpenCard>(Channel.UNLIMITED)
 
@@ -48,7 +52,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         // A recreated activity (rotation, process death) has the launch intent again, but its flow is already open.
         if (savedInstanceState == null) {
-            intent.sharedPicture()?.let(sharedPictures::trySend)
+            intent.sharedPicture()?.let { picture ->
+                if (intent.sharesAsStoreLogo()) sharedLogos.trySend(picture) else sharedPictures.trySend(picture)
+            }
             intent.openCard()?.let(openCards::trySend)
         }
         addOnNewIntentListener { intent ->
@@ -70,6 +76,7 @@ class MainActivity : ComponentActivity() {
                     SharedTransitionLayout {
                         AppNavigation(
                             sharedPictures = sharedPictures.receiveAsFlow(),
+                            sharedLogos = sharedLogos.receiveAsFlow(),
                             openCards = openCards.receiveAsFlow(),
                         )
                     }
@@ -84,11 +91,15 @@ class MainActivity : ComponentActivity() {
 fun SharedTransitionScope.AppNavigation(
     modifier: Modifier = Modifier,
     sharedPictures: Flow<Uri> = emptyFlow(),
+    sharedLogos: Flow<Uri> = emptyFlow(),
     openCards: Flow<OpenCard> = emptyFlow(),
 ) {
     val navController = rememberNavController()
     LaunchedEffect(navController) {
         sharedPictures.collect { navController.openSharedPicture(it.toString()) }
+    }
+    LaunchedEffect(navController) {
+        sharedLogos.collect { navController.openSharedLogo(it.toString()) }
     }
     LaunchedEffect(navController) {
         openCards.collect { navController.openCard(it.cardId, it.color) }
@@ -135,6 +146,9 @@ fun SharedTransitionScope.AppNavigation(
         composable<SharedPicture> {
             SharedPictureScreen(directions = navController.sharedPictureDirections(it))
         }
+        composable<SharedLogo> {
+            SharedLogoScreen(directions = navController.sharedLogoDirections(it))
+        }
     }
 }
 
@@ -176,14 +190,26 @@ internal fun Intent.sharedPicture(): Uri? {
         ?.takeIf { it.scheme == ContentResolver.SCHEME_CONTENT }
 }
 
+/** The "Set as store logo" share target (#151): an alias of [MainActivity] in the manifest. */
+internal const val SHARE_AS_STORE_LOGO = "com.bdaniel.loyscan.ShareAsStoreLogo"
+
+/**
+ * The share came through "Set as store logo" (#151), not LoyScan's add-card target (#77): the share sheet starts the
+ * alias it lists, so the intent names it.
+ */
+internal fun Intent.sharesAsStoreLogo(): Boolean = component?.className == SHARE_AS_STORE_LOGO
+
 /**
  * Starts the same share in a new LoyScan task, with the picture's read grant passed on. A share LoyScan was granted
  * nothing for can't be passed on: `startActivity` grants an `ACTION_SEND`'s stream itself and throws a
  * `SecurityException`, so that share is dropped and the open screen stays (seen on a device, #83).
  */
 internal fun Intent.forwardToATaskOfItsOwn(context: Context, start: (Intent) -> Unit = context::startActivity) {
+    // A "Set as store logo" share stays one (#151); any other goes to the activity itself.
+    val target = component?.takeIf { it.className == SHARE_AS_STORE_LOGO }
+        ?: ComponentName(context, MainActivity::class.java)
     val forwarded = Intent(this)
-        .setClass(context, MainActivity::class.java)
+        .setComponent(target)
         .setFlags(
             Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK or Intent.FLAG_ACTIVITY_NEW_DOCUMENT or
                 Intent.FLAG_GRANT_READ_URI_PERMISSION

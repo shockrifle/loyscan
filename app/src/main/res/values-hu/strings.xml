@@ -162,6 +162,9 @@
     <string name="logo_picture">Logó képe</string>
     <string name="use_whole_image">Az egész kép</string>
     <string name="logo">Logó</string>
+    <string name="share_as_store_logo">Beállítás bolt logójaként</string>
+    <string name="copying_picture">A kép másolása…</string>
+    <string name="shared_logo_failed">A képet nem sikerült használni.</string>
     <string name="logo_for_which_store">Melyik bolt logója legyen?</string>
     <string name="change_logo">Logó módosítása</string>
     <string name="use_card_photo">Kártya fotójának használata</string>

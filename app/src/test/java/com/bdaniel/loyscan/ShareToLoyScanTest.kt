@@ -1,11 +1,13 @@
 package com.bdaniel.loyscan
 
 import android.app.Application
+import android.content.ComponentName
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
@@ -14,16 +16,20 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.bdaniel.loyscan.data.local.db.AppDatabase
+import com.bdaniel.loyscan.data.repository.StoreRepository
+import com.bdaniel.loyscan.di.CardPhotosModule
 import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.domain.ScannedBarcode
 import com.bdaniel.loyscan.testing.FakePictureReader
 import com.bdaniel.loyscan.testing.WAIT_TIMEOUT_MS
 import com.bdaniel.loyscan.testing.aStoreEntity
+import com.bdaniel.loyscan.testing.writeOnePixelPng
 import com.bdaniel.loyscan.ui.scanner.PictureScan
 import com.google.common.truth.Truth.assertThat
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Before
@@ -32,6 +38,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
+import java.io.ByteArrayInputStream
+import java.io.File
 import javax.inject.Inject
 
 /**
@@ -55,6 +64,9 @@ class ShareToLoyScanTest {
     @Inject
     lateinit var pictureReader: FakePictureReader
 
+    @Inject
+    lateinit var stores: StoreRepository
+
     private var scenario: ActivityScenario<MainActivity>? = null
 
     @Before
@@ -66,6 +78,7 @@ class ShareToLoyScanTest {
     @After
     fun tearDown() {
         scenario?.close()
+        photoDirectory().deleteRecursively()
     }
 
     @Test
@@ -143,13 +156,56 @@ class ShareToLoyScanTest {
         assertThat(pictureReader.reads).hasSize(1)
     }
 
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE) // the picture is really decoded, cropped and encoded
+    fun sharingAPictureAsAStoreLogo_asksWhichStore_andTheCropMakesItItsLogo() { // #151
+        scenario = ActivityScenario.launch(logoShare())
+        waitForText("Logo for which store?")
+        composeRule.onNodeWithText("Test Store").performClick()
+
+        waitForText("Crop")
+        composeRule.onNodeWithText("Crop").performClick()
+
+        waitForText("Remove logo")
+        composeRule.onNodeWithTag(STORE_LOGO_PREVIEW_IMAGE_TAG, useUnmergedTree = true).assertExists()
+        val logo = runBlocking { stores.getAll().first().single { it.name == "Test Store" }.logo }
+        assertThat(logo).isNotNull()
+        composeRule.onNodeWithContentDescription("Back").performClick()
+        waitForText("No cards yet", substring = true)
+    }
+
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    fun recreatingTheActivity_keepsTheStoreQuestion_withoutCopyingThePictureAgain() { // #151
+        scenario = ActivityScenario.launch(logoShare())
+        waitForText("Logo for which store?")
+
+        scenario!!.recreate()
+
+        waitForText("Logo for which store?")
+        assertThat(photoDirectory().listFiles().orEmpty()).hasLength(1)
+        assertThat(pictureReader.reads).isEmpty() // not read for a barcode
+    }
+
+    /** A share through "Set as store logo" (#151), its picture a real PNG served by the content resolver. */
+    private fun logoShare(): Intent {
+        val context = ApplicationProvider.getApplicationContext<Application>()
+        val png = File(context.cacheDir, "shared.png").writeOnePixelPng().readBytes()
+        shadowOf(context.contentResolver).registerInputStream(Uri.parse(PICTURE), ByteArrayInputStream(png))
+        return share().setComponent(ComponentName(context, SHARE_AS_STORE_LOGO))
+    }
+
+    private fun photoDirectory() =
+        File(ApplicationProvider.getApplicationContext<Application>().filesDir, CardPhotosModule.PHOTO_DIRECTORY)
+
     private fun share() = Intent(ApplicationProvider.getApplicationContext(), MainActivity::class.java)
         .setAction(Intent.ACTION_SEND)
         .setType("image/png")
         .putExtra(Intent.EXTRA_STREAM, Uri.parse(PICTURE))
 
-    private fun waitForText(text: String) =
-        composeRule.waitUntil(WAIT_TIMEOUT_MS) { composeRule.onAllNodes(hasText(text)).fetchSemanticsNodes().isNotEmpty() }
+    private fun waitForText(text: String, substring: Boolean = false) = composeRule.waitUntil(WAIT_TIMEOUT_MS) {
+        composeRule.onAllNodes(hasText(text, substring = substring)).fetchSemanticsNodes().isNotEmpty()
+    }
 }
 
 private const val PICTURE = "content://media/picker/0/42"

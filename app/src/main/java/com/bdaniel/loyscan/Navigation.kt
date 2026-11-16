@@ -308,6 +308,39 @@ fun NavController.sharedPictureDirections(shared: NavBackStackEntry) = SharedPic
 )
 
 
+/** A picture shared to LoyScan as a store logo (#151), at the `content://` [uri] granted with the share. */
+@Serializable
+data class SharedLogo(val uri: String)
+
+@Immutable
+data class SharedLogoDirections(
+    val onStaged: (staged: String) -> Unit,
+    val toBack: () -> Unit,
+)
+
+/** Starts setting a store logo from a shared picture (#151) over the list, in place of whatever was open above it. */
+fun NavController.openSharedLogo(uri: String) {
+    navigate(SharedLogo(uri)) {
+        popUpTo<CardList>()
+    }
+}
+
+/**
+ * Once the picture is copied in, the store picker asks which store it is for, in place of [shared], so Back returns
+ * to the list. Only while [shared], its own entry, is current: a copy that ends after Back leaves the user there.
+ */
+fun NavController.sharedLogoDirections(shared: NavBackStackEntry) = SharedLogoDirections(
+    onStaged = { staged ->
+        whileCurrent(shared) {
+            navigate(StorePicker(logoPicture = staged)) {
+                popUpTo<SharedLogo> { inclusive = true }
+            }
+        }
+    },
+    toBack = { whileCurrent(shared) { navigateUp() } },
+)
+
+
 /**
  * Navigates only while [entry] is the current screen. Every direction goes through it. A screen still runs its effects
  * and takes taps while it animates out after Back, or until the next screen covers it, so a write that ends, a scan
