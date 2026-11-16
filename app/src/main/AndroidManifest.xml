@@ -47,6 +47,21 @@
                 <data android:mimeType="image/*" />
             </intent-filter>
         </activity>
+        <!-- Share -> LoyScan as a store logo (#151): a second share target, so the share sheet lists "Set as store logo"
+             beside LoyScan. An alias of the same activity (its launch mode, #83); the intent names the alias. -->
+        <activity-alias
+            android:name=".ShareAsStoreLogo"
+            android:exported="true"
+            android:label="@string/share_as_store_logo"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:mimeType="image/*" />
+            </intent-filter>
+        </activity-alias>
         <!-- Home-screen widget: the user's cards as tiles, each opening its card (#11). -->
         <receiver
             android:name=".widget.glance.CardWidgetReceiver"

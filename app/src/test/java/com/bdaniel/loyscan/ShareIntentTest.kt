@@ -25,6 +25,35 @@ class ShareIntentTest {
     }
 
     @Test
+    fun sharingOnePicture_alsoResolvesToSetAsStoreLogo() { // #151: a second share target
+        for (type in listOf("image/png", "image/jpeg", "image/*")) {
+            assertThat(resolves(Intent(Intent.ACTION_SEND).setType(type), SHARE_AS_STORE_LOGO)).isTrue()
+        }
+        assertThat(resolves(Intent(Intent.ACTION_SEND).setType("text/plain"), SHARE_AS_STORE_LOGO)).isFalse()
+    }
+
+    @Test
+    fun aShareThroughSetAsStoreLogo_sharesAsAStoreLogo_andThePlainShareDoesNot() { // #151
+        val asLogo = share().setComponent(ComponentName(context, SHARE_AS_STORE_LOGO))
+
+        assertThat(asLogo.sharesAsStoreLogo()).isTrue()
+        assertThat(asLogo.sharedPicture()).isEqualTo(Uri.parse(PICTURE))
+        assertThat(share().sharesAsStoreLogo()).isFalse()
+        assertThat(share().setComponent(ComponentName(context, MainActivity::class.java)).sharesAsStoreLogo()).isFalse()
+    }
+
+    @Test
+    fun aStoreLogoShareForwardedToALoyScanOfItsOwn_isStillAStoreLogoShare() { // #151, as #83
+        val started = mutableListOf<Intent>()
+
+        share().setComponent(ComponentName(context, SHARE_AS_STORE_LOGO)).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            .forwardToATaskOfItsOwn(context, start = started::add)
+
+        assertThat(started.single().sharesAsStoreLogo()).isTrue()
+        assertThat(started.single().sharedPicture()).isEqualTo(Uri.parse(PICTURE))
+    }
+
+    @Test
     fun sharingAnythingElse_doesNotResolveToLoyScan() {
         assertThat(resolves(Intent(Intent.ACTION_SEND).setType("text/plain"))).isFalse()
         assertThat(resolves(Intent(Intent.ACTION_SEND_MULTIPLE).setType("image/png"))).isFalse()
@@ -88,9 +117,9 @@ class ShareIntentTest {
     private fun share(type: String = "image/png", uri: String = PICTURE) =
         Intent(Intent.ACTION_SEND).setType(type).putExtra(Intent.EXTRA_STREAM, Uri.parse(uri))
 
-    private fun resolves(intent: Intent) =
+    private fun resolves(intent: Intent, activity: String = MainActivity::class.java.name) =
         packageManager.queryIntentActivities(intent.setPackage(context.packageName), PackageManager.MATCH_DEFAULT_ONLY)
-            .any { it.activityInfo.name == MainActivity::class.java.name }
+            .any { it.activityInfo.name == activity }
 }
 
 private const val PICTURE = "content://media/picker/0/42"

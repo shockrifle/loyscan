@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-16 · "Set as store logo" share target: the picture copied in, the picker asks which store, the crop makes the logo; #151 done · features/store-logo, features/add-card, decisions/2026-11-13-user-supplied-store-logos, workflows/tdd · #151 shared image
 - 2026-11-16 · the store picker's logo mode asks which store a shared picture is the logo for · features/add-card, features/store-logo · #151 shared image
 - 2026-11-16 · the logo screen opens its crop once on a staged picture passed in its route · features/store-logo · #151 shared image
 - 2026-11-13 · review of PR #161: a Room test pins that saving a custom store keeps its logo · features/edit-store · PR #161 review

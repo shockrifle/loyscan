@@ -164,6 +164,9 @@
     <string name="logo_picture">Logo picture</string>
     <string name="use_whole_image">Use whole image</string>
     <string name="logo">Logo</string>
+    <string name="share_as_store_logo">Set as store logo</string>
+    <string name="copying_picture">Copying the picture…</string>
+    <string name="shared_logo_failed">The picture couldn\'t be used.</string>
     <string name="logo_for_which_store">Logo for which store?</string>
     <string name="change_logo">Change logo</string>
     <string name="use_card_photo">Use a card\'s photo</string>

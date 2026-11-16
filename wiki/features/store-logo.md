@@ -5,16 +5,20 @@ The user gives a store a logo of their own, and every card of that store shows i
 logo files ([[2026-11-12-no-bundled-store-logos]]); why it is stored the way it is:
 [[2026-11-13-user-supplied-store-logos]]. Issue [#151](https://github.com/shockrifle/loyscan/issues/151).
 
-**Done so far:** a store's logo screen, reached from the store picker for a catalogue store and from the edit form's
-logo slot for a custom store (slice 3, [[edit-store]]), set from an image on the device (slice 1) or from a crop of
-the front photo of one of the store's cards (slice 2). The new-store form has no slot (see the decision). **Not
-implemented yet** (#151 stays open for it): an image shared to LoyScan as the source.
+A store's logo screen is reached from the store picker for a catalogue store and from the edit form's logo slot for a
+custom store ([[edit-store]]; the new-store form has none, see the decision). The logo comes from an image on the
+device, a crop of the front photo of one of the store's cards, or a picture shared to LoyScan through "Set as store
+logo". Done in four slices, 2026-11-13 to 2026-11-16.
 
 **Entry points** (under `app/src/main/java/com/bdaniel/loyscan/`):
 - `StorePickerScreen.kt`: a catalogue store's row has a trailing image icon, "Logo of <name>", in every section
   (Suggested, Frequently added, All stores) → `StorePickerDirections.toStoreLogo(storeId)` → `StoreLogo(storeId)`
   (`Navigation.kt`). A custom store's row keeps its Edit button ([[edit-store]]) and has no logo button: its edit
   form's **Change logo** → `CustomStoreDirections.toStoreLogo(storeId)` → the same `StoreLogo(storeId)`, over the form.
+- Share → "Set as store logo": the `.ShareAsStoreLogo` activity-alias in `app/src/main/AndroidManifest.xml`,
+  `Intent.sharesAsStoreLogo()` and the `sharedLogos` channel in `MainActivity.kt`; `SharedLogoScreen.kt`,
+  `SharedLogoViewModel.kt`; `SharedLogo(uri)`, `openSharedLogo`, `sharedLogoDirections` in `Navigation.kt`; then the
+  store picker's logo mode ([[add-card]]) and `StoreLogo(storeId, picture)`.
 - `StoreLogoScreen.kt`, `StoreLogoViewModel.kt`: the screen and its state.
 - `ui/LogoSearch.kt`: "Find a logo online".
 - `data/repository/StoreRepository.kt` (`setLogo`), `data/photos/CardPhotos.kt` (`cropLogo`): storage, see the decision.
@@ -49,6 +53,18 @@ implemented yet** (#151 stays open for it): an image shared to LoyScan as the so
   the store picker's logo mode, [[add-card]]): the screen opens
   the square crop on it once (`routePictureTaken` in the `SavedStateHandle`), so Cancel, Crop or process death
   doesn't bring it back. For a store that is gone it is discarded; one whose file is no longer there opens nothing.
+- **A picture shared to LoyScan** (#151): the share sheet lists two LoyScan targets for one image, LoyScan itself
+  (adds a card, [[add-card]], unchanged) and **Set as store logo**, an `activity-alias` of `MainActivity` with the
+  same `SEND image/*` filter, the owner's choice on 2026-11-16. The alias is the intent's component
+  (`sharesAsStoreLogo`); a share forwarded to a LoyScan of its own (#83) keeps it. `SharedLogo(uri)` opens over the
+  list ("Copying the picture…") and copies the picture in at once (`CardPhotos.stage`), while the share's read grant
+  is surely held; the copy's name is in the `SavedStateHandle`, so it isn't made again after process death. A picture
+  that can't be copied says "The picture couldn't be used.". The copy then goes to the store picker in logo mode,
+  "Logo for which store?", any store, in place of `SharedLogo`; the store tapped opens its logo screen with the crop on
+  the copy, in place of the picker, so Back returns to the list. A copy abandoned on the way (Back from the picker or
+  the crop) stays in the photos' directory, which backup carries, until the photo orphan sweep deletes it, more than a
+  day later ([[card-photos]]). **Not checked on a device yet:** that the share sheet lists both targets and starts the
+  alias (cold start, reopened from recents); unit tests can't see the share sheet.
 - **Remove logo** clears it; the name on colour comes back and its file is deleted.
 - **A store that is gone** says "This store is no longer available." and offers nothing.
 - **A logo whose file is missing** is no logo, here, on the tiles and in the header (`CardPhotos.withoutMissing`).
@@ -73,6 +89,13 @@ implemented yet** (#151 stays open for it): an image shared to LoyScan as the so
   straight to the square crop; several → the dialog, the choice cropped; Cancel; the dialog closing when the list empties;
   the dialog still open after process death when the store loads before the cards (`StateRestorationTester`); a
   picture in the route opens the square crop.
+- The shared picture: `ShareIntentTest` (the alias resolves for one image and not for text; its intent shares as a
+  store logo, the plain one doesn't; a forwarded one stays one), `SharedLogoViewModelTest` (copied once; nothing
+  staged while copying; a failure; kept after process death without a second copy), `SharedLogoScreenTest` (copying,
+  handed on once, a failure, Back, Hungarian), `AddCardDirectionsTest.aSharedLogo_…`, `aSharedLogoCopiedAfterBack_…`,
+  end to end `ShareToLoyScanTest.sharingAPictureAsAStoreLogo_asksWhichStore_andTheCropMakesItItsLogo` and
+  `recreatingTheActivity_keepsTheStoreQuestion_withoutCopyingThePictureAgain` (a real PNG served with
+  `ShadowContentResolver.registerInputStream`, `@GraphicsMode(NATIVE)` on those methods only).
 - From a custom store's form: `CustomStoreViewModelTest` (`editingAStore_showsItsLogo`, `aLogoWhoseFileIsMissing_…`,
   `aLogoSetWhileTheFormIsOpen_isShown`, `aNewStore_hasNoLogo`, `savingAnEdit_keepsTheStoresLogo`),
   `CustomStoreScreenTest` (the slot with and without a logo, Change logo, none on the new-store form or for a store

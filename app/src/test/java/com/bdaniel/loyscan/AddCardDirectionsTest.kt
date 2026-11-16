@@ -43,6 +43,7 @@ class AddCardDirectionsTest {
                 composable<Detail> {}
                 composable<SharedPicture> {}
                 composable<StoreLogo> {}
+                composable<SharedLogo> {}
             }
         }
         composeRule.runOnIdle { navController.listDirections(navController.currentBackStackEntry!!).toAddCard() }
@@ -152,6 +153,33 @@ class AddCardDirectionsTest {
         composeRule.runOnIdle { picker.toStore("hu-tesco") }
 
         composeRule.runOnIdle { assertThat(navController.previousBackStackEntry?.destination?.hasRoute(CardList::class)).isTrue() }
+    }
+
+    @Test
+    fun aSharedLogo_opensOverTheList_andItsCopyGoesToThePickerInLogoMode_inItsPlace() { // #151
+        composeRule.runOnIdle { navController.openSharedLogo("content://media/picker/0/7") }
+        composeRule.runOnIdle {
+            assertThat(navController.currentBackStackEntry!!.toRoute<SharedLogo>()).isEqualTo(SharedLogo("content://media/picker/0/7"))
+            assertThat(navController.previousBackStackEntry?.destination?.hasRoute(CardList::class)).isTrue()
+        }
+
+        composeRule.runOnIdle { navController.sharedLogoDirections(navController.currentBackStackEntry!!).onStaged("staged-1") }
+
+        composeRule.runOnIdle {
+            assertThat(navController.currentBackStackEntry!!.toRoute<StorePicker>()).isEqualTo(StorePicker(logoPicture = "staged-1"))
+            assertThat(navController.previousBackStackEntry?.destination?.hasRoute(CardList::class)).isTrue()
+        }
+    }
+
+    @Test
+    fun aSharedLogoCopiedAfterBack_leavesTheUserOnTheList() { // #151, as #68
+        composeRule.runOnIdle { navController.openSharedLogo("content://media/picker/0/7") }
+        val shared = composeRule.runOnIdle { navController.sharedLogoDirections(navController.currentBackStackEntry!!) }
+        composeRule.runOnIdle { shared.toBack() }
+
+        composeRule.runOnIdle { shared.onStaged("staged-1") }
+
+        composeRule.runOnIdle { assertThat(currentIs<CardList>()).isTrue() }
     }
 
     @Test
