@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -64,7 +65,8 @@ class StoreLogoViewModel @Inject constructor(
     private val photos: CardPhotos,
 ) : ViewModel() {
 
-    private val storeId = savedStateHandle.toRoute<StoreLogo>().storeId
+    private val route = savedStateHandle.toRoute<StoreLogo>()
+    private val storeId = route.storeId
 
     private val found: StateFlow<Found> = storeRepository.getAll()
         .map { stores ->
@@ -99,6 +101,27 @@ class StoreLogoViewModel @Inject constructor(
             cardPhotosLoaded = cardPhotos != null,
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, StoreLogoState())
+
+    init {
+        route.picture?.let(::openCropOnce)
+    }
+
+    /**
+     * Opens the crop on the staged [picture] the route brought (#151: shared to LoyScan as a store logo), once: a
+     * Cancel, a Crop or process death doesn't bring it back. For a store that is gone it is discarded; a file that is
+     * no longer there (swept meanwhile) opens nothing.
+     */
+    private fun openCropOnce(picture: String) {
+        if (savedStateHandle.get<Boolean>(ROUTE_PICTURE_TAKEN) == true) return
+        viewModelScope.launch {
+            val found = found.first { it !is Found.Loading }
+            savedStateHandle[ROUTE_PICTURE_TAKEN] = true
+            when {
+                found is Found.Gone -> photos.discard(listOf(picture))
+                photos.exists(picture) -> savedStateHandle[CROP_LOGO] = picture
+            }
+        }
+    }
 
     /** A picture picked for the logo, `null` when the picker was cancelled: copied in, then the crop screen opens on it. */
     fun onPicked(picture: Uri?) {
@@ -202,5 +225,6 @@ class StoreLogoViewModel @Inject constructor(
 
     private companion object {
         const val CROP_LOGO = "cropLogo"
+        const val ROUTE_PICTURE_TAKEN = "routePictureTaken"
     }
 }
