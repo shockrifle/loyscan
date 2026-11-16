@@ -164,6 +164,7 @@
     <string name="logo_picture">Logo picture</string>
     <string name="use_whole_image">Use whole image</string>
     <string name="logo">Logo</string>
+    <string name="logo_for_which_store">Logo for which store?</string>
     <string name="change_logo">Change logo</string>
     <string name="use_card_photo">Use a card\'s photo</string>
     <string name="which_card_photo">Which card\'s photo?</string>

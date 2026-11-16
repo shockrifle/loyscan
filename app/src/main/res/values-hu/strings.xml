@@ -162,6 +162,7 @@
     <string name="logo_picture">Logó képe</string>
     <string name="use_whole_image">Az egész kép</string>
     <string name="logo">Logó</string>
+    <string name="logo_for_which_store">Melyik bolt logója legyen?</string>
     <string name="change_logo">Logó módosítása</string>
     <string name="use_card_photo">Kártya fotójának használata</string>
     <string name="which_card_photo">Melyik kártya fotója?</string>

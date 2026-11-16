@@ -35,7 +35,8 @@ private const val ALL_STORES_KEY = "all stores"
  * First step of adding a card: pick the store, searching by name or alias, or "Other card" for one that isn't listed.
  * While nothing is searched, the frequently added stores of the user's country come first (#6), after the stores
  * suggested for a shared picture's barcode (#77). A custom store has an Edit button (#53), a catalogue store a Logo
- * button (#151).
+ * button (#151). For a picture shared as a store logo, it asks which store the logo is for (#151), offering only the
+ * stores.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,8 +49,11 @@ fun StorePickerScreen(
     val suggested by viewModel.suggested.collectAsState()
     val frequentlyAdded by viewModel.frequentlyAdded.collectAsState()
     // A custom store is edited in its form (#53); a catalogue store's logo has its own screen (#151). In every section.
+    // Asking which store a shared picture is the logo for (#151), a row is only a store to tap.
     val trailing: (Store) -> (@Composable () -> Unit)? = { store ->
-        if (store.isCustom) {
+        if (viewModel.logoMode) {
+            null
+        } else if (store.isCustom) {
             {
                 IconButton(onClick = { directions.toEditStore(store.id) }) {
                     Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.edit_store_named, store.name))
@@ -67,7 +71,9 @@ fun StorePickerScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.choose_store)) },
+                title = {
+                    Text(stringResource(if (viewModel.logoMode) R.string.logo_for_which_store else R.string.choose_store))
+                },
                 navigationIcon = {
                     IconButton(onClick = directions.toBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.back))
@@ -84,13 +90,15 @@ fun StorePickerScreen(
             onStoreClick = { directions.toStore(it.id) },
             modifier = Modifier.padding(innerPadding),
             header = {
-                item(key = OTHER_CARD_KEY) {
-                    ListItem(
-                        headlineContent = { Text(stringResource(R.string.other_card)) },
-                        supportingContent = { Text(stringResource(R.string.other_card_hint)) },
-                        leadingContent = { Icon(Icons.Default.Add, contentDescription = null) },
-                        modifier = Modifier.clickable(onClick = directions.toCustomStore),
-                    )
+                if (!viewModel.logoMode) {
+                    item(key = OTHER_CARD_KEY) {
+                        ListItem(
+                            headlineContent = { Text(stringResource(R.string.other_card)) },
+                            supportingContent = { Text(stringResource(R.string.other_card_hint)) },
+                            leadingContent = { Icon(Icons.Default.Add, contentDescription = null) },
+                            modifier = Modifier.clickable(onClick = directions.toCustomStore),
+                        )
+                    }
                 }
                 // Each section's stores are also in the full list below, so their keys mustn't be the store id alone.
                 if (suggested.isNotEmpty()) {

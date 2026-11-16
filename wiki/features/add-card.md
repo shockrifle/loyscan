@@ -31,6 +31,13 @@ with the picture's barcode (#77, below). Everything runs offline on the local da
   [[2026-10-30-frequently-added-stores]]) lists the catalogue stores flagged `frequentlyAdded` whose `countryCodes`
   contain the user's country (`UserCountry`: SIM, then network, then locale), by name, between "Other card" and an
   "All stores" heading; they stay in the full list too. With none for the country, neither heading is shown.
+- **Logo mode** (#151, [[store-logo]]): `StorePicker(logoPicture = <staged name>)` asks "Logo for which store?" for a
+  picture shared to LoyScan as a store logo (`StorePickerViewModel.logoMode`). It lists the same stores and sections,
+  without "Other card" and without the rows' Edit and logo buttons. A tap on a store replaces the picker with that
+  store's logo screen, `StoreLogo(storeId, picture)` (`storePickerDirections`), so Back from there returns to the list.
+  Tests: `StorePickerViewModelTest.aPictureForALogo_…`, `StorePickerScreenTest.inLogoMode_…`,
+  `inHungarian_theLogoModesTitle_isTranslated`, `AddCardDirectionsTest.aStoreTappedInLogoMode_…`,
+  `aSecondTapOnAStoreInLogoMode_opensOneLogoScreen`.
 - **Language** (#72): every text on the store picker, its search, the scanner ([[barcode-scanner]]), the shared
   picture screen (`SharedPictureScreenTest.inHungarian_…`: reading, no barcode, an unreadable picture), the card form
   (its problem messages, photo slots and "Choose store" dialog) and the photo crop screen is a string resource, in

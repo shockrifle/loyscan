@@ -35,6 +35,9 @@ class StorePickerViewModel(
     constructor(storeRepository: StoreRepository, savedStateHandle: SavedStateHandle, userCountry: UserCountry) :
         this(storeRepository, savedStateHandle.toRoute<StorePicker>(), userCountry)
 
+    /** The picker asks which store a shared picture is the logo for (#151), not which store a card is for. */
+    val logoMode: Boolean = route.logoPicture != null
+
     private val country = userCountry.code()
 
     private val _query = MutableStateFlow("")

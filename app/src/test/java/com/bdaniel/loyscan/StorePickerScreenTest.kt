@@ -103,6 +103,32 @@ class StorePickerScreenTest {
     }
 
     @Test
+    fun inLogoMode_theTitleAsksWhichStore_withoutOtherCard_orEditAndLogoButtons() { // #151: a picture shared as a logo
+        setScreen(
+            aStore(id = "first", name = "First Store", frequentlyAdded = true),
+            aStore(id = "custom", name = "My Shop", isCustom = true),
+            route = StorePicker(logoPicture = "staged-1"),
+        )
+
+        composeRule.onNodeWithText("Logo for which store?").assertIsDisplayed()
+        composeRule.onNodeWithText("Choose store").assertDoesNotExist()
+        composeRule.onNodeWithText("Other card").assertDoesNotExist()
+        composeRule.onNodeWithContentDescription("Logo of First Store").assertDoesNotExist()
+        composeRule.onNodeWithContentDescription("Edit My Shop").assertDoesNotExist()
+        composeRule.onNodeWithText("My Shop").performClick()
+
+        assertThat(picked).containsExactly("custom")
+    }
+
+    @Test
+    @Config(qualifiers = "+hu")
+    fun inHungarian_theLogoModesTitle_isTranslated() { // #151
+        setScreen(aStore(id = "first", name = "First Store"), route = StorePicker(logoPicture = "staged-1"))
+
+        composeRule.onNodeWithText("Melyik bolt logója legyen?").assertIsDisplayed()
+    }
+
+    @Test
     fun aCatalogueStoresLogoButton_opensItsLogoScreen_andACustomStoreHasNone() { // #151: a custom store's is its form's
         setScreen(aStore(id = "first", name = "First Store"), aStore(id = "custom", name = "My Shop", isCustom = true))
 

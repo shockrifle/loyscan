@@ -45,7 +45,8 @@ implemented yet** (#151 stays open for it): an image shared to LoyScan as the so
 - **Find a logo online** opens a Google Images search for "<store name> logo" in the browser (`logoSearchUri`), the
   user's choice on 2026-11-13; a setting for the search engine is not implemented. With no app to open it, a toast
   says "No app can open the web search.". The user saves an image there and picks it with Choose image.
-- **A picture in the route** (`StoreLogo.picture`, a staged name; for a picture shared to LoyScan): the screen opens
+- **A picture in the route** (`StoreLogo.picture`, a staged name; for a picture shared to LoyScan, chosen for a store in
+  the store picker's logo mode, [[add-card]]): the screen opens
   the square crop on it once (`routePictureTaken` in the `SavedStateHandle`), so Cancel, Crop or process death
   doesn't bring it back. For a store that is gone it is discarded; one whose file is no longer there opens nothing.
 - **Remove logo** clears it; the name on colour comes back and its file is deleted.
