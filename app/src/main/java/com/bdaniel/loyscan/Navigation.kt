@@ -109,7 +109,11 @@ fun NavController.storePickerDirections(picker: NavBackStackEntry) = StorePicker
  * catalogue store) or a custom store's edit form.
  */
 @Serializable
-data class StoreLogo(val storeId: String)
+data class StoreLogo(
+    val storeId: String,
+    /** A staged picture the screen opens its crop on once (#151: shared to LoyScan as a store logo). */
+    val picture: String? = null,
+)
 
 @Immutable
 data class StoreLogoDirections(val toBack: () -> Unit)

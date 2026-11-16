@@ -45,6 +45,9 @@ implemented yet** (#151 stays open for it): an image shared to LoyScan as the so
 - **Find a logo online** opens a Google Images search for "<store name> logo" in the browser (`logoSearchUri`), the
   user's choice on 2026-11-13; a setting for the search engine is not implemented. With no app to open it, a toast
   says "No app can open the web search.". The user saves an image there and picks it with Choose image.
+- **A picture in the route** (`StoreLogo.picture`, a staged name; for a picture shared to LoyScan): the screen opens
+  the square crop on it once (`routePictureTaken` in the `SavedStateHandle`), so Cancel, Crop or process death
+  doesn't bring it back. For a store that is gone it is discarded; one whose file is no longer there opens nothing.
 - **Remove logo** clears it; the name on colour comes back and its file is deleted.
 - **A store that is gone** says "This store is no longer available." and offers nothing.
 - **A logo whose file is missing** is no logo, here, on the tiles and in the header (`CardPhotos.withoutMissing`).
@@ -58,14 +61,17 @@ implemented yet** (#151 stays open for it): an image shared to LoyScan as the so
   (the stored logo deleted); a save still running when the screen closes; the crop restored after process death;
   removing, and a failed remove; another store left alone; the card photos offered (this store's front photos only, a
   missing file left out, a card's number for one without a label); a card's photo → a copy → crop → logo; a photo
-  not on the list refused; a copy that fails; working while copying it.
+  not on the list refused; a copy that fails; working while copying it; a picture in the route → the crop → the logo,
+  cancelled and not offered again, still in the crop after process death, not offered again once cropped, discarded
+  for a store that is gone, nothing for a missing file.
 - `StoreLogoScreenTest`: the preview with and without a logo; Choose image → a square frame → Crop sets it; a wide
   picture (`writeWidePng`, 2×1) pinched out is cropped whole (`top` −0.5, `bottom` 1.5); Use whole image and Cancel;
   Find a logo online; Remove logo; a failure; the buttons waiting; a store that is gone; Back; Hungarian (the "Which
   card's photo?" dialog open); font scale 2 (the screen with the card photo button; the dialog's own layout isn't
   measured, as `assertTextFitsAndDoesNotOverlap` reads one window). Use a card's photo: no button without one; one card →
   straight to the square crop; several → the dialog, the choice cropped; Cancel; the dialog closing when the list empties;
-  the dialog still open after process death when the store loads before the cards (`StateRestorationTester`).
+  the dialog still open after process death when the store loads before the cards (`StateRestorationTester`); a
+  picture in the route opens the square crop.
 - From a custom store's form: `CustomStoreViewModelTest` (`editingAStore_showsItsLogo`, `aLogoWhoseFileIsMissing_…`,
   `aLogoSetWhileTheFormIsOpen_isShown`, `aNewStore_hasNoLogo`, `savingAnEdit_keepsTheStoresLogo`),
   `CustomStoreScreenTest` (the slot with and without a logo, Change logo, none on the new-store form or for a store

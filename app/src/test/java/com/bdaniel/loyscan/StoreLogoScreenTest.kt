@@ -107,6 +107,19 @@ class StoreLogoScreenTest {
     }
 
     @Test
+    fun aPictureInTheRoute_opensTheSquareCrop() { // #151: a picture shared to LoyScan
+        photos.stored += "shared"
+        val viewModel = StoreLogoViewModel(SavedStateHandle(route = StoreLogo("shop", picture = "shared")), stores, cards, photos)
+        composeRule.setContent { StoreLogoScreen(directions(), viewModel, testPicker(), testLogoSearch()) }
+
+        val frame = composeRule.onNodeWithTag(PHOTO_CROP_FRAME_TAG).fetchSemanticsNode().size
+        assertThat(abs(frame.width - frame.height)).isAtMost(1)
+        composeRule.onNodeWithText("Crop").performClick()
+
+        assertThat(stores.stores.value.single().logo).isEqualTo("logo-1")
+    }
+
+    @Test
     fun theCrop_zoomsOut_soAWideLogoFitsTheSquareWhole() {
         File(context.filesDir, CardPhotosModule.PHOTO_DIRECTORY).resolve("staged-1").writeWidePng()
         setScreen()

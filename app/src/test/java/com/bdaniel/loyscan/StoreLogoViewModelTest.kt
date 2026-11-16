@@ -270,6 +270,72 @@ class StoreLogoViewModelTest {
     }
 
     @Test
+    fun aPictureInTheRoute_opensTheCropOnIt_andCropMakesItTheLogo() = runTest { // #151: a picture shared to LoyScan
+        photos.stored += "shared"
+        val viewModel = viewModel(SavedStateHandle(route = StoreLogo("shop", picture = "shared")))
+
+        assertThat(viewModel.state.value.cropping).isEqualTo("shared")
+        viewModel.confirmCrop(square)
+
+        assertThat(photos.croppedLogos.map { it.first }).containsExactly("shared")
+        assertThat(stores.stores.value.single { it.id == "shop" }.logo).isEqualTo("logo-1")
+        assertThat(viewModel.state.value.cropping).isNull()
+    }
+
+    @Test
+    fun aPictureInTheRoute_cancelled_isDiscarded_andNotOfferedAgain() = runTest { // #151
+        photos.stored += "shared"
+        val handle = SavedStateHandle(route = StoreLogo("shop", picture = "shared"))
+        viewModel(handle).cancelCrop()
+
+        val restored = viewModel(SavedStateHandle(handle.keys().associateWith { handle.get<Any?>(it) }))
+
+        assertThat(photos.stored).doesNotContain("shared")
+        assertThat(restored.state.value.cropping).isNull()
+    }
+
+    @Test
+    fun aPictureInTheRoute_isStillInTheCrop_afterProcessDeath() = runTest { // #151
+        photos.stored += "shared"
+        val handle = SavedStateHandle(route = StoreLogo("shop", picture = "shared"))
+        viewModel(handle)
+
+        val restored = viewModel(SavedStateHandle(handle.keys().associateWith { handle.get<Any?>(it) }))
+
+        assertThat(restored.state.value.cropping).isEqualTo("shared")
+    }
+
+    @Test
+    fun aPictureInTheRoute_cropped_isNotOfferedAgain_afterProcessDeath() = runTest { // #151
+        photos.stored += "shared"
+        val handle = SavedStateHandle(route = StoreLogo("shop", picture = "shared"))
+        viewModel(handle).confirmCrop(square)
+
+        val restored = viewModel(SavedStateHandle(handle.keys().associateWith { handle.get<Any?>(it) }))
+
+        assertThat(restored.state.value.cropping).isNull()
+        assertThat(photos.croppedLogos).hasSize(1)
+    }
+
+    @Test
+    fun aPictureInTheRoute_forAStoreThatIsGone_isDiscarded_withoutACrop() = runTest { // #151
+        photos.stored += "shared"
+        val viewModel = viewModel(SavedStateHandle(route = StoreLogo("gone", picture = "shared")))
+
+        assertThat(viewModel.state.value.storeGone).isTrue()
+        assertThat(viewModel.state.value.cropping).isNull()
+        assertThat(photos.stored).doesNotContain("shared")
+    }
+
+    @Test
+    fun aPictureInTheRoute_whoseFileIsMissing_opensNoCrop() = runTest { // #151: e.g. swept while the app was away
+        val viewModel = viewModel(SavedStateHandle(route = StoreLogo("shop", picture = "shared")))
+
+        assertThat(viewModel.state.value.ready).isTrue()
+        assertThat(viewModel.state.value.cropping).isNull()
+    }
+
+    @Test
     fun removingTheLogo_clearsIt() = runTest {
         stores.setLogo("shop", "logo")
         photos.stored += "logo"

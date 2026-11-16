@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-16 · the logo screen opens its crop once on a staged picture passed in its route · features/store-logo · #151 shared image
 - 2026-11-13 · review of PR #161: a Room test pins that saving a custom store keeps its logo · features/edit-store · PR #161 review
 - 2026-11-13 · a custom store's edit form gets a logo slot opening its logo screen; the new-store form has none, by the owner's choice · features/edit-store, features/store-logo, decisions/2026-11-13-user-supplied-store-logos · #151 custom store slot
 - 2026-11-13 · review of PR #160: the card-photo question closes for an empty list only once the list has loaded · features/store-logo · PR #160 review
