@@ -106,7 +106,7 @@ whenever a catalogue store is added. Checked 2026-11-12; "none found" means not 
   press kit; a press kit's "editorial use" is not permission for an app.
 - **Names and brand colours stay**, as referential use: they identify which retailer's card it is.
 - **A non-affiliation note is required before the first release**, in the app
-  ([#150](https://github.com/shockrifle/loyscan/issues/150); the app has no about screen yet) and in the Play
+  ([#150](https://github.com/shockrifle/loyscan/issues/150); on the About screen since 2026-11-17, [[about]]) and in the Play
   listing ([#75](https://github.com/shockrifle/loyscan/issues/75)): LoyScan is not affiliated with or endorsed by the retailers whose cards it stores, and their names
   belong to their owners.
 - The user chose this on 2026-11-12: bundling was ruled out, the press kits of all 23 stores were checked, and the

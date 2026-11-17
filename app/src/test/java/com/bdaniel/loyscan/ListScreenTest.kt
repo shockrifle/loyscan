@@ -89,7 +89,7 @@ class ListScreenTest {
         val card = aLoyaltyCard(id = cardId(5), store = aStore(name = "Test Store", color = "#AA0000"))
         val viewModel = ListViewModel(FakeLoyaltyCardRepository(listOf(card)), FakeUserPreferencesRepository(), SavedStateHandle(), FakeCardPhotos())
         var navigatedTo: Pair<String, String>? = null
-        val directions = ListDirections(toCard = { id, color -> navigatedTo = id to color; true }, toAddCard = {}, toEditCard = { _, _ -> })
+        val directions = ListDirections(toCard = { id, color -> navigatedTo = id to color; true }, toAddCard = {}, toEditCard = { _, _ -> }, toAbout = {})
 
         composeRule.setContent {
             SharedTransitionLayout {
@@ -304,7 +304,7 @@ class ListScreenTest {
     @Test
     fun addCard_startsAddingACard() {
         var addCardOpened = 0
-        setScreen(directions = ListDirections(toCard = { _, _ -> true }, toAddCard = { addCardOpened++ }, toEditCard = { _, _ -> }))
+        setScreen(directions = ListDirections(toCard = { _, _ -> true }, toAddCard = { addCardOpened++ }, toEditCard = { _, _ -> }, toAbout = {}))
 
         composeRule.onNodeWithContentDescription("Add card").performClick()
 
@@ -312,9 +312,19 @@ class ListScreenTest {
     }
 
     @Test
+    fun theAboutButton_opensAbout() { // #150
+        var aboutOpened = 0
+        setScreen(aLoyaltyCard(), directions = ListDirections(toCard = { _, _ -> true }, toAddCard = {}, toEditCard = { _, _ -> }, toAbout = { aboutOpened++ }))
+
+        composeRule.onNodeWithContentDescription("About").performClick()
+
+        assertThat(aboutOpened).isEqualTo(1)
+    }
+
+    @Test
     fun noCards_offersToAddTheFirstOne_withoutASearchField() {
         var addCardOpened = 0
-        setScreen(directions = ListDirections(toCard = { _, _ -> true }, toAddCard = { addCardOpened++ }, toEditCard = { _, _ -> }))
+        setScreen(directions = ListDirections(toCard = { _, _ -> true }, toAddCard = { addCardOpened++ }, toEditCard = { _, _ -> }, toAbout = {}))
 
         composeRule.onNodeWithText("No cards yet").assertIsDisplayed()
         composeRule.onNodeWithTag(CARD_SEARCH_TAG).assertDoesNotExist()
@@ -397,7 +407,7 @@ class ListScreenTest {
         composeRule.setContent {
             SharedTransitionLayout {
                 AnimatedVisibility(visible = true) {
-                    ListScreen(animatedVisibilityScope = this, directions = ListDirections({ _, _ -> true }, {}, { _, _ -> }), viewModel = viewModel)
+                    ListScreen(animatedVisibilityScope = this, directions = ListDirections({ _, _ -> true }, {}, { _, _ -> }, toAbout = {}), viewModel = viewModel)
                 }
             }
         }
@@ -434,7 +444,7 @@ class ListScreenTest {
         var opened = 0
         setScreen(
             aLoyaltyCard(id = cardId(1), store = aStore(name = "Apple")), aLoyaltyCard(id = cardId(2), store = aStore(name = "Berry")),
-            directions = ListDirections(toCard = { _, _ -> opened++; true }, toAddCard = {}, toEditCard = { _, _ -> }),
+            directions = ListDirections(toCard = { _, _ -> opened++; true }, toAddCard = {}, toEditCard = { _, _ -> }, toAbout = {}),
         )
 
         composeRule.onNodeWithText("Apple").performTouchInput { longClick() }
@@ -483,7 +493,7 @@ class ListScreenTest {
         var edited: Pair<String, String>? = null
         setScreen(
             aLoyaltyCard(id = cardId(1), store = aStore(id = "apple", name = "Apple")), aLoyaltyCard(id = cardId(2), store = aStore(id = "berry", name = "Berry")),
-            directions = ListDirections(toCard = { _, _ -> true }, toAddCard = {}, toEditCard = { id, storeId -> edited = id to storeId }),
+            directions = ListDirections(toCard = { _, _ -> true }, toAddCard = {}, toEditCard = { id, storeId -> edited = id to storeId }, toAbout = {}),
         )
         composeRule.onNodeWithText("Apple").performTouchInput { longClick() }
         composeRule.onNodeWithText("Berry").performClick()
@@ -579,7 +589,7 @@ class ListScreenTest {
         restorationTester.setContent {
             SharedTransitionLayout {
                 AnimatedVisibility(visible = true) {
-                    ListScreen(animatedVisibilityScope = this, directions = ListDirections({ _, _ -> true }, {}, { _, _ -> }), viewModel = viewModel)
+                    ListScreen(animatedVisibilityScope = this, directions = ListDirections({ _, _ -> true }, {}, { _, _ -> }, toAbout = {}), viewModel = viewModel)
                 }
             }
         }
@@ -756,7 +766,7 @@ class ListScreenTest {
         restorationTester.setContent {
             SharedTransitionLayout {
                 AnimatedVisibility(visible = true) {
-                    ListScreen(animatedVisibilityScope = this, directions = ListDirections({ _, _ -> true }, {}, { _, _ -> }), viewModel = viewModel)
+                    ListScreen(animatedVisibilityScope = this, directions = ListDirections({ _, _ -> true }, {}, { _, _ -> }, toAbout = {}), viewModel = viewModel)
                 }
             }
         }
@@ -826,7 +836,7 @@ class ListScreenTest {
         val showList = mutableStateOf(true)
         val viewModel = ListViewModel(repository, FakeUserPreferencesRepository(CardSort.MOST_USED), SavedStateHandle(), FakeCardPhotos())
         // Opens a card only from the shown list, as the app's directions do (#69).
-        val directions = ListDirections(toCard = { _, _ -> showList.value.also { showList.value = false } }, toAddCard = {}, toEditCard = { _, _ -> })
+        val directions = ListDirections(toCard = { _, _ -> showList.value.also { showList.value = false } }, toAddCard = {}, toEditCard = { _, _ -> }, toAbout = {})
         val setContent: (@Composable () -> Unit) -> Unit = restorationTester?.let { it::setContent } ?: composeRule::setContent
         setContent {
             val savedState = rememberSaveableStateHolder()
@@ -882,14 +892,14 @@ class ListScreenTest {
 
         shown.assertSeen(
             "Kártyáim", "Keresés a kártyák között", "Nincs ilyen kártya: „xyz”", "1 kijelölve", "Törlöd ezt a kártyát?",
-            "2 kijelölve", "Törlöd a kijelölt 2 kártyát?", "Nem sikerült törölni a kártyákat. Próbáld újra.", "Kijelölés",
+            "2 kijelölve", "Törlöd a kijelölt 2 kártyát?", "Nem sikerült törölni a kártyákat. Próbáld újra.", "Kijelölés", "Névjegy",
         )
         shown.assertEveryTextIsTranslated("Apple", "Work", "Berry", "A", "B", "Apple, Work", "xyz")
     }
 
     private fun setScreen(
         vararg cards: LoyaltyCard,
-        directions: ListDirections = ListDirections(toCard = { _, _ -> true }, toAddCard = {}, toEditCard = { _, _ -> }),
+        directions: ListDirections = ListDirections(toCard = { _, _ -> true }, toAddCard = {}, toEditCard = { _, _ -> }, toAbout = {}),
         preferences: FakeUserPreferencesRepository = FakeUserPreferencesRepository(),
         photos: FakeCardPhotos = FakeCardPhotos(),
         viewModel: ListViewModel = ListViewModel(FakeLoyaltyCardRepository(cards.toList()), preferences, SavedStateHandle(), photos),

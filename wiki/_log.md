@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-17 · About screen from an Info icon beside the list's Settings gear: name, version and the non-affiliation note, in English and Hungarian · features/about (new), features/card-list, features/_index, decisions/2026-11-12-no-bundled-store-logos, index · #150
 - 2026-11-16 · review of PR #165: a pick made while the route's picture is checked keeps the crop; FakeCardPhotos.existsGate; add-card entry points refreshed · features/store-logo, features/add-card, workflows/tdd · PR #165 review
 - 2026-11-16 · "Set as store logo" share target: the picture copied in, the picker asks which store, the crop makes the logo; #151 done · features/store-logo, features/add-card, decisions/2026-11-13-user-supplied-store-logos, workflows/tdd · #151 shared image
 - 2026-11-16 · the store picker's logo mode asks which store a shared picture is the logo for · features/add-card, features/store-logo · #151 shared image

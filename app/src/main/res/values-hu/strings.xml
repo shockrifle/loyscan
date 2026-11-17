@@ -11,6 +11,10 @@
     <!-- Card list -->
     <string name="card_list_title">Kártyáim</string>
     <string name="settings">Beállítások</string>
+    <string name="about">Névjegy</string>
+    <!-- The About screen it opens (#150) -->
+    <string name="about_version">Verzió: %1$s</string>
+    <string name="about_not_affiliated">A LoyScan nem áll kapcsolatban az általa tárolt kártyák kereskedőivel, és azok nem támogatják az alkalmazást. A nevük és a védjegyeik a tulajdonosaikat illetik.</string>
     <string name="add_card">Kártya hozzáadása</string>
     <string name="search_cards">Keresés a kártyák között</string>
     <string name="no_card_matches">Nincs ilyen kártya: „%1$s”</string>

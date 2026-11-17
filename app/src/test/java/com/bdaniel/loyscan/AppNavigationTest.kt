@@ -126,6 +126,19 @@ class AppNavigationTest {
     }
 
     @Test
+    fun about_opensFromTheList_saysLoyScanIsNotAffiliated_andBackReturnsToTheList() { // #150
+        waitForText("Gold card")
+        composeRule.onNodeWithContentDescription("About").performClick()
+        waitForText("Version ${BuildConfig.VERSION_NAME}")
+
+        composeRule.onNodeWithText("not affiliated with or endorsed by the retailers", substring = true).assertIsDisplayed()
+
+        composeRule.onNodeWithContentDescription("Back").performClick()
+        waitForTextToGo("Version ${BuildConfig.VERSION_NAME}")
+        composeRule.onNodeWithText("Gold card").assertIsDisplayed()
+    }
+
+    @Test
     fun addCard_opensTheStorePicker_pickingAStoreOpensTheScanner_andBackReturnsToThePicker() {
         composeRule.onNodeWithContentDescription("Add card").performClick()
         waitForText("Choose store")

@@ -26,6 +26,7 @@ the way they are, what's fragile, and how to work on it.
 - [[card-photos]] — photos of the physical card, in private storage, deleted with the card
 - [[edit-store]] — editing or deleting a custom store from the store picker
 - [[store-logo]] — the user's own logo for a store, on every card of it (#151, in slices)
+- [[about]] — the About screen from the list: name, version, and the non-affiliation note (#150)
 - [[barcode-scanner]] — reads a card's barcode with the camera (offline, no Play Services)
 - [[store-catalogue]] — curated store list, synced into the database on every open
 - [[seed-data]] — the former debug demo cards (removed, #55)

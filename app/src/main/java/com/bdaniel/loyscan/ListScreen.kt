@@ -145,6 +145,9 @@ fun SharedTransitionScope.ListScreen(
                 title = { Text(stringResource(R.string.card_list_title)) },
                 actions = {
                     SortMenu(sort = sort, onSortChange = viewModel::onSortChange)
+                    IconButton(onClick = directions.toAbout) {
+                        Icon(Icons.Default.Info, contentDescription = stringResource(R.string.about))
+                    }
                     IconButton(onClick = { /* TODO: Handle settings click */ }) {
                         Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings))
                     }
