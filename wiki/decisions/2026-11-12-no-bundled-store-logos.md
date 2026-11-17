@@ -127,5 +127,7 @@ whenever a catalogue store is added. Checked 2026-11-12; "none found" means not 
   badge is visual polish (#108), not a logo.
 - Play screenshots must show no retailer logos, including on card photos (a #75 criterion since 2026-11-12).
 - `Store.logo`, the Coil SVG loader and the `INTERNET` permission stay as they are. No shipped store uses them
-  ([[coil-image-loading]]). Removing them is out of scope here.
+  ([[coil-image-loading]]). Removing them is out of scope here. *Amended 2026-11-17:* `Store.logo` became the user's
+  own logo file (#151, [[2026-11-13-user-supplied-store-logos]]), and the SVG decoder and the `INTERNET` permission
+  were removed in [#157](https://github.com/shockrifle/loyscan/issues/157).
 - Adding a catalogue store adds no logo ([[add-a-catalogue-store]]).

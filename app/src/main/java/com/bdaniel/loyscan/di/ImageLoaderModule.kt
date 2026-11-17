@@ -3,7 +3,6 @@ package com.bdaniel.loyscan.di
 import android.content.Context
 import coil.EventListener
 import coil.ImageLoader
-import coil.decode.SvgDecoder
 import com.bdaniel.loyscan.data.photos.FileCardPhotos
 import com.bdaniel.loyscan.ui.CardPhotoMapper
 import dagger.Module
@@ -27,7 +26,6 @@ object ImageLoaderModule {
     ): ImageLoader {
         return ImageLoader.Builder(context)
             .components {
-                add(SvgDecoder.Factory())
                 add(CardPhotoMapper(photos))
             }
             .eventListener(object : EventListener {
