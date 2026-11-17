@@ -14,3 +14,16 @@
 .cxx
 local.properties
 /.idea/deviceManager.xml
+
+# Release signing material and outputs (#74). The repo is public: none of these may ever be committed, and they are
+# ignored before any of them exists. Where they live instead: wiki/workflows/release.md. Checked by GitIgnoreTest.
+*.jks
+*.keystore
+keystore.properties
+*service-account*.json
+/secrets/
+.env
+*.aab
+*.apk
+*.idsig
+mapping.txt
