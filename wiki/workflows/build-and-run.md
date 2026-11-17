@@ -123,11 +123,13 @@ All versions live in `gradle/libs.versions.toml`. Constraints that have bitten b
   icons — [[2025-12-08-hand-rolled-icons]].
 - The `kotlinSerialization` plugin version is pinned to the Kotlin version (`2.4.21`). It's needed for the
   type-safe navigation routes.
-- **kotlinx-serialization-json 1.12 wraps constructor exceptions.** An exception thrown in a `@Serializable` class's
-  constructor while decoding (a `require` in an `init` block, as in `CardNumberRule` and the catalogue entries) now
-  arrives as the cause of a `JsonException`, a `SerializationException` (its 1.12.0 release notes, "Exceptions
-  rework"). The parsers still throw `IllegalArgumentException`s, so callers didn't change; tests that tell a rule check
-  from a JSON error look at `rootCause` ([[tdd]] → Shared helpers). Seen in #115.
+- **kotlinx-serialization-json 1.12 wrapped constructor exceptions; 1.13 reverted it.** In 1.12 an exception thrown in
+  a `@Serializable` class's constructor while decoding (a `require` in an `init` block, as in `CardNumberRule` and the
+  catalogue entries) arrived as the cause of a `JsonException`, a `SerializationException` (its 1.12.0 release notes,
+  "Exceptions rework"; seen in #115). 1.13.0 rolled that back ("Exceptions rework rollback"), so the `require`'s
+  `IllegalArgumentException` comes out as it is again (PR #163). Either way the parsers throw
+  `IllegalArgumentException`s (`SerializationException` is one), so callers didn't change. Tests that tell a rule check
+  from a JSON error look at `rootCause` ([[tdd]] → Shared helpers), which works under both behaviours.
 - `coroutinesTest` must match the `kotlinx-coroutines-core` version the app actually resolves (check with
   `./gradlew :app:dependencies --configuration debugRuntimeClasspath`); a newer one silently upgrades core.
 - DataStore (`datastore`, [[2026-10-28-datastore-for-user-preferences]]) pulls `kotlinx-coroutines-core` 1.8.1, which
