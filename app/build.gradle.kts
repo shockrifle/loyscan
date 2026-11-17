@@ -71,6 +71,8 @@ android {
             it.inputs.file("$projectDir/proguard-rules.pro").withPropertyName("r8Rules").withPathSensitivity(PathSensitivity.RELATIVE)
             // DesignValuesTest reads the app's sources for design values used directly (#108).
             it.inputs.dir("$projectDir/src/main/java").withPropertyName("mainSources").withPathSensitivity(PathSensitivity.RELATIVE)
+            // GitIgnoreTest asks git about the repo's ignore rules (#74).
+            it.inputs.file("$rootDir/.gitignore").withPropertyName("gitIgnore").withPathSensitivity(PathSensitivity.RELATIVE)
         }
     }
 }

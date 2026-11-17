@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-17 · added the git-ignore test row · workflows/tdd · #74: `.gitignore` covers signing material and release outputs, checked by `GitIgnoreTest`
 - 2026-11-17 · About screen from an Info icon beside the list's Settings gear: name, version and the non-affiliation note, in English and Hungarian · features/about (new), features/card-list, features/_index, decisions/2026-11-12-no-bundled-store-logos, index · #150
 - 2026-11-17 · INTERNET permission and coil-svg removed; AppPermissionsTest pins the merged manifest's permissions; both logo decisions' consequences amended · integrations/coil-image-loading, apps/android-app, decisions/2026-11-12-no-bundled-store-logos, decisions/2026-11-13-user-supplied-store-logos, workflows/tdd · #157
 - 2026-11-16 · review of PR #165: a pick made while the route's picture is checked keeps the crop; FakeCardPhotos.existsGate; add-card entry points refreshed · features/store-logo, features/add-card, workflows/tdd · PR #165 review
