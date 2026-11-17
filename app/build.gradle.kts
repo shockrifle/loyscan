@@ -131,6 +131,8 @@ android {
             // ReleaseWorkflowTest reads the release workflow and its build script (#74).
             it.inputs.file("$rootDir/.github/workflows/release.yml").withPropertyName("releaseWorkflow").withPathSensitivity(PathSensitivity.RELATIVE)
             it.inputs.dir("$rootDir/.github/scripts").withPropertyName("ciScripts").withPathSensitivity(PathSensitivity.RELATIVE)
+            // ... and checks the release-signing wizard sets exactly the secrets the workflow reads.
+            it.inputs.dir("$rootDir/scripts").withPropertyName("wizards").withPathSensitivity(PathSensitivity.RELATIVE)
         }
     }
 }

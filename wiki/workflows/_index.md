@@ -12,4 +12,4 @@ a procedure with real commands, plus the constraints that have bitten before.
 - [[ci]] — GitHub Actions: tests + coverage gate on every PR and on `master`, where the reports are, how Dependabot's PRs are handled (`/dependency-pr`)
 - [[code-review]] — changes land through PRs: `/review-changes`, then `/review-fix`; `/next-task` runs issue → plan critic → PR → independent review → merge end to end
 - [[release]] — cut a release: bump `loyscan.versionName`, tag `vX.Y.Z` on `master`, the Release workflow signs the AAB onto a draft GitHub release, upload to Play by hand; where release files are kept (#74)
-- [[agent-skills]] — the project skills in `.claude/skills/` (`diagnosing-bugs`, `writing-for-agents`, `grilling`, `retro`, `to-tickets`): what each is for, what was adapted, how to change one
+- [[agent-skills]] — the project skills in `.claude/skills/` (`diagnosing-bugs`, `writing-for-agents`, `grilling`, `retro`, `to-tickets`, `wizard`): what each is for, what was adapted, how to change one
