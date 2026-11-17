@@ -7,6 +7,25 @@ plugins {
     alias(libs.plugins.kover)
 }
 
+// The release version (#74): semver X.Y.Z, set by hand as loyscan.versionName in gradle.properties. versionCode is
+// derived, X*10000 + Y*100 + Z, so it grows with every release; Y and Z stay below 100 so no two versions share a code.
+// .github/scripts/check-release-build.sh checks it; why: wiki/decisions/2026-11-17-release-signing-and-versioning.md
+val appVersionName: String = providers.gradleProperty("loyscan.versionName").getOrElse("")
+val appVersionCode: Int = run {
+    val parts = Regex("""(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)""").matchEntire(appVersionName)
+        ?.destructured?.toList()?.map(String::toInt)
+    require(parts != null && parts[1] < 100 && parts[2] < 100) {
+        "loyscan.versionName must be X.Y.Z (no leading zeros, Y and Z below 100), not \"$appVersionName\""
+    }
+    parts[0] * 10000 + parts[1] * 100 + parts[2]
+}
+
+// Prints "<versionName> <versionCode>" as Gradle resolved them, for the release scripts: ./gradlew -q :app:printVersion
+tasks.register("printVersion") {
+    val version = "$appVersionName $appVersionCode"
+    doLast { println(version) }
+}
+
 android {
     namespace = "com.bdaniel.loyscan"
     compileSdk {
@@ -17,8 +36,8 @@ android {
         applicationId = "com.bdaniel.loyscan"
         minSdk = 29
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = appVersionCode
+        versionName = appVersionName
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

@@ -15,7 +15,7 @@ listing's own note is #75.
 ## Behavior
 
 - A Back arrow and the title "About", then "LoyScan" (`app_name`, not translated), "Version <versionName>"
-  (`BuildConfig.VERSION_NAME`, from `app/build.gradle.kts`), and the note. The version is a parameter defaulting to
+  (`BuildConfig.VERSION_NAME`: `loyscan.versionName` in `gradle.properties`, [[2026-11-17-release-versioning]]), and the note. The version is a parameter defaulting to
   the build's, so a screen test passes its own.
 - The page scrolls, so at a large font scale on a short phone the whole note can still be read.
 - Static: no ViewModel, no state. Like every screen except the card, it stays portrait on a phone

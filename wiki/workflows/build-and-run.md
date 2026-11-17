@@ -19,6 +19,8 @@ adb shell am start -n com.bdaniel.loyscan/.MainActivity
 ./gradlew lintDebug                                                  # lint; errors fail it, as on CI (#126)
 ./gradlew check                                                      # tests + lint + coverage gate
 ./gradlew assembleRelease                                            # the minified (R8) release, unsigned (#74)
+./gradlew -q :app:printVersion                                       # "<versionName> <versionCode>" as Gradle resolves them
+.github/scripts/check-release-build.sh                               # the release checks CI runs (Git Bash): wiki/workflows/ci.md
 ./gradlew connectedSmokeAndroidTest                                  # on-device smoke test of the R8 build (below)
 ```
 

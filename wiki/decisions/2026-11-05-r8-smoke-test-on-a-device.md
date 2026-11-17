@@ -59,7 +59,7 @@ own consumer rules: Room, Hilt, kotlinx.serialization, Coil, CameraX, Glance, an
     loads them from the app, and R8 had removed them (`NoClassDefFoundError: androidx/tracing/Trace`, then
     `kotlin/LazyKt`). These rules only keep more, so release is unaffected.
   - `app/proguard-smoke-test-rules.pro` has `-dontwarn` for three optional classes AndroidX Test refers to.
-- **CI** (`.github/workflows/tests.yml`) runs `assembleRelease compileSmokeAndroidTestKotlin` after the tests:
+- **CI** (`.github/workflows/tests.yml`) runs `assembleRelease compileSmokeAndroidTestKotlin` after the tests (step "Minified release build"; the release checks of #74 follow it, [[ci]]):
   R8 must succeed, and the smoke test must compile.
 - The unused template `androidTest` dependencies (Espresso, Compose `ui-test-junit4`) were removed.
 

@@ -83,6 +83,14 @@ jobs:
       - name: Minified release build
         run: ./gradlew assembleRelease compileSmokeAndroidTestKotlin
 
+      # The release version scheme, through what Gradle resolves (#74): wiki/workflows/ci.md
+      - name: Release build checks
+        run: .github/scripts/check-release-build.sh
+
+      # The CI and release scripts: shellcheck is preinstalled on ubuntu-latest.
+      - name: Shellcheck
+        run: shellcheck .github/scripts/*.sh
+
       - name: Upload coverage report
         if: always()
         uses: actions/upload-artifact@v7

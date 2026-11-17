@@ -39,6 +39,7 @@ inferred whys as inferred.
 - [[2026-11-12-no-bundled-store-logos]] — no bundled or fetched retailer logos (Play's IP policy asks for permission; 23 retailers checked, none practical); names and brand colours stay; a non-affiliation note in the app and Play listing before release (#109)
 - [[2026-11-13-user-supplied-store-logos]] — a store's logo is the user's own picture, a PNG with transparency in the card photos' directory named by the existing `logo` column; the catalogue sync never touches it (#151)
 - [[2026-11-12-design-tokens-and-card-shape]] — a plain `Spacing` object shared with the widget, M3 default `Shapes`, one ID-1-proportional `CardShape` (6%) for every depiction of the card; a visual-only scanner viewfinder; card-ratio widget tiles in 1–2 columns, square corners on API 29–30 (#108)
+- [[2026-11-17-release-versioning]] — semver `loyscan.versionName` in `gradle.properties`; `versionCode = X*10000 + Y*100 + Z`, derived and checked by the build (#74)
 
 ## Superseded
 
