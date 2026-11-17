@@ -108,6 +108,9 @@ debug-only Kotlin, removed in #55 ([[seed-data]]).
 
 **Mapper** — `toDomainModel()` extension functions in `data/mapper/` converting Room results to domain models.
 
+**Play App Signing** — Google Play keeps the app signing key and re-signs what it delivers; we sign uploads with
+the **upload key** ([[google-play]], [[2026-11-17-release-signing-on-ci]]).
+
 **Quiet zone** — The blank margin a scanner needs around a barcode, in modules (EAN-13: 11 on the left; QR: 4).
 Added by `EncodedBarcode` per symbology, since ZXing's are too narrow or missing ([[zxing-core]]).
 
@@ -132,3 +135,10 @@ classes and bound in `di/RepositoryModule.kt`; the ViewModels' only data depende
 card-number rule. Was `Brand` until #1 — [[2026-10-12-data-model-v2]].
 
 **Timber** — Logging library; `DebugTree` planted in debug builds only (`LoyScanApplication.kt:11-13`).
+
+
+**Upload key** — The PKCS12 keystore that signs the AABs uploaded to Play; outside the repo, in Actions secrets for
+CI, resettable by Play when it leaks ([[release]], [[leaked-signing-secret]]).
+
+**versionCode** — Play's version number, derived from `loyscan.versionName` X.Y.Z as `X*10000 + Y*100 + Z`
+([[2026-11-17-release-versioning]]).

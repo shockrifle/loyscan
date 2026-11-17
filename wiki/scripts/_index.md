@@ -12,6 +12,7 @@ Notable scripts, CLIs and custom Gradle tasks: what each does, how to invoke it,
   rotate a leaked key ([[release]], [[leaked-signing-secret]], #74). Written with the `wizard` skill ([[agent-skills]]).
 - `.github/scripts/release-bundle.sh X.Y.Z`: builds the signed AAB and refuses another version or an unsigned AAB; the
   Release workflow runs it ([[release]]).
+- `.github/scripts/check-release-wizard.sh`: runs the release-signing wizard with piped answers in a sandbox ([[ci]], #74).
 - `.github/scripts/check-release-build.sh`: the release build's checks, run on CI and in Git Bash ([[ci]], #74).
 
 Otherwise the build uses the stock Gradle wrapper tasks ([[build-and-run]]).

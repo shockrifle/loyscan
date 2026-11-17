@@ -18,6 +18,9 @@ class GitIgnoreTest {
             "app/upload-keystore.jks",
             "release.keystore",
             "app/release.keystore",
+            // PKCS12 keystores often carry these extensions (#74 review).
+            "upload.p12",
+            "app/upload.pfx",
             "keystore.properties",
             "app/keystore.properties",
             "play-service-account.json",
@@ -30,6 +33,7 @@ class GitIgnoreTest {
             "mapping.txt",
             "app/release/mapping.txt",
             ".env",
+            ".env.local",
         )
 
         secretOrBuilt.forEach { path ->

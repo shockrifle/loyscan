@@ -19,10 +19,13 @@ local.properties
 # ignored before any of them exists. Where they live instead: wiki/workflows/release.md. Checked by GitIgnoreTest.
 *.jks
 *.keystore
+*.p12
+*.pfx
 keystore.properties
 *service-account*.json
 /secrets/
 .env
+.env.*
 *.aab
 *.apk
 *.idsig

@@ -9,7 +9,7 @@ plugins {
 
 // The release version (#74): semver X.Y.Z, set by hand as loyscan.versionName in gradle.properties. versionCode is
 // derived, X*10000 + Y*100 + Z, so it grows with every release; Y and Z stay below 100 so no two versions share a code.
-// .github/scripts/check-release-build.sh checks it; why: wiki/decisions/2026-11-17-release-signing-and-versioning.md
+// .github/scripts/check-release-build.sh checks it; why: wiki/decisions/2026-11-17-release-versioning.md
 val appVersionName: String = providers.gradleProperty("loyscan.versionName").getOrElse("")
 val appVersionCode: Int = run {
     val parts = Regex("""(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)""").matchEntire(appVersionName)

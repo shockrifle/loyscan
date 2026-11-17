@@ -14,7 +14,7 @@ can reset.
 1. **Stop releases.** Don't push a `v*` tag until this is done.
 2. **Make a new upload key** with a new password: re-run `scripts/release-signing-setup.sh` and give it a **new
    keystore path** (a new file, not the old one with a new password: the old file may be out there with its old
-   password). It writes the new local properties, replaces the three secrets, and can export the new certificate
+   password). For a new path the wizard doesn't offer the saved password; type a new one. It writes the new local properties, replaces the three secrets, and can export the new certificate
    for step 3.
 3. **Ask Play to reset the upload key.** In Play Console, the app's App signing (app integrity) page has the upload key
    reset request. It asks for the new upload certificate as a PEM file:
