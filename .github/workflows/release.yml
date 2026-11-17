@@ -1,0 +1,66 @@
+# Builds the signed release AAB when a version tag (vX.Y.Z) is pushed, and keeps it with R8's mapping.txt on a draft
+# GitHub release, which only people with write access see. Uploading to Play is by hand (#74). How to cut a release:
+# wiki/workflows/release.md. Secrets reach a step only through env:, and nothing prints them: ReleaseWorkflowTest.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      # Only a reviewed commit gets signed: a tag on a branch that never merged stops here.
+      - name: The tag is on master
+        run: git merge-base --is-ancestor "$GITHUB_SHA" origin/master
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+
+      # No cache: a release builds from scratch rather than from caches other workflows wrote.
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-disabled: true
+
+      # The wrapper tries its download once; retry it (#116).
+      - name: Gradle distribution
+        run: for attempt in 1 2 3; do ./gradlew --version && exit 0; sleep 30; done; exit 1
+
+      - name: Upload key
+        env:
+          LOYSCAN_UPLOAD_KEYSTORE_BASE64: ${{ secrets.LOYSCAN_UPLOAD_KEYSTORE_BASE64 }}
+        run: (umask 077 && base64 --decode <<<"$LOYSCAN_UPLOAD_KEYSTORE_BASE64" > "$RUNNER_TEMP/upload.jks")
+
+      - name: Signed bundle
+        env:
+          LOYSCAN_UPLOAD_STORE_FILE: ${{ runner.temp }}/upload.jks
+          LOYSCAN_UPLOAD_STORE_PASSWORD: ${{ secrets.LOYSCAN_UPLOAD_STORE_PASSWORD }}
+          LOYSCAN_UPLOAD_KEY_ALIAS: ${{ secrets.LOYSCAN_UPLOAD_KEY_ALIAS }}
+        run: .github/scripts/release-bundle.sh "${GITHUB_REF_NAME#v}"
+
+      - name: Remove the upload key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/upload.jks"
+
+      - name: Draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh release create "$GITHUB_REF_NAME" --draft --verify-tag --title "LoyScan ${GITHUB_REF_NAME#v}"
+          --notes "Signed AAB and R8 mapping for Play. Upload both, then leave this release a draft: wiki/workflows/release.md"
+          app/build/outputs/bundle/release/app-release.aab app/build/outputs/mapping/release/mapping.txt

@@ -45,7 +45,7 @@ if (uploadSigningMissing.size in 1 until uploadSigningNames.size) {
     throw GradleException(
         "Release signing is half set up. Missing: " +
             uploadSigningMissing.joinToString { (property, variable) -> "loyscan.upload.$property or $variable" } +
-            ". Set all three or none: wiki/workflows/build-and-run.md",
+            ". Set all three or none: wiki/workflows/release.md",
     )
 }
 
@@ -128,6 +128,9 @@ android {
             it.inputs.dir("$projectDir/src/main/java").withPropertyName("mainSources").withPathSensitivity(PathSensitivity.RELATIVE)
             // GitIgnoreTest asks git about the repo's ignore rules (#74).
             it.inputs.file("$rootDir/.gitignore").withPropertyName("gitIgnore").withPathSensitivity(PathSensitivity.RELATIVE)
+            // ReleaseWorkflowTest reads the release workflow and its build script (#74).
+            it.inputs.file("$rootDir/.github/workflows/release.yml").withPropertyName("releaseWorkflow").withPathSensitivity(PathSensitivity.RELATIVE)
+            it.inputs.dir("$rootDir/.github/scripts").withPropertyName("ciScripts").withPathSensitivity(PathSensitivity.RELATIVE)
         }
     }
 }

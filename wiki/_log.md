@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-17 · release workflow on a `vX.Y.Z` tag (signed AAB onto a draft release), release runbook, leaked-secret runbook, Play integration page · workflows/release (new), runbooks/leaked-signing-secret (new), integrations/google-play (new), workflows/ci, workflows/tdd, workflows/_index, runbooks/_index, integrations/_index, index · #74
 - 2026-11-17 · release signing from Gradle properties or `LOYSCAN_UPLOAD_*` variables decided, checked with a throwaway key on CI · decisions/2026-11-17-release-signing-on-ci (new), decisions/_index, decisions/2026-11-05-r8-smoke-test-on-a-device, apps/android-app, workflows/build-and-run, workflows/ci, workflows/tdd, architecture · #74
 - 2026-11-17 · release version scheme decided (semver name, derived versionCode, `printVersion`); CI release checks and shellcheck · decisions/2026-11-17-release-versioning (new), decisions/_index, decisions/2026-11-05-r8-smoke-test-on-a-device, workflows/ci, workflows/build-and-run, workflows/tdd, architecture, apps/android-app, features/about · #74
 - 2026-11-17 · added the git-ignore test row · workflows/tdd · #74: `.gitignore` covers signing material and release outputs, checked by `GitIgnoreTest`
