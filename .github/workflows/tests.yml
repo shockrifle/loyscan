@@ -87,6 +87,10 @@ jobs:
       - name: Release build checks
         run: .github/scripts/check-release-build.sh
 
+      # The release-signing wizard, run with piped answers in a sandbox HOME (#74): wiki/workflows/ci.md
+      - name: Release wizard checks
+        run: .github/scripts/check-release-wizard.sh
+
       # The CI and release scripts, and the wizards (#74): shellcheck is preinstalled on ubuntu-latest.
       - name: Shellcheck
         run: shellcheck .github/scripts/*.sh scripts/*.sh .claude/skills/wizard/template.sh

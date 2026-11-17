@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2329
+# The library defines helpers a given wizard may not call (shellcheck SC2329), so that check is off for the file.
 #
 # Release signing setup (#74): makes the upload key, keeps it for local builds and CI, and points at Play Console.
 # Run it from Git Bash or any bash: scripts/release-signing-setup.sh. What it sets up: wiki/workflows/release.md
@@ -123,7 +125,7 @@ ask() {
   [[ -n "$key" ]] && current=$(_existing "$key" || true)
   # Readline needs the colour codes wrapped in \001..\002 to place the cursor.
   p="  $s$BOLD$e$prompt$s$RESET$e "
-  [[ -n "$current" ]] && p+="$s$DIM$e[Enter keeps $current]$s$RESET$e "
+  [[ -n "$current" ]] && p+="$s$DIM${e}[Enter keeps $current]$s$RESET$e "
   read -e -r -p "$p" input || rc=1
   if (( rc )) && [[ -z "$input" ]]; then return 1; fi
   [[ -z "$input" && -n "$current" ]] && input="$current"
@@ -245,8 +247,17 @@ stage "The upload key and its password"
 say "One password unlocks the keystore and the key (PKCS12 ignores a separate key password)."
 say "Use 6 or more plain ASCII characters, no spaces at either end: Gradle reads it from a"
 say "properties file. Your password manager can make one."
+# The saved password is offered back only for the saved keystore: a new keystore (a rotation after a leak) must not
+# get the old, possibly leaked, password by a press of Enter.
+saved_password=""
+saved_store=$(_existing loyscan.upload.storeFile || true)
+if [[ -n "$saved_store" && "$saved_store" == "$(java_path "$KEYSTORE")" ]]; then
+  saved_password=loyscan.upload.storePassword
+elif [[ -n "$saved_store" ]]; then
+  note "A new keystore gets a new password; the saved one isn't offered."
+fi
 while true; do
-  ask_secret LOYSCAN_UPLOAD_STORE_PASSWORD "Password (typed blind):" loyscan.upload.storePassword
+  ask_secret LOYSCAN_UPLOAD_STORE_PASSWORD "Password (typed blind):" "$saved_password"
   if (( ${#LOYSCAN_UPLOAD_STORE_PASSWORD} < 6 )) || [[ "$LOYSCAN_UPLOAD_STORE_PASSWORD" =~ ^[[:space:]]|[[:space:]]$ ]] \
      || LC_ALL=C grep -q '[^ -~]' <<<"$LOYSCAN_UPLOAD_STORE_PASSWORD"; then
     warn "6 or more ASCII characters, no spaces at the ends. Try again."; continue

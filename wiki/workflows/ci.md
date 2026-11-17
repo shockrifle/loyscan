@@ -40,14 +40,19 @@ with a throwaway PKCS12 key made in a temp directory: with the key alias missing
 signed by exactly that key (SHA-256), and the password (a marker) must appear in neither log
 ([[2026-11-17-release-signing-on-ci]]). The signed `bundleRelease` reuses the R8 output of the step before; the
 whole script took about 5 minutes locally (2026-11-17). It runs locally in
-Git Bash too. **Shellcheck** then lints `.github/scripts/*.sh`, the wizards in `scripts/` and the `wizard` skill's template (shellcheck is preinstalled on `ubuntu-latest`; it isn't
+Git Bash too. **Release wizard checks** runs `.github/scripts/check-release-wizard.sh`: the release-signing wizard with its answers
+piped in, in a sandbox `HOME`, with no browser or `gh` on its `PATH`. A first run must make a key the password opens
+and write the three properties without printing the password; a keystore path inside the repo must be refused; a new
+keystore path must ask for a new password rather than keep the saved one (a rotation, [[leaked-signing-secret]]).
+**Shellcheck** then lints `.github/scripts/*.sh`, the wizards in `scripts/` and the `wizard` skill's template (shellcheck is preinstalled on `ubuntu-latest`; it isn't
 part of the local gate).
 
 `check-release-build.sh` builds the signed AAB through `.github/scripts/release-bundle.sh`, the script the Release
 workflow runs, and first checks that it refuses a tag that isn't the build's version.
 
 **Release workflow** (`.github/workflows/release.yml`, #74): a separate workflow, run by pushing a `vX.Y.Z` tag. It
-checks the tagged commit is on `master`, decodes the upload keystore from the Actions secrets into the runner's temp
+checks the tagged commit is on `master` (a guard against mistakes, not a security boundary: [[release]] → Who can
+reach the secrets), decodes the upload keystore from the Actions secrets into the runner's temp
 directory, runs `release-bundle.sh X.Y.Z`, deletes the keystore, and creates a draft GitHub release with the AAB and
 `mapping.txt`. No Gradle cache: a release builds from scratch. `ReleaseWorkflowTest` (in the gate) checks its rules:
 secrets only as `env:` entries, nothing that echoes or traces, a `v*` trigger, a draft. How to cut a release:

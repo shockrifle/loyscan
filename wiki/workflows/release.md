@@ -72,6 +72,14 @@ Attach both to a draft release yourself (`gh release create vX.Y.Z --draft --ver
 - **The upload keystore and its password**: outside the repo on the owner's machine, in a backup, and as the three
   Actions secrets. A secret that ends up in a commit, an issue or a log: [[leaked-signing-secret]].
 
+## Who can reach the secrets
+
+The three secrets are repository secrets, so any workflow run with access to secrets can read them: today that means
+anyone with write access, who could also push a tag on a branch whose `release.yml` skips the "on `master`" check.
+That check guards against mistakes (a tag on the wrong commit), not against a collaborator. Pull requests from forks
+get no secrets. Moving the secrets into an Actions environment limited to `v*` tags would close this; environments
+need a paid plan while the repo is private.
+
 ## Checks
 
 - `ReleaseWorkflowTest` (JVM, in the gate) reads `release.yml` and `release-bundle.sh`: secrets reach a step only as

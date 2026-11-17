@@ -23,7 +23,9 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Only a reviewed commit gets signed: a tag on a branch that never merged stops here.
+      # A guard against mistakes, not a security boundary: a tag on a commit that never merged stops here. This file
+      # comes from the tagged commit, so someone with write access could tag a branch without it; the secrets are
+      # repo-wide (wiki/workflows/release.md -> Who can reach the secrets).
       - name: The tag is on master
         run: git merge-base --is-ancestor "$GITHUB_SHA" origin/master
 
