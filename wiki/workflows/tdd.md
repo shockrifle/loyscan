@@ -143,9 +143,10 @@ Shared helpers are in `testing/`:
   app loader's memory cache, idling the main looper (`ListScreenTest.aCardWithAFrontPhoto_…`); a name with no file
   there is a photo that fails to load (`aFrontPhotoThatCantBeLoaded_…`).
 - **`Throwable.rootCause`** (`testing/Throwables.kt`): the innermost cause. A parser test that must tell a rule check
-  from a JSON error asserts the root cause is exactly `IllegalArgumentException` (what `require` throws): since
-  kotlinx-serialization 1.12 the check's exception is wrapped in a `JsonException`, and a JSON error's root is the
-  `JsonException` itself (`CardNumberRulesTest.parse_rejectsInvalidRuleDefinitions`, #115).
+  from a JSON error asserts the root cause is exactly `IllegalArgumentException` (what `require` throws), while a
+  JSON error's root is a `SerializationException`, a subclass
+  (`CardNumberRulesTest.parse_rejectsInvalidRuleDefinitions`, #115). It was added for kotlinx-serialization 1.12,
+  which wrapped the check's exception in a `JsonException`; 1.13 reverted that (PR #163), and the check holds for both.
 - **`writeOnePixelPng()` / `writeWidePng()`** (`testing/PhotoFiles.kt`): a real 1×1 or 2×1 PNG written where the app's
   loader finds it; the wide one is a wordmark-shaped picture for the logo crop's zoom-out (#151).
 - **`WAIT_TIMEOUT_MS`** (`testing/Waits.kt`, 10 s): the timeout every `waitUntil*` passes, in screen and app tests alike. `WaitTimeoutsTest` fails on one that doesn't (#59).
