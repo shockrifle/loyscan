@@ -26,6 +26,29 @@ tasks.register("printVersion") {
     doLast { println(version) }
 }
 
+// Release signing (#74): the upload key comes from Gradle properties (~/.gradle/gradle.properties, outside the repo)
+// or LOYSCAN_UPLOAD_* environment variables (the release workflow's secrets); nothing about it is in the repo. All three
+// set: release is signed. None: release stays unsigned (CI's PR builds). Some: the build stops, naming only what's
+// missing, never a value. One password: a PKCS12 keystore ignores a separate key password.
+// wiki/decisions/2026-11-17-release-signing-on-ci.md
+val uploadSigningNames = listOf(
+    "storeFile" to "LOYSCAN_UPLOAD_STORE_FILE",
+    "storePassword" to "LOYSCAN_UPLOAD_STORE_PASSWORD",
+    "keyAlias" to "LOYSCAN_UPLOAD_KEY_ALIAS",
+)
+val uploadSigning: Map<String, String?> = uploadSigningNames.associate { (property, variable) ->
+    property to (providers.gradleProperty("loyscan.upload.$property").orNull?.takeIf { it.isNotEmpty() }
+        ?: providers.environmentVariable(variable).orNull?.takeIf { it.isNotEmpty() })
+}
+val uploadSigningMissing = uploadSigningNames.filter { (property, _) -> uploadSigning[property] == null }
+if (uploadSigningMissing.size in 1 until uploadSigningNames.size) {
+    throw GradleException(
+        "Release signing is half set up. Missing: " +
+            uploadSigningMissing.joinToString { (property, variable) -> "loyscan.upload.$property or $variable" } +
+            ". Set all three or none: wiki/workflows/build-and-run.md",
+    )
+}
+
 android {
     namespace = "com.bdaniel.loyscan"
     compileSdk {
@@ -47,8 +70,21 @@ android {
         arg("room.schemaLocation", "$projectDir/schemas")
     }
 
+    signingConfigs {
+        if (uploadSigningMissing.isEmpty()) {
+            create("upload") {
+                storeFile = file(uploadSigning.getValue("storeFile")!!)
+                storePassword = uploadSigning.getValue("storePassword")
+                keyAlias = uploadSigning.getValue("keyAlias")
+                keyPassword = uploadSigning.getValue("storePassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
+            // Signed only when the upload key is set up (above); otherwise unsigned.
+            signingConfig = signingConfigs.findByName("upload")
             // R8 (#73): shrinks, optimizes and obfuscates; keep rules only where a library doesn't ship its own.
             isMinifyEnabled = true
             isShrinkResources = true

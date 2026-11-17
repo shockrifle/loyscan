@@ -58,7 +58,7 @@ data, not the theme. Icons are hand-written `ImageVector`s — [[2025-12-08-hand
 ## Build types
 
 - `debug`: the everyday build; the JVM tests run on it.
-- `release`: R8 on (`isMinifyEnabled`, `isShrinkResources`, #73). It's unsigned until #74. Libraries ship their own
+- `release`: R8 on (`isMinifyEnabled`, `isShrinkResources`, #73). It's signed with the upload key when that is set up, unsigned otherwise ([[2026-11-17-release-signing-on-ci]], #74). Libraries ship their own
   keep rules. `app/proguard-rules.pro` adds only `-keepnames enum com.bdaniel.loyscan.domain.BarcodeFormat`, since
   Navigation looks up an enum route argument's class by name. `RouteKeepRulesTest` checks every route's enum
   arguments against that file.
