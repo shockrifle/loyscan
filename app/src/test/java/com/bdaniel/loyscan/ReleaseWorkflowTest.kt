@@ -52,6 +52,17 @@ class ReleaseWorkflowTest {
     }
 
     @Test
+    fun theSetupWizard_setsExactlyTheSecretsTheWorkflowReads() {
+        val read = Regex("""secrets\.([A-Z][A-Z0-9_]*)""").findAll(workflow.readText()).map { it.groupValues[1] }.toSet()
+        val wizard = File("../scripts/release-signing-setup.sh").readLines()
+            .filterNot { it.trimStart().startsWith("#") }.joinToString("\n")
+        val set = Regex("""\bset_secret\s+([A-Z][A-Z0-9_]*)""").findAll(wizard).map { it.groupValues[1] }.toSet()
+
+        assertThat(read).isNotEmpty()
+        assertThat(set).containsExactlyElementsIn(read - "GITHUB_TOKEN")
+    }
+
+    @Test
     fun theReleaseStaysADraft() {
         val creates = workflow.readLines().filter { "gh release" in it }
 

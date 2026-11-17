@@ -40,7 +40,7 @@ with a throwaway PKCS12 key made in a temp directory: with the key alias missing
 signed by exactly that key (SHA-256), and the password (a marker) must appear in neither log
 ([[2026-11-17-release-signing-on-ci]]). The signed `bundleRelease` reuses the R8 output of the step before; the
 whole script took about 5 minutes locally (2026-11-17). It runs locally in
-Git Bash too. **Shellcheck** then lints `.github/scripts/*.sh` (shellcheck is preinstalled on `ubuntu-latest`; it isn't
+Git Bash too. **Shellcheck** then lints `.github/scripts/*.sh`, the wizards in `scripts/` and the `wizard` skill's template (shellcheck is preinstalled on `ubuntu-latest`; it isn't
 part of the local gate).
 
 `check-release-build.sh` builds the signed AAB through `.github/scripts/release-bundle.sh`, the script the Release

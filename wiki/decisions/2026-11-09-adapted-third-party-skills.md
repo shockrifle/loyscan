@@ -40,7 +40,7 @@ Option 3, for the four skills that fill a gap: `diagnosing-bugs`, `writing-for-a
 
 **Update, same day.** The shortlist was revisited one skill at a time: `to-tickets` was adapted after all (GitHub
 sub-issues and blocked-by links make it work without the upstream tracker setup); the `tdd` skill's seams and
-tests-that-can't-fail ideas went into [[tdd]] and `review-changes.md` instead of a skill; `wizard` waits for #74;
+tests-that-can't-fail ideas went into [[tdd]] and `review-changes.md` instead of a skill; `wizard` waited for #74, where it was adapted on 2026-11-17 with the release-signing wizard as its first real task ([[agent-skills]]);
 a plan critic was chosen as our own agent run by `/next-task` (not built yet; it goes in with the move to pull
 requests); the lesson loop and
 the architecture review were skipped; dependency updates went to Dependabot ([[ci]]).

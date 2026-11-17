@@ -12,8 +12,10 @@ can reset.
 ## Steps
 
 1. **Stop releases.** Don't push a `v*` tag until this is done.
-2. **Make a new upload key** with a new password, as in [[release]] → Once (a new keystore file, not the old one with
-   a new password: the old file may be out there with its old password).
+2. **Make a new upload key** with a new password: re-run `scripts/release-signing-setup.sh` and give it a **new
+   keystore path** (a new file, not the old one with a new password: the old file may be out there with its old
+   password). It writes the new local properties, replaces the three secrets, and can export the new certificate
+   for step 3.
 3. **Ask Play to reset the upload key.** In Play Console, the app's App signing (app integrity) page has the upload key
    reset request. It asks for the new upload certificate as a PEM file:
    ```sh
@@ -23,8 +25,8 @@ can reset.
    Google's help page on Play App Signing describes the reset
    (https://support.google.com/googleplay/android-developer/answer/9842756). Until Play confirms it, uploads signed
    with either key may be refused.
-4. **Replace the secrets**: all three `LOYSCAN_UPLOAD_*` Actions secrets ([[release]] → Once), and
-   `~/.gradle/gradle.properties` on every machine that signs.
+4. **Check the secrets were replaced**: all three `LOYSCAN_UPLOAD_*` Actions secrets (the wizard did it, or
+   [[release]] → Once by hand), and `~/.gradle/gradle.properties` on every machine that signs.
 5. **Destroy the old keystore** and its backups once Play accepts the new key.
 6. **Clean up where it leaked**, as hygiene only: delete the comment or log, or rewrite the branch if it never
    reached `master`. A leak on `master` stays in its history; the rotation is what makes it harmless.

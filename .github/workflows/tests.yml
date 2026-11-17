@@ -87,9 +87,9 @@ jobs:
       - name: Release build checks
         run: .github/scripts/check-release-build.sh
 
-      # The CI and release scripts: shellcheck is preinstalled on ubuntu-latest.
+      # The CI and release scripts, and the wizards (#74): shellcheck is preinstalled on ubuntu-latest.
       - name: Shellcheck
-        run: shellcheck .github/scripts/*.sh
+        run: shellcheck .github/scripts/*.sh scripts/*.sh .claude/skills/wizard/template.sh
 
       - name: Upload coverage report
         if: always()

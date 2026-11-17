@@ -1,7 +1,7 @@
 # Agent skills
 
 Project Claude Code skills live in `.claude/skills/<name>/SKILL.md`, next to the slash commands in
-`.claude/commands/` ([[code-review]]). Five are adapted copies of Matt Pocock's MIT-licensed skills
+`.claude/commands/` ([[code-review]]). Six are adapted copies of Matt Pocock's MIT-licensed skills
 (https://github.com/mattpocock/skills, licence in `.claude/skills/LICENSE-mattpocock-skills`); why these and why
 copies: [[2026-11-09-adapted-third-party-skills]].
 
@@ -12,6 +12,7 @@ copies: [[2026-11-09-adapted-third-party-skills]].
 | `grilling` | the agent, on "grill me" or shaping a plan or issue | Round-by-round interview over a design tree, each question with a recommended answer; facts are looked up by an `Explore` subagent, decisions go to the user | Reads the issue and recorded decisions first; at the end offers to write the outcome where it belongs (issue = what, `decisions/` = why, [[glossary]] = terms) |
 | `retro` | the user only: `/retro [session]` | Retrospective on a session: proposes changes to navigation, checks, review rules, steering files, commands and skills | Points at our files (transcripts under `~/.claude/projects/C--workspace-LoyScan/`, `review-changes.md` as the reviewer's rules, JUnit source-reading tests as the cheap mechanical check); changes nothing until the user picks |
 | `to-tickets` | the user only: `/to-tickets [issue #n]` | Splits a large issue or plan into ordered vertical-slice issues, each with testable criteria and its blockers, after the user approves the breakdown | Slices follow the [[architecture]] layers and carry their own schema migration; tickets are GitHub issues in the existing style with a "Blocked by #N" line (which `/next-task` reads) plus GitHub's native sub-issue and blocked-by links; a field check is its own `needs-field-check` ticket |
+| `wizard` | the user only: `/wizard [procedure]` | Writes an interactive bash script that walks the user through steps only they can take (keys, Actions secrets, Play Console), capturing values blind and writing them where they belong; the agent never runs it, so no secret passes through the chat | No `.env`: values go to a Gradle property in `~/.gradle/gradle.properties` (`write_property`, refuses a file inside the repo) or an Actions secret; `inside_repo` refuses repo paths, `java_path` gives Windows paths with forward slashes (Git Bash); secrets go to tools through env or stdin; committed wizards live in `scripts/` and `ReleaseWorkflowTest` checks their secrets against the workflow. First use: `scripts/release-signing-setup.sh` ([[release]], #74) |
 
 ## Changing a skill
 

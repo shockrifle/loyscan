@@ -16,7 +16,11 @@ three Actions secrets:
 | `LOYSCAN_UPLOAD_STORE_PASSWORD` | its password (also the key's) |
 | `LOYSCAN_UPLOAD_KEY_ALIAS` | the key's alias |
 
-By hand, from Git Bash, with the keystore in a folder outside the repo:
+**Run the wizard**: `scripts/release-signing-setup.sh` from Git Bash (`gh` logged in). It makes the key, asks for
+the password blind, offers to write the local Gradle properties (below), sets the three secrets and opens Play Console.
+Safe to re-run: saved values come back as defaults. Written with the `wizard` skill ([[agent-skills]]).
+
+Or by hand, from Git Bash, with the keystore in a folder outside the repo:
 
 ```sh
 read -rs LOYSCAN_UPLOAD_STORE_PASSWORD && export LOYSCAN_UPLOAD_STORE_PASSWORD   # typed blind
