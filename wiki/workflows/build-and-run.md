@@ -18,11 +18,19 @@ adb shell am start -n com.bdaniel.loyscan/.MainActivity
 ./gradlew koverVerifyDebug                                           # fail if line coverage is below the minimum
 ./gradlew lintDebug                                                  # lint; errors fail it, as on CI (#126)
 ./gradlew check                                                      # tests + lint + coverage gate
-./gradlew assembleRelease                                            # the minified (R8) release, unsigned (#74)
+./gradlew assembleRelease                                            # the minified (R8) release; signed only with the upload key set up (below)
+./gradlew bundleRelease                                              # the AAB for Play, likewise
 ./gradlew -q :app:printVersion                                       # "<versionName> <versionCode>" as Gradle resolves them
 .github/scripts/check-release-build.sh                               # the release checks CI runs (Git Bash): wiki/workflows/ci.md
 ./gradlew connectedSmokeAndroidTest                                  # on-device smoke test of the R8 build (below)
 ```
+
+**Release signing** (#74, [[2026-11-17-release-signing-on-ci]]). `release` is signed when three values are set, each
+as a Gradle property (in `~/.gradle/gradle.properties`, never in the project) or an environment variable:
+`loyscan.upload.storeFile` / `LOYSCAN_UPLOAD_STORE_FILE` (a forward-slash path on Windows: `C:/Users/…`),
+`loyscan.upload.storePassword` / `LOYSCAN_UPLOAD_STORE_PASSWORD` (also the key's: PKCS12), `loyscan.upload.keyAlias` /
+`LOYSCAN_UPLOAD_KEY_ALIAS`. With none set it's unsigned; with some, every Gradle command fails with *"Release signing is
+half set up. Missing: …"*.
 
 On Windows, use `gradlew.bat` or Git Bash. `local.properties` (the SDK path) is git-ignored and must exist
 locally.

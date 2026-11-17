@@ -34,7 +34,12 @@ R8 must succeed on release, and the on-device smoke test must compile. The smoke
 
 **Release build checks** runs `.github/scripts/check-release-build.sh` (#74): the version scheme through what Gradle
 resolves (`./gradlew -q :app:printVersion -Ployscan.versionName=…`), hand-worked values (1.2.3 → 10203, 0.9.1 → 901)
-and names the build must reject (`1.0`, `v1.0.0`, `1.100.0`) ([[2026-11-17-release-versioning]]). It runs locally in
+and names the build must reject (`1.0`, `v1.0.0`, `1.100.0`) ([[2026-11-17-release-versioning]]). Then signing,
+with a throwaway PKCS12 key made in a temp directory: with the key alias missing, the build must stop and name only
+`LOYSCAN_UPLOAD_KEY_ALIAS`; with all three set, `bundleRelease` must make an AAB that `jarsigner -verify` accepts,
+signed by exactly that key (SHA-256), and the password (a marker) must appear in neither log
+([[2026-11-17-release-signing-on-ci]]). The signed `bundleRelease` reuses the R8 output of the step before; the
+whole script took about 5 minutes locally (2026-11-17). It runs locally in
 Git Bash too. **Shellcheck** then lints `.github/scripts/*.sh` (shellcheck is preinstalled on `ubuntu-latest`; it isn't
 part of the local gate).
 

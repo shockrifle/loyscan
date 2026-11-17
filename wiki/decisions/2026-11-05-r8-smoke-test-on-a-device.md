@@ -27,7 +27,8 @@ own consumer rules: Room, Hilt, kotlinx.serialization, Coil, CameraX, Glance, an
   - A separate self-instrumenting `com.android.test` module (the Macrobenchmark pattern): runs in its own process,
     so it needs no smoke-only keep rules. But it adds a second Gradle module to a single-module app.
 - **What the test runs against.**
-  - `release` itself: it's unsigned until #74, so it can't be installed.
+  - `release` itself: it was unsigned until #74, so it couldn't be installed. Since #74 it is signed with the upload
+    key, which is for Play and only on the owner's machine and CI ([[2026-11-17-release-signing-on-ci]]).
   - A `smoke` build type (`initWith(release)`, debug-signed, `applicationIdSuffix ".smoke"`): **chosen**.
 
 ## Decision
