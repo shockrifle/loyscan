@@ -68,4 +68,5 @@ shows it. The catalogue sync never touches that column.
 - The name in `logo` is a file name like a photo's, so `CardPhotos.exists` and the loader's `CardPhotoMapper` work for
   it unchanged. The tile and the detail header show it as a `CardPhoto`; one that can't be loaded or whose file is
   missing falls back to the initials or the name ([[card-list]], [[card-detail]]).
-- The Coil SVG decoder and the `INTERNET` permission no longer serve any store field ([[coil-image-loading]]).
+- The Coil SVG decoder and the `INTERNET` permission no longer serve any store field ([[coil-image-loading]]). *Amended
+  2026-11-17:* both were removed in [#157](https://github.com/shockrifle/loyscan/issues/157).

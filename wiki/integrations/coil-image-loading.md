@@ -1,6 +1,6 @@
 # Coil image loading
 
-Images are loaded with **Coil 2.7.0** (`io.coil-kt:coil-compose`, `coil-svg`) through one app-wide loader. Since #151
+Images are loaded with **Coil 2.7.0** (`io.coil-kt:coil-compose`; `coil-svg` was dropped in #157) through one app-wide loader. Since #151
 every image the app shows is a private file: a card photo ([[card-photos]]) or the store logo the user gave a store
 ([[2026-11-13-user-supplied-store-logos]]). No shipped store has a logo, and none is fetched
 ([[2026-11-12-no-bundled-store-logos]]); the debug demo stores that pointed at **picsum.photos** placeholders were removed
@@ -12,7 +12,7 @@ in #55 ([[seed-data]]).
   instead). It was a URL until #151; nothing ever stored one but the removed demo stores.
 - Both a photo and a logo are shown as a `CardPhoto(name)` model, which only the app's loader maps to its file
   (`CardPhotoMapper`, `ui/CardPhoto.kt`).
-- The app-wide `ImageLoader` is a Hilt `@Singleton` with the SVG decoder, the `CardPhotoMapper` and an `EventListener`
+- The app-wide `ImageLoader` is a Hilt `@Singleton` with the `CardPhotoMapper` and an `EventListener`
   that logs failures at WARN via Timber (`app/src/main/java/com/bdaniel/loyscan/di/ImageLoaderModule.kt`). Get it in
   Compose with `hiltImageLoader()` and pass it to `AsyncImage(imageLoader = …)` —
   [[2025-12-12-singleton-image-loader]].
@@ -21,10 +21,12 @@ in #55 ([[seed-data]]).
 
 - **Coil 2 package names** (`coil.*`, not `coil3.*`). Upgrading to Coil 3 changes the artifact group
   (`io.coil-kt.coil3`) and packages, and needs an explicit network-fetcher artifact.
-- `AsyncImage` **without** `imageLoader =` silently uses Coil's own default singleton, which has no SVG support,
-  no logging and no `CardPhotoMapper`, so a card photo fails on it. The list tiles did this until #10
+- `AsyncImage` **without** `imageLoader =` silently uses Coil's own default singleton, which has no logging
+  and no `CardPhotoMapper`, so a card photo fails on it. The list tiles did this until #10
   ([[list-screen-bypasses-image-loader]], resolved); every `AsyncImage` now passes `hiltImageLoader()`.
 - No placeholder or error drawable is set. A tile or header whose photo or logo can't load sets an `onError` flag and
   falls back to the initials or the name.
-- The SVG decoder and the `INTERNET` permission no longer serve any store field: the decision to keep or remove them
-  is [[2026-11-12-no-bundled-store-logos]] → Consequences.
+- **No `INTERNET` permission** since #157 (2026-11-17), so a URL load fails at run time. Coil 2's `coil-base` still
+  ships its OkHttp network fetcher; only the permission is gone. `AppPermissionsTest` fails if the permission comes
+  back, from the app's manifest or a library's ([[android-app]] → Manifest facts). The SVG decoder (`coil-svg`) was
+  removed in the same change: every image is a PNG or JPEG file the app wrote.

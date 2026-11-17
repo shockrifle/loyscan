@@ -17,7 +17,12 @@ versionName `1.0` (versionCode 1). minSdk 29, targetSdk 36, compileSdk 37, Java/
 
 ## Manifest facts
 
-- `android.permission.INTERNET` — added in `c4d6bdc` for remote brand logos; since #151 no store field uses it ([[coil-image-loading]]).
+- **No `android.permission.INTERNET`** since #157 (2026-11-17). It was added in `c4d6bdc` for remote brand logos, and
+  no store field used it after #151 ([[coil-image-loading]]). `AppPermissionsTest` reads the permissions from
+  Robolectric's package manager, built from the debug unit-test merged manifest (the app's and every library's), and
+  fails on `INTERNET`. A release-only dependency would not be seen there; there is none today. `ACCESS_NETWORK_STATE`,
+  `WAKE_LOCK`, `RECEIVE_BOOT_COMPLETED` and `FOREGROUND_SERVICE` come from `androidx.work` (through Glance) and give no
+  network access.
 - `MainActivity` has the default `standard` launch mode and takes `ACTION_SEND` for `image/*`: Share → LoyScan
   ([[add-card]], [[2026-11-03-share-in-standard-launch-mode]], #77, #83).
 - `android.permission.CAMERA` for the [[barcode-scanner]], asked for at runtime. Declaring it also makes Android refuse
