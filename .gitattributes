@@ -2,3 +2,6 @@
 wiki/_log.md merge=union
 # Shell scripts run under bash (Git Bash on Windows too), which breaks on CRLF.
 *.sh text eol=lf
+# Workflow files: ReleaseWorkflowTest reads release.yml's text and compares it with \n-only strings, so a Windows
+# checkout (core.autocrlf) with CRLF would fail it (#170). GitHub reads them as LF anyway.
+.github/workflows/*.yml text eol=lf
