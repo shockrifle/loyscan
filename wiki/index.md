@@ -33,16 +33,16 @@ the way they are, what's fragile, and how to work on it.
 
 ## How-to
 
-- Workflows: [[tdd]] (start here before writing code), [[build-and-run]], [[ci]], [[database-schema-changes]], [[add-a-catalogue-store]], [[add-a-string]], [[test-backup-on-a-device]], [[code-review]] (PRs, incl. `/next-task`), [[agent-skills]]
-- Runbooks: [[cli-build-jvm-target-mismatch]], [[reset-local-database]]
-- Integrations: [[coil-image-loading]], [[zxing-core]], [[zxing-cpp]]
+- Workflows: [[tdd]] (start here before writing code), [[build-and-run]], [[ci]], [[database-schema-changes]], [[add-a-catalogue-store]], [[add-a-string]], [[test-backup-on-a-device]], [[code-review]] (PRs, incl. `/next-task`), [[agent-skills]], [[release]]
+- Runbooks: [[cli-build-jvm-target-mismatch]], [[reset-local-database]], [[leaked-signing-secret]]
+- Integrations: [[coil-image-loading]], [[zxing-core]], [[zxing-cpp]], [[google-play]]
 - Scripts: [[reviewer-model]] (which model a reviewer subagent really ran on) — see [[scripts/_index|scripts]]
 
 ## Knowledge registers
 
 | Folder | What's in it |
 |---|---|
-| [[decisions/_index\|decisions]] | Why the codebase looks the way it does (34 pages) |
+| [[decisions/_index\|decisions]] | Why the codebase looks the way it does (36 pages) |
 | [[bugs/_index\|bugs]] | Postmortems (5 pages) |
 | [[tech-debt/_index\|tech-debt]] | Owed work, open vs resolved (7 pages) |
 | [[hacks/_index\|hacks]] | Short-lived workarounds (3 pages) |

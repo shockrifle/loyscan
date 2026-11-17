@@ -67,11 +67,15 @@ if grep -q "$marker" <<<"$out"; then fail "the half-set-up error printed the sto
 if grep -q 'LOYSCAN_UPLOAD_STORE_FILE' <<<"$out"; then fail "the half-set-up error names a value that is set"; fi
 pass "a half-set-up upload key stops the build, naming only what's missing"
 
-# Fully set up: the AAB is signed with exactly this key, and the log never shows the password.
+# Fully set up, built the way the release workflow builds it (release-bundle.sh): the AAB is signed with exactly this
+# key, and the log never shows the password.
 export LOYSCAN_UPLOAD_KEY_ALIAS=upload
+if out=$(.github/scripts/release-bundle.sh 9.99.0 "${blank[@]}" 2>&1); then fail "release-bundle.sh built for a tag that isn't the version"; fi
+grep -q 'not 9.99.0' <<<"$out" || fail "release-bundle.sh failed for another reason than the version: $out"
+pass "release-bundle.sh refuses a tag that isn't the build's version"
 aab=app/build/outputs/bundle/release/app-release.aab
-rm -f "$aab"
-./gradlew bundleRelease "${blank[@]}" >"$work/build.log" 2>&1 || { tail -n 50 "$work/build.log"; fail "bundleRelease failed"; }
+.github/scripts/release-bundle.sh "$declared" "${blank[@]}" >"$work/build.log" 2>&1 ||
+  { tail -n 50 "$work/build.log"; fail "release-bundle.sh failed"; }
 [[ -f "$aab" ]] || fail "bundleRelease made no $aab"
 if grep -q "$marker" "$work/build.log"; then fail "the build log contains the store password"; fi
 # Not -strict: that also fails on a self-signed certificate, which every upload key is.

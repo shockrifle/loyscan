@@ -43,6 +43,16 @@ whole script took about 5 minutes locally (2026-11-17). It runs locally in
 Git Bash too. **Shellcheck** then lints `.github/scripts/*.sh` (shellcheck is preinstalled on `ubuntu-latest`; it isn't
 part of the local gate).
 
+`check-release-build.sh` builds the signed AAB through `.github/scripts/release-bundle.sh`, the script the Release
+workflow runs, and first checks that it refuses a tag that isn't the build's version.
+
+**Release workflow** (`.github/workflows/release.yml`, #74): a separate workflow, run by pushing a `vX.Y.Z` tag. It
+checks the tagged commit is on `master`, decodes the upload keystore from the Actions secrets into the runner's temp
+directory, runs `release-bundle.sh X.Y.Z`, deletes the keystore, and creates a draft GitHub release with the AAB and
+`mapping.txt`. No Gradle cache: a release builds from scratch. `ReleaseWorkflowTest` (in the gate) checks its rules:
+secrets only as `env:` entries, nothing that echoes or traces, a `v*` trigger, a draft. How to cut a release:
+[[release]].
+
 Before the build, a **Gradle distribution** step runs `./gradlew --version`, up to three times, 30 seconds apart. The
 wrapper downloads the distribution on a cache miss and tries only once.
 
