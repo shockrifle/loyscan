@@ -91,7 +91,7 @@ All versions live in `gradle/libs.versions.toml`. Constraints that have bitten b
   with AGP 9's built-in Kotlin; `2.3.3` wasn't tried there. Kotlin is at least 2.3.20 because zxing-cpp 3.1.x is
   built on that stdlib ([[zxing-cpp]]).
 - **Kotlin, Hilt, the Android Gradle plugin, Gradle and compileSdk move together.** Upgraded as one set in #115
-  (2026-11-10): Kotlin 2.4.21, Hilt 2.60.1, AGP 9.5.1, Gradle 9.8.2 (9.9.0 since #114, which AGP 9.5.1 builds on),
+  (2026-11-10): Kotlin 2.4.21, Hilt 2.60.1, AGP 9.5.1, Gradle 9.8.2 (9.9.0 since #114, which AGP 9.5.1 builds on; 9.9.1 since PR #164),
   compileSdk 37 (targetSdk stays 36). Each failed alone on Dependabot's first PRs, 2026-11-09 ([[ci]] → Dependabot):
   - **A Kotlin minor needs a Hilt that knows it.** Kotlin 2.4.21 (PR #110) doesn't compile with Hilt 2.57.2:
     *"[Hilt] Provided Metadata instance has version 2.4.0, while maximum supported version is 2.3.0"*. Hilt's

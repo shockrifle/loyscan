@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-17 · Gradle wrapper 9.9.0→9.9.1 (patch: daemon connection hardening, Kotlin DSL speed-ups) · workflows/build-and-run · PR #164 Dependabot bump
 - 2026-11-17 · kotlinx-serialization-json 1.13 reverts 1.12's wrapping of constructor exceptions; rootCause check still holds · workflows/build-and-run, workflows/tdd · PR #163 Dependabot bump 1.12.0→1.13.0
 - 2026-11-17 · corrected what would close the release secrets gap (required reviewers or tag rules, not a tag-limited environment alone) · workflows/release · #74, review round 2 of PR #168
 - 2026-11-17 · review of PR #168: wizard check script, rotation no longer offers the saved password, `.p12`/`.pfx`/`.env.*` ignored, who can reach the release secrets, glossary terms · workflows/release, workflows/ci, workflows/tdd, runbooks/leaked-signing-secret, scripts/_index, glossary · #74
