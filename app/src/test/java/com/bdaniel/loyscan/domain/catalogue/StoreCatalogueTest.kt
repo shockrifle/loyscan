@@ -112,8 +112,8 @@ class StoreCatalogueTest {
         )
         for (entry in invalid) {
             val e = assertThrows(entry, IllegalArgumentException::class.java) { StoreCatalogue.parse("[$entry]") }
-            // Make sure a check (require) fired, not a JSON error. Since kotlinx.serialization 1.12 the check's
-            // IllegalArgumentException arrives as the cause of a JsonException.
+            // Make sure a check (require) fired, not a JSON error: a JSON error is a SerializationException, a
+            // subclass. It checks the root cause, as a kotlinx.serialization version may wrap the check (1.12 did).
             assertEquals(entry, IllegalArgumentException::class.java, e.rootCause.javaClass)
         }
     }
