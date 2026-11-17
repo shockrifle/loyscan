@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-17 · corrected what would close the release secrets gap (required reviewers or tag rules, not a tag-limited environment alone) · workflows/release · #74, review round 2 of PR #168
 - 2026-11-17 · review of PR #168: wizard check script, rotation no longer offers the saved password, `.p12`/`.pfx`/`.env.*` ignored, who can reach the release secrets, glossary terms · workflows/release, workflows/ci, workflows/tdd, runbooks/leaked-signing-secret, scripts/_index, glossary · #74
 - 2026-11-17 · `wizard` skill adapted (user-invoked) and the release-signing wizard committed; release and leaked-secret pages point at it · workflows/agent-skills, decisions/2026-11-09-adapted-third-party-skills, decisions/_index, scripts/_index, workflows/release, runbooks/leaked-signing-secret, workflows/tdd, workflows/ci · #74
 - 2026-11-17 · release workflow on a `vX.Y.Z` tag (signed AAB onto a draft release), release runbook, leaked-secret runbook, Play integration page · workflows/release (new), runbooks/leaked-signing-secret (new), integrations/google-play (new), workflows/ci, workflows/tdd, workflows/_index, runbooks/_index, integrations/_index, index · #74

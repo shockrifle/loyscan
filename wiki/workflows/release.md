@@ -77,8 +77,9 @@ Attach both to a draft release yourself (`gh release create vX.Y.Z --draft --ver
 The three secrets are repository secrets, so any workflow run with access to secrets can read them: today that means
 anyone with write access, who could also push a tag on a branch whose `release.yml` skips the "on `master`" check.
 That check guards against mistakes (a tag on the wrong commit), not against a collaborator. Pull requests from forks
-get no secrets. Moving the secrets into an Actions environment limited to `v*` tags would close this; environments
-need a paid plan while the repo is private.
+get no secrets. Limiting an Actions environment to `v*` tags would not close this alone, since a collaborator can tag
+any commit; an environment with required reviewers, or rules on who may create `v*` tags, would. Environments need a
+paid plan while the repo is private (as understood 2026-11-17; not checked against GitHub's plans page).
 
 ## Checks
 
