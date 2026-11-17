@@ -149,6 +149,9 @@ fun SharedTransitionScope.AppNavigation(
         composable<SharedLogo> {
             SharedLogoScreen(directions = navController.sharedLogoDirections(it))
         }
+        composable<About> {
+            AboutScreen(directions = navController.aboutDirections(it))
+        }
     }
 }
 

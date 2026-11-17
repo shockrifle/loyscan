@@ -18,6 +18,8 @@ data class ListDirections(
     val toAddCard: () -> Unit,
     /** Edits the card [id] of the store [storeId] (#7: one card selected). */
     val toEditCard: (id: String, storeId: String) -> Unit,
+    /** The About screen (#150). */
+    val toAbout: () -> Unit,
 )
 
 /**
@@ -30,6 +32,19 @@ fun NavController.listDirections(list: NavBackStackEntry) = ListDirections(
     },
     toAddCard = { whileCurrent(list) { navigate(StorePicker()) } },
     toEditCard = { id, storeId -> whileCurrent(list) { navigate(CardForm(storeId, cardId = id)) } },
+    toAbout = { whileCurrent(list) { navigate(About) } },
+)
+
+/** The app's name and version, and that it isn't affiliated with the retailers whose cards it stores (#150). */
+@Serializable
+object About
+
+@Immutable
+data class AboutDirections(val toBack: () -> Unit)
+
+/** Only while [about], its own entry, is current: a second tap on Back leaves the list in place (#69). */
+fun NavController.aboutDirections(about: NavBackStackEntry) = AboutDirections(
+    toBack = { whileCurrent(about) { navigateUp() } },
 )
 
 

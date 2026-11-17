@@ -1,6 +1,6 @@
 # Card list ("My Cards")
 
-The start destination: a top bar titled "My Cards" with a Sort menu, a search field, and a 2-column grid of card
+The start destination: a top bar titled "My Cards" with a Sort menu, an About button and a Settings icon, a search field, and a 2-column grid of card
 tiles, one per row in `loyalty_cards`, live-updating from Room. Sort, search and multi-select: #7.
 
 **Entry points:** `ListScreen` and `CardItem` in `app/src/main/java/com/bdaniel/loyscan/ListScreen.kt`;
@@ -100,7 +100,8 @@ tiles, one per row in `loyalty_cards`, live-updating from Room. Sort, search and
 - **Language** (#72): every text on the list is a string resource, in English or Hungarian by the phone's language;
   the store names and labels are the user's data and aren't translated ([[add-a-string]]). Tests:
   `ListScreenTest.inHungarian_everyTextOnTheList_isTranslated`.
-- The Settings icon in the top bar is a no-op (`ListScreen.kt:145`, `/* TODO */`).
+- The Info icon in the top bar, "About", → `directions.toAbout()` → [[about]] (#150).
+- The Settings icon in the top bar is a no-op (`ListScreen.kt:151`, `/* TODO */`).
 - The "Add card" floating button → `directions.toAddCard()` → the store picker of [[add-card]]. The grid has 88dp of bottom content
   padding (`ADD_BUTTON_CLEARANCE`) so the button never covers the last row (`ListScreenTest.theLastTile_isNotCoveredByTheAddButtonWhenScrolledToTheEnd`).
 
