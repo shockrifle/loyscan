@@ -62,7 +62,9 @@ terms, with domain→entity mappers. Time comes from an injected `java.time.Cloc
 Tests run on the JVM (`./gradlew testDebugUnitTest`, see [[build-and-run]]); shared helpers live in
 `app/src/test/java/com/bdaniel/loyscan/testing/`. The one exception is the on-device smoke test of the minified build
 (`app/src/androidTest/`, `MinifiedAppSmokeTest`): it drives the app from outside with UiAutomator, by visible text and
-content descriptions, so it needs no seam in the app ([[2026-11-05-r8-smoke-test-on-a-device]]).
+content descriptions, so it needs no seam in the app ([[2026-11-05-r8-smoke-test-on-a-device]]). The release build's
+own configuration (version scheme, #74) is checked by a shell script on CI, through Gradle's resolved values and its
+outputs ([[tdd]] → the layer table).
 
 - **ViewModels** are constructed directly with `FakeLoyaltyCardRepository` / `FakeStoreRepository` /
   `FakeUserPreferencesRepository` (each a

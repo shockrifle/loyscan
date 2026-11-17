@@ -1,7 +1,7 @@
 # Android app (`:app`)
 
 The only runtime surface: a single-Activity Compose app, package/applicationId `com.bdaniel.loyscan`,
-versionName `1.0` (versionCode 1). minSdk 29, targetSdk 36, compileSdk 37, Java/JVM 21 (`app/build.gradle.kts`).
+versionName `1.0.0` (versionCode 10000; `loyscan.versionName` in `gradle.properties`, [[2026-11-17-release-versioning]]). minSdk 29, targetSdk 36, compileSdk 37, Java/JVM 21 (`app/build.gradle.kts`).
 
 ## Entry points
 

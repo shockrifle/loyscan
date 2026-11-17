@@ -32,6 +32,12 @@ A **Lint** step follows: `./gradlew lintDebug`. A lint error fails the run, warn
 R8 must succeed on release, and the on-device smoke test must compile. The smoke test itself doesn't run on CI
 ([[2026-11-05-r8-smoke-test-on-a-device]], #73).
 
+**Release build checks** runs `.github/scripts/check-release-build.sh` (#74): the version scheme through what Gradle
+resolves (`./gradlew -q :app:printVersion -Ployscan.versionName=…`), hand-worked values (1.2.3 → 10203, 0.9.1 → 901)
+and names the build must reject (`1.0`, `v1.0.0`, `1.100.0`) ([[2026-11-17-release-versioning]]). It runs locally in
+Git Bash too. **Shellcheck** then lints `.github/scripts/*.sh` (shellcheck is preinstalled on `ubuntu-latest`; it isn't
+part of the local gate).
+
 Before the build, a **Gradle distribution** step runs `./gradlew --version`, up to three times, 30 seconds apart. The
 wrapper downloads the distribution on a cache miss and tries only once.
 
