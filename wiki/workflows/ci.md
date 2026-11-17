@@ -110,6 +110,13 @@ in CI usually depends on the platform: path separators, line endings (`core.auto
 CRLF), the default time zone or locale, or timing in Robolectric/Compose tests. Read the `test-reports` artifact
 for the failing assertion before changing the test.
 
+It goes the other way too: a test that reads a checked-in file's text passes on CI and fails on Windows if the file
+comes out with CRLF. `.gitattributes` pins LF for `*.sh` (bash breaks on CRLF) and for `.github/workflows/*.yml`,
+whose text `ReleaseWorkflowTest` compares with `\n`-only strings. Until 2026-11-17 the workflows had no rule, and that
+test failed only in the local gate, with *"line contents match, but line-break characters differ"* (#170). A new
+test that reads a file's text needs the same rule for that file, or a test that normalises `\r\n`. After adding a rule,
+delete the files and check them out again (`git checkout -- <path>`), since git doesn't rewrite a clean working copy.
+
 ## Choices and constraints
 
 - **No emulator job.** Every test runs on the JVM via Robolectric ([[2026-10-12-tdd-and-coverage]]), except the
