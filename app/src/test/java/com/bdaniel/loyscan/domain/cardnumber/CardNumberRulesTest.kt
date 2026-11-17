@@ -123,8 +123,9 @@ class CardNumberRulesTest {
         )
         for (rule in invalid) {
             val e = assertThrows(rule, IllegalArgumentException::class.java) { CardNumberRules.parse("[$rule]") }
-            // Make sure a rule check (require) fired, not a JSON error: a JSON error is a SerializationException, a
-            // subclass. It checks the root cause, as a kotlinx.serialization version may wrap the check (1.12 did).
+            // Make sure a rule check (require) fired, not a JSON error. assertThrows also accepts a JSON error (a
+            // SerializationException is a subclass), so compare the exact class, and of the root cause: a
+            // kotlinx.serialization version may wrap the check's exception (1.12 did).
             assertEquals(rule, IllegalArgumentException::class.java, e.rootCause.javaClass)
         }
     }
