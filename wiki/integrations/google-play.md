@@ -15,6 +15,20 @@ uploads each AAB by hand in Play Console ([[release]], #74). The store listing, 
 - **`versionCode` must grow** with every upload, on every track; `X*10000 + Y*100 + Z` does that as long as the version
   grows ([[2026-11-17-release-versioning]]). An AAB with a code Play has already seen is refused.
 
+## Store listing assets
+
+What Play shows on the listing but the app doesn't ship lives in `play/` at the repo root, outside every Gradle source
+set. For now that is only the store icon; where the listing texts, screenshots and feature graphic go is decided with
+them (#75).
+
+- **Store icon** `play/store-icon.png`: 512×512, 32-bit PNG (RGBA), at most 1024 KB, a full opaque square. Play draws
+  the rounded corners and the shadow itself, so none are drawn in (Play Console help, "Graphic assets"). It is the
+  launcher icon's background and foreground layers, the visible 72dp centre of the 108dp layer scaled to 512px, as
+  Android Studio's Play Store icon export does. `StoreIconTest` renders the layers named in `mipmap-anydpi/ic_launcher.xml`
+  and fails when the PNG differs from them, or when it misses Play's spec or hand-worked pixels (the crop and scale).
+  **After a launcher icon change**: run `StoreIconTest`, then copy `app/build/store-icon/store-icon.png` (written on
+  every run) over `play/store-icon.png`.
+
 ## Quirks
 
 - **R8 mapping.** AGP puts the R8 mapping inside the AAB (`BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map`),

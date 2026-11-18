@@ -133,6 +133,9 @@ android {
             it.inputs.dir("$rootDir/.github/scripts").withPropertyName("ciScripts").withPathSensitivity(PathSensitivity.RELATIVE)
             // ... and checks the release-signing wizard sets exactly the secrets the workflow reads.
             it.inputs.dir("$rootDir/scripts").withPropertyName("wizards").withPathSensitivity(PathSensitivity.RELATIVE)
+            // StoreIconTest compares Play's store icon with the launcher icon's layers (#75). `files`, not `file`: the
+            // test names the PNG when it is missing, which `file` would turn into a Gradle error.
+            it.inputs.files("$rootDir/play/store-icon.png").withPropertyName("storeIcon").withPathSensitivity(PathSensitivity.RELATIVE)
         }
     }
 }
