@@ -4,11 +4,12 @@ A standard Gradle-wrapper project with no custom tasks or scripts; coverage task
 
 **Gradle runs on JDK 17 or newer** (AGP 9's minimum). Since AGP 9 (#115) Kotlin takes its JVM target (21) from
 `compileOptions`, so the JDK that runs Gradle no longer decides the bytecode: a terminal build on JDK 19 works
-(checked 2026-11-10). CI uses JDK 21, the same as Android Studio's bundled JBR. Before #115 any JDK other than 21
-failed the build — [[cli-build-jvm-target-mismatch]].
+(checked 2026-11-10), and so does one on Android Studio's bundled JBR 25 (the gate and `assembleDebug`, checked
+2026-11-18; until then the JBR was 21). CI uses JDK 21. Before #115 any JDK other than 21 failed the build —
+[[cli-build-jvm-target-mismatch]].
 
 ```sh
-export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"   # optional: the JDK version CI uses
+export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"   # optional: Android Studio's JDK (25; CI uses 21)
 ./gradlew assembleDebug        # build (verified passing 2026-10-08 with JAVA_HOME as above)
 ./gradlew installDebug         # install on the connected device/emulator
 adb shell am start -n com.bdaniel.loyscan/.MainActivity
@@ -34,6 +35,29 @@ half set up. Missing: …"*.
 
 On Windows, use `gradlew.bat` or Git Bash. `local.properties` (the SDK path) is git-ignored and must exist
 locally.
+
+## IDE settings
+
+**Android Studio's `.idea/` folder is not tracked** (#174). Opening the project imports it from Gradle, which writes
+`.idea/` afresh; the Gradle build (the wrapper, `gradle/libs.versions.toml`, `app/build.gradle.kts`) is the only
+project setup. The files the template had committed held machine-local state (the project JDK's name, the selected
+device, import bookkeeping) and nothing shared: the inspection profile was Android Studio's default. Every Android
+Studio update rewrote some of them (moving the project JDK from `jbr-21` to `jbr-25` did, 2026-11-18). A clone that
+pulls #174's commit across loses the old files from its working tree (git deletes what a commit untracks); a Gradle sync
+in Android Studio writes them again.
+
+**Adding a shared IDE file later** (a code style in `.idea/codeStyles/`, a customised inspection profile in
+`.idea/inspectionProfiles/`, shared run configurations in `.idea/runConfigurations/`) takes three changes in the same
+commit, or the file is ignored, or `GitIgnoreTest` fails:
+
+1. A `!` exception in `.gitignore` after `/.idea/*`, e.g. `!/.idea/codeStyles/`. Keep the rule as `/.idea/*`: git can't
+   re-include a file inside a directory that is itself ignored (`/.idea/`).
+2. The file's path in `GitIgnoreTest`'s `SHARED_IDE_FILES`, and out of the ignored list in
+   `androidStudiosProjectFiles_areIgnored`.
+3. A line here saying what the file shares.
+
+`GitIgnoreTest` asks git itself: every `.idea/` path is ignored, and git tracks no file under `.idea/` outside
+`SHARED_IDE_FILES`, so a file added with `git add -f` fails the gate too.
 
 ## Tests
 

@@ -103,7 +103,8 @@ With `gh`:
 
 ## Reproduce a failure locally
 
-Run the gate (root `CLAUDE.md`) with `JAVA_HOME` set to Android Studio's JBR 21 (see [[build-and-run]]).
+Run the gate (root `CLAUDE.md`) with `JAVA_HOME` set to Android Studio's JBR (see [[build-and-run]]). It is JDK 25
+since 2026-11-18 while CI uses 21; a failure that only CI shows can also come from that difference.
 
 CI uses Linux and Temurin, while local builds use Windows and the JBR. A test that passes locally but fails only
 in CI usually depends on the platform: path separators, line endings (`core.autocrlf` gives Windows checkouts

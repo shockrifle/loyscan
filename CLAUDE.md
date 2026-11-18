@@ -34,8 +34,8 @@ type-safe route/Directions). Use it as the template. Each layer there starts wit
 - Single-module Android app (`:app`), Kotlin 2.4 + Jetpack Compose (Material 3), Hilt + Room via KSP,
   Navigation Compose with `@Serializable` routes, Coil 2 for images, Timber for logging.
 - Build: `./gradlew assembleDebug` · install: `./gradlew installDebug`. Versions live in `gradle/libs.versions.toml`.
-  Gradle needs JDK 17+. CI uses JDK 21, as does Android Studio's JBR (`/c/Program Files/Android/Android Studio/jbr`),
-  the safe `JAVA_HOME` for a terminal build — see `wiki/workflows/build-and-run.md`.
+  Gradle needs JDK 17+. CI uses JDK 21; Android Studio's JBR (`/c/Program Files/Android/Android Studio/jbr`, JDK 25
+  since 2026-11-18) is the safe `JAVA_HOME` for a terminal build — see `wiki/workflows/build-and-run.md`.
 - **Test-first.** Write the failing test before the code, and see it fail. A bug fix starts with a failing
   regression test. **The gate**, `./gradlew testDebugUnitTest koverVerify lintDebug`, must pass before committing; raise the Kover
   `minBound` when coverage rises. How: `wiki/workflows/tdd.md`; why: `wiki/decisions/2026-10-12-tdd-and-coverage.md`.
