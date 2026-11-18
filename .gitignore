@@ -1,19 +1,16 @@
 *.iml
 .gradle
 /local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
+# Android Studio's project files are machine-local and rewritten by every update (#174). A shared one (code style,
+# inspection profile, run configurations) needs a `!/.idea/...` exception below this line, kept as `/.idea/*` (not
+# `/.idea/`) so that one can work, and an entry in GitIgnoreTest's SHARED_IDE_FILES: wiki/workflows/build-and-run.md.
+/.idea/*
 .DS_Store
 /build
 /captures
 .externalNativeBuild
 .cxx
 local.properties
-/.idea/deviceManager.xml
 
 # Release signing material and outputs (#74). The repo is public: none of these may ever be committed, and they are
 # ignored before any of them exists. Where they live instead: wiki/workflows/release.md. Checked by GitIgnoreTest.

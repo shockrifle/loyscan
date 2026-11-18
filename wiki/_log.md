@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-18 · `.idea/` untracked and ignored as `/.idea/*`; how to add a shared IDE file (a `!` exception plus GitIgnoreTest's SHARED_IDE_FILES); corrected Android Studio's JBR from 21 to 25 (gate passes on it) · workflows/build-and-run, workflows/ci, root CLAUDE.md · #174
 - 2026-11-18 · LoyScan's own launcher icon (fanned cards, heart-shaped barcode, plum; own monochrome layer), template raster mipmaps removed; decision with the Play icon comparison; pixel-level drawable test row · decisions/2026-11-18-launcher-icon, decisions/_index, apps/android-app, workflows/tdd · #75
 - 2026-11-17 · workflow YAML pinned to LF in .gitattributes, so ReleaseWorkflowTest passes on a Windows checkout; tests that read a file's text need the same · workflows/ci · #170
 - 2026-11-17 · Gradle wrapper 9.9.0→9.9.1 (patch: daemon connection hardening, Kotlin DSL speed-ups) · workflows/build-and-run · PR #164 Dependabot bump
