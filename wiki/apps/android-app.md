@@ -36,6 +36,7 @@ versionName `1.0.0` (versionCode 10000; `loyscan.versionName` in `gradle.propert
   `android.appwidget.provider` meta-data (`res/xml/card_widget_info.xml`) is the home-screen widget
   ([[card-widget]], #11); its `onUpdate` starts the live-update observer. `MainActivity` also reads an open-card
   intent (`openCardIntent` / `Intent.openCard()`) the widget fires.
+- Launcher icon (`@mipmap/ic_launcher`, `ic_launcher_round`): adaptive vectors only, in `mipmap-anydpi` (minSdk 29 is past API 26, so no raster fallbacks). Two fanned cards, the front card's barcode shaped as a heart, on plum `#5B2A4E` ([[2026-11-18-launcher-icon]]). Its own `ic_launcher_monochrome` cuts the barcode out of the card and the back card back from the front one, because a themed icon (Android 13+) is tinted by alpha alone. `LauncherIconTest` checks both layers' pixels (#75).
 - Native code: zxing-cpp ships `.so` files for `arm64-v8a`, `armeabi-v7a`, `x86` and `x86_64` ([[zxing-cpp]]).
 - `allowBackup="true"`, but **cloud backup carries no app data** ([[2026-11-05-no-cloud-backup-in-v1]], #71,
   `BackupRulesTest`). `data_extraction_rules.xml` (Android 12+) excludes every domain (`root`/`file`/`database`/

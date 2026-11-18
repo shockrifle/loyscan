@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The themed-icon layer (Android 13+), the same geometry as ic_launcher_foreground. The launcher tints it by alpha
+     alone, so shapes are told apart by gaps: the back card is cut back 2 units around the front card, and the barcode
+     is cut out of the front card (the heart is a hole, refilled with the spaces between the bars). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- The back card, everywhere but the front card grown by 2 (the hole is drawn counter-clockwise) -->
+    <group>
+        <clip-path android:pathData="M0,0H108V108H0Z M33,39A6,6 0,0 0,27,45L27,69A6,6 0,0 0,33,75L75,75A6,6 0,0 0,81,69L81,45A6,6 0,0 0,75,39L33,39Z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M26.63,39.22L67.71,30.48A4,4 0,0 1,72.46,33.56L77.45,57.04A4,4 0,0 1,74.37,61.78L33.29,70.52A4,4 0,0 1,28.54,67.44L23.55,43.96A4,4 0,0 1,26.63,39.22Z" />
+    </group>
+    <!-- The front card with a heart-shaped hole -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillType="evenOdd"
+        android:pathData="M33,41L75,41A4,4 0,0 1,79,45L79,69A4,4 0,0 1,75,73L33,73A4,4 0,0 1,29,69L29,45A4,4 0,0 1,33,41Z M54,68.83C54,68.83 41,61.25 41,52.58C41,48.25 44.25,45 48.04,45C50.75,45 52.92,46.62 54,48.79C55.08,46.62 57.25,45 59.96,45C63.75,45 67,48.25 67,52.58C67,61.25 54,68.83 54,68.83Z" />
+    <!-- Inside the heart, the spaces between the bars -->
+    <group>
+        <clip-path android:pathData="M54,68.83C54,68.83 41,61.25 41,52.58C41,48.25 44.25,45 48.04,45C50.75,45 52.92,46.62 54,48.79C55.08,46.62 57.25,45 59.96,45C63.75,45 67,48.25 67,52.58C67,61.25 54,68.83 54,68.83Z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M44,44h1.6v26h-1.6z M47.2,44h1.6v26h-1.6z M52.8,44h1.6v26h-1.6z M56.4,44h1.6v26h-1.6z M59.6,44h1.6v26h-1.6z M64.2,44h1.6v26h-1.6z" />
+    </group>
+</vector>
