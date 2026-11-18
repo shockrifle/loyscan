@@ -6,13 +6,13 @@ import android.graphics.Canvas
 import android.graphics.Color
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.bdaniel.loyscan.testing.adaptiveLayers
 import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
 import kotlin.math.hypot
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.GraphicsMode
-import org.xmlpull.v1.XmlPullParser
 
 /**
  * The launcher icon is LoyScan's own (#75): two fanned loyalty cards, the front one's barcode shaped as a heart, as an
@@ -29,7 +29,7 @@ class LauncherIconTest {
     @Test
     fun bothLauncherIcons_areAdaptiveWithTheirOwnMonochromeLayer() {
         listOf(R.mipmap.ic_launcher, R.mipmap.ic_launcher_round).forEach { icon ->
-            val layers = adaptiveLayers(icon)
+            val layers = context.adaptiveLayers(icon)
             assertWithMessage("layers of ${context.resources.getResourceEntryName(icon)}")
                 .that(layers.keys).containsExactly("background", "foreground", "monochrome")
             // The template reused the coloured foreground, so a themed icon showed a blank silhouette.
@@ -74,18 +74,6 @@ class LauncherIconTest {
         assertThat(extent(icon.row(LOBES_ROW), hole)).isGreaterThan(2 * atPoint)
     }
 
-    /** Layer name → drawable resource id, from the `<adaptive-icon>` XML of [icon]. */
-    private fun adaptiveLayers(icon: Int): Map<String, Int> {
-        val parser = context.resources.getXml(icon)
-        val layers = mutableMapOf<String, Int>()
-        while (parser.next() != XmlPullParser.END_DOCUMENT) {
-            if (parser.eventType == XmlPullParser.START_TAG && parser.name != "adaptive-icon") {
-                layers[parser.name] = parser.getAttributeResourceValue(ANDROID_NS, "drawable", 0)
-            }
-        }
-        return layers
-    }
-
     private fun render(drawable: Int): Bitmap {
         val bitmap = Bitmap.createBitmap(SIZE, SIZE, Bitmap.Config.ARGB_8888)
         context.getDrawable(drawable)!!.apply { setBounds(0, 0, SIZE, SIZE) }.draw(Canvas(bitmap))
@@ -111,7 +99,6 @@ class LauncherIconTest {
         row.map(on).zipWithNext().count { (before, now) -> !before && now } + if (on(row.first())) 1 else 0
 
     private companion object {
-        const val ANDROID_NS = "http://schemas.android.com/apk/res/android"
         const val SCALE = 4
         const val SIZE = 108 * SCALE
         const val SAFE_RADIUS = 33f * SCALE

@@ -54,5 +54,6 @@ alpha alone. Layers: `app/src/main/res/drawable/ic_launcher_{background,foregrou
   point, and reaching down to it) in both the coloured and the themed layer ([[tdd]]).
 - The icon is vectors only; the template's raster `mipmap-*dpi` files are gone (minSdk 29 always uses
   `mipmap-anydpi`).
-- Play's 512×512 store icon is still to be exported from these layers (#75).
+- Play's 512×512 store icon is `play/store-icon.png`, rendered from these layers (the visible 72dp centre of the
+  background and foreground); `StoreIconTest` fails when it drifts from them ([[google-play]] → Store listing assets).
 - The app's theme still uses the template purple; the icon's plum is not (yet) a theme colour.
