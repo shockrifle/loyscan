@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-19 · listing's number-check claim narrowed to what the rules check (length and format for most stores, the check digit where there is one); the no-URL rule covers bare domains; the title rule names symbols · integrations/google-play · #75, review of PR #177
 - 2026-11-19 · Play store listing texts (title, short and full description) in English and Hungarian under `play/listing/`, with the non-affiliation note; StoreListingTest checks Play's limits, the note, no contact details or retailer names; what the texts claim and which tests back it · integrations/google-play, workflows/tdd, architecture · #75
 - 2026-11-18 · Play's 512×512 store icon in `play/`, rendered from the launcher icon's layers, golden-file test with hand-worked pixels; regenerate-by-copy step · integrations/google-play, decisions/2026-11-18-launcher-icon, apps/android-app, workflows/tdd · #75
 - 2026-11-18 · `.idea/` untracked and ignored as `/.idea/*`; how to add a shared IDE file (a `!` exception plus GitIgnoreTest's SHARED_IDE_FILES); corrected Android Studio's JBR from 21 to 25 (gate passes on it) · workflows/build-and-run, workflows/ci, root CLAUDE.md · #174

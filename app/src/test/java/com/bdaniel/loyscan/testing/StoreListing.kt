@@ -9,10 +9,10 @@ fun listingText(file: String): String = file.replace("\r\n", "\n").removeSuffix(
 /**
  * What is wrong with [listing] for Play (wiki/integrations/google-play.md → Store listing assets): a blank text, a text
  * over Play's limit (title 30, short description 80, full description 4000 characters, an accented letter counting as
- * one), a full description without [notAffiliatedNote] word for word, contact details (an email address, a URL, a
- * number of 7 or more digits), an all-caps word or an emoji in the title, or one of [retailerNames]. A retailer's name
- * matches in any case; one of 4 or more characters also at the start of a longer word ("Tescoban"), a shorter one
- * ("dm") only as a whole word.
+ * one), a full description without [notAffiliatedNote] word for word, contact details (an email address, a URL or bare
+ * domain, a number of 7 or more digits), an all-caps word or an emoji or symbol (`™` too) in the title, or one of
+ * [retailerNames]. A retailer's name matches in any case; one of 4 or more characters also at the start of a longer
+ * word ("Tescoban"), a shorter one ("dm") only as a whole word.
  */
 fun listingProblems(listing: Listing, notAffiliatedNote: String, retailerNames: List<String>): List<String> {
     val texts = listOf(
@@ -38,7 +38,7 @@ fun listingProblems(listing: Listing, notAffiliatedNote: String, retailerNames: 
         problems += "full description: no \"not affiliated\" note"
     }
     ALL_CAPS_WORD.findAll(listing.title).forEach { problems += "title: an all-caps word (${it.value})" }
-    listing.title.codePoints().filter(::isEmoji).forEach { problems += "title: an emoji (${String(Character.toChars(it))})" }
+    listing.title.codePoints().filter(::isEmoji).forEach { problems += "title: an emoji or symbol (${String(Character.toChars(it))})" }
     return problems
 }
 
@@ -51,6 +51,9 @@ private fun isEmoji(codePoint: Int): Boolean =
     Character.getType(codePoint) == Character.OTHER_SYMBOL.toInt() || codePoint in 0x1F000..0x1FAFF
 
 private val EMAIL = Regex("""[\w.+-]+@[\w-]+(\.[\w-]+)+""")
-private val URL = Regex("""(https?://|www\.)[^\s]*[^\s.,;:!?)]""", RegexOption.IGNORE_CASE)
+/** A link with a scheme or `www.`, or a bare domain: words joined by dots, ending in a lower-case TLD of 2+ letters. */
+private val URL = Regex(
+    """(?i:https?://|www\.)[^\s]*[^\s.,;:!?)]|(?<![\p{L}\p{N}@.-])[\p{L}\p{N}-]+(\.[\p{L}\p{N}-]+)*\.[a-z]{2,}(?![\p{L}\p{N}])""",
+)
 private val LONG_NUMBER = Regex("""\d([ -]?\d){6,}""")
 private val ALL_CAPS_WORD = Regex("""(?<![\p{L}\p{N}])\p{Lu}{2,}(?![\p{L}\p{N}])""")
