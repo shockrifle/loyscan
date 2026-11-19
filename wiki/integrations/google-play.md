@@ -23,8 +23,9 @@ them (#75).
 
 - **Store icon** `play/store-icon.png`: 512×512, 32-bit PNG (RGBA), at most 1024 KB, a full opaque square. Play draws
   the rounded corners and the shadow itself, so none are drawn in (Play Console help, "Graphic assets"). It is the
-  launcher icon's background and foreground layers, the visible 72dp centre of the 108dp layer scaled to 512px, as
-  Android Studio's Play Store icon export does. `StoreIconTest` renders the layers named in `mipmap-anydpi/ic_launcher.xml`
+  launcher icon's background and foreground layers, the visible 72dp centre of the 108dp layer scaled to 512px. That
+  crop is our choice (not checked against Android Studio's Image Asset export): it is the most a launcher shows, so the
+  icon looks the same on the listing as on a phone. `StoreIconTest` renders the layers named in `mipmap-anydpi/ic_launcher.xml`
   and fails when the PNG differs from them, or when it misses Play's spec or hand-worked pixels (the crop and scale).
   **After a launcher icon change**: run `StoreIconTest`, then copy `app/build/store-icon/store-icon.png` (written on
   every run) over `play/store-icon.png`.
