@@ -20,7 +20,7 @@ LoyScan is an Android app that keeps your loyalty cards on your phone. This poli
 
 ## No internet, no tracking
 
-- LoyScan has no internet access: it doesn't ask Android for it, so it can't send anything anywhere.
+- LoyScan has no internet access: it doesn't ask Android for it, so it can't send anything over the internet itself.
 - There is no account, no ads, no analytics and no crash reporting of LoyScan's own.
 - "Find a logo online" opens your browser on a Google image search for the store's name. That search is between you and Google, under Google's privacy policy.
 
