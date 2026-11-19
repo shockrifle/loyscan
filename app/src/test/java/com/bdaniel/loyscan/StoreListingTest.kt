@@ -328,7 +328,9 @@ class StoreListingTest {
                     ShippedCatalogueTest::eachRule_turnsThePrintedNumberIntoItsBarcode,
                     ShippedCatalogueTest::superShop_verifiesALuhnCheckDigit,
                 ) +
+                    CardFormViewModelTest::class.tests(CardFormViewModelTest::anInvalidNumber_saysWhy_andCanStillBeSavedAnyway) +
                     CardFormScreenTest::class.tests(
+                        CardFormScreenTest::inHungarian_aNumberThatStartsWrong_saysSo,
                         CardFormScreenTest::aNumberTheStoresBarcodeCantHold_saysSo_andOffersSaveAnyway,
                         CardFormScreenTest::aWrongCheckDigit_saysSo_andOffersSaveAnyway,
                     ),

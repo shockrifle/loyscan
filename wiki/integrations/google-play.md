@@ -46,8 +46,10 @@ set: the store icon and the listing texts. Where the screenshots and feature gra
   claim, word for word as the English listing says it, with its tests as Kotlin function references, and this table
   mirrors it. `StoreListingTest` fails when a bullet of the English full description is no claim, when a claim's text is
   gone from the listing, when the Hungarian full description has a different number of bullets in any section, or when
-  a test in the list isn't named in this table. A deleted or renamed test doesn't compile. It checks that the tests
-  exist, not what they assert: changing what a test checks still means reading the claim. Changing a feature the
+  a test in the list isn't named on this page. A deleted or renamed test doesn't compile. What it doesn't check: that
+  the tests assert what the claim says (changing what a test checks still means reading the claim); a claim in a line
+  that isn't a bullet (the intro, the closing lines) or in the short description, which are listed by hand; a Hungarian
+  bullet that says something else than its English one; a row of this table whose test left the list. Changing a feature the
   listing claims means changing the listing in the same PR.
 
   | Claim (en-US) | Tests |
@@ -55,7 +57,7 @@ set: the store icon and the listing texts. Where the screenshots and feature gra
   | "the cashier scans the barcode from your screen" | `DetailScreenTest.showsTheCardsBarcode` |
   | Scan with the camera, read it from a picture, or type the number | `CameraXScannerTest.aBarcodeInAFrame_isReportedAsScanned`, `ScannerScreenTest.aPictureWithABarcode_isHandedOnAsAScan`, `AppNavigationTest.addingACardByHand_savesIt_opensIt_andBackReturnsToTheListWithIt` |
   | The built-in list of Hungarian stores, or your own with a name, colour and barcode type | `ShippedCatalogueTest.shippedCatalogue_loadsIntoTheDatabase`, `ShippedCatalogueTest.everyShippedStore_isAHungarianStore`, `StorePickerScreenTest.tappingAStore_picksIt`, `CustomStoreScreenTest.creatingAStore_savesItWithTheChosenColourAndFormat_andOpensTheScannerForIt` |
-  | For most listed stores, length and format as you type, the check digit where the card has one | `ShippedCatalogueTest.mostShippedStores_haveANumberRule` (22 of 23 stores on 2026-11-19), `ShippedCatalogueTest.eachRule_turnsThePrintedNumberIntoItsBarcode`, `ShippedCatalogueTest.superShop_verifiesALuhnCheckDigit`, `CardFormScreenTest.aNumberTheStoresBarcodeCantHold_saysSo_andOffersSaveAnyway`, `CardFormScreenTest.aWrongCheckDigit_saysSo_andOffersSaveAnyway` ([[add-card]]) |
+  | For most listed stores, length and format as you type, the check digit where the card has one | `ShippedCatalogueTest.mostShippedStores_haveANumberRule` (22 of 23 stores on 2026-11-19), `ShippedCatalogueTest.eachRule_turnsThePrintedNumberIntoItsBarcode`, `ShippedCatalogueTest.superShop_verifiesALuhnCheckDigit`, `CardFormViewModelTest.anInvalidNumber_saysWhy_andCanStillBeSavedAnyway` (too short, as typed), `CardFormScreenTest.inHungarian_aNumberThatStartsWrong_saysSo`, `CardFormScreenTest.aNumberTheStoresBarcodeCantHold_saysSo_andOffersSaveAnyway`, `CardFormScreenTest.aWrongCheckDigit_saysSo_andOffersSaveAnyway` ([[add-card]]) |
   | Photos of the card's front and back; a store logo of your own | `CardFormScreenTest.addingAFrontPhoto_picksAPicture_showsIt_andSavesItWithTheCard`, `CardFormViewModelTest.editingACard_startsWithItsPhotos_andAPickedBackPhotoReplacesItsOwnOnSave`, `DetailScreenTest.aCardWithPhotos_showsThemUnderTheNumber`, `StoreLogoScreenTest.choosingAnImage_opensASquareCrop_andCropSetsTheLogo`, `ListScreenTest.aCardWhoseStoreHasALogo_showsItOnItsTile_inPlaceOfTheInitials` |
   | Tiles in their store's colour; search, sort, tap to open | `ListScreenTest.aTile_isInItsStoresColour`, `ListScreenTest.searching_showsOnlyTheMatchingCards`, `ListScreenTest.choosingASort_storesIt_andReordersTheTiles`, `AppNavigationTest.tappingACard_opensItsDetail_andBackReturnsToTheList` |
   | Full brightness, the barcode and its number; a double-tap shows the barcode full screen | `DetailScreenTest.turnsTheScreenToFullBrightness`, `DetailScreenTest.showsTheCardsBarcode`, `DetailScreenTest.showsTheCardLabelAndNumber`, `DetailScreenTest.doubleTappingTheBarcode_opensScanMode_whichKeepsTheScreenOn`, `DetailScreenTest.scanMode_showsTheBarcode_overTheWholeScreen` |

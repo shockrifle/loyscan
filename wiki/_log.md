@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-19 · the number-check claim names its as-you-type length and start tests; the claims guard's limits spelled out · integrations/google-play · review of PR #179
 - 2026-11-19 · the listing's claims mapped to their tests in a table, enforced by `LISTING_CLAIMS` in StoreListingTest · integrations/google-play, workflows/tdd · #178
 - 2026-11-19 · screen colour check through NATIVE graphics and `captureToImage` added; the legacy-mode note on drawing corrected (NATIVE draws) · workflows/tdd · #178
 - 2026-11-19 · listing's number-check claim narrowed to what the rules check (length and format for most stores, the check digit where there is one); the no-URL rule covers bare domains; the title rule names symbols · integrations/google-play · #75, review of PR #177
