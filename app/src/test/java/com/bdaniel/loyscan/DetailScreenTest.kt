@@ -589,6 +589,17 @@ class DetailScreenTest {
     }
 
     @Test
+    fun scanMode_showsTheBarcode_overTheWholeScreen() { // #178: the Play listing says a double-tap shows it full screen
+        setScreen()
+        composeRule.onNodeWithContentDescription("Barcode").performTouchInput { doubleClick() }
+
+        val screen = composeRule.onRoot().fetchSemanticsNode().boundsInRoot
+        assertThat(composeRule.onNodeWithTag("scanMode").fetchSemanticsNode().boundsInRoot).isEqualTo(screen)
+        composeRule.onNode(hasContentDescription("Barcode") and hasAnyAncestor(hasTestTag("scanMode")), useUnmergedTree = true)
+            .assertIsDisplayed()
+    }
+
+    @Test
     fun scanMode_tapClosesIt() {
         setScreen()
         composeRule.onNodeWithContentDescription("Barcode").performTouchInput { doubleClick() }

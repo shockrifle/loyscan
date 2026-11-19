@@ -42,12 +42,28 @@ set: the store icon and the listing texts. Where the screenshots and feature gra
     keywords, rankings or price and promotion claims ("#1", "free") and testimonials in every text; those are checked
     by reading.
   - the Hungarian texts are Hungarian: they differ from the English and contain hand-picked words.
-- **What the texts claim**, and the tests that keep it true: no `INTERNET` permission, "the app itself never goes online"
-  (`AppPermissionsTest`; "Find a logo online" opens the browser, another app, [[store-logo]]); cards aren't in Google's
-  cloud backup and are copied only by a device-to-device transfer (`BackupRulesTest`, #71; the device check is #104); a
-  number check as you type: length and format for most catalogue stores, the check digit only where the store's rule
-  has one, so the texts say "most" and "where the card has one" ([[add-card]], `stores.json`); a home-screen widget
-  ([[card-widget]]). Changing one of these means changing the listing in the same PR.
+- **What the texts claim**, and the tests that keep it true (#178). `LISTING_CLAIMS` in `StoreListingTest` holds each
+  claim, word for word as the English listing says it, with its tests as Kotlin function references, and this table
+  mirrors it. `StoreListingTest` fails when a bullet of the English full description is no claim, when a claim's text is
+  gone from the listing, when the Hungarian full description has a different number of bullets in any section, or when
+  a test in the list isn't named in this table. A deleted or renamed test doesn't compile. It checks that the tests
+  exist, not what they assert: changing what a test checks still means reading the claim. Changing a feature the
+  listing claims means changing the listing in the same PR.
+
+  | Claim (en-US) | Tests |
+  |---|---|
+  | "the cashier scans the barcode from your screen" | `DetailScreenTest.showsTheCardsBarcode` |
+  | Scan with the camera, read it from a picture, or type the number | `CameraXScannerTest.aBarcodeInAFrame_isReportedAsScanned`, `ScannerScreenTest.aPictureWithABarcode_isHandedOnAsAScan`, `AppNavigationTest.addingACardByHand_savesIt_opensIt_andBackReturnsToTheListWithIt` |
+  | The built-in list of Hungarian stores, or your own with a name, colour and barcode type | `ShippedCatalogueTest.shippedCatalogue_loadsIntoTheDatabase`, `ShippedCatalogueTest.everyShippedStore_isAHungarianStore`, `StorePickerScreenTest.tappingAStore_picksIt`, `CustomStoreScreenTest.creatingAStore_savesItWithTheChosenColourAndFormat_andOpensTheScannerForIt` |
+  | For most listed stores, length and format as you type, the check digit where the card has one | `ShippedCatalogueTest.mostShippedStores_haveANumberRule` (22 of 23 stores on 2026-11-19), `ShippedCatalogueTest.eachRule_turnsThePrintedNumberIntoItsBarcode`, `ShippedCatalogueTest.superShop_verifiesALuhnCheckDigit`, `CardFormScreenTest.aNumberTheStoresBarcodeCantHold_saysSo_andOffersSaveAnyway`, `CardFormScreenTest.aWrongCheckDigit_saysSo_andOffersSaveAnyway` ([[add-card]]) |
+  | Photos of the card's front and back; a store logo of your own | `CardFormScreenTest.addingAFrontPhoto_picksAPicture_showsIt_andSavesItWithTheCard`, `CardFormViewModelTest.editingACard_startsWithItsPhotos_andAPickedBackPhotoReplacesItsOwnOnSave`, `DetailScreenTest.aCardWithPhotos_showsThemUnderTheNumber`, `StoreLogoScreenTest.choosingAnImage_opensASquareCrop_andCropSetsTheLogo`, `ListScreenTest.aCardWhoseStoreHasALogo_showsItOnItsTile_inPlaceOfTheInitials` |
+  | Tiles in their store's colour; search, sort, tap to open | `ListScreenTest.aTile_isInItsStoresColour`, `ListScreenTest.searching_showsOnlyTheMatchingCards`, `ListScreenTest.choosingASort_storesIt_andReordersTheTiles`, `AppNavigationTest.tappingACard_opensItsDetail_andBackReturnsToTheList` |
+  | Full brightness, the barcode and its number; a double-tap shows the barcode full screen | `DetailScreenTest.turnsTheScreenToFullBrightness`, `DetailScreenTest.showsTheCardsBarcode`, `DetailScreenTest.showsTheCardLabelAndNumber`, `DetailScreenTest.doubleTappingTheBarcode_opensScanMode_whichKeepsTheScreenOn`, `DetailScreenTest.scanMode_showsTheBarcode_overTheWholeScreen` |
+  | The home-screen widget opens a card with one tap ([[card-widget]]) | `CardWidgetInfoTest.theWidget_isOfferedToTheLauncher`, `CardWidgetContentTest.content_showsOneClickableTilePerCard_withItsInitialsAndLabel`, `WidgetTapOpensCardTest.aColdOpenCardIntent_opensThatCardsDetail_fromADeadProcess` |
+  | No account, no ads, no analytics; the short description's "no account and no ads"; LoyScan never goes online, cards, notes and photos stay on the phone | `AppPermissionsTest.theApp_doesNotAskForNetworkAccess`: no `INTERNET` permission, and an account, ads and analytics all need the network. "Find a logo online" opens the browser, another app ([[store-logo]]) |
+  | Not in Google's cloud backup; copied only by a transfer to a new phone | `BackupRulesTest.cloudBackup_includesNothing`, `BackupRulesTest.cloudBackup_excludesEveryDataDomain`, `BackupRulesTest.deviceTransfer_carriesDatabasePrefsAndPhotos` (#71; the device check is #104) |
+  | In English and Hungarian | `StringResourcesTest.theAppsHungarianStrings_translateEveryDefaultString` |
+  | Not affiliated with or endorsed by the retailers | `StoreListingTest.everyLocale_followsTheListingRules`, `AppNavigationTest.about_opensFromTheList_saysLoyScanIsNotAffiliated_andBackReturnsToTheList` ([[about]]) |
 - **Store icon** `play/store-icon.png`: 512×512, 32-bit PNG (RGBA), at most 1024 KB, a full opaque square. Play draws
   the rounded corners and the shadow itself, so none are drawn in (Play Console help, "Graphic assets"). It is the
   launcher icon's background and foreground layers, the visible 72dp centre of the 108dp layer scaled to 512px. That

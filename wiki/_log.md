@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-19 · the listing's claims mapped to their tests in a table, enforced by `LISTING_CLAIMS` in StoreListingTest · integrations/google-play, workflows/tdd · #178
 - 2026-11-19 · screen colour check through NATIVE graphics and `captureToImage` added; the legacy-mode note on drawing corrected (NATIVE draws) · workflows/tdd · #178
 - 2026-11-19 · listing's number-check claim narrowed to what the rules check (length and format for most stores, the check digit where there is one); the no-URL rule covers bare domains; the title rule names symbols · integrations/google-play · #75, review of PR #177
 - 2026-11-19 · Play store listing texts (title, short and full description) in English and Hungarian under `play/listing/`, with the non-affiliation note; StoreListingTest checks Play's limits, the note, no contact details or retailer names; what the texts claim and which tests back it · integrations/google-play, workflows/tdd, architecture · #75

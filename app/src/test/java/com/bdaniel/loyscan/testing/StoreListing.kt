@@ -1,5 +1,8 @@
 package com.bdaniel.loyscan.testing
 
+import kotlin.reflect.KClass
+import kotlin.reflect.KFunction1
+
 /** One locale's Play store listing texts (`play/listing/<locale>/`, #75). */
 data class Listing(val title: String, val shortDescription: String, val fullDescription: String)
 
@@ -57,3 +60,39 @@ private val URL = Regex(
 )
 private val LONG_NUMBER = Regex("""\d([ -]?\d){6,}""")
 private val ALL_CAPS_WORD = Regex("""(?<![\p{L}\p{N}])\p{Lu}{2,}(?![\p{L}\p{N}])""")
+
+/**
+ * A feature the listing claims, [text] word for word as the English listing says it (a full-description bullet without
+ * its "• ", or a phrase of another line), and the [tests] that keep it true, named `Class.method` (#178).
+ */
+data class ListingClaim(val text: String, val tests: List<String>)
+
+/** [tests] of this class, named `Class.method`. Function references, so a deleted or renamed test doesn't compile. */
+fun <T : Any> KClass<T>.tests(vararg tests: KFunction1<T, *>): List<String> = tests.map { "$simpleName.${it.name}" }
+
+/**
+ * What [claims] leave out of [listing]: a full-description bullet that is no claim's text, a claim whose text is in
+ * neither description any more, and a claim with no test.
+ */
+fun claimProblems(listing: Listing, claims: List<ListingClaim>): List<String> {
+    val texts = claims.map { it.text }.toSet()
+    val unclaimed = listing.fullDescription.lines()
+        .filter { it.startsWith(BULLET) }
+        .map { it.removePrefix(BULLET) }
+        .filterNot { it in texts }
+        .map { "no claim for the bullet: $it" }
+    val gone = claims
+        .filterNot { it.text in listing.fullDescription || it.text in listing.shortDescription }
+        .map { "not in the listing: ${it.text}" }
+    val untested = claims.filter { it.tests.isEmpty() }.map { "no test for: ${it.text}" }
+    return unclaimed + gone + untested
+}
+
+/** How many bullets each section of [fullDescription] has; sections are separated by a blank line. */
+fun bulletsPerSection(fullDescription: String): List<Int> =
+    fullDescription.split("\n\n").map { section -> section.lines().count { it.startsWith(BULLET) } }
+
+/** The [tests] that [page] doesn't name in backticks, as `` `Class.method` ``. */
+fun testsNotNamedIn(page: String, tests: List<String>): List<String> = tests.filterNot { "`$it`" in page }
+
+private const val BULLET = "• "
