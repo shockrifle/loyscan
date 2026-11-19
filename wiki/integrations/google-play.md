@@ -31,20 +31,23 @@ set: the store icon and the listing texts. Where the screenshots and feature gra
     description 4000;
   - the full description contains the app's `about_not_affiliated` string in its language word for word, on one line
     ([[2026-11-12-no-bundled-store-logos]], [[about]]);
-  - no email address, URL or number of 7 or more digits: contact details live in Play Console only, and a URL would
-    need to be one chosen to be public (the privacy policy's, later);
+  - no email address, URL (with a scheme, `www.`, or a bare domain like `example.hu`) or number of 7 or more digits:
+    contact details live in Play Console only, and a URL would need to be one chosen to be public (the privacy
+    policy's, later);
   - no retailer named: no catalogue store name or alias from `stores.json`, in any case, a name of 4 or more letters also
     at the start of a longer word ("Lidlben"). Stricter than the logo decision needs: the owner chose on 2026-11-19 to
     keep the listing clear of retailers' trademarks. Hungarian accented suffixes ("Tescóban") slip past it; "spare"
     trips on "SPAR", rephrase it;
-  - no all-caps word or emoji in the title. Play's Metadata policy also bans repeated keywords, rankings or price and
-    promotion claims ("#1", "free") and testimonials in every text; those are checked by reading.
+  - no all-caps word, emoji or other symbol (`™` too) in the title. Play's Metadata policy also bans repeated
+    keywords, rankings or price and promotion claims ("#1", "free") and testimonials in every text; those are checked
+    by reading.
   - the Hungarian texts are Hungarian: they differ from the English and contain hand-picked words.
 - **What the texts claim**, and the tests that keep it true: no `INTERNET` permission, "the app itself never goes online"
   (`AppPermissionsTest`; "Find a logo online" opens the browser, another app, [[store-logo]]); cards aren't in Google's
   cloud backup and are copied only by a device-to-device transfer (`BackupRulesTest`, #71; the device check is #104); a
-  number check as you type ([[add-card]]); a home-screen widget ([[card-widget]]). Changing one of these means changing
-  the listing in the same PR.
+  number check as you type: length and format for most catalogue stores, the check digit only where the store's rule
+  has one, so the texts say "most" and "where the card has one" ([[add-card]], `stores.json`); a home-screen widget
+  ([[card-widget]]). Changing one of these means changing the listing in the same PR.
 - **Store icon** `play/store-icon.png`: 512×512, 32-bit PNG (RGBA), at most 1024 KB, a full opaque square. Play draws
   the rounded corners and the shadow itself, so none are drawn in (Play Console help, "Graphic assets"). It is the
   launcher icon's background and foreground layers, the visible 72dp centre of the 108dp layer scaled to 512px. That

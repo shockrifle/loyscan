@@ -142,6 +142,13 @@ class StoreListingTest {
     }
 
     @Test
+    fun aBareDomain_isAProblem() {
+        val problems = listingProblems(A_LISTING.copy(shortDescription = "Visit loyscan.hu, e.g. today."), NOTE, RETAILERS)
+
+        assertThat(problems).containsExactly("short description: a URL (loyscan.hu)")
+    }
+
+    @Test
     fun aPhoneNumber_isAProblem() {
         val problems = listingProblems(A_LISTING.copy(shortDescription = "Call +36 30-123 4567"), NOTE, RETAILERS)
 
@@ -168,7 +175,14 @@ class StoreListingTest {
     fun anEmojiInTheTitle_isAProblem() {
         val problems = listingProblems(A_LISTING.copy(title = "LoyScan 💳 cards"), NOTE, RETAILERS)
 
-        assertThat(problems).containsExactly("title: an emoji (💳)")
+        assertThat(problems).containsExactly("title: an emoji or symbol (💳)")
+    }
+
+    @Test
+    fun aTrademarkSignInTheTitle_isNamedAsASymbol() {
+        val problems = listingProblems(A_LISTING.copy(title = "LoyScan™ cards"), NOTE, RETAILERS)
+
+        assertThat(problems).containsExactly("title: an emoji or symbol (™)")
     }
 
     @Test
