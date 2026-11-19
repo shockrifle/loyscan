@@ -1,12 +1,21 @@
 package com.bdaniel.loyscan
 
+import com.bdaniel.loyscan.data.local.db.ShippedCatalogueTest
 import com.bdaniel.loyscan.domain.catalogue.StoreCatalogue
 import com.bdaniel.loyscan.testing.DEFAULT_STRINGS
 import com.bdaniel.loyscan.testing.HUNGARIAN_STRINGS
 import com.bdaniel.loyscan.testing.Listing
+import com.bdaniel.loyscan.testing.ListingClaim
+import com.bdaniel.loyscan.testing.bulletsPerSection
+import com.bdaniel.loyscan.testing.claimProblems
 import com.bdaniel.loyscan.testing.listingProblems
 import com.bdaniel.loyscan.testing.listingText
 import com.bdaniel.loyscan.testing.stringValue
+import com.bdaniel.loyscan.testing.tests
+import com.bdaniel.loyscan.ui.scanner.CameraXScannerTest
+import com.bdaniel.loyscan.widget.CardWidgetContentTest
+import com.bdaniel.loyscan.widget.CardWidgetInfoTest
+import com.bdaniel.loyscan.testing.testsNotNamedIn
 import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
 import java.io.File
@@ -61,7 +70,77 @@ class StoreListingTest {
         assertThat(RETAILER_NAMES).containsAtLeast("Tesco", "Clubcard", "dm", "SPAR")
     }
 
+    @Test
+    fun everyClaimOfTheListing_isBackedByNamedTests() { // #178
+        assertWithMessage("LISTING_CLAIMS against play/listing/en-US").that(claimProblems(listing("en-US"), LISTING_CLAIMS)).isEmpty()
+    }
+
+    @Test
+    fun theHungarianListing_hasTheEnglishBullets_sectionBySection() { // #178: so a Hungarian-only claim can't slip past
+        assertThat(bulletsPerSection(listing("hu-HU").fullDescription))
+            .isEqualTo(bulletsPerSection(listing("en-US").fullDescription))
+    }
+
+    @Test
+    fun theTestsBehindTheClaims_areNamedOnTheGooglePlayWikiPage() { // #178: the wiki's table can't drift from the list
+        val page = GOOGLE_PLAY_WIKI.readText()
+
+        assertWithMessage("tests missing from $GOOGLE_PLAY_WIKI")
+            .that(testsNotNamedIn(page, LISTING_CLAIMS.flatMap { it.tests })).isEmpty()
+    }
+
     // ---- The rules, on snippets ----
+
+    @Test
+    fun claimsCoveringEveryBullet_haveNoProblems() {
+        val claims = listOf(ListingClaim("Scan a card.", listOf("A.a")), ListingClaim("Offline", listOf("A.b")))
+
+        assertThat(claimProblems(CLAIMED_LISTING, claims)).isEmpty()
+    }
+
+    @Test
+    fun aBulletNoClaimHas_isAProblem() {
+        val claims = listOf(ListingClaim("Offline", listOf("A.b")))
+
+        assertThat(claimProblems(CLAIMED_LISTING, claims)).containsExactly("no claim for the bullet: Scan a card.")
+    }
+
+    @Test
+    fun aClaimTheListingNoLongerMakes_isAProblem() {
+        val claims = listOf(
+            ListingClaim("Scan a card.", listOf("A.a")),
+            ListingClaim("Offline", listOf("A.b")),
+            ListingClaim("Sync to the cloud.", listOf("A.c")),
+        )
+
+        assertThat(claimProblems(CLAIMED_LISTING, claims)).containsExactly("not in the listing: Sync to the cloud.")
+    }
+
+    @Test
+    fun aClaimWithoutATest_isAProblem() {
+        val claims = listOf(ListingClaim("Scan a card.", emptyList()), ListingClaim("Offline", listOf("A.b")))
+
+        assertThat(claimProblems(CLAIMED_LISTING, claims)).containsExactly("no test for: Scan a card.")
+    }
+
+    @Test
+    fun bullets_areCountedPerSection() {
+        assertThat(bulletsPerSection("Intro.\n\nAdd\n• one\n• two\n\nKeep\n• three\n\nEnd.")).containsExactly(0, 2, 1, 0).inOrder()
+    }
+
+    @Test
+    fun aTestNotNamedInBackticks_isMissingFromThePage() {
+        val page = "| Scan | `ScannerTest.scans_once` |"
+
+        assertThat(testsNotNamedIn(page, listOf("ScannerTest.scans_once", "ScannerTest.scans"))).containsExactly("ScannerTest.scans")
+    }
+
+    @Test
+    fun aClassesTests_areNamedClassDotMethod() {
+        assertThat(StoreListingTest::class.tests(StoreListingTest::aClaimWithoutATest_isAProblem))
+            .containsExactly("StoreListingTest.aClaimWithoutATest_isAProblem")
+    }
+
 
     @Test
     fun aListingWithinTheRules_hasNoProblems() {
@@ -214,6 +293,110 @@ class StoreListingTest {
     }
 
     private companion object {
+        /** The google-play wiki page, whose table names the tests behind each claim. */
+        val GOOGLE_PLAY_WIKI = File("../wiki/integrations/google-play.md")
+
+        val NO_NETWORK = AppPermissionsTest::class.tests(AppPermissionsTest::theApp_doesNotAskForNetworkAccess)
+
+        /** Every feature the listing claims, with the tests that keep it true: wiki/integrations/google-play.md. */
+        val LISTING_CLAIMS: List<ListingClaim> = listOf(
+            ListingClaim(
+                "the cashier scans the barcode from your screen",
+                DetailScreenTest::class.tests(DetailScreenTest::showsTheCardsBarcode),
+            ),
+            ListingClaim(
+                "Scan the card's barcode with the camera, read it from a picture, or type the number.",
+                CameraXScannerTest::class.tests(CameraXScannerTest::aBarcodeInAFrame_isReportedAsScanned) +
+                    ScannerScreenTest::class.tests(ScannerScreenTest::aPictureWithABarcode_isHandedOnAsAScan) +
+                    AppNavigationTest::class.tests(AppNavigationTest::addingACardByHand_savesIt_opensIt_andBackReturnsToTheListWithIt),
+            ),
+            ListingClaim(
+                "Pick the store from the built-in list of Hungarian stores, or add your own with a name, colour and barcode type.",
+                ShippedCatalogueTest::class.tests(
+                    ShippedCatalogueTest::shippedCatalogue_loadsIntoTheDatabase,
+                    ShippedCatalogueTest::everyShippedStore_isAHungarianStore,
+                ) +
+                    StorePickerScreenTest::class.tests(StorePickerScreenTest::tappingAStore_picksIt) +
+                    CustomStoreScreenTest::class.tests(
+                        CustomStoreScreenTest::creatingAStore_savesItWithTheChosenColourAndFormat_andOpensTheScannerForIt,
+                    ),
+            ),
+            ListingClaim(
+                "For most listed stores, LoyScan checks the number's length and format as you type, and its check digit where the card has one.",
+                ShippedCatalogueTest::class.tests(
+                    ShippedCatalogueTest::mostShippedStores_haveANumberRule,
+                    ShippedCatalogueTest::eachRule_turnsThePrintedNumberIntoItsBarcode,
+                    ShippedCatalogueTest::superShop_verifiesALuhnCheckDigit,
+                ) +
+                    CardFormScreenTest::class.tests(
+                        CardFormScreenTest::aNumberTheStoresBarcodeCantHold_saysSo_andOffersSaveAnyway,
+                        CardFormScreenTest::aWrongCheckDigit_saysSo_andOffersSaveAnyway,
+                    ),
+            ),
+            ListingClaim(
+                "Keep photos of the card's front and back, and give a store a logo of your own.",
+                CardFormScreenTest::class.tests(CardFormScreenTest::addingAFrontPhoto_picksAPicture_showsIt_andSavesItWithTheCard) +
+                    CardFormViewModelTest::class.tests(
+                        CardFormViewModelTest::editingACard_startsWithItsPhotos_andAPickedBackPhotoReplacesItsOwnOnSave,
+                    ) +
+                    DetailScreenTest::class.tests(DetailScreenTest::aCardWithPhotos_showsThemUnderTheNumber) +
+                    StoreLogoScreenTest::class.tests(StoreLogoScreenTest::choosingAnImage_opensASquareCrop_andCropSetsTheLogo) +
+                    ListScreenTest::class.tests(ListScreenTest::aCardWhoseStoreHasALogo_showsItOnItsTile_inPlaceOfTheInitials),
+            ),
+            ListingClaim(
+                "Your cards are tiles in their store's colour. Search or sort them, and tap one to open it.",
+                ListScreenTest::class.tests(
+                    ListScreenTest::aTile_isInItsStoresColour,
+                    ListScreenTest::searching_showsOnlyTheMatchingCards,
+                    ListScreenTest::choosingASort_storesIt_andReordersTheTiles,
+                ) + AppNavigationTest::class.tests(AppNavigationTest::tappingACard_opensItsDetail_andBackReturnsToTheList),
+            ),
+            ListingClaim(
+                "The card opens at full brightness, with the barcode and its number. Double-tap the barcode to show it full screen.",
+                DetailScreenTest::class.tests(
+                    DetailScreenTest::turnsTheScreenToFullBrightness,
+                    DetailScreenTest::showsTheCardsBarcode,
+                    DetailScreenTest::showsTheCardLabelAndNumber,
+                    DetailScreenTest::doubleTappingTheBarcode_opensScanMode_whichKeepsTheScreenOn,
+                    DetailScreenTest::scanMode_showsTheBarcode_overTheWholeScreen,
+                ),
+            ),
+            ListingClaim(
+                "The home-screen widget opens a card with one tap.",
+                CardWidgetInfoTest::class.tests(CardWidgetInfoTest::theWidget_isOfferedToTheLauncher) +
+                    CardWidgetContentTest::class.tests(CardWidgetContentTest::content_showsOneClickableTilePerCard_withItsInitialsAndLabel) +
+                    WidgetTapOpensCardTest::class.tests(WidgetTapOpensCardTest::aColdOpenCardIntent_opensThatCardsDetail_fromADeadProcess),
+            ),
+            // An account, ads and analytics all need the network, which the app can't use.
+            ListingClaim("No account, no ads, no analytics.", NO_NETWORK),
+            ListingClaim("Offline, with no account and no ads.", NO_NETWORK),
+            ListingClaim("LoyScan itself never goes online: your cards, notes and photos stay on the phone.", NO_NETWORK),
+            ListingClaim(
+                "Cards aren't backed up to Google's cloud. They are copied only when you transfer your data to a new phone.",
+                BackupRulesTest::class.tests(
+                    BackupRulesTest::cloudBackup_includesNothing,
+                    BackupRulesTest::cloudBackup_excludesEveryDataDomain,
+                    BackupRulesTest::deviceTransfer_carriesDatabasePrefsAndPhotos,
+                ),
+            ),
+            ListingClaim(
+                "In English and Hungarian.",
+                StringResourcesTest::class.tests(StringResourcesTest::theAppsHungarianStrings_translateEveryDefaultString),
+            ),
+            ListingClaim(
+                "LoyScan is not affiliated with or endorsed by the retailers whose cards it stores.",
+                StoreListingTest::class.tests(StoreListingTest::everyLocale_followsTheListingRules) +
+                    AppNavigationTest::class.tests(AppNavigationTest::about_opensFromTheList_saysLoyScanIsNotAffiliated_andBackReturnsToTheList),
+            ),
+        )
+
+        val CLAIMED_LISTING = Listing(
+            title = "Cards",
+            shortDescription = "Your cards. Offline.",
+            fullDescription = "Keep your cards.\n\nAdd\n• Scan a card.",
+        )
+
+
         /** The listing folder, from the module directory (the test's working directory). */
         val LISTING = File("../play/listing")
         val LOCALES = mapOf("en-US" to DEFAULT_STRINGS, "hu-HU" to HUNGARIAN_STRINGS)
