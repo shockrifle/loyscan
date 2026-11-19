@@ -2,7 +2,8 @@
 
 Where LoyScan is published. There is **no API integration**: no service account, no upload from CI. The owner
 uploads each AAB by hand in Play Console ([[release]], #74), and pastes the store listing texts in by hand too (below).
-The privacy policy, data safety form, screenshots and feature graphic are still open in #75.
+The privacy policy's text is written (below), but not yet published; the data safety form, screenshots and feature
+graphic are still open in #75.
 
 ## Contract
 
@@ -18,7 +19,7 @@ The privacy policy, data safety form, screenshots and feature graphic are still 
 ## Store listing assets
 
 What Play shows on the listing but the app doesn't ship lives in `play/` at the repo root, outside every Gradle source
-set: the store icon and the listing texts. Where the screenshots and feature graphic go is decided with them (#75).
+set: the store icon, the listing texts and the privacy policy. Where the screenshots and feature graphic go is decided with them (#75).
 
 - **Listing texts** `play/listing/<locale>/title.txt`, `short_description.txt`, `full_description.txt`, for `en-US` and
   `hu-HU` (Play's locale codes; Fastlane's file names, so a tool that uploads them could read the folder as it is,
@@ -74,6 +75,46 @@ set: the store icon and the listing texts. Where the screenshots and feature gra
   and fails when the PNG differs from them, or when it misses Play's spec or hand-worked pixels (the crop and scale).
   **After a launcher icon change**: run `StoreIconTest`, then copy `app/build/store-icon/store-icon.png` (written on
   every run) over `play/store-icon.png`.
+
+## Privacy policy
+
+`play/privacy-policy/en-US.md` and `hu-HU.md`: what LoyScan keeps, the camera, no internet, backup and the widget, in
+Markdown (LF line endings, `.gitattributes`). Every statement is a `- ` bullet on one line; the other lines (title,
+date, intro, the note on Android's and Play's own diagnostics, the closing line) are written out in `PrivacyPolicyTest`,
+so a sentence can't be added without a test or a change there. The date is in words ("19 November 2026"): an ISO date
+looks like a phone number to the contact-details rule. Rules, each checked by `PrivacyPolicyTest` (plain JUnit, helpers
+in `testing/PrivacyPolicy.kt` and `testing/StoreListing.kt`, tested on snippets first):
+
+- exactly these two files, each with its six headings, written out per language;
+- every English bullet is a claim of `POLICY_CLAIMS`, word for word, with its tests as function references, and every
+  test is named in this section;
+- the Hungarian file has as many bullets under each heading as the English one, and is in Hungarian. What a Hungarian
+  bullet says is checked by reading: the owner reads it before it is published;
+- no email address, URL or number of 7 or more digits (`personalDetails`, shared with the listing).
+
+**To change it**: edit both files, change the date in both and in `PrivacyPolicyTest`, update `POLICY_CLAIMS` and the
+table, run `PrivacyPolicyTest`, then republish it. A change to what the app stores, sends or backs up means changing the
+policy in the same PR.
+
+**Not done yet** (#75): where it is published and its URL (Play Console's privacy policy field), the contact the policy
+must name (Play's User Data policy asks for one; the no-contact-details rule will then need to allow that one chosen
+address), whether the app links to it too, and the data safety form, which must match it.
+
+| Claim (en-US) | Tests |
+|---|---|
+| What LoyScan keeps: cards, with when they were added, last opened and how often | `RoomLoyaltyCardRepositoryTest.add_storesTheCard_andItReadsBackWithItsStore`, `RoomLoyaltyCardRepositoryTest.recordUse_countsAUseAtTheClocksTime` |
+| Photos and logos, location and metadata removed | `FileCardPhotosTest.stored_dropsTheLocationAndTheOtherExif`, `FileCardPhotosTest.cropLogo_dropsThePicturesMetadata` |
+| Stores you add, how you sort | `RoomStoreRepositoryTest.add_insertsTheStore_andGetAllEmitsIt`, `ListScreenTest.choosingASort_storesIt_andReordersTheTiles` |
+| All of it in LoyScan's private storage | `DatabaseModuleTest.theDatabase_isKeptInTheAppsPrivateStorage`, `CardPhotosModuleTest.thePhotos_areKeptInTheAppsPrivateFiles`, `PreferencesModuleTest.theUserPreferences_areKeptInTheAppsPrivateFiles_underAStableName` |
+| Deleting a card deletes its photos | `RoomLoyaltyCardRepositoryTest.delete_deletesTheCardsPhotos`, `AppNavigationTest.deletingACardFromTheList_deletesItsPhotoFiles` |
+| The camera reads barcodes, only in the scanner, only once allowed | `ScannerScreenTest.permissionNotAskedYet_isRequestedOnEntry`, `ScannerScreenTest.permissionDenied_explainsWhyAndAsksAgain`, `CameraXScannerTest.aBarcodeInAFrame_isReportedAsScanned`, `CameraXScannerTest.leaving_closesTheCamera` |
+| The camera app saves a card photo into LoyScan's storage | `CardFormScreenTest.takingAPhoto_opensTheCameraAppOnACapture_andShowsThePhotoTaken`, `CardPhotosModuleTest.aCapture_isSharedThroughTheAppsFileProvider_forTheCameraAppToWriteIntoThePhotoDirectory` (CI only), `CardPhotosModuleTest.thePhotos_areKeptInTheAppsPrivateFiles` |
+| A picked or shared picture is read on the phone | `ScannerScreenTest.aPictureWithABarcode_isHandedOnAsAScan`, `ShareToLoyScanTest.sharingAPictureWithABarcode_opensThePicker_andPickingAStoreOpensTheFormWithIt` |
+| No internet access; no account, ads, analytics or crash reporting of its own; no server, no company gets the cards | `AppPermissionsTest.theApp_doesNotAskForNetworkAccess`, `AppPermissionsTest.thePermissionList_comesFromTheMergedManifest` |
+| "Find a logo online" is a Google image search in the browser | `LogoSearchTest.logoSearchUri_isAGoogleImageSearchForTheStoresLogo`, `LogoSearchTest.aLogoSearch_opensTheSearchInTheBrowser` ([[store-logo]]) |
+| Nothing goes to Google's cloud backup | `BackupRulesTest.theManifest_allowsBackup_andPointsAndroidAtBothRulesFiles`, `BackupRulesTest.cloudBackup_includesNothing`, `BackupRulesTest.cloudBackup_excludesEveryDataDomain`, `BackupRulesTest.legacyRules_areIncludeOnlyAndEveryIncludeIsDeviceToDeviceOnly` |
+| A transfer to a new phone copies cards, photos and settings | `BackupRulesTest.deviceTransfer_carriesDatabasePrefsAndPhotos`, `BackupRulesTest.legacyRules_transferEveryDomainToANewPhone` (the device check is #104) |
+| The widget shows the cards' names on the home screen | `CardWidgetContentTest.content_showsOneClickableTilePerCard_withItsInitialsAndLabel` ([[card-widget]]) |
 
 ## Quirks
 

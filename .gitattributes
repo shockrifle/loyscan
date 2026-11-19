@@ -8,3 +8,5 @@ wiki/_log.md merge=union
 # Play listing texts are pasted into Play Console as they are, and Play counts line breaks: keep them LF on Windows too
 # (#75). StoreListingTest reads CRLF as LF either way.
 play/listing/**/*.txt text eol=lf
+# The privacy policy is published as it is, and PrivacyPolicyTest matches its lines word for word (#75).
+play/privacy-policy/*.md text eol=lf

@@ -7,6 +7,10 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.xmlpull.v1.XmlPullParser
+import java.io.File
+import javax.xml.parsers.DocumentBuilderFactory
+
+private const val ANDROID = "http://schemas.android.com/apk/res/android"
 
 /**
  * Cloud backup carries no app data (#71): the user's cards, their photos (#10) and preferences don't go to the user's
@@ -34,6 +38,17 @@ class BackupRulesTest {
         "root", "file", "database", "sharedpref", "external",
         "device_root", "device_file", "device_database", "device_sharedpref",
     )
+
+    @Test
+    fun theManifest_allowsBackup_andPointsAndroidAtBothRulesFiles() { // #75: without them Android backs up everything
+        // The rules files below mean nothing unless the manifest names them; with allowBackup false, a new phone would get
+        // nothing either. Read from the app's manifest: a library's can't change these without tools:replace.
+        val application = manifestApplication()
+
+        assertThat(application["allowBackup"]).isEqualTo("true")
+        assertThat(application["dataExtractionRules"]).isEqualTo("@xml/data_extraction_rules")
+        assertThat(application["fullBackupContent"]).isEqualTo("@xml/backup_rules")
+    }
 
     // --- Android 12+ : data_extraction_rules.xml ---
 
@@ -79,6 +94,17 @@ class BackupRulesTest {
             .map { it.domain }
             .toSet()
         assertThat(d2dDomains).containsAtLeastElementsIn(allDomains)
+    }
+
+    /** The `android:` attributes of the app manifest's `<application>`, by local name. */
+    private fun manifestApplication(): Map<String, String> {
+        val application = DocumentBuilderFactory.newInstance().apply { isNamespaceAware = true }
+            .newDocumentBuilder().parse(File("src/main/AndroidManifest.xml"))
+            .getElementsByTagName("application").item(0)
+        val attributes = application.attributes
+        return (0 until attributes.length).map { attributes.item(it) }
+            .filter { it.namespaceURI == ANDROID }
+            .associate { it.localName to it.nodeValue }
     }
 
     private data class Rule(val domain: String?, val path: String?, val requireFlags: String?)

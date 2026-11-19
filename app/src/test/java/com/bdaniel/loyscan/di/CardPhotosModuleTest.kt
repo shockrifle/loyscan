@@ -24,6 +24,13 @@ class CardPhotosModuleTest {
     }
 
     @Test
+    fun thePhotos_areKeptInTheAppsPrivateFiles() { // the privacy policy says so (#75)
+        val photo = photos.file("front").canonicalFile
+
+        assertThat(photo.path).startsWith(context.filesDir.canonicalPath + File.separator)
+    }
+
+    @Test
     fun theFileProvider_isPrivate_andGrantsOneUriAtATime() {
         val provider = context.packageManager.resolveContentProvider("${context.packageName}.photos", 0)!!
 

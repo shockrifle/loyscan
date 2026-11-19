@@ -10,6 +10,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.io.File
 import java.time.Duration
 
 /** The app's database as the app builds it: a new one holds the catalogue and nothing else, and opening it sweeps photos. */
@@ -24,6 +25,13 @@ class DatabaseModuleTest {
     fun tearDown() {
         db.close()
         context.deleteDatabase("loyscan.db")
+    }
+
+    @Test
+    fun theDatabase_isKeptInTheAppsPrivateStorage() { // the privacy policy says so (#75)
+        val path = File(db.openHelper.writableDatabase.path!!).canonicalPath
+
+        assertThat(path).startsWith(context.dataDir.canonicalPath + File.separator)
     }
 
     @Test
