@@ -65,6 +65,9 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import com.bdaniel.loyscan.testing.assertTextFitsAndDoesNotOverlap
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.test.onAllNodesWithTag
 import java.io.File
 import com.google.common.truth.Truth.assertThat
@@ -281,6 +284,17 @@ class ListScreenTest {
 
         // A tile's label ends in "…" when it doesn't fit, and its initials shrink to fit, by design.
         composeRule.assertTextFitsAndDoesNotOverlap(fitsByDesign = setOf("Work car", "Penny Market", "SC", "PM"))
+    }
+
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE) // real drawing, for the pixels
+    fun aTile_isInItsStoresColour() { // #178: the Play listing says the cards are tiles in their store's colour
+        setScreen(aLoyaltyCard(store = aStore(name = "Test Store", color = "#AA0000")))
+
+        val tile = composeRule.onNodeWithTag(CARD_TILE_TAG, useUnmergedTree = true).captureToImage().toPixelMap()
+
+        // Left of the initials and above the label, clear of the rounded corner.
+        assertThat(tile[tile.width / 8, tile.height / 3]).isEqualTo(Color(0xFFAA0000))
     }
 
     @Test
