@@ -1,0 +1,21 @@
+LoyScan keeps your loyalty cards on your phone, so the plastic ones can stay at home. At the till, open the card and the cashier scans the barcode from your screen.
+
+Add a card
+• Scan the card's barcode with the camera, read it from a picture, or type the number.
+• Pick the store from the built-in list of Hungarian stores, or add your own with a name, colour and barcode type.
+• For listed stores, LoyScan checks the number as you type, so a wrong digit is caught before you save.
+• Keep photos of the card's front and back, and give a store a logo of your own.
+
+At the till
+• Your cards are tiles in their store's colour. Search or sort them, and tap one to open it.
+• The card opens at full brightness, with the barcode and its number. Double-tap the barcode to show it full screen.
+• The home-screen widget opens a card with one tap.
+
+Your cards stay on your phone
+• No account, no ads, no analytics.
+• LoyScan itself never goes online: your cards, notes and photos stay on the phone.
+• Cards aren't backed up to Google's cloud. They are copied only when you transfer your data to a new phone.
+
+In English and Hungarian.
+
+LoyScan is not affiliated with or endorsed by the retailers whose cards it stores. Their names and marks belong to their owners.

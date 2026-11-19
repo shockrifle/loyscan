@@ -136,6 +136,10 @@ android {
             // StoreIconTest compares Play's store icon with the launcher icon's layers (#75). `files`, not `file`: the
             // test names the PNG when it is missing, which `file` would turn into a Gradle error.
             it.inputs.files("$rootDir/play/store-icon.png").withPropertyName("storeIcon").withPathSensitivity(PathSensitivity.RELATIVE)
+            // StoreListingTest reads Play's listing texts and checks them against the catalogue's retailer names (#75).
+            it.inputs.files("$rootDir/play/listing").withPropertyName("storeListing").withPathSensitivity(PathSensitivity.RELATIVE)
+            it.inputs.files("$projectDir/src/main/assets/catalogue/stores.json").withPropertyName("storeCatalogue")
+                .withPathSensitivity(PathSensitivity.RELATIVE)
         }
     }
 }

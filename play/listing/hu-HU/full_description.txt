@@ -1,0 +1,21 @@
+A LoyScan a telefonodon tartja a törzsvásárlói kártyáidat, így a műanyag kártyák otthon maradhatnak. A kasszánál nyisd meg a kártyát, és a pénztáros a képernyődről olvassa be a vonalkódot.
+
+Kártya hozzáadása
+• Olvasd be a kártya vonalkódját a kamerával, egy képről, vagy írd be a számát.
+• Válaszd ki a boltot a beépített magyar bolt-listából, vagy add meg a sajátodat névvel, színnel és vonalkódtípussal.
+• A listában szereplő boltoknál a LoyScan gépelés közben ellenőrzi a számot, így egy elütött számjegy még mentés előtt kiderül.
+• Fotózd le a kártya elejét és hátulját, és adj saját logót egy boltnak.
+
+A kasszánál
+• A kártyáid a boltjuk színében jelennek meg. Kereshetsz és rendezhetsz köztük, egy érintés megnyitja őket.
+• A kártya teljes fényerővel nyílik meg, a vonalkóddal és a számával. Dupla koppintásra a vonalkód teljes képernyőn jelenik meg.
+• A kezdőképernyő-widget egy érintéssel megnyit egy kártyát.
+
+A kártyáid a telefonodon maradnak
+• Nincs fiók, nincsenek reklámok és nincs analitika.
+• A LoyScan maga soha nem kapcsolódik az internetre: a kártyáid, a jegyzeteid és a fotóid a telefonon maradnak.
+• A kártyákról nem készül mentés a Google felhőjébe. Csak akkor másolódnak át, amikor az adataidat egy új telefonra viszed át.
+
+Magyarul és angolul.
+
+A LoyScan nem áll kapcsolatban az általa tárolt kártyák kereskedőivel, és azok nem támogatják az alkalmazást. A nevük és a védjegyeik a tulajdonosaikat illetik.
