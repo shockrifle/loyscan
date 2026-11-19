@@ -78,6 +78,18 @@ class ShippedCatalogueTest {
     }
 
     @Test
+    fun everyShippedStore_isAHungarianStore() { // #178: the Play listing offers "the built-in list of Hungarian stores"
+        assertThat(shipped.filterNot { "HU" in it.countryCodes }.map { it.id }).isEmpty()
+    }
+
+    @Test
+    fun mostShippedStores_haveANumberRule() { // #178: the Play listing says "for most listed stores" the number is checked
+        val withARule = shipped.count { it.cardNumberRule != null }
+
+        assertWithMessage("$withARule of ${shipped.size} stores have a rule").that(withARule * 2).isGreaterThan(shipped.size)
+    }
+
+    @Test
     fun everyStoreWithARule_hasATestVector() {
         assertThat(vectors.map { it.storeId })
             .containsExactlyElementsIn(shipped.filter { it.cardNumberRule != null }.map { it.id })

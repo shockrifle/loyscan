@@ -1,10 +1,14 @@
 package com.bdaniel.loyscan.widget
 
+import android.appwidget.AppWidgetManager
 import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
 import androidx.compose.ui.unit.dp
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.bdaniel.loyscan.R
+import com.bdaniel.loyscan.widget.glance.CardWidgetReceiver
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -23,6 +27,18 @@ class CardWidgetInfoTest {
 
         assertThat(minHeight).isEqualTo(90f)
         assertThat(minHeight).isAtLeast(widgetHeightForOneTile(minWidth.dp).value)
+    }
+
+    @Test
+    fun theWidget_isOfferedToTheLauncher() { // #178: the Play listing promises a home-screen widget
+        val receivers = context.packageManager.queryBroadcastReceivers(
+            Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE).setPackage(context.packageName),
+            PackageManager.GET_META_DATA,
+        )
+
+        val widget = receivers.single().activityInfo
+        assertThat(widget.name).isEqualTo(CardWidgetReceiver::class.java.name)
+        assertThat(widget.metaData.getInt(AppWidgetManager.META_DATA_APPWIDGET_PROVIDER)).isEqualTo(R.xml.card_widget_info)
     }
 
     /** The provider's dimension attribute [name], in dp. */
