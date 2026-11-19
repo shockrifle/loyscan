@@ -54,7 +54,14 @@ fun translationProblems(default: String, translated: String): List<String> {
 
 /** Every text in a `strings.xml` (each string, each plural item), as Android shows it: `'` is `'`. */
 fun stringValues(xml: String): List<String> =
-    parseResources(xml).values.flatMap { it.items.values }.map { it.replace(Regex("""\\(.)""")) { match -> match.groupValues[1] } }
+    parseResources(xml).values.flatMap { it.items.values }.map(::unescape)
+
+/** The `<string>` called [name] in a `strings.xml`, as Android shows it (`\'` is `'`), or null when there is none. */
+fun stringValue(xml: String, name: String): String? =
+    parseResources(xml)[name]?.takeUnless { it.plural }?.items?.get("")?.let(::unescape)
+
+/** A resource text as Android shows it: a backslash escape (`\'`) is the character it escapes. */
+private fun unescape(text: String): String = text.replace(Regex("""\\(.)""")) { match -> match.groupValues[1] }
 
 /** A `<string>` (its text under the key "") or a `<plurals>` (its items by quantity). */
 private class Resource(val plural: Boolean, val translatable: Boolean, val items: Map<String, String>)

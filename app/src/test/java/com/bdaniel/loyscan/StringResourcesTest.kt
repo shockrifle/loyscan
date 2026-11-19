@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
 import com.bdaniel.loyscan.testing.DEFAULT_STRINGS
 import com.bdaniel.loyscan.testing.HUNGARIAN_STRINGS
+import com.bdaniel.loyscan.testing.stringValue
 import com.bdaniel.loyscan.testing.translationProblems
 import org.junit.Test
 
@@ -147,6 +148,14 @@ class StringResourcesTest {
 
         assertThat(leftOut).isEmpty()
         assertThat(added).containsExactly("delete (one): format arguments [%s], expected some of [%d]")
+    }
+
+    @Test
+    fun aStringsValue_isReadByName_asAndroidShowsIt() { // #75: the listing quotes the app's note
+        val xml = resources("""<string name="title">My Cards</string><string name="note">It\'s &amp; theirs</string>""")
+
+        assertThat(stringValue(xml, "note")).isEqualTo("It's & theirs")
+        assertThat(stringValue(xml, "missing")).isNull()
     }
 
     private fun resources(body: String) = """<?xml version="1.0" encoding="utf-8"?><resources>$body</resources>"""
