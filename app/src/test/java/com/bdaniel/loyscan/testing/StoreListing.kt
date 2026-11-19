@@ -31,9 +31,7 @@ fun listingProblems(listing: Listing, notAffiliatedNote: String, retailerNames: 
         }
         val length = text.codePointCount(0, text.length)
         if (length > limit) problems += "$what: $length characters, Play allows $limit"
-        EMAIL.findAll(text).forEach { problems += "$what: an email address (${it.value})" }
-        URL.findAll(text).forEach { problems += "$what: a URL (${it.value})" }
-        LONG_NUMBER.findAll(text).forEach { problems += "$what: a number of 7 or more digits (${it.value})" }
+        personalDetails(text).forEach { problems += "$what: $it" }
         retailerNames.distinctBy { it.lowercase() }.filter { mentions(text, it) }
             .forEach { problems += "$what: names a retailer ($it)" }
     }
@@ -44,6 +42,16 @@ fun listingProblems(listing: Listing, notAffiliatedNote: String, retailerNames: 
     listing.title.codePoints().filter(::isEmoji).forEach { problems += "title: an emoji or symbol (${String(Character.toChars(it))})" }
     return problems
 }
+
+/**
+ * The contact details in [text], each named with what it is: an email address, a URL (with a scheme or `www.`, or a bare
+ * domain), a number of 7 or more digits (spaces or hyphens between them, so a phone number, and an ISO date too: a date
+ * in a text Play shows is written in words). Play's listing and the privacy policy hold none (#75).
+ */
+fun personalDetails(text: String): List<String> =
+    EMAIL.findAll(text).map { "an email address (${it.value})" }.toList() +
+        URL.findAll(text).map { "a URL (${it.value})" } +
+        LONG_NUMBER.findAll(text).map { "a number of 7 or more digits (${it.value})" }
 
 private fun mentions(text: String, name: String): Boolean {
     val end = if (name.length >= 4) "" else """(?![\p{L}\p{N}])"""
@@ -74,15 +82,22 @@ fun <T : Any> KClass<T>.tests(vararg tests: KFunction1<T, *>): List<String> = te
  * What [claims] leave out of [listing]: a full-description bullet that is no claim's text, a claim whose text is in
  * neither description any more, and a claim with no test.
  */
-fun claimProblems(listing: Listing, claims: List<ListingClaim>): List<String> {
+fun claimProblems(listing: Listing, claims: List<ListingClaim>): List<String> =
+    claimProblems(listing.fullDescription, claims, BULLET, alsoIn = listing.shortDescription)
+
+/**
+ * What [claims] leave out of [document], whose bullets start with [bullet]: a bullet that is no claim's text, a claim
+ * whose text is in neither [document] nor [alsoIn] any more, and a claim with no test.
+ */
+fun claimProblems(document: String, claims: List<ListingClaim>, bullet: String, alsoIn: String = ""): List<String> {
     val texts = claims.map { it.text }.toSet()
-    val unclaimed = listing.fullDescription.lines()
-        .filter { it.startsWith(BULLET) }
-        .map { it.removePrefix(BULLET) }
+    val unclaimed = document.lines()
+        .filter { it.startsWith(bullet) }
+        .map { it.removePrefix(bullet) }
         .filterNot { it in texts }
         .map { "no claim for the bullet: $it" }
     val gone = claims
-        .filterNot { it.text in listing.fullDescription || it.text in listing.shortDescription }
+        .filterNot { it.text in document || it.text in alsoIn }
         .map { "not in the listing: ${it.text}" }
     val untested = claims.filter { it.tests.isEmpty() }.map { "no test for: ${it.text}" }
     return unclaimed + gone + untested

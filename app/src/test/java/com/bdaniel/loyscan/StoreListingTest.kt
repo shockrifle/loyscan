@@ -10,6 +10,7 @@ import com.bdaniel.loyscan.testing.bulletsPerSection
 import com.bdaniel.loyscan.testing.claimProblems
 import com.bdaniel.loyscan.testing.listingProblems
 import com.bdaniel.loyscan.testing.listingText
+import com.bdaniel.loyscan.testing.personalDetails
 import com.bdaniel.loyscan.testing.stringValue
 import com.bdaniel.loyscan.testing.tests
 import com.bdaniel.loyscan.ui.scanner.CameraXScannerTest
@@ -141,6 +142,32 @@ class StoreListingTest {
             .containsExactly("StoreListingTest.aClaimWithoutATest_isAProblem")
     }
 
+
+    @Test
+    fun claimsOfAMarkdownList_areReadFromItsDashBullets() { // the privacy policy's bullets (#75)
+        val text = "# Policy\n\n## Kept\n- Your cards.\n- Your photos.\n\nNot a bullet."
+        val claims = listOf(ListingClaim("Your cards.", listOf("A.a")), ListingClaim("Sync to the cloud.", listOf("A.b")))
+
+        assertThat(claimProblems(text, claims, bullet = "- "))
+            .containsExactly("no claim for the bullet: Your photos.", "not in the listing: Sync to the cloud.")
+    }
+
+    @Test
+    fun personalDetails_areEmailAddressesUrlsAndLongNumbers() {
+        val text = "Write to someone@example.hu, see example.org, or call 06 30 123 4567."
+
+        assertThat(personalDetails(text)).containsExactly(
+            "an email address (someone@example.hu)",
+            "a URL (example.org)",
+            "a number of 7 or more digits (06 30 123 4567)",
+        ).inOrder()
+    }
+
+    @Test
+    fun aDateInWords_isNoPersonalDetail_butAnIsoDateLooksLikeAPhoneNumber() { // so the privacy policy dates in words
+        assertThat(personalDetails("Last updated: 19 November 2026. Frissítve: 2026. november 19.")).isEmpty()
+        assertThat(personalDetails("Last updated: 2026-11-19")).containsExactly("a number of 7 or more digits (2026-11-19)")
+    }
 
     @Test
     fun aListingWithinTheRules_hasNoProblems() {
