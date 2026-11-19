@@ -20,7 +20,7 @@ A LoyScan egy Android-alkalmazás, amely a telefonodon tárolja a hűségkárty�
 
 ## Nincs internet, nincs követés
 
-- A LoyScan nem fér hozzá az internethez: nem kér rá engedélyt az Androidtól, így semmit sem tud elküldeni sehova.
+- A LoyScan nem fér hozzá az internethez: nem kér rá engedélyt az Androidtól, így maga semmit sem tud elküldeni az interneten.
 - Nincs fiók, nincsenek hirdetések, nincs analitika, és a LoyScan saját hibajelentést sem küld.
 - A „Logó keresése az interneten” a böngésződben megnyit egy Google-képkeresést a bolt nevére. Ez a keresés közted és a Google között zajlik, a Google adatvédelmi szabályai szerint.
 

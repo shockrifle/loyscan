@@ -224,7 +224,7 @@ class PrivacyPolicyTest {
                     ) + NO_NETWORK,
             ),
             ListingClaim(
-                "LoyScan has no internet access: it doesn't ask Android for it, so it can't send anything anywhere.",
+                "LoyScan has no internet access: it doesn't ask Android for it, so it can't send anything over the internet itself.",
                 NO_NETWORK,
             ),
             ListingClaim("There is no account, no ads, no analytics and no crash reporting of LoyScan's own.", NO_NETWORK),
