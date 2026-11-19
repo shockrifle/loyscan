@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-19 · privacy policy text (en-US, hu-HU) in `play/privacy-policy/`, each statement tied to tests by `POLICY_CLAIMS`; what is still open before it is published · integrations/google-play, workflows/tdd, architecture · #75
 - 2026-11-19 · the number-check claim names its as-you-type length and start tests; the claims guard's limits spelled out · integrations/google-play · review of PR #179
 - 2026-11-19 · the listing's claims mapped to their tests in a table, enforced by `LISTING_CLAIMS` in StoreListingTest · integrations/google-play, workflows/tdd · #178
 - 2026-11-19 · screen colour check through NATIVE graphics and `captureToImage` added; the legacy-mode note on drawing corrected (NATIVE draws) · workflows/tdd · #178

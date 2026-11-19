@@ -138,7 +138,9 @@ android {
             it.inputs.files("$rootDir/play/store-icon.png").withPropertyName("storeIcon").withPathSensitivity(PathSensitivity.RELATIVE)
             // StoreListingTest reads Play's listing texts and checks them against the catalogue's retailer names (#75).
             it.inputs.files("$rootDir/play/listing").withPropertyName("storeListing").withPathSensitivity(PathSensitivity.RELATIVE)
-            // ... and that the google-play wiki page names the tests behind the listing's claims (#178).
+            // PrivacyPolicyTest reads the privacy policy's Markdown (#75).
+            it.inputs.files("$rootDir/play/privacy-policy").withPropertyName("privacyPolicy").withPathSensitivity(PathSensitivity.RELATIVE)
+            // ... and that the google-play wiki page names the tests behind the listing's and the policy's claims (#178, #75).
             it.inputs.files("$rootDir/wiki/integrations/google-play.md").withPropertyName("googlePlayWiki")
                 .withPathSensitivity(PathSensitivity.RELATIVE)
             it.inputs.files("$projectDir/src/main/assets/catalogue/stores.json").withPropertyName("storeCatalogue")

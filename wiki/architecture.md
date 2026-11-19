@@ -116,7 +116,8 @@ outputs ([[tdd]] → the layer table).
 - **Waits.** Every Compose `waitUntil*` passes the shared `WAIT_TIMEOUT_MS` (`testing/Waits.kt`), never the 1 s default
   that timed out on CI; `WaitTimeoutsTest` reads the test sources and fails on a wait that doesn't ([[tdd]], #59).
 - **Play's listing texts** (`play/listing/`, #75) are files, so `StoreListingTest` reads them as the owner pastes them
-  into Play Console and checks them against the app's own strings and the shipped catalogue ([[google-play]]).
+  into Play Console and checks them against the app's own strings and the shipped catalogue ([[google-play]]). The
+  privacy policy (`play/privacy-policy/`) is read the same way by `PrivacyPolicyTest`, each statement tied to its tests.
 - Fixture builders (`aLoyaltyCard()`, `aStoreEntity()`, …) give every field a default; `cardId(n)` makes distinct UUID-shaped card ids.
 
 ### Build tooling
