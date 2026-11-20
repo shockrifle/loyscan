@@ -383,8 +383,10 @@ fun SharedTransitionScope.CardItem(
     // The store's logo (#151) when it loads; one that can't be loaded shows the initials, as a missing one does.
     var logoFailed by remember(card.store.logo) { mutableStateOf(false) }
     val logo = card.store.logo?.takeUnless { logoFailed }
-    // On a photo, the label sits on a dark scrim, so it is white whatever the photo's colours.
-    val textColor = if (photo != null) Color.White else cardColor.contrastingTextColor()
+    // On a photo or a logo, the label sits on a dark scrim over the picture, so it is white whatever the picture's
+    // colours (review of #183: a centred logo reaches under the label).
+    val onPicture = photo != null || logo != null
+    val textColor = if (onPicture) Color.White else cardColor.contrastingTextColor()
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -435,13 +437,13 @@ fun SharedTransitionScope.CardItem(
                 val label: (@Composable () -> Unit)? = card.label?.let { label ->
                     {
                         Column(Modifier.fillMaxWidth()) {
-                            // On a photo, the scrim fades in above the label and is at full strength behind the text.
-                            if (photo != null) Spacer(Modifier.fillMaxWidth().height(Spacing.l).background(PHOTO_SCRIM_FADE))
+                            // On a picture, the scrim fades in above the label and is at full strength behind the text.
+                            if (onPicture) Spacer(Modifier.fillMaxWidth().height(Spacing.l).background(PHOTO_SCRIM_FADE))
                             Text(
                                 text = label,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .then(if (photo != null) Modifier.background(PHOTO_LABEL_SCRIM) else Modifier)
+                                    .then(if (onPicture) Modifier.background(PHOTO_LABEL_SCRIM) else Modifier)
                                     .padding(start = Spacing.s, end = Spacing.s, bottom = Spacing.s),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = textColor,

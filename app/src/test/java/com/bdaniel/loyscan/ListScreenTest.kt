@@ -290,6 +290,27 @@ class ListScreenTest {
     }
 
     @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE) // real drawing, for the pixels
+    fun aLogoTile_hasTheDarkLabelBand_underItsLabel_anInitialsTileDoesNot() { // review of #183: the label is over the logo
+        storedPhoto("logo")
+        setScreen(
+            aLoyaltyCard(id = cardId(1), store = aStore(id = "apple", name = "Apple", logo = "logo"), label = "Work"),
+            aLoyaltyCard(id = cardId(2), store = aStore(id = "berry", name = "Berry"), label = "Home"),
+            photos = FakeCardPhotos("logo"),
+        )
+        waitForAnImageToLoad()
+
+        val (logoTile, initialsTile) = composeRule.onAllNodesWithTag(CARD_TILE_TAG, useUnmergedTree = true).fetchSemanticsNodes().map {
+            composeRule.onNode(SemanticsMatcher("tile ${it.id}") { node -> node.id == it.id }, useUnmergedTree = true).captureToImage().toPixelMap()
+        }
+        // Right of the short label, in the band's bottom padding; against the brand colour left of the logo or initials.
+        fun bottom(tile: PixelMap) = tile[tile.width * 7 / 8, tile.height - 3]
+        fun brandColour(tile: PixelMap) = tile[tile.width / 16, tile.height / 2]
+        assertThat(bottom(logoTile).luminance()).isLessThan(brandColour(logoTile).luminance() * 0.6f)
+        assertThat(colourDistance(bottom(initialsTile), brandColour(initialsTile))).isLessThan(0.02f)
+    }
+
+    @Test
     @Config(qualifiers = "w411dp-h891dp") // a common phone width
     @GraphicsMode(GraphicsMode.Mode.NATIVE) // real text measuring: the label's height decides whether the initials fit
     fun aTilesInitials_areCentredInTheTile_withALabelOrWithout() { // #183, as a photo: the label is over the tile

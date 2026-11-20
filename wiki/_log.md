@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-20 · a logo tile's label sits on the photo's dark band; the look-alike initials trade-off of unlabelled tiles · features/card-list · review of PR #191
 - 2026-11-20 · a list tile draws only the card's label, never the store name; logo and initials centred in the whole tile, the label over it, the photo band only with a label; card-widget's "same text the list tile shows" corrected · features/card-list, apps/card-widget · #183
 - 2026-11-20 · grilled #187 and #188: two proposed decisions; custom-stores, store-suggestion-trigger and user-supplied-store-logos amended · decisions/2026-11-20-barcode-type-per-card, decisions/2026-11-20-other-card-scan-first, decisions/2026-10-22-custom-stores, decisions/2026-10-22-store-suggestion-trigger, decisions/2026-11-13-user-supplied-store-logos, decisions/_index, index · #187, #188, review of PR #190
 - 2026-11-19 · the policy's no-internet bullet says LoyScan can't send anything over the internet itself (the logo search and the camera app are other apps) · integrations/google-play · review of PR #180
