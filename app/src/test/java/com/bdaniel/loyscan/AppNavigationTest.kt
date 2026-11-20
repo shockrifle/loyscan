@@ -215,7 +215,7 @@ class AppNavigationTest {
         waitForText("4242")
         composeRule.onNodeWithContentDescription("Back").performClick()
         waitForText("My Cards")
-        composeRule.onNodeWithText("My Shop").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("My Shop").assertIsDisplayed() // the tile, read as its store (#183)
     }
 
     @Test
@@ -398,8 +398,8 @@ class AppNavigationTest {
         composeRule.onNodeWithText("My Gym").assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Back").performClick()
         waitForTextToGo("Choose store")
-        waitForText("My Gym")
-        waitForTextToGo("My Shop") // #62
+        waitForTile("My Gym")
+        waitForTileToGo("My Shop") // #62
     }
 
     @Test
@@ -513,6 +513,13 @@ class AppNavigationTest {
     /** A screen that is leaving can still show [text] for a while, so asserting it is gone at once is racy (#62). */
     private fun waitForTextToGo(text: String) =
         composeRule.waitUntil(WAIT_TIMEOUT_MS) { composeRule.onAllNodes(hasText(text)).fetchSemanticsNodes().isEmpty() }
+
+    /** A list tile is read as its store's name, and an unlabelled card's tile draws no text (#183). */
+    private fun waitForTile(store: String) =
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) { composeRule.onAllNodes(hasContentDescription(store)).fetchSemanticsNodes().isNotEmpty() }
+
+    private fun waitForTileToGo(store: String) =
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) { composeRule.onAllNodes(hasContentDescription(store)).fetchSemanticsNodes().isEmpty() }
 
     /** Waits until the app's image loader has decoded a photo and closed its file. Its result comes on the main looper. */
     private fun waitForThePhotoToLoad() =

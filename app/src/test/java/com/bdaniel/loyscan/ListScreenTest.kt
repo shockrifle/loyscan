@@ -101,7 +101,7 @@ class ListScreenTest {
                 }
             }
         }
-        composeRule.onNodeWithText("Test Store").performClick()
+        tile("Test Store").performClick()
 
         assertThat(navigatedTo).isEqualTo(cardId(5) to "#AA0000")
     }
@@ -110,8 +110,8 @@ class ListScreenTest {
     fun showsATileForEachCard() {
         setScreen(aLoyaltyCard(id = cardId(1), store = aStore(name = "First Store")), aLoyaltyCard(id = cardId(2), store = aStore(name = "Second Store")))
 
-        composeRule.onNodeWithText("First Store").assertIsDisplayed()
-        composeRule.onNodeWithText("Second Store").assertIsDisplayed()
+        tile("First Store").assertIsDisplayed()
+        tile("Second Store").assertIsDisplayed()
     }
 
     @Test
@@ -311,8 +311,8 @@ class ListScreenTest {
     fun emptyOrMalformedStoreColor_doesNotCrash() { // #14
         setScreen(aLoyaltyCard(id = cardId(1), store = aStore(name = "No Colour", color = "")), aLoyaltyCard(id = cardId(2), store = aStore(name = "Bad Colour", color = "not a colour")))
 
-        composeRule.onNodeWithText("No Colour").assertIsDisplayed()
-        composeRule.onNodeWithText("Bad Colour").assertIsDisplayed()
+        tile("No Colour").assertIsDisplayed()
+        tile("Bad Colour").assertIsDisplayed()
     }
 
     @Test
@@ -388,7 +388,7 @@ class ListScreenTest {
 
         composeRule.onNode(hasScrollAction()).performScrollToIndex(cards.lastIndex)
 
-        val lastTile = composeRule.onNodeWithText("Store 12").fetchSemanticsNode().boundsInRoot
+        val lastTile = tile("Store 12").fetchSemanticsNode().boundsInRoot
         val addButton = composeRule.onNodeWithContentDescription("Add card").fetchSemanticsNode().boundsInRoot
         assertThat(lastTile.overlaps(addButton)).isFalse()
     }
@@ -399,8 +399,8 @@ class ListScreenTest {
 
         composeRule.onNodeWithTag(CARD_SEARCH_TAG).performTextInput("berr")
 
-        composeRule.onNodeWithText("Berry").assertIsDisplayed()
-        composeRule.onNodeWithText("Apple").assertDoesNotExist()
+        tile("Berry").assertIsDisplayed()
+        tile("Apple").assertDoesNotExist()
     }
 
     @Test
@@ -428,18 +428,18 @@ class ListScreenTest {
 
         composeRule.onNodeWithText("No card matches “berry”").assertDoesNotExist()
         repository.loadGate!!.complete(Unit)
-        composeRule.onNodeWithText("Berry").assertIsDisplayed()
+        tile("Berry").assertIsDisplayed()
     }
 
     @Test
     fun longPressingATile_selectsIt_inPlaceOfTheTitleAndTheAddButton() { // #7: multi-select
         setScreen(aLoyaltyCard(id = cardId(1), store = aStore(name = "Apple")), aLoyaltyCard(id = cardId(2), store = aStore(name = "Berry")))
 
-        composeRule.onNodeWithText("Apple").performTouchInput { longClick() }
+        tile("Apple").performTouchInput { longClick() }
 
         composeRule.onNodeWithText("1 selected").assertIsDisplayed()
-        composeRule.onNodeWithText("Apple").assert(isSelected())
-        composeRule.onNodeWithText("Berry").assert(isNotSelected())
+        tile("Apple").assert(isSelected())
+        tile("Berry").assert(isNotSelected())
         composeRule.onNodeWithText("My Cards").assertDoesNotExist()
         composeRule.onNodeWithContentDescription("Add card").assertDoesNotExist()
     }
@@ -448,7 +448,7 @@ class ListScreenTest {
     fun aTile_offersToSelectIt_toTalkBack() {
         setScreen(aLoyaltyCard(store = aStore(name = "Apple")))
 
-        composeRule.onNodeWithText("Apple").assert(
+        tile("Apple").assert(
             SemanticsMatcher("long click labelled Select") { it.config.getOrNull(SemanticsActions.OnLongClick)?.label == "Select" }
         )
     }
@@ -461,11 +461,11 @@ class ListScreenTest {
             directions = ListDirections(toCard = { _, _ -> opened++; true }, toAddCard = {}, toEditCard = { _, _ -> }, toAbout = {}),
         )
 
-        composeRule.onNodeWithText("Apple").performTouchInput { longClick() }
-        composeRule.onNodeWithText("Berry").performClick()
+        tile("Apple").performTouchInput { longClick() }
+        tile("Berry").performClick()
 
         composeRule.onNodeWithText("2 selected").assertIsDisplayed()
-        composeRule.onNodeWithText("Berry").assert(isSelected())
+        tile("Berry").assert(isSelected())
         assertThat(opened).isEqualTo(0)
     }
 
@@ -473,8 +473,8 @@ class ListScreenTest {
     fun deselectingTheLastSelectedCard_endsTheSelection() {
         setScreen(aLoyaltyCard(store = aStore(name = "Apple")))
 
-        composeRule.onNodeWithText("Apple").performTouchInput { longClick() }
-        composeRule.onNodeWithText("Apple").performClick()
+        tile("Apple").performTouchInput { longClick() }
+        tile("Apple").performClick()
 
         composeRule.onNodeWithText("My Cards").assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Add card").assertIsDisplayed()
@@ -483,18 +483,18 @@ class ListScreenTest {
     @Test
     fun close_endsTheSelection() {
         setScreen(aLoyaltyCard(store = aStore(name = "Apple")))
-        composeRule.onNodeWithText("Apple").performTouchInput { longClick() }
+        tile("Apple").performTouchInput { longClick() }
 
         composeRule.onNodeWithContentDescription("Close").performClick()
 
         composeRule.onNodeWithText("My Cards").assertIsDisplayed()
-        composeRule.onNodeWithText("Apple").assert(isNotSelected())
+        tile("Apple").assert(isNotSelected())
     }
 
     @Test
     fun back_endsTheSelection_andStaysOnTheList() {
         setScreen(aLoyaltyCard(store = aStore(name = "Apple")))
-        composeRule.onNodeWithText("Apple").performTouchInput { longClick() }
+        tile("Apple").performTouchInput { longClick() }
 
         composeRule.runOnUiThread { composeRule.activity.onBackPressedDispatcher.onBackPressed() }
 
@@ -509,10 +509,10 @@ class ListScreenTest {
             aLoyaltyCard(id = cardId(1), store = aStore(id = "apple", name = "Apple")), aLoyaltyCard(id = cardId(2), store = aStore(id = "berry", name = "Berry")),
             directions = ListDirections(toCard = { _, _ -> true }, toAddCard = {}, toEditCard = { id, storeId -> edited = id to storeId }, toAbout = {}),
         )
-        composeRule.onNodeWithText("Apple").performTouchInput { longClick() }
-        composeRule.onNodeWithText("Berry").performClick()
+        tile("Apple").performTouchInput { longClick() }
+        tile("Berry").performClick()
         composeRule.onNodeWithContentDescription("Edit").assertDoesNotExist()
-        composeRule.onNodeWithText("Apple").performClick()
+        tile("Apple").performClick()
 
         composeRule.onNodeWithContentDescription("Edit").performClick()
 
@@ -526,8 +526,8 @@ class ListScreenTest {
             listOf(aLoyaltyCard(id = cardId(1), store = aStore(name = "Apple")), aLoyaltyCard(id = cardId(2), store = aStore(name = "Berry")), aLoyaltyCard(id = cardId(3), store = aStore(name = "Cherry")))
         )
         setScreen(viewModel = ListViewModel(repository, FakeUserPreferencesRepository(), SavedStateHandle(), FakeCardPhotos()))
-        composeRule.onNodeWithText("Apple").performTouchInput { longClick() }
-        composeRule.onNodeWithText("Cherry").performClick()
+        tile("Apple").performTouchInput { longClick() }
+        tile("Cherry").performClick()
 
         composeRule.onNodeWithContentDescription("Delete").performClick()
         composeRule.onNodeWithText("Delete 2 cards?").assertIsDisplayed()
@@ -535,16 +535,16 @@ class ListScreenTest {
         composeRule.onNode(hasText("Delete") and hasAnyAncestor(isDialog())).performClick()
 
         composeRule.onNodeWithText("Delete 2 cards?").assertDoesNotExist()
-        composeRule.onNodeWithText("Apple").assertDoesNotExist()
-        composeRule.onNodeWithText("Cherry").assertDoesNotExist()
-        composeRule.onNodeWithText("Berry").assert(isNotSelected())
+        tile("Apple").assertDoesNotExist()
+        tile("Cherry").assertDoesNotExist()
+        tile("Berry").assert(isNotSelected())
         composeRule.onNodeWithText("My Cards").assertIsDisplayed()
     }
 
     @Test
     fun deletingOneSelectedCard_asksAboutThatCard() {
         setScreen(aLoyaltyCard(store = aStore(name = "Apple")))
-        composeRule.onNodeWithText("Apple").performTouchInput { longClick() }
+        tile("Apple").performTouchInput { longClick() }
 
         composeRule.onNodeWithContentDescription("Delete").performClick()
 
@@ -555,7 +555,7 @@ class ListScreenTest {
     fun cancellingTheDelete_keepsTheCardsAndTheSelection() {
         val repository = FakeLoyaltyCardRepository(listOf(aLoyaltyCard(store = aStore(name = "Apple"))))
         setScreen(viewModel = ListViewModel(repository, FakeUserPreferencesRepository(), SavedStateHandle(), FakeCardPhotos()))
-        composeRule.onNodeWithText("Apple").performTouchInput { longClick() }
+        tile("Apple").performTouchInput { longClick() }
         composeRule.onNodeWithContentDescription("Delete").performClick()
 
         composeRule.onNodeWithText("Cancel").performClick()
@@ -570,7 +570,7 @@ class ListScreenTest {
         val repository = FakeLoyaltyCardRepository(listOf(aLoyaltyCard(store = aStore(name = "Apple"))))
         repository.deleteFailure = IllegalStateException("disk I/O error")
         setScreen(viewModel = ListViewModel(repository, FakeUserPreferencesRepository(), SavedStateHandle(), FakeCardPhotos()))
-        composeRule.onNodeWithText("Apple").performTouchInput { longClick() }
+        tile("Apple").performTouchInput { longClick() }
         composeRule.onNodeWithContentDescription("Delete").performClick()
 
         composeRule.onNode(hasText("Delete") and hasAnyAncestor(isDialog())).performClick()
@@ -584,11 +584,11 @@ class ListScreenTest {
     @Test
     fun aNewSelectionAfterADelete_doesNotReopenTheDialog() {
         setScreen(aLoyaltyCard(id = cardId(1), store = aStore(name = "Apple")), aLoyaltyCard(id = cardId(2), store = aStore(name = "Berry")))
-        composeRule.onNodeWithText("Apple").performTouchInput { longClick() }
+        tile("Apple").performTouchInput { longClick() }
         composeRule.onNodeWithContentDescription("Delete").performClick()
         composeRule.onNode(hasText("Delete") and hasAnyAncestor(isDialog())).performClick()
 
-        composeRule.onNodeWithText("Berry").performTouchInput { longClick() }
+        tile("Berry").performTouchInput { longClick() }
 
         composeRule.onNodeWithText("1 selected").assertIsDisplayed()
         composeRule.onNode(isDialog()).assertDoesNotExist()
@@ -607,8 +607,8 @@ class ListScreenTest {
                 }
             }
         }
-        composeRule.onNodeWithText("Apple").performTouchInput { longClick() }
-        composeRule.onNodeWithText("Berry").performClick()
+        tile("Apple").performTouchInput { longClick() }
+        tile("Berry").performClick()
         composeRule.onNodeWithContentDescription("Delete").performClick()
 
         // A new process: a new ViewModel on the saved state, whose cards load only later.
@@ -626,7 +626,7 @@ class ListScreenTest {
         val repository = FakeLoyaltyCardRepository(listOf(aLoyaltyCard(store = aStore(name = "Apple"))))
         repository.deleteGate = CompletableDeferred()
         setScreen(viewModel = ListViewModel(repository, FakeUserPreferencesRepository(), SavedStateHandle(), FakeCardPhotos()))
-        composeRule.onNodeWithText("Apple").performTouchInput { longClick() }
+        tile("Apple").performTouchInput { longClick() }
         composeRule.onNodeWithContentDescription("Delete").performClick()
 
         composeRule.onNode(hasText("Delete") and hasAnyAncestor(isDialog())).performClick()
@@ -639,7 +639,7 @@ class ListScreenTest {
         val repository = FakeLoyaltyCardRepository(listOf(aLoyaltyCard(id = cardId(1), store = aStore(name = "Apple")), aLoyaltyCard(id = cardId(2), store = aStore(name = "Berry"))))
         repository.deleteFailure = IllegalStateException("disk I/O error")
         setScreen(viewModel = ListViewModel(repository, FakeUserPreferencesRepository(), SavedStateHandle(), FakeCardPhotos()))
-        composeRule.onNodeWithText("Apple").performTouchInput { longClick() }
+        tile("Apple").performTouchInput { longClick() }
         composeRule.onNodeWithContentDescription("Delete").performClick()
         composeRule.onNode(hasText("Delete") and hasAnyAncestor(isDialog())).performClick()
         composeRule.onNodeWithText("The card couldn't be deleted. Try again.").assertIsDisplayed()
@@ -647,7 +647,7 @@ class ListScreenTest {
         // The selected card goes another way (e.g. deleted elsewhere), which ends the selection and closes the dialog.
         repository.cards.value = repository.cards.value.filterNot { it.id == cardId(1) }
         composeRule.onNodeWithText("My Cards").assertIsDisplayed()
-        composeRule.onNodeWithText("Berry").performTouchInput { longClick() }
+        tile("Berry").performTouchInput { longClick() }
         composeRule.onNodeWithContentDescription("Delete").performClick()
 
         composeRule.onNodeWithText("It is removed from this phone for good.").assertIsDisplayed()
@@ -689,13 +689,13 @@ class ListScreenTest {
         composeRule.onNode(hasScrollAction()).performScrollToIndex(12)
         val tappedTop = top("Store 15")
 
-        composeRule.onNodeWithText("Store 15").performClick()
+        tile("Store 15").performClick()
         repository.setUseCount("Store 15", 12) // the use moves it from 15th to 10th, three rows up
         composeRule.waitForIdle()
         showList.value = true
         composeRule.waitForIdle()
 
-        composeRule.onNodeWithText("Store 15").assertIsDisplayed()
+        tile("Store 15").assertIsDisplayed()
         assertThat(top("Store 15")).isEqualTo(tappedTop)
     }
 
@@ -706,7 +706,7 @@ class ListScreenTest {
         val showList = setListInNavigation(repository)
         composeRule.onNode(hasScrollAction()).performScrollToIndex(12)
         val tappedTop = top("Store 15")
-        composeRule.onNodeWithText("Store 15").performClick()
+        tile("Store 15").performClick()
         composeRule.waitForIdle()
 
         composeRule.mainClock.autoAdvance = false
@@ -717,7 +717,7 @@ class ListScreenTest {
         composeRule.mainClock.autoAdvance = true
         composeRule.waitForIdle()
 
-        composeRule.onNodeWithText("Store 15").assertIsDisplayed()
+        tile("Store 15").assertIsDisplayed()
         assertThat(top("Store 15")).isEqualTo(tappedTop)
     }
 
@@ -729,15 +729,15 @@ class ListScreenTest {
         val tappedTop = top("Store 15")
 
         composeRule.mainClock.autoAdvance = false
-        composeRule.onNodeWithText("Store 15").performClick()
-        composeRule.onNodeWithText("Store 14").performClick()
+        tile("Store 15").performClick()
+        tile("Store 14").performClick()
         composeRule.mainClock.autoAdvance = true
         repository.setUseCount("Store 15", 12)
         composeRule.waitForIdle()
         showList.value = true
         composeRule.waitForIdle()
 
-        composeRule.onNodeWithText("Store 15").assertIsDisplayed()
+        tile("Store 15").assertIsDisplayed()
         assertThat(top("Store 15")).isEqualTo(tappedTop)
     }
 
@@ -747,13 +747,13 @@ class ListScreenTest {
         val showList = setListInNavigation(repository)
         composeRule.onNode(hasScrollAction()).performScrollToIndex(12)
 
-        composeRule.onNodeWithText("Store 15").performClick()
+        tile("Store 15").performClick()
         repository.setUseCount("Store 15", 100)
         composeRule.waitForIdle()
         showList.value = true
         composeRule.waitForIdle()
 
-        composeRule.onNodeWithText("Store 15").assertIsDisplayed()
+        tile("Store 15").assertIsDisplayed()
     }
 
     @Test
@@ -761,7 +761,7 @@ class ListScreenTest {
         val repository = FakeLoyaltyCardRepository(cardsByUse())
         val showList = setListInNavigation(repository)
         composeRule.onNode(hasScrollAction()).performScrollToIndex(12)
-        composeRule.onNodeWithText("Store 15").performClick()
+        tile("Store 15").performClick()
         composeRule.waitForIdle()
         showList.value = true
         composeRule.waitForIdle()
@@ -770,7 +770,7 @@ class ListScreenTest {
         composeRule.waitForIdle()
 
         // The list keeps its scroll position, as for any reorder, so the tile that moved to the top is out of view.
-        composeRule.onNodeWithText("Store 15").assertIsNotDisplayed()
+        tile("Store 15").assertIsNotDisplayed()
     }
 
     @Test
@@ -787,7 +787,7 @@ class ListScreenTest {
 
         restorationTester.emulateSavedInstanceStateRestore()
 
-        composeRule.onNodeWithText("Store 01").assertIsDisplayed()
+        tile("Store 01").assertIsDisplayed()
     }
 
     @Test
@@ -797,7 +797,7 @@ class ListScreenTest {
         val showList = setListInNavigation(repository, restorationTester)
         composeRule.onNode(hasScrollAction()).performScrollToIndex(12)
         val tappedTop = top("Store 15")
-        composeRule.onNodeWithText("Store 15").performClick()
+        tile("Store 15").performClick()
         composeRule.waitForIdle()
 
         restorationTester.emulateSavedInstanceStateRestore()
@@ -805,7 +805,7 @@ class ListScreenTest {
         showList.value = true
         composeRule.waitForIdle()
 
-        composeRule.onNodeWithText("Store 15").assertIsDisplayed()
+        tile("Store 15").assertIsDisplayed()
         assertThat(top("Store 15")).isEqualTo(tappedTop)
     }
 
@@ -815,7 +815,7 @@ class ListScreenTest {
         val density = mutableStateOf<Density?>(null)
         val showList = setListInNavigation(repository, density = density)
         composeRule.onNode(hasScrollAction()).performScrollToIndex(12)
-        composeRule.onNodeWithText("Store 17").performClick() // a tile in the third visible row
+        tile("Store 17").performClick() // a tile in the third visible row
         composeRule.waitForIdle()
 
         // Larger text and controls, as after a display size change: the same offset in pixels is below the grid.
@@ -871,7 +871,7 @@ class ListScreenTest {
         return showList
     }
 
-    private fun top(text: String) = composeRule.onNodeWithText(text).fetchSemanticsNode().boundsInRoot.top
+    private fun top(store: String) = tile(store).fetchSemanticsNode().boundsInRoot.top
 
     @Test
     @Config(qualifiers = "+hu")
@@ -893,7 +893,7 @@ class ListScreenTest {
         composeRule.onNodeWithContentDescription("Törlés").performClick()
         shown.collect()
         composeRule.onNodeWithText("Mégse").performClick()
-        composeRule.onNodeWithText("Berry").performClick()
+        tile("Berry").performClick()
         composeRule.onNodeWithContentDescription("Törlés").performClick()
         shown.collect()
         repository.deleteFailure = IllegalStateException("disk I/O error")
@@ -940,6 +940,9 @@ class ListScreenTest {
     private fun storedPhoto(name: String) =
         File(composeRule.activity.filesDir, CardPhotosModule.PHOTO_DIRECTORY).resolve(name).writeOnePixelPng()
 
+    /** An unlabelled card's tile, found by what TalkBack reads: its store's name (the tile draws only a label, #183). */
+    private fun tile(store: String) = composeRule.onNodeWithContentDescription(store)
+
     /** Two tiles share a row of the grid, so the first one is the one on the left. */
-    private fun left(text: String) = composeRule.onNodeWithText(text).fetchSemanticsNode().boundsInRoot.left
+    private fun left(store: String) = tile(store).fetchSemanticsNode().boundsInRoot.left
 }
