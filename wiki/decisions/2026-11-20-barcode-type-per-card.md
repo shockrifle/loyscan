@@ -28,7 +28,9 @@ form no longer asks for it.
   default); scans keep `scannedFormat`.
 - The card form shows the type collapsed; for a typed or edited number, tapping it opens a selector of
   `BarcodeFormat.forCustomStores` plus the store's own type when it isn't among them. A scan shows
-  "Scanned · <type>" without one.
+  "Scanned · <type>" without one while its number is untouched. Editing a scan's number makes it typed; it then starts
+  at the scan's type when the selector offers it, else at the store's starting type below. Editing a card shows and
+  keeps its saved type.
 - A new typed card starts at the rule's type, else the store's default. The rule makes the barcode content while the
   card's type equals the rule's; any other type draws the number as typed.
 - Neither custom-store form asks for a type; a new custom store's default is Code 128, an existing one keeps its own.
@@ -43,6 +45,8 @@ form no longer asks for it.
 
 ## Consequences
 - A Room schema change with a migration ([[2026-11-05-room-schema-frozen-from-v2]], [[database-schema-changes]]).
+  The rule's type is inside the store's JSON `cardNumberRule` column, so the migration has to parse it in Kotlin
+  rather than copy a column; a mistake there would change a barcode, so it needs a migration test per case.
 - A catalogue rule whose type changes later stops applying to cards saved with the old type; they keep their
   barcode, drawn as typed.
 - Editing a custom store's type no longer redraws its typed cards ([[edit-store]] changes with it).
