@@ -45,7 +45,8 @@ shows it. The catalogue sync never touches that column.
   typed, with the logo) and **Change logo**, which opens the same logo screen for the store. The new-store form has no
   slot, the owner's choice on 2026-11-13: a store has no id before Create, which goes straight to the scanner, so a
   slot there would need its own copy of the sources and the crop holding a logo for a store not yet saved; the logo is
-  set afterwards through Edit.
+  set afterwards through Edit. *Amended 2026-11-20:* the new-store form gets a slot, holding the logo as a temporary
+  file until Create ([[2026-11-20-other-card-scan-first]], [#188](https://github.com/shockrifle/loyscan/issues/188)).
 - **A picture shared to the app:** a second share target, "Set as store logo" (an `activity-alias` of the one
   activity), the owner's choice on 2026-11-16 over asking after every share or offering it only when a picture has no
   barcode: the add-card share (#77) stays one tap, and a picture with a barcode can still become a logo. The picture

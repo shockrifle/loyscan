@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-20 · grilled #187 and #188: two proposed decisions; custom-stores, store-suggestion-trigger and user-supplied-store-logos amended · decisions/2026-11-20-barcode-type-per-card, decisions/2026-11-20-other-card-scan-first, decisions/_index · #187, #188
 - 2026-11-19 · the policy's no-internet bullet says LoyScan can't send anything over the internet itself (the logo search and the camera app are other apps) · integrations/google-play · review of PR #180
 - 2026-11-19 · privacy policy text (en-US, hu-HU) in `play/privacy-policy/`, each statement tied to tests by `POLICY_CLAIMS`; what is still open before it is published · integrations/google-play, workflows/tdd, architecture · #75
 - 2026-11-19 · the number-check claim names its as-you-type length and start tests; the claims guard's limits spelled out · integrations/google-play · review of PR #179

@@ -41,6 +41,8 @@ inferred whys as inferred.
 - [[2026-11-12-design-tokens-and-card-shape]] — a plain `Spacing` object shared with the widget, M3 default `Shapes`, one ID-1-proportional `CardShape` (6%) for every depiction of the card; a visual-only scanner viewfinder; card-ratio widget tiles in 1–2 columns, square corners on API 29–30 (#108)
 - [[2026-11-17-release-versioning]] — semver `loyscan.versionName` in `gradle.properties`; `versionCode = X*10000 + Y*100 + Z`, derived and checked by the build (#74)
 - [[2026-11-17-release-signing-on-ci]] — Play App Signing; the upload key (PKCS12, one password) is read from Gradle properties or `LOYSCAN_UPLOAD_*` variables, never a repo file; half set up stops the build; CI signs on a tag (#74)
+- [[2026-11-20-barcode-type-per-card]] — (proposed) a typed number's barcode type is saved on every card and chosen on the card form; another type than the rule's turns the rule off; custom-store forms stop asking (#187)
+- [[2026-11-20-other-card-scan-first]] — (proposed) "Other card": scan → new-store form with a logo slot, scan and duplicate-name suggestions → card form, each step replacing the last (#188)
 - [[2026-11-18-launcher-icon]] — launcher icon: two fanned cards, the front card's barcode a heart, on plum; chosen against 154 Play icons, away from Google Wallet's and the Hearts card games' look (#75)
 
 ## Superseded

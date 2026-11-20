@@ -20,6 +20,9 @@ no rule at all ([[store-catalogue]]).
 4. **Also when a more specific rule reads it** (one with a required start, against Auchan's catch-all EAN-13 rule).
 
 ## Decision
+*Amended 2026-11-20 (proposed, not built):* in "Other card" the new-store form suggests a store first, and the card
+form after it doesn't suggest the stores passed over there ([[2026-11-20-other-card-scan-first]], #188).
+
 Options 1, 2 and 3 (user's choice, 2026-10-22, after the review). `suggestedStores` in
 `app/src/main/java/com/bdaniel/loyscan/CardFormViewModel.kt`:
 - picked store has no rule, or its rule rejects the scan → every other store whose rule reads it;
