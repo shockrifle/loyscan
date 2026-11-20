@@ -50,9 +50,14 @@ tiles, one per row in `loyalty_cards`, live-updating from Room. Sort, search and
   (`TILE_LOGO_FRACTION`); a logo that can't be loaded, or whose file is missing (`CardPhotos.withoutMissing`), falls back
   to the initials. **Only the card's own label is drawn** (#183), one line at the bottom left over the tile, as on a
   photo; a card without a label shows no text at all, since the logo, the photo or the initials say which store it is.
+  The cost: two unlabelled cards of stores with the same initials and a similar colour look alike (the store is still
+  heard through TalkBack and found by search); a label or a logo tells them apart.
   Until #183 a tile showed the store name when there was no label. The logo and the initials are centred in the whole
   tile, with a label or without (#183, the user's call: as a photo sits under its label). The logo's size doesn't depend
-  on the label, which is drawn over it. The initials get the height the label leaves (`CentredOverLabel`) and shrink to
+  on the label, which is drawn over it: a square logo reaches under the label text on a phone, so on a logo tile the
+  label is white on the photo's dark band and fade, as on a photo (review of #183, the user's call over shrinking the
+  logo; `aLogoTile_hasTheDarkLabelBand_underItsLabel_anInitialsTileDoesNot`, pixels). An initials tile's label has no
+  band. The initials get the height the label leaves (`CentredOverLabel`) and shrink to
   fit it (`autoSize`); they are centred when that keeps them clear of the label, else they sit just above it (large
   font scales on small tiles), so they never run into it or get squeezed out (`ListScreenTest.aTilesInitials_andLabel_doNotOverlap_…`;
   Robolectric's legacy text measuring makes widths near zero and a label 44px tall, so the centring test,
