@@ -42,6 +42,8 @@ number still has to fit it. One that doesn't fit falls back to Code 128, then QR
 would get a check digit ZXing computes, i.e. become another number.
 
 ## Consequences
+- *Amended 2026-11-20 (proposed, not built):* the type moves to the card form ([[2026-11-20-barcode-type-per-card]],
+  #187) and "Other card" scans before the store is made ([[2026-11-20-other-card-scan-first]], #188).
 - A custom store abandoned before its first card stays in the picker until the user deletes it. Since #53 a custom
   store's name, colour and format can be edited from the picker, and the store deleted with its cards
   ([[edit-store]]); changing the format redraws its typed cards, not its scans.
