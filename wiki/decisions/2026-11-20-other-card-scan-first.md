@@ -28,10 +28,9 @@ keep store → scanner → form.
   to the picker. A shared picture with a barcode (#77) skips the scanner; Enter manually or a picture without one
   reaches the new-store form, then the card form with an empty number.
 - The form shows the scan ("Scanned · <number> · <type>", or "Number entered by hand"). A scan a catalogue rule reads
-  shows "This looks like a <store> card" with **Use <store>**; a name matching a store's name or alias (ignoring case
-  and accents, as the picker's search) shows a hint with **Use <store>**. The name hint fires when the name or an alias *equals* it after the
-  search's normalisation (`StoreSearch.searchKey`), not when it merely contains it, which would hint at most stores
-  for one letter. Create still works.
+  shows "This looks like a <store> card" with **Use <store>**; a typed name that equals a store's name or alias after
+  the picker search's case and accent normalisation (`StoreSearch.searchKey`) shows a hint with **Use <store>**; a
+  substring match, as the search uses, would hint at most stores for one letter. Create still works.
 - **Use <store>** replaces the form with that store's card form, with the scan, or an empty number after Enter
   manually.
 - The card form reached this way doesn't suggest again the stores passed over on the form.
