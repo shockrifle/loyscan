@@ -31,6 +31,11 @@ import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.hasScrollAction
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.graphics.PixelMap
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.onNodeWithText
@@ -67,6 +72,7 @@ import com.bdaniel.loyscan.testing.assertTextFitsAndDoesNotOverlap
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.graphics.Color
+import kotlin.math.abs
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.test.onAllNodesWithTag
 import java.io.File
@@ -124,12 +130,14 @@ class ListScreenTest {
     }
 
     @Test
-    fun aTile_isReadOutAsTheStoreName_andTheLabel() { // review of #7
+    fun aTile_isReadOutAsTheStoreName_andTheLabel() { // review of #7; #183: the store, though the tile doesn't show it
         setScreen(aLoyaltyCard(id = cardId(1), store = aStore(name = "Shell ClubSmart"), label = "Work car"), aLoyaltyCard(id = cardId(2), store = aStore(name = "Penny"), label = null))
 
-        // TalkBack reads a merged node's content description in place of its text.
-        composeRule.onNodeWithText("Work car").assertContentDescriptionEquals("Shell ClubSmart, Work car")
-        composeRule.onNodeWithText("Penny").assertContentDescriptionEquals("Penny")
+        // TalkBack reads a merged node's content description in place of its text. The tiles, sorted by name.
+        val tiles = composeRule.onAllNodes(hasClickAction() and hasAnyAncestor(hasScrollAction()))
+        tiles.assertCountEquals(2)
+        tiles[0].assertContentDescriptionEquals("Penny")
+        tiles[1].assertContentDescriptionEquals("Shell ClubSmart, Work car")
     }
 
     @Test
@@ -141,6 +149,7 @@ class ListScreenTest {
         val tile = composeRule.onNodeWithTag(CARD_TILE_TAG, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
 
         // Robolectric's text widths are near zero, so only the vertical layout can be checked.
+        assertThat(initials.height).isGreaterThan(0f) // shrunk to fit, not squeezed out (#183)
         assertThat(initials.bottom).isAtMost(label.top)
         assertThat(tile.contains(label.bottomRight - Offset(1f, 1f))).isTrue()
     }
@@ -233,11 +242,83 @@ class ListScreenTest {
     }
 
     @Test
-    fun aTileWithoutALabel_showsTheStoreName() {
+    fun aTileWithoutALabel_showsOnlyTheInitials() { // #183: not the store name
         setScreen(aLoyaltyCard(store = aStore(name = "Shell ClubSmart"), label = null))
 
-        composeRule.onNodeWithText("SC").assertIsDisplayed()
-        composeRule.onNodeWithText("Shell ClubSmart").assertIsDisplayed()
+        assertThat(textsOnTheTiles()).containsExactly("SC")
+    }
+
+    @Test
+    fun aLogoTileWithoutALabel_showsNoText() { // #183: the logo says which store it is
+        storedPhoto("logo")
+        setScreen(aLoyaltyCard(store = aStore(name = "Shell ClubSmart", logo = "logo"), label = null), photos = FakeCardPhotos("logo"))
+        waitForAnImageToLoad() // a logo that failed to load would show the initials by now
+
+        composeRule.onNodeWithTag(CARD_TILE_LOGO_TAG, useUnmergedTree = true).assertIsDisplayed()
+        assertThat(textsOnTheTiles()).isEmpty()
+    }
+
+    @Test
+    fun aPhotoTileWithoutALabel_showsNoText() { // #183: the photo says which store it is
+        storedPhoto("front")
+        setScreen(aLoyaltyCard(store = aStore(name = "Shell ClubSmart"), label = null, frontPhotoPath = "front"), photos = FakeCardPhotos("front"))
+        waitForAnImageToLoad() // a photo that failed to load would show the initials by now
+
+        composeRule.onNodeWithTag(CARD_TILE_PHOTO_TAG, useUnmergedTree = true).assertIsDisplayed()
+        assertThat(textsOnTheTiles()).isEmpty()
+    }
+
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE) // real drawing, for the pixels
+    fun aPhotoTile_hasTheDarkLabelBand_onlyWithALabel() { // #183: no empty band over an unlabelled photo
+        storedPhoto("front")
+        setScreen(
+            aLoyaltyCard(id = cardId(1), store = aStore(name = "Apple"), label = "Work", frontPhotoPath = "front"),
+            aLoyaltyCard(id = cardId(2), store = aStore(name = "Berry"), label = null, frontPhotoPath = "front"),
+            photos = FakeCardPhotos("front"),
+        )
+        waitForAnImageToLoad()
+
+        val (labelled, unlabelled) = composeRule.onAllNodesWithTag(CARD_TILE_TAG, useUnmergedTree = true).fetchSemanticsNodes().map {
+            composeRule.onNode(SemanticsMatcher("tile ${it.id}") { node -> node.id == it.id }, useUnmergedTree = true).captureToImage().toPixelMap()
+        }
+        // Right of the short label, in the band's bottom padding, clear of the rounded corner; against the tile's middle.
+        fun bottom(tile: PixelMap) = tile[tile.width * 7 / 8, tile.height - 3]
+        fun middle(tile: PixelMap) = tile[tile.width * 7 / 8, tile.height / 2]
+        assertThat(colourDistance(bottom(unlabelled), middle(unlabelled))).isLessThan(0.02f) // a scaled picture's edge can differ by a step
+        assertThat(bottom(labelled).luminance()).isLessThan(middle(labelled).luminance())
+    }
+
+    @Test
+    @Config(qualifiers = "w411dp-h891dp") // a common phone width
+    @GraphicsMode(GraphicsMode.Mode.NATIVE) // real text measuring: the label's height decides whether the initials fit
+    fun aTilesInitials_areCentredInTheTile_withALabelOrWithout() { // #183, as a photo: the label is over the tile
+        setScreen(aLoyaltyCard(id = cardId(1), store = aStore(name = "Apple"), label = "Work"), aLoyaltyCard(id = cardId(2), store = aStore(name = "Berry"), label = null))
+
+        val tiles = composeRule.onAllNodesWithTag(CARD_TILE_TAG, useUnmergedTree = true).fetchSemanticsNodes().map { it.boundsInRoot }
+        listOf("A", "B").forEachIndexed { i, initials ->
+            val shown = composeRule.onNodeWithText(initials, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+            assertThat(shown.center.y).isWithin(1f).of(tiles[i].center.y)
+        }
+    }
+
+    @Test
+    fun aStoresLogo_isCentredInTheTile_atThreeFifthsOfItsHeight_withALabelOrWithout() { // #151's 60%; #183
+        storedPhoto("logo")
+        setScreen(
+            aLoyaltyCard(id = cardId(1), store = aStore(id = "apple", name = "Apple", logo = "logo"), label = "Work"),
+            aLoyaltyCard(id = cardId(2), store = aStore(id = "berry", name = "Berry", logo = "logo"), label = null),
+            photos = FakeCardPhotos("logo"),
+        )
+        waitForAnImageToLoad()
+
+        val tiles = composeRule.onAllNodesWithTag(CARD_TILE_TAG, useUnmergedTree = true).fetchSemanticsNodes().map { it.boundsInRoot }
+        val logos = composeRule.onAllNodesWithTag(CARD_TILE_LOGO_TAG, useUnmergedTree = true).fetchSemanticsNodes().map { it.boundsInRoot }
+        assertThat(logos).hasSize(2)
+        logos.zip(tiles).forEach { (logo, tile) ->
+            assertThat(logo.center.y).isWithin(1f).of(tile.center.y)
+            assertThat(logo.height).isWithin(1f).of(tile.height * 0.6f)
+        }
     }
 
     @Test
@@ -939,6 +1020,13 @@ class ListScreenTest {
 
     private fun storedPhoto(name: String) =
         File(composeRule.activity.filesDir, CardPhotosModule.PHOTO_DIRECTORY).resolve(name).writeOnePixelPng()
+
+    private fun colourDistance(a: Color, b: Color) = maxOf(abs(a.red - b.red), abs(a.green - b.green), abs(a.blue - b.blue))
+
+    /** Every text drawn on the tiles, in the unmerged tree: the initials and the labels. */
+    private fun textsOnTheTiles() =
+        composeRule.onAllNodes(hasAnyAncestor(hasTestTag(CARD_TILE_TAG)) and SemanticsMatcher.keyIsDefined(SemanticsProperties.Text), useUnmergedTree = true)
+            .fetchSemanticsNodes().flatMap { node -> node.config[SemanticsProperties.Text].map { it.text } }
 
     /** An unlabelled card's tile, found by what TalkBack reads: its store's name (the tile draws only a label, #183). */
     private fun tile(store: String) = composeRule.onNodeWithContentDescription(store)

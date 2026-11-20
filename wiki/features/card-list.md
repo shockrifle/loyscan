@@ -43,22 +43,32 @@ tiles, one per row in `loyalty_cards`, live-updating from Room. Sort, search and
   card can re-sort the list; on the way back, the opened card's tile is put back where it was tapped
   ([[card-transition]] → Returning to a list the use re-sorted, #61).
 - Tile (`CardItem`): a `Card` containing a box in bank-card (ID-1, 85.60 × 53.98 mm) proportions filled with the brand
-  color (or `surfaceVariant` if the color string is empty or malformed, via `toBrandColorOrNull()`). Inside: the store's
+  color (or `surfaceVariant` if the color string is empty or malformed, via `toBrandColorOrNull()`). It shows the store's
   initials, large (`Store.initials`: the first letter or digit of the name's first two words, upper case;
-  `StoreTest`), or the store's logo at 60% size when the user gave the store one (#151, [[2026-11-13-user-supplied-store-logos]]):
-  a `CardPhoto` file through the app's loader, tagged `CARD_TILE_LOGO_TAG`; a logo that can't be loaded, or whose file is
-  missing (`CardPhotos.withoutMissing`), falls back to the initials. Below them, one line
-  at the bottom left: the card's label, or the store name when there is no label, so two cards of one store can be told
-  apart. The box is a `Column`: the initials take the height the label leaves and shrink to fit it (`autoSize`), so
-  they don't run into the label at large font scales (`ListScreenTest.aTilesInitials_andLabel_doNotOverlap_…`;
-  Robolectric measures text widths as near zero, so only the vertical layout is tested). TalkBack reads the tile as
-  "store, label" (or the store alone): the box carries that content description, because TalkBack reads a merged
-  node's description in place of its text (`ListScreenTest.aTile_isReadOutAsTheStoreName_andTheLabel`). Text is black or white, whichever has the higher WCAG contrast ratio with the
-  box (`contrastingTextColor()`, `ui/BrandColor.kt`; `BrandColorTest`). Tests: `ListScreenTest.aTile_…`,
-  `aTileWithoutALabel_showsTheStoreName`.
+  `StoreTest`), or the store's logo when the user gave the store one (#151, [[2026-11-13-user-supplied-store-logos]]):
+  a `CardPhoto` file through the app's loader, tagged `CARD_TILE_LOGO_TAG`, 60% of the tile's height
+  (`TILE_LOGO_FRACTION`); a logo that can't be loaded, or whose file is missing (`CardPhotos.withoutMissing`), falls back
+  to the initials. **Only the card's own label is drawn** (#183), one line at the bottom left over the tile, as on a
+  photo; a card without a label shows no text at all, since the logo, the photo or the initials say which store it is.
+  Until #183 a tile showed the store name when there was no label. The logo and the initials are centred in the whole
+  tile, with a label or without (#183, the user's call: as a photo sits under its label). The logo's size doesn't depend
+  on the label, which is drawn over it. The initials get the height the label leaves (`CentredOverLabel`) and shrink to
+  fit it (`autoSize`); they are centred when that keeps them clear of the label, else they sit just above it (large
+  font scales on small tiles), so they never run into it or get squeezed out (`ListScreenTest.aTilesInitials_andLabel_doNotOverlap_…`;
+  Robolectric's legacy text measuring makes widths near zero and a label 44px tall, so the centring test,
+  `aTilesInitials_areCentredInTheTile_withALabelOrWithout`, uses real text measuring at 411dp). Tests:
+  `aTileWithoutALabel_showsOnlyTheInitials`, `aLogoTileWithoutALabel_showsNoText`, `aPhotoTileWithoutALabel_showsNoText`,
+  `aStoresLogo_isCentredInTheTile_atThreeFifthsOfItsHeight_withALabelOrWithout`. TalkBack reads the tile as
+  "store, label" (or the store alone), so the store is still heard though it isn't drawn: the box carries that content
+  description, because TalkBack reads a merged node's description in place of its text
+  (`ListScreenTest.aTile_isReadOutAsTheStoreName_andTheLabel`, on the merged tiles). Tests find an unlabelled card's
+  tile by that description (`tile(store)`). Text is black or white, whichever has the higher WCAG contrast ratio with the
+  box (`contrastingTextColor()`, `ui/BrandColor.kt`; `BrandColorTest`). Tests: `ListScreenTest.aTile_…`.
 - **A card with a front photo** ([[card-photos]], #10) shows it as its tile, cropped to fill the box (`CARD_TILE_PHOTO_TAG`),
-  in place of the initials or logo; the label stays at the bottom left in white, on a 60% black band
-  (`PHOTO_LABEL_SCRIM`, `ui/CardPhoto.kt`) that a 16dp gradient fades into above it. Over a white photo that is 5.7:1, past
+  in place of the initials or logo; a label stays at the bottom left in white, on a 60% black band
+  (`PHOTO_LABEL_SCRIM`, `ui/CardPhoto.kt`) that a 16dp gradient fades into above it. The band and the fade are drawn
+  only with a label: an unlabelled photo is shown whole (#183, `ListScreenTest.aPhotoTile_hasTheDarkLabelBand_onlyWithALabel`,
+  pixels). Over a white photo that is 5.7:1, past
   WCAG AA's 4.5:1 (`BrandColorTest.whiteText_onThePhotoLabelScrim_readsOnAWhitePhoto`); the first version's gradient ran
   through the text and left it at about 2.4:1 (review of #10). The brand colour shows under the photo while it loads
   (initials there would flash on every photo tile), and a photo the loader can't load, e.g. a broken file, falls back to

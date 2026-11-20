@@ -33,7 +33,8 @@ All paths are under `app/src/main/java/com/bdaniel/loyscan/` unless written in f
   without reopening the app.
 - `widget/CardWidgetTiles.kt` — the pure logic, unit-tested: `List<LoyaltyCard>.toWidgetTiles(sort)` sorts with
   the list's `sortedBy(sort)` ([[card-list]], #7) and maps each card to a `WidgetTile(cardId, color, initials, label)`,
-  the `label` being the card's label or, when it has none, the store name — the same text the list tile shows.
+  the `label` being the card's label or, when it has none, the store name. The list tile drew the same text until #183;
+  it now draws only the label, while the widget still shows the store name for an unlabelled card (the widget: #181).
   `WidgetTile.backgroundColor()` / `.textColor()` reuse [[card-detail]]'s `toBrandColorOrNull()` and
   `contrastingTextColor()`, falling back to a neutral grey for an empty or malformed brand colour.
 - `widget/CardWidgetContent` — the Glance composable (since #108, [[design-system]]): a `LazyVerticalGrid` of
