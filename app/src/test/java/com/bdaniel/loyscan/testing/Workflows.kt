@@ -28,11 +28,12 @@ fun workflowSteps(text: String, job: String): List<WorkflowStep> {
 }
 
 /**
- * The steps from index [from] on that can run without [gate] holding, each as "label: why". A step's `if:` must name
- * [gate] as one of its `&&` terms and hold no `||`, so no other term can bring the step back.
+ * The steps from index [from] on that can run without their gate holding, each as "label: why". A step's `if:` must
+ * name its gate ([gateOf]) as one of its `&&` terms and hold no `||`, so no other term can bring the step back.
  */
-fun ungatedSteps(steps: List<WorkflowStep>, from: Int, gate: String): List<String> =
+fun ungatedSteps(steps: List<WorkflowStep>, from: Int, gateOf: (WorkflowStep) -> String): List<String> =
     steps.drop(from).mapNotNull { step ->
+        val gate = gateOf(step)
         val condition = step.condition
         when {
             condition == null -> "${step.label}: no if:"
