@@ -46,7 +46,12 @@ issues, other PRs) needs my go-ahead.
      `wiki/_log.md` line, and push it. Dependabot stops rebasing a branch someone else pushed to, so finish this PR
      in this run. If the PR then shows `CONFLICTING`, rebase it yourself (step 5); otherwise wait for CI on the new
      head (`gh pr checks <n> --watch`) and merge when it is green.
-   - Then, or with nothing to update → merge: `gh pr merge <n> --rebase`.
+   - Then, or with nothing to update → check `gh pr view <n> --json mergeStateStatus`. `master` only takes a branch
+     that is up to date with it, and Dependabot no longer rebases on its own (`rebase-strategy: disabled`, #199), so
+     after any other merge the PR is `BEHIND`. If it is: comment `@dependabot rebase` (or, on a branch you pushed to,
+     rebase it yourself, step 5), wait for the new head's CI (`gh pr checks <n> --watch`; no new commit within an hour
+     means it was ignored: rebase it yourself), and go back to step 2 with the new result. Rebase only the PR you
+     are about to merge: every rebase is a new run. Up to date and green → merge: `gh pr merge <n> --rebase`.
 5. **Rebase it yourself** (reached from step 2 or 4):
    1. `gh pr checkout <n>`, then `git rebase origin/master`. The local union driver merges `wiki/_log.md` without
       stopping, but it puts `master`'s new lines above the branch's: check the top of the file, move the branch's

@@ -205,7 +205,9 @@ delete the files and check them out again (`git checkout -- <path>`), since git 
 
 ## Dependabot
 
-`.github/dependabot.yml` opens update PRs once a week, at most 5 open at a time for Gradle:
+`.github/dependabot.yml` opens update PRs once a month (weekly until #199), at most 5 open at a time for Gradle, and
+doesn't rebase them on its own (`rebase-strategy: disabled`); `DependabotConfigTest` checks both, and that Kotlin and
+KSP stay in one group:
 - **Gradle** (`gradle/libs.versions.toml`). Kotlin, the serialization plugin and KSP come as one grouped PR, because
   their versions are coupled ([[build-and-run]] → Dependencies); all `androidx.*` libraries come as another. Hilt,
   AGP and the Gradle wrapper come one PR each, though a Kotlin minor needs a Hilt release that reads its metadata
@@ -216,7 +218,14 @@ delete the files and check them out again (`git checkout -- <path>`), since git 
 
 Each PR runs the Tests workflow. A Gradle bump changes setup-gradle's cache key and the toml part of the Robolectric one, so its run
 starts cold (about 5 minutes); the Gradle distribution still comes from its own cache unless the wrapper itself is
-bumped (Caches, above).
+bumped (Caches, above). Its `master` run after the merge runs in full too (it changed a cache key's inputs), which saves
+the new caches.
+
+Until #199 Dependabot rebased its open PRs by itself: on 2026-11-23 it force-pushed all five within minutes of a merge
+to `master` (#197 at 12:44 after the 12:41 merge), and each push started a cold run. Now a PR stays as it was opened
+until `/dependency-pr` merges it, and the command rebases only that PR (`BEHIND` → `@dependabot rebase`), so a batch of
+five costs about two runs a PR (its first and the one after its rebase) rather than one per PR per merge. A month's
+updates: roughly one Gradle batch and one Actions PR.
 
 **Handling them** (decided 2026-11-09, [[2026-11-09-pull-request-workflow]]): the agent reviews and merges them with
 `/dependency-pr [PR #n]` (`.claude/commands/dependency-pr.md`). Each PR ends up in one of these:

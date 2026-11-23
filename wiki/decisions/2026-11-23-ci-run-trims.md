@@ -4,7 +4,7 @@
 
 The Tests workflow decides in its first step whether the run needs the gate ([[ci]] → What runs). A pull request that
 changes only wiki pages gets a green `test` check without Gradle, and a push to `master` of a tree a green PR run
-already tested skips the gate.
+already tested skips the gate. Dependabot opens its PRs monthly and no longer rebases them on its own.
 
 ## Context
 
@@ -65,3 +65,10 @@ records nothing, and its push runs in full and saves them.
   script (`cache_inputs`); a new cache, or a key over other files, must add them, or its `master` entry goes stale.
 - **The Actions API is in the path of a `master` push.** An outage, a rate limit or a changed answer only makes the
   push run in full.
+- **Version updates wait up to a month** (Dependabot was weekly), and arrive as one batch to work through. Security
+  updates aren't affected: Dependabot alerts are on ([[2026-11-23-public-repository]]), and its security update PRs
+  don't follow the version-update schedule (GitHub's documented behaviour, not yet seen here).
+- **An open Dependabot PR goes stale until it is merged.** With `rebase-strategy: disabled` it isn't rebased after
+  other merges, so its green check can be from an old `master`; `/dependency-pr` asks for a rebase of the PR it is
+  about to merge, since `master` requires an up-to-date branch anyway. Weekly with automatic rebases cost a cold run
+  per open PR per merge (five PRs were rebased within minutes of one merge on 2026-11-23).
