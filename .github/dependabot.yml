@@ -1,10 +1,14 @@
-# Weekly dependency update PRs. Why and how they are handled: wiki/workflows/ci.md → Dependabot
+# Monthly dependency update PRs, rebased only when /dependency-pr is about to merge one (#199). Why and how they are
+# handled: wiki/workflows/ci.md → Dependabot
 version: 2
 updates:
   - package-ecosystem: gradle
     directory: "/"
     schedule:
-      interval: weekly
+      interval: monthly
+    # Each rebase starts a CI run, a cold one for Gradle; on 2026-11-23 Dependabot rebased all its open PRs within
+    # minutes of a merge to master. /dependency-pr rebases the PR it is about to merge.
+    rebase-strategy: disabled
     open-pull-requests-limit: 5
     groups:
       # Kotlin, its serialization plugin and KSP are coupled (wiki/workflows/build-and-run.md → Dependencies):
@@ -23,7 +27,10 @@ updates:
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
-      interval: weekly
+      interval: monthly
+    # Each rebase starts a CI run, a cold one for Gradle; on 2026-11-23 Dependabot rebased all its open PRs within
+    # minutes of a merge to master. /dependency-pr rebases the PR it is about to merge.
+    rebase-strategy: disabled
     groups:
       actions:
         patterns:

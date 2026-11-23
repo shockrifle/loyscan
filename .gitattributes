@@ -5,6 +5,8 @@ wiki/_log.md merge=union
 # Workflow files: ReleaseWorkflowTest reads release.yml's text and compares it with \n-only strings, so a Windows
 # checkout (core.autocrlf) with CRLF would fail it (#170). GitHub reads them as LF anyway.
 .github/workflows/*.yml text eol=lf
+# DependabotConfigTest reads it too (it normalises CRLF, but keep it as GitHub reads it).
+.github/dependabot.yml text eol=lf
 # Play listing texts are pasted into Play Console as they are, and Play counts line breaks: keep them LF on Windows too
 # (#75). StoreListingTest reads CRLF as LF either way.
 play/listing/**/*.txt text eol=lf
