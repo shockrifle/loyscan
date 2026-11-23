@@ -1,4 +1,5 @@
-# Unit tests + Kover coverage gate, lint, and the minified release build, on every push to master and every PR into it. What runs and how to reproduce: wiki/workflows/ci.md
+# Unit tests + Kover coverage gate, lint, and the minified release build, on every push to master and every PR into it,
+# unless ci-gate.sh finds the run needs no gate (#199). What runs and how to reproduce: wiki/workflows/ci.md
 name: Tests
 
 on:
@@ -19,9 +20,23 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
+      # Two commits deep: on a pull request the checkout is GitHub's merge commit, and ci-gate.sh diffs it against its
+      # first parent, the base.
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
+
+      # Whether this run needs the gate (#199): wiki/workflows/ci.md -> What runs. Every later step runs only on
+      # run=true; the job itself always runs, so the required `test` check reports green on a skip, not "skipped".
+      - name: Decide
+        id: gate
+        run: .github/scripts/ci-gate.sh
+        env:
+          EVENT: ${{ github.event_name }}
+          REPO: ${{ github.repository }}
 
       - uses: actions/setup-java@v6
+        if: steps.gate.outputs.run == 'true'
         with:
           distribution: temurin
           java-version: 21
@@ -29,6 +44,7 @@ jobs:
       # Caches the Gradle home and validates the wrapper. Basic (MIT, actions/cache) caching instead of the default
       # proprietary "enhanced" provider, which is only a free preview for private repos.
       - uses: gradle/actions/setup-gradle@v6
+        if: steps.gate.outputs.run == 'true'
         with:
           cache-provider: basic
 
@@ -36,6 +52,7 @@ jobs:
       # run that downloads a new jar (a test pins a new SDK) saves a new entry; restore takes the newest one for this
       # toml (#94): wiki/workflows/ci.md -> Caches. `key` never matches exactly: saved keys always have the suffix.
       - name: Restore Robolectric jars
+        if: steps.gate.outputs.run == 'true'
         id: robolectric-restore
         uses: actions/cache/restore@v6
         with:
@@ -44,31 +61,36 @@ jobs:
           restore-keys: robolectric-jars-${{ hashFiles('gradle/libs.versions.toml') }}-
 
       - name: Robolectric jars before the tests
+        if: steps.gate.outputs.run == 'true'
         run: .github/scripts/robolectric-jars.sh ~/.m2/repository/org/robolectric robolectric-jars-${{ hashFiles('gradle/libs.versions.toml') }}-
 
       # The Gradle distribution, cached on its own key. setup-gradle's basic cache key hashes every Gradle file, so a
       # PR that bumps a dependency misses it, and services.gradle.org timed out or answered 504 on such runs (#116).
       # This key changes only with the wrapper version, and PR runs restore entries saved on master.
       - uses: actions/cache@v6
+        if: steps.gate.outputs.run == 'true'
         with:
           path: ~/.gradle/wrapper/dists
           key: gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
 
       # Download the distribution (on a cache miss) with retries: the wrapper itself tries once.
       - name: Gradle distribution
+        if: steps.gate.outputs.run == 'true'
         run: for attempt in 1 2 3; do ./gradlew --version && exit 0; sleep 30; done; exit 1
 
       - name: Tests and coverage gate
+        if: steps.gate.outputs.run == 'true'
         run: ./gradlew --continue testDebugUnitTest koverVerify koverHtmlReportDebug koverXmlReportDebug
 
       # A jar the tests downloaded shows up here and not in the list before the tests. Saved only when the set changed,
       # and only after green tests, so a jar cut off by a failing run is never cached.
       - name: Robolectric jars after the tests
+        if: steps.gate.outputs.run == 'true'
         id: robolectric-jars
         run: .github/scripts/robolectric-jars.sh ~/.m2/repository/org/robolectric robolectric-jars-${{ hashFiles('gradle/libs.versions.toml') }}-
 
       - name: Save Robolectric jars
-        if: steps.robolectric-jars.outputs.count != '0' && steps.robolectric-jars.outputs.key != steps.robolectric-restore.outputs.cache-matched-key
+        if: steps.robolectric-jars.outputs.count != '0' && steps.robolectric-jars.outputs.key != steps.robolectric-restore.outputs.cache-matched-key && steps.gate.outputs.run == 'true'
         uses: actions/cache/save@v6
         with:
           path: ~/.m2/repository/org/robolectric
@@ -76,27 +98,37 @@ jobs:
 
       # Lint errors fail the run; warnings don't (#126). One variant: release and smoke lint the same sources.
       - name: Lint
+        if: steps.gate.outputs.run == 'true'
         run: ./gradlew lintDebug
 
       # The minified release (R8, #73) must build, and the on-device smoke test that runs against it must compile.
       # The smoke test itself runs on a device, by hand: wiki/workflows/build-and-run.md
       - name: Minified release build
+        if: steps.gate.outputs.run == 'true'
         run: ./gradlew assembleRelease compileSmokeAndroidTestKotlin
 
       # The release version scheme, through what Gradle resolves (#74): wiki/workflows/ci.md
       - name: Release build checks
+        if: steps.gate.outputs.run == 'true'
         run: .github/scripts/check-release-build.sh
 
       # The release-signing wizard, run with piped answers in a sandbox HOME (#74): wiki/workflows/ci.md
       - name: Release wizard checks
+        if: steps.gate.outputs.run == 'true'
         run: .github/scripts/check-release-wizard.sh
+
+      # What ci-gate.sh decides, case by case in throwaway repos (#199): wiki/workflows/ci.md
+      - name: CI gate checks
+        if: steps.gate.outputs.run == 'true'
+        run: .github/scripts/check-ci-gate.sh
 
       # The CI and release scripts, and the wizards (#74): shellcheck is preinstalled on ubuntu-latest.
       - name: Shellcheck
+        if: steps.gate.outputs.run == 'true'
         run: shellcheck .github/scripts/*.sh scripts/*.sh .claude/skills/wizard/template.sh
 
       - name: Upload coverage report
-        if: always()
+        if: always() && steps.gate.outputs.run == 'true'
         uses: actions/upload-artifact@v7
         with:
           name: coverage-report
@@ -107,7 +139,7 @@ jobs:
           retention-days: 14
 
       - name: Upload test reports
-        if: failure()
+        if: failure() && steps.gate.outputs.run == 'true'
         uses: actions/upload-artifact@v7
         with:
           name: test-reports

@@ -43,6 +43,7 @@ inferred whys as inferred.
 - [[2026-11-17-release-signing-on-ci]] — Play App Signing; the upload key (PKCS12, one password) is read from Gradle properties or `LOYSCAN_UPLOAD_*` variables, never a repo file; half set up stops the build; CI signs on a tag (#74)
 - [[2026-11-20-barcode-type-per-card]] — (proposed) a typed number's barcode type is saved on every card and chosen on the card form; another type than the rule's turns the rule off; custom-store forms stop asking (#187)
 - [[2026-11-23-public-repository]] — the repo goes public under GPL-3.0-or-later after a sweep; author email accepted, old Actions runs deleted (#200)
+- [[2026-11-23-ci-run-trims]] — the Tests workflow's first step decides whether the run needs the gate; a wiki-only PR is green without Gradle (#199)
 - [[2026-11-20-other-card-scan-first]] — (proposed) "Other card": scan → new-store form with a logo slot, scan and duplicate-name suggestions → card form, each step replacing the last (#188)
 - [[2026-11-18-launcher-icon]] — launcher icon: two fanned cards, the front card's barcode a heart, on plum; chosen against 154 Play icons, away from Google Wallet's and the Hearts card games' look (#75)
 
