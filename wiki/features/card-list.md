@@ -118,7 +118,7 @@ tiles, one per row in `loyalty_cards`, live-updating from Room. Sort, search and
   the store names and labels are the user's data and aren't translated ([[add-a-string]]). Tests:
   `ListScreenTest.inHungarian_everyTextOnTheList_isTranslated`.
 - The Info icon in the top bar, "About", → `directions.toAbout()` → [[about]] (#150).
-- The Settings icon in the top bar is a no-op (`ListScreen.kt:151`, `/* TODO */`).
+- The Settings icon in the top bar is a no-op (`ListScreen.kt`, `ListScreen`'s top bar, `/* TODO */`).
 - The "Add card" floating button → `directions.toAddCard()` → the store picker of [[add-card]]. The grid has 88dp of bottom content
   padding (`ADD_BUTTON_CLEARANCE`) so the button never covers the last row (`ListScreenTest.theLastTile_isNotCoveredByTheAddButtonWhenScrolledToTheEnd`).
 
