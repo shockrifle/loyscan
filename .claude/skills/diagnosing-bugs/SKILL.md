@@ -14,7 +14,7 @@ Before exploring, read the wiki pages for the area (from `wiki/index.md`), `wiki
 
 ## Redact
 
-This skill has you show commands, outputs and captured artifacts. The repo is treated as public (`wiki/CLAUDE.md`,
+This skill has you show commands, outputs and captured artifacts. The repo is public (`wiki/CLAUDE.md`,
 "Public-safe"), and LoyScan's data is personal: **a real card number, barcode picture, card photo or store the
 user shopped at is personal data.** Write `<REDACTED>` in its place in everything you show, commit or file. A
 fixture built from a real card uses invented digits of the same shape (same length, same check digit rule,

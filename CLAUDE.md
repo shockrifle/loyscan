@@ -45,4 +45,5 @@ type-safe route/Directions). Use it as the template. Each layer there starts wit
   `git push` / `git pull` work.
 - Work is tracked in GitHub Issues + milestones (`gh issue list`); reference issues in commits (`Fixes #N`).
   Issues hold what/status, the wiki holds why/how — see "GitHub Issues vs this wiki" in `wiki/CLAUDE.md`.
-  The repo is private but treated as public: nothing personal or third-party-proprietary in issues/commits.
+  The repo is public (since 2026-11-23, #200): nothing personal or third-party-proprietary in issues/commits;
+  `PublicSafeRepoTest` checks the tracked files. `master` is protected: a merge needs a green `test` check.

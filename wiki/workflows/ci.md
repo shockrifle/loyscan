@@ -3,6 +3,8 @@
 Every pull request into `master`, and every push to it (a merged PR), runs the unit tests, the Kover coverage
 gate and lint on GitHub Actions. A PR is merged only when its run is green ([[code-review]]). A red run on `master` means
 `master` is broken, so fix it before merging anything else. Workflow: `.github/workflows/tests.yml` (added for #29).
+GitHub enforces the gate: `master` is protected and requires the job's check, `test` (the job name, not the workflow
+name `Tests`), on a branch up to date with `master`, for admins too ([[2026-11-23-public-repository]]).
 
 ## What runs
 
@@ -82,7 +84,8 @@ Caches:
   **Save Robolectric jars** stores the new set under its own key; the next run restores it. When the two lists match,
   nothing was downloaded and the save step is skipped. A toml change (a Robolectric bump) starts this cache cold.
 
-**Runtime** (job time, measured 2026-11-12; the 2026-10-12 figures of 2 and 5 minutes predate lint and the minified
+**Runtime** (the runs cited here and elsewhere in the wiki were deleted on 2026-11-23, before the repo went public;
+their IDs remain as records. Job time, measured 2026-11-12; the 2026-10-12 figures of 2 and 5 minutes predate lint and the minified
 build): about **10–14 minutes with a warm Gradle cache** (587–851 s over six runs on 2026-11-11 and 2026-11-12, e.g.
 43191093845, 43189465936, 43051061277). The unit tests and coverage gate take 4–5½ minutes, lint 1½–2¼ and the minified
 release build 3½–6. **Cold**, when setup-gradle's cache key changes (a dependency bump), no run with the lint step has
@@ -121,9 +124,12 @@ delete the files and check them out again (`git checkout -- <path>`), since git 
 ## Choices and constraints
 
 - **No emulator job.** Every test runs on the JVM via Robolectric ([[2026-10-12-tdd-and-coverage]]), except the
-  minified build's smoke test, which runs by hand on a device ([[2026-11-05-r8-smoke-test-on-a-device]]). The repo is private, so Actions minutes count against a quota, and an emulator
-  job would cost several times this job. Add one only for a test that needs a real device (e.g. camera, #4), and
+  minified build's smoke test, which runs by hand on a device ([[2026-11-05-r8-smoke-test-on-a-device]]). An emulator job would take several times this
+  job's time. (Until 2026-11-23 the repo was private and Actions minutes were capped; they ran out in November 2026,
+  #199. Public repos' minutes are free.) Add one only for a test that needs a real device (e.g. camera, #4), and
   run it only when that code changes.
+- **Pull requests from forks wait for approval.** A workflow run on an outside contributor's PR starts only after a
+  maintainer approves it (`approval_policy: all_external_contributors`, set 2026-11-23). Fork PRs get no secrets either way.
 - **Pull requests into `master`, and pushes to it.** Every change lands through a PR
   ([[2026-11-09-pull-request-workflow]]), and the PR's green run is a merge gate. The run on `master` after a merge
   checks the rebased commits on the `master` they landed on. Until 2026-11-09 work was pushed straight to `master`,
