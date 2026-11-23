@@ -31,4 +31,10 @@ class StoreTest {
     fun initials_ofABlankName_areEmpty() {
         assertThat(aStore(name = " ").initials).isEmpty()
     }
+
+    @Test
+    fun storeInitials_ofANameAsTyped_areAStoresInitials() { // #192: the custom store form's preview, before a save
+        assertThat(storeInitials("Big Deal")).isEqualTo("BD")
+        assertThat(storeInitials("")).isEmpty()
+    }
 }
