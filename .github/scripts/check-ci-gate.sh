@@ -112,19 +112,19 @@ no_api_calls() { [ ! -s "$FAKE_GH/calls" ] || { cat "$FAKE_GH/calls"; fail "$1: 
 
 # ── Pull requests: which run the gate ───────────────────────────────────────────────────────────────────────────────
 repo wiki/index.md wiki/new-page.md; decide pull_request
-expect "a PR changing only wiki pages skips the gate" run=false marker=false
+expect "a PR changing only wiki pages skips the gate, but runs the public-safe check" run=false marker=false setup=true wiki=true
 repo rm:wiki/index.md; decide pull_request
-expect "a PR deleting a wiki page skips the gate" run=false marker=false
+expect "a PR deleting a wiki page skips the gate, but runs the public-safe check" run=false marker=false setup=true wiki=true
 repo wiki/index.md README.md; decide pull_request
-expect "a PR changing a wiki page and another file runs the gate" run=true
+expect "a PR changing a wiki page and another file runs the gate" run=true setup=true wiki=false
 repo wiki/integrations/google-play.md; decide pull_request
-expect "a PR changing a wiki page the tests read runs the gate" run=true
+expect "a PR changing a wiki page the tests read runs the gate" run=true setup=true wiki=false
 repo mv:app/src/main/A.kt:wiki/A.kt; decide pull_request
-expect "a PR moving a file into wiki/ runs the gate (the old path counts too)" run=true
+expect "a PR moving a file into wiki/ runs the gate (the old path counts too)" run=true setup=true wiki=false
 repo; decide pull_request
-expect "a PR with no changes runs the gate" run=true marker=false
+expect "a PR with no changes runs the gate" run=true marker=false setup=true wiki=false
 repo app/src/main/A.kt; git checkout -q --orphan lone && git commit -qm "a commit with no parent"; decide pull_request
-expect "a PR run that can't see its base runs the gate" run=true marker=false
+expect "a PR run that can't see its base runs the gate" run=true marker=false setup=true wiki=false
 
 # ── Pull requests: which may record their tree as tested (marker) ───────────────────────────────────────────────────
 repo app/src/main/A.kt README.md .github/workflows/release.yml; decide pull_request
@@ -143,7 +143,7 @@ no_api_calls "a pull request"
 # ── A manual run ────────────────────────────────────────────────────────────────────────────────────────────────────
 repo wiki/index.md; reset_api; artifacts "$(artifact 101)"; run_answer 101 pull_request completed success
 decide workflow_dispatch
-expect "a manual run runs the gate, even on a wiki-only change or a tested tree" run=true marker=false
+expect "a manual run runs the gate, even on a wiki-only change or a tested tree" run=true marker=false setup=true wiki=false
 no_api_calls "a manual run"
 
 # ── The tree is written for the marker's name ───────────────────────────────────────────────────────────────────────
@@ -162,12 +162,12 @@ fi
 
 repo app/src/main/A.kt; reset_api; artifacts "$(artifact 101)"; run_answer 101 pull_request completed success
 decide push
-expect "a push whose tree a green PR run tested skips the gate" run=false marker=false
+expect "a push whose tree a green PR run tested skips the gate" run=false marker=false setup=false wiki=false
 grep -q "^api repos/owner/loyscan/actions/artifacts?name=tested-tree-$(git rev-parse 'HEAD^{tree}')&per_page=100$"   "$FAKE_GH/calls" || { cat "$FAKE_GH/calls"; fail "the lookup didn't ask for this tree's marker"; }
 pass "the lookup asks for the marker named after HEAD's tree"
 
 reset_api; decide push
-expect "a push of a tree no PR run recorded runs the gate" run=true
+expect "a push of a tree no PR run recorded runs the gate" run=true setup=true wiki=false
 
 reset_api; artifacts "$(artifact 101 true)"; run_answer 101 pull_request completed success; decide push
 expect "a push whose marker has expired runs the gate" run=true
@@ -202,7 +202,7 @@ run_answer 102 pull_request completed success; decide push
 expect "a push with a failed and a green PR run on its tree skips the gate" run=false
 
 reset_api; artifacts "$(artifact 101)"; run_answer 101 pull_request completed success; touch "$FAKE_GH/down"; decide push
-expect "a push runs the gate when the API fails" run=true
+expect "a push runs the gate when the API fails" run=true setup=true wiki=false
 
 reset_api; printf '<html>rate limited</html>
 ' >"$FAKE_GH/artifacts.json"; decide push

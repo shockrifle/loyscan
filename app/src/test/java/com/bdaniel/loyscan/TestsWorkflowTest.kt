@@ -1,5 +1,6 @@
 package com.bdaniel.loyscan
 
+import com.bdaniel.loyscan.testing.WorkflowStep
 import com.bdaniel.loyscan.testing.jobConditions
 import com.bdaniel.loyscan.testing.ungatedSteps
 import com.bdaniel.loyscan.testing.workflowSteps
@@ -10,7 +11,8 @@ import org.junit.Test
 
 /**
  * The Tests workflow decides first whether this run needs the gate (#199): `.github/scripts/ci-gate.sh` writes
- * `run=true|false`, and every later step runs only when it is true. The `test` job itself always runs, so the required
+ * `run=true|false`, and every later step runs only when it is true, except the JDK and Gradle setup (`setup`, also for
+ * a wiki-only PR) and that PR's one test (`wiki`: `PublicSafeRepoTest`, which reads every tracked file). The `test` job itself always runs, so the required
  * check reports green on a skip instead of "skipped". What the script decides is checked by
  * `.github/scripts/check-ci-gate.sh`; this test checks the workflow wires it up. wiki/workflows/ci.md
  */
@@ -62,7 +64,7 @@ class TestsWorkflowTest {
         assertThat(snippetSteps.map { it.label })
             .containsExactly("actions/checkout@v7", "Decide", "Gated", "Gated with another term", "No condition", "Or around it", "Another output")
             .inOrder()
-        assertThat(ungatedSteps(snippetSteps, from = 2, gate = GATE)).containsExactly(
+        assertThat(ungatedSteps(snippetSteps, from = 2) { GATE }).containsExactly(
             "No condition: no if:",
             "Or around it: its if: has ||",
             "Another output: its if: doesn't require $GATE",
@@ -96,10 +98,27 @@ class TestsWorkflowTest {
     }
 
     @Test
-    fun everyStepAfterTheDecision_runsOnlyWhenTheGateRuns() {
-        assertWithMessage("steps of tests.yml that can run when ci-gate.sh says run=false")
-            .that(ungatedSteps(steps, from = 2, gate = GATE))
+    fun everyStepAfterTheDecision_runsOnlyWhenItsGateHolds() {
+        val gateOf = { step: WorkflowStep ->
+            when (step.label) {
+                in SETUP_STEPS -> SETUP
+                WIKI_STEP -> WIKI
+                else -> GATE
+            }
+        }
+
+        assertWithMessage("steps of tests.yml that can run when ci-gate.sh says they shouldn't")
+            .that(ungatedSteps(steps, from = 2, gateOf))
             .isEmpty()
+        assertThat(steps.map { it.label }).containsAtLeastElementsIn(SETUP_STEPS + WIKI_STEP)
+    }
+
+    @Test
+    fun aWikiOnlyPullRequest_runsOnlyThePublicSafeCheck() {
+        val wiki = steps.single { it.label == WIKI_STEP }
+
+        assertThat(wiki.text).contains("\n        run: ./gradlew testDebugUnitTest --tests 'com.bdaniel.loyscan.PublicSafeRepoTest'\n")
+        assertThat(steps.filter { WIKI in it.condition.orEmpty() }.map { it.label }).containsExactly(WIKI_STEP)
     }
 
     @Test
@@ -155,5 +174,15 @@ class TestsWorkflowTest {
 
     private companion object {
         const val GATE = "steps.gate.outputs.run == 'true'"
+        const val SETUP = "steps.gate.outputs.setup == 'true'"
+        const val WIKI = "steps.gate.outputs.wiki == 'true'"
+        const val WIKI_STEP = "Public-safe check (wiki-only PR)"
+        val SETUP_STEPS = listOf(
+            "actions/setup-java@v6",
+            "gradle/actions/setup-gradle@v6",
+            "actions/cache@v6",
+            "Gradle distribution",
+            "Upload test reports",
+        )
     }
 }

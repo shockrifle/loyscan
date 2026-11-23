@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-23 · review of PR #202: a wiki-only PR runs PublicSafeRepoTest alone instead of no Gradle · decisions/2026-11-23-ci-run-trims, workflows/ci, workflows/tdd · owner decision on the review's major finding
 - 2026-11-23 · Dependabot monthly, no automatic rebases; /dependency-pr rebases a BEHIND PR before merging · workflows/ci (Dependabot), decisions/2026-11-23-ci-run-trims, workflows/tdd · #199 commit 3
 - 2026-11-23 · a push to master skips the gate when a green PR run recorded the same tree · decisions/2026-11-23-ci-run-trims, workflows/ci (What runs, minutes per change), scripts/_index · #199 commit 2
 - 2026-11-23 · Tests workflow decides first whether the run needs the gate; a wiki-only PR skips Gradle · decisions/2026-11-23-ci-run-trims (new), decisions/_index, workflows/ci, workflows/tdd, workflows/_index, scripts/_index · #199 commit 1

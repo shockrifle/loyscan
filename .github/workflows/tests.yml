@@ -32,7 +32,8 @@ jobs:
           fetch-depth: 2
 
       # Whether this run needs the gate (#199): wiki/workflows/ci.md -> What runs. Every later step runs only on
-      # run=true; the job itself always runs, so the required `test` check reports green on a skip, not "skipped".
+      # run=true, except the JDK and Gradle setup (setup=true) and a wiki-only PR's public-safe check (wiki=true); the
+      # job itself always runs, so the required `test` check reports green on a skip, not "skipped".
       - name: Decide
         id: gate
         run: .github/scripts/ci-gate.sh
@@ -42,7 +43,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
 
       - uses: actions/setup-java@v6
-        if: steps.gate.outputs.run == 'true'
+        if: steps.gate.outputs.setup == 'true'
         with:
           distribution: temurin
           java-version: 21
@@ -50,7 +51,7 @@ jobs:
       # Caches the Gradle home and validates the wrapper. Basic (MIT, actions/cache) caching instead of the default
       # proprietary "enhanced" provider, which is only a free preview for private repos.
       - uses: gradle/actions/setup-gradle@v6
-        if: steps.gate.outputs.run == 'true'
+        if: steps.gate.outputs.setup == 'true'
         with:
           cache-provider: basic
 
@@ -74,15 +75,21 @@ jobs:
       # PR that bumps a dependency misses it, and services.gradle.org timed out or answered 504 on such runs (#116).
       # This key changes only with the wrapper version, and PR runs restore entries saved on master.
       - uses: actions/cache@v6
-        if: steps.gate.outputs.run == 'true'
+        if: steps.gate.outputs.setup == 'true'
         with:
           path: ~/.gradle/wrapper/dists
           key: gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
 
       # Download the distribution (on a cache miss) with retries: the wrapper itself tries once.
       - name: Gradle distribution
-        if: steps.gate.outputs.run == 'true'
+        if: steps.gate.outputs.setup == 'true'
         run: for attempt in 1 2 3; do ./gradlew --version && exit 0; sleep 30; done; exit 1
+
+      # A wiki-only PR skips the gate, but PublicSafeRepoTest reads every tracked file, wiki pages too: the public repo
+      # must not take a personal path or email address from a wiki page either (#200, #199).
+      - name: Public-safe check (wiki-only PR)
+        if: steps.gate.outputs.wiki == 'true'
+        run: ./gradlew testDebugUnitTest --tests 'com.bdaniel.loyscan.PublicSafeRepoTest'
 
       - name: Tests and coverage gate
         if: steps.gate.outputs.run == 'true'
@@ -160,7 +167,7 @@ jobs:
           retention-days: 14
 
       - name: Upload test reports
-        if: failure() && steps.gate.outputs.run == 'true'
+        if: failure() && steps.gate.outputs.setup == 'true'
         uses: actions/upload-artifact@v7
         with:
           name: test-reports

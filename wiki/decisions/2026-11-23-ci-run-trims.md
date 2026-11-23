@@ -3,7 +3,7 @@
 **Status:** Active · **Date:** 2026-11-23 · **Issue:** #199
 
 The Tests workflow decides in its first step whether the run needs the gate ([[ci]] → What runs). A pull request that
-changes only wiki pages gets a green `test` check without Gradle, and a push to `master` of a tree a green PR run
+changes only wiki pages runs `PublicSafeRepoTest` alone instead of the gate, and a push to `master` of a tree a green PR run
 already tested skips the gate. Dependabot opens its PRs monthly and no longer rebases them on its own.
 
 ## Context
@@ -47,11 +47,13 @@ records nothing, and its push runs in full and saves them.
 
 ## What each trim gives up
 
-- **A wiki-only PR merges unchecked by the tests that read the wiki.** `PublicSafeRepoTest` reads every tracked file,
-  wiki pages included, so a wiki PR with a personal path or email address merges green and turns `master` red on its
-  push run, which still runs the gate. `wiki/integrations/google-play.md` is exempt (a change to it runs the gate),
-  since `StoreListingTest` and `PrivacyPolicyTest` check it names the tests behind Play's claims. A new test that reads
-  a wiki page must add it to `tested_wiki` in `ci-gate.sh`.
+- **A wiki-only PR runs one test, not the gate.** The issue asked for no Gradle at all; the PR review (#202) found that
+  would let a wiki page with a personal path or email address merge green into the public repo, since
+  `PublicSafeRepoTest` (#200) reads every tracked file. The owner chose to run that test alone (2026-11-23): its rules
+  stay in one place, at the cost of setting up Gradle and compiling the tests (a few minutes, against 13–17 for the
+  gate). The text is public as soon as the branch is pushed either way; the check keeps it off `master`.
+  `wiki/integrations/google-play.md` runs the full gate, since `StoreListingTest` and `PrivacyPolicyTest` check it
+  names the tests behind Play's claims. A new test that reads a wiki page must add it to `tested_wiki` in `ci-gate.sh`.
 - **`master` no longer checks the rebased commits one more time.** A skipped push trusts the PR run: the same tree on
   the same workflow. What it gives up: a check that depends on something besides the tree (a flaky test that would
   fail the second time, a dependency re-resolved from a moving version, the runner image changing in between), and
