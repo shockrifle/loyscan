@@ -20,7 +20,8 @@ Actions minutes had run out. The repo went public the same day and its minutes a
   wiki-only PR can't merge.
 - **A job-level `if:`.** A skipped job counts for branch protection but shows as "skipped", not green, and needs a
   separate job to look at the diff first.
-- **A first step that decides, and an `if:` on every later step.** The job runs and goes green in about half a minute.
+- **A first step that decides, and an `if:` on every later step.** The job runs, and a skip goes green in about half a
+  minute.
 
 For knowing on `master` that a tree was already tested:
 - **The PR head's tree** (find the merged PR through the API, compare its head's tree). A PR run tests GitHub's merge
