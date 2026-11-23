@@ -46,6 +46,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.bdaniel.loyscan.ui.LogoPreview
 import com.bdaniel.loyscan.ui.theme.Spacing
 import com.bdaniel.loyscan.ui.barcodeFormatName
 import com.bdaniel.loyscan.ui.theme.icons.Icons

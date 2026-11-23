@@ -1,13 +1,22 @@
 package com.bdaniel.loyscan
 
+import androidx.navigation.testing.invoke
+import com.bdaniel.loyscan.ui.STORE_LOGO_PREVIEW_TAG
 import android.content.Context
 import android.net.Uri
 import androidx.compose.ui.geometry.Offset
+import com.bdaniel.loyscan.ui.CARD_TILE_LOGO_TAG
+import androidx.compose.ui.test.hasContentDescriptionExactly
+import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.graphics.toPixelMap
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
-import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -17,7 +26,6 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
 import androidx.lifecycle.SavedStateHandle
-import androidx.navigation.testing.invoke
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.bdaniel.loyscan.di.CardPhotosModule
@@ -65,15 +73,12 @@ class StoreLogoScreenTest {
     private val searches = mutableListOf<String>()
     private var backs = 0
 
-    /** The store's name in the preview, not elsewhere on the screen. */
-    private val previewName = hasText("Shop") and hasAnyAncestor(hasTestTag(STORE_LOGO_PREVIEW_TAG))
-
     @Test
-    fun withoutALogo_showsTheStoresNameOnItsColour_andOffersNoRemove() {
+    fun withoutALogo_showsTheStoresInitialsOnItsColour_notItsName_andOffersNoRemove() { // #192: as its unlabelled tile
         setScreen()
 
-        composeRule.onNode(previewName).assertIsDisplayed()
-        composeRule.onNodeWithTag(STORE_LOGO_PREVIEW_IMAGE_TAG, useUnmergedTree = true).assertDoesNotExist()
+        assertThat(textsInThePreview()).containsExactly("S")
+        composeRule.onNode(previewLogo, useUnmergedTree = true).assertDoesNotExist()
         composeRule.onNodeWithText("Choose image").assertIsDisplayed()
         composeRule.onNodeWithText("Find a logo online").assertIsDisplayed()
         composeRule.onNodeWithText("Remove logo").assertDoesNotExist()
@@ -81,13 +86,13 @@ class StoreLogoScreenTest {
     }
 
     @Test
-    fun withALogo_showsIt_inPlaceOfTheName_andOffersRemove() {
+    fun withALogo_showsIt_andNoText_andOffersRemove() { // #192: as its unlabelled tile
         givenALogo()
         setScreen()
         waitForAnImageToLoad()
 
-        composeRule.onNodeWithTag(STORE_LOGO_PREVIEW_IMAGE_TAG, useUnmergedTree = true).assertIsDisplayed()
-        composeRule.onNode(previewName).assertDoesNotExist()
+        composeRule.onNode(previewLogo, useUnmergedTree = true).assertIsDisplayed()
+        assertThat(textsInThePreview()).isEmpty()
         composeRule.onNodeWithText("Remove logo").performScrollTo().assertIsDisplayed()
     }
 
@@ -242,14 +247,14 @@ class StoreLogoScreenTest {
     }
 
     @Test
-    fun removeLogo_bringsBackTheName() {
+    fun removeLogo_bringsBackTheInitials() {
         givenALogo()
         setScreen()
 
         composeRule.onNodeWithText("Remove logo").performScrollTo().performClick()
 
         assertThat(stores.stores.value.single().logo).isNull()
-        composeRule.onNode(previewName).assertIsDisplayed()
+        assertThat(textsInThePreview()).containsExactly("S")
         composeRule.onNodeWithText("Remove logo").assertDoesNotExist()
     }
 
@@ -328,6 +333,65 @@ class StoreLogoScreenTest {
 
         composeRule.assertTextFitsAndDoesNotOverlap()
     }
+
+    @Test
+    fun aLogoThatCantBeLoaded_showsTheInitials() { // #192, as a tile: not an empty brand-colour box
+        runBlocking { stores.setLogo("shop", "broken") } // no file: the loader fails
+        photos.stored += "broken"
+        setScreen()
+
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) { ShadowLooper.idleMainLooper(); textsInThePreview() == listOf("S") }
+        composeRule.onNode(previewLogo, useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun theLogo_isCentredInThePreview_atThreeFifthsOfItsHeight() { // #151's 60%, as on a tile (#192)
+        givenALogo()
+        setScreen()
+        waitForAnImageToLoad()
+
+        val preview = composeRule.onNodeWithTag(STORE_LOGO_PREVIEW_TAG).fetchSemanticsNode().boundsInRoot
+        val logo = composeRule.onNode(previewLogo, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        assertThat(logo.center.y).isWithin(1f).of(preview.center.y)
+        assertThat(logo.center.x).isWithin(1f).of(preview.center.x)
+        assertThat(logo.height).isWithin(1f).of(preview.height * 0.6f)
+    }
+
+    @Test
+    fun thePreview_isReadOutAsTheStoreName() { // #192: as a tile is
+        setScreen()
+
+        composeRule.onNodeWithTag(STORE_LOGO_PREVIEW_TAG).assert(hasContentDescriptionExactly("Shop"))
+    }
+
+    @Test
+    fun thePreviewWithALogo_isReadOutAsTheStoreName() { // #192: as a tile is, not as "Logo of Shop"
+        givenALogo()
+        setScreen()
+        waitForAnImageToLoad()
+
+        composeRule.onNode(previewLogo, useUnmergedTree = true).assertExists()
+        composeRule.onNodeWithTag(STORE_LOGO_PREVIEW_TAG).assert(hasContentDescriptionExactly("Shop"))
+    }
+
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE) // real drawing, for the pixels
+    fun thePreviewsCorners_areRounded() { // #192: the face draws the colour; the preview still clips it to a card
+        setScreen()
+
+        val preview = composeRule.onNodeWithTag(STORE_LOGO_PREVIEW_TAG).captureToImage().toPixelMap()
+        val brand = Color(0xFF336699)
+        assertThat(preview[preview.width / 2, preview.height / 2 + preview.height / 4]).isEqualTo(brand) // below the initials
+        assertThat(preview[0, 0]).isNotEqualTo(brand)
+    }
+
+    /** The texts drawn in the preview. Its node merges them, so they are read from the unmerged tree. */
+    private fun textsInThePreview() =
+        composeRule.onAllNodes(hasAnyAncestor(hasTestTag(STORE_LOGO_PREVIEW_TAG)) and SemanticsMatcher.keyIsDefined(SemanticsProperties.Text), useUnmergedTree = true)
+            .fetchSemanticsNodes().flatMap { node -> node.config[SemanticsProperties.Text].map { it.text } }
+
+    /** The store's logo in the preview, drawn as a tile draws it. */
+    private val previewLogo = hasTestTag(CARD_TILE_LOGO_TAG) and hasAnyAncestor(hasTestTag(STORE_LOGO_PREVIEW_TAG))
 
     private fun givenALogo() {
         File(context.filesDir, CardPhotosModule.PHOTO_DIRECTORY).resolve("logo").writeOnePixelPng()

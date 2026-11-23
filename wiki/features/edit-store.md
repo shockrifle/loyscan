@@ -42,7 +42,8 @@ Catalogue stores have no Edit button and can't be changed or deleted. Issue [#53
   (`Deletion.kt`). This also removes a store abandoned before its first card ([[2026-10-22-custom-stores]]).
 - The deleted cards' photo files are deleted too ([[card-photos]]), and the store's logo file.
 - **Logo** (#151, [[store-logo]]): the edit form, once the store has loaded, has a "Logo" section: the store's tile
-  preview (`LogoPreview`, shared with the logo screen) drawn with the form's name and colour as typed, the store's
+  preview (`LogoPreview` in `ui/CardTileFace.kt`, shared with the logo screen, #162) drawn with the form's name and
+  colour as typed (the initials of the name, as a tile, `storeInitials`, #192), the store's
   logo on it (`CustomStoreState.logo`; a logo whose file is missing is none, checked once per store-list update), and
   **Change logo**, which opens the store's logo screen over the form (`CustomStoreDirections.toStoreLogo`); Back
   returns to the form with its unsaved edits, and a logo set there shows at once. Save leaves the logo as it is
