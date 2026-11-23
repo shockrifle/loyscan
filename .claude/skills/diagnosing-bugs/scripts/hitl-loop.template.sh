@@ -13,7 +13,7 @@
 # At the end, captured values are printed as KEY=VALUE for the agent to parse.
 #
 # `capture` prints its value back to the terminal, where the agent reads it, and
-# the repo is treated as public: ask for observations ("did the digits match?",
+# the repo is public: ask for observations ("did the digits match?",
 # "which barcode format did it show?"), never for a real card number.
 #
 # Adapted from Matt Pocock's skills (https://github.com/mattpocock/skills, MIT licence;

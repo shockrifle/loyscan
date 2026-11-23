@@ -56,7 +56,8 @@ still leave doubt.
   force-push or deletion; no required review ([[code-review]], [[ci]]).
 - Secret scanning with push protection, and Dependabot alerts, are on.
 - Workflows on PRs from outside contributors wait for a maintainer's approval ([[ci]]).
-- New commits use the GitHub noreply address as the author email.
+- New commits use the GitHub noreply address as the author email: the owner's clone sets it as its repo-local
+  `user.email` ([[build-and-run]]).
 
 ## Consequences
 

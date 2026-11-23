@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-23 · review of PR #201 round 3: commit email set to the noreply address in the owner's clone, and documented · workflows/build-and-run, decisions/2026-11-23-public-repository · review of PR #201
 - 2026-11-23 · repo switched to public; master protected, secret scanning, Dependabot alerts, fork-PR approval · decisions/2026-11-23-public-repository (Active, what the switch changed), CLAUDE (Public-safe), /CLAUDE.md, workflows/ci, workflows/code-review, workflows/release, decisions/2026-11-09-pull-request-workflow, decisions/2026-11-05-r8-smoke-test-on-a-device · #200
 - 2026-11-23 · review of PR #201: the run deletion and the switch worded as pending; WSL paths checked too; credit lines in wizard headers · decisions/2026-11-23-public-repository, workflows/agent-skills · review of PR #201
 - 2026-11-23 · repo made public: sweep, GPL-3.0-or-later, PublicSafeRepoTest · decisions/2026-11-23-public-repository (new), workflows/public-safe-sweep (new), workflows/tdd (PublicSafeRepoTest row), decisions/_index, workflows/_index, index · #200
