@@ -15,6 +15,11 @@ concurrency:
   group: ${{ github.event_name == 'pull_request' && format('tests-{0}', github.ref) || format('tests-run-{0}', github.run_id) }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+# The Decide step reads the Actions API (which runs recorded which tree); nothing in the job writes through the token.
+permissions:
+  actions: read
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -34,6 +39,7 @@ jobs:
         env:
           EVENT: ${{ github.event_name }}
           REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
 
       - uses: actions/setup-java@v6
         if: steps.gate.outputs.run == 'true'
@@ -90,6 +96,7 @@ jobs:
         run: .github/scripts/robolectric-jars.sh ~/.m2/repository/org/robolectric robolectric-jars-${{ hashFiles('gradle/libs.versions.toml') }}-
 
       - name: Save Robolectric jars
+        id: robolectric-save
         if: steps.robolectric-jars.outputs.count != '0' && steps.robolectric-jars.outputs.key != steps.robolectric-restore.outputs.cache-matched-key && steps.gate.outputs.run == 'true'
         uses: actions/cache/save@v6
         with:
@@ -126,6 +133,20 @@ jobs:
       - name: Shellcheck
         if: steps.gate.outputs.run == 'true'
         run: shellcheck .github/scripts/*.sh scripts/*.sh .claude/skills/wizard/template.sh
+
+      # A green PR run records the tree it tested, so the push that lands this tree on master skips the gate (#199):
+      # wiki/workflows/ci.md -> What runs. Not when ci-gate.sh said marker=false (the PR changed what a cache key is
+      # made of) or this run saved new Robolectric jars: master then runs in full and saves its caches. Only the name
+      # counts. Last of the checking steps; a failed upload only costs master a full run.
+      - name: Record the tested tree
+        if: success() && github.event_name == 'pull_request' && steps.gate.outputs.marker == 'true' && steps.robolectric-save.outcome == 'skipped' && steps.gate.outputs.run == 'true'
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: tested-tree-${{ steps.gate.outputs.tree }}
+          path: ${{ runner.temp }}/tested-tree
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Upload coverage report
         if: always() && steps.gate.outputs.run == 'true'

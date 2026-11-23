@@ -1,8 +1,8 @@
 # Continuous integration (GitHub Actions)
 
 Every pull request into `master`, and every push to it (a merged PR), runs the unit tests, the Kover coverage
-gate and lint on GitHub Actions, unless the run's first step finds it needs no gate: a PR that changes only wiki pages
-(below, #199). A PR is merged only when its run is green ([[code-review]]). A red run on `master` means
+gate and lint on GitHub Actions, unless the run's first step finds it needs no gate: a PR that changes only wiki pages,
+or a push to `master` of a tree a green PR run already tested (below, #199). A PR is merged only when its run is green ([[code-review]]). A red run on `master` means
 `master` is broken, so fix it before merging anything else. Workflow: `.github/workflows/tests.yml` (added for #29).
 GitHub enforces the gate: `master` is protected and requires the job's check, `test` (the job name, not the workflow
 name `Tests`), on a branch up to date with `master`, for admins too ([[2026-11-23-public-repository]]).
@@ -19,8 +19,9 @@ Which runs cancel which (#119):
 - **A pull request's runs:** a newer push to the PR's branch cancels that PR's run that is still going; only its
   latest commit matters. Their concurrency group is `tests-refs/pull/<n>/merge`, one per PR.
 - **Runs on `master` (a merged PR) and manual runs:** never cancelled. Each has a group of its own (keyed by its run
-  id), so two merges in quick succession get one run each, and every merged commit is checked. These runs can
-  overlap: when watching `master` after a merge, pick the run for the merged head's SHA, not just the latest run.
+  id), so two merges in quick succession get one run each. These runs can overlap: when watching `master` after a
+  merge, pick the run for the merged head's SHA, not just the latest run. A run that skipped the gate is green in
+  under a minute; its Decide step's log names the PR run that tested the tree.
 
 **Decide** comes first, right after the checkout (`fetch-depth: 2`): `.github/scripts/ci-gate.sh` writes `run=true` or
 `run=false`, and every later step has `steps.gate.outputs.run == 'true'` in its `if:`. The job itself always runs, so
@@ -29,7 +30,22 @@ on `run=false` the required `test` check is green after about half a minute, not
   commit and its first parent the base) are all under `wiki/` → `run=false`. Not when one of them is a page a test
   reads (`wiki/integrations/google-play.md`, read by `StoreListingTest` and `PrivacyPolicyTest`), nor when the list is
   empty or the base can't be read. A file moved into `wiki/` counts by its old path too.
-- **Anything else** (other PRs, every push to `master`, a manual run) → `run=true`.
+  Every other PR runs the gate. It also writes `marker=true`, unless a changed file is one the cache keys are made of
+  (`*.gradle*`, `gradle.properties`, anything under `gradle/` or `buildSrc/`, `versions.properties`, `tests.yml`,
+  `ci-gate.sh`, `robolectric-jars.sh`).
+- **A push to `master`** → `run=false` when a green PR run of this workflow already tested the same tree. The PR run's
+  last checking step, **Record the tested tree**, uploads an artifact named `tested-tree-<git tree SHA>` (kept 14 days,
+  `continue-on-error`) when the run is green, `marker=true` and **Save Robolectric jars** was skipped. The push looks
+  that name up (`gh api repos/<repo>/actions/artifacts?name=tested-tree-<tree>`, with `jq`; the job's token has
+  `actions: read` and `contents: read` only) and skips only for an unexpired artifact whose run is a completed,
+  successful `pull_request` run of `.github/workflows/tests.yml` with its head in this repository (not a fork). A
+  rebase-merge of a PR that was up to date with `master` lands exactly the tree its run tested, and `master` requires
+  PRs to be up to date, so a merged PR's push normally skips. An API error or anything unexpected → `run=true`.
+- **A manual run** (and any other event) → `run=true`.
+
+Caches stay fresh across a skipped push: the PR changed nothing a key is made of and saved no new Robolectric jars, so
+the entries `master` already has are the ones the next PR run asks for (Caches, below). A PR that changes a key's
+inputs (every Dependabot Gradle PR) leaves no marker, so its push runs in full and saves the new entries.
 
 `.github/scripts/check-ci-gate.sh` checks those rules case by case in throwaway repos (step **CI gate checks**), and
 `TestsWorkflowTest` (in the gate) checks the wiring: the triggers, Decide right after the checkout, every later step
@@ -104,7 +120,15 @@ build): about **10–14 minutes with a warm Gradle cache** (587–851 s over six
 43191093845, 43189465936, 43051061277). The unit tests and coverage gate take 4–5½ minutes, lint 1½–2¼ and the minified
 release build 3½–6. **Cold**, when setup-gradle's cache key changes (a dependency bump), no run with the lint step has
 been measured yet. The last cold runs, on 2026-11-10 before lint was added, took 685–854 s (42783746385,
-42785399324, 42785742119). With lint added, expect roughly 13–17 minutes (an estimate).
+42785399324, 42785742119). With lint added, expect roughly 13–17 minutes (an estimate). Run 45176725551 (2026-11-23,
+`master`, Gradle home not restored) took 12½ minutes.
+
+**Minutes per change** (#199, estimates from the figures above; a skipped run is the checkout, the Decide step and
+the job's setup, under a minute):
+- A PR: one full run per push to its branch (a newer push cancels the older run), plus a skipped run on `master` after
+  the merge. Before #199 the `master` run was a second full run.
+- A wiki-only PR: a skipped run per push, plus one full run on `master` after the merge (nothing recorded its tree).
+- A PR changing a cache key's inputs (a dependency bump): its runs, plus a full run on `master`, as before.
 
 ## Where the reports are
 
@@ -146,7 +170,8 @@ delete the files and check them out again (`git checkout -- <path>`), since git 
   maintainer approves it (`approval_policy: all_external_contributors`, set 2026-11-23). Fork PRs get no secrets either way.
 - **Pull requests into `master`, and pushes to it.** Every change lands through a PR
   ([[2026-11-09-pull-request-workflow]]), and the PR's green run is a merge gate. The run on `master` after a merge
-  checks the rebased commits on the `master` they landed on. Until 2026-11-09 work was pushed straight to `master`,
+  checks the rebased commits on the `master` they landed on, unless a green PR run already tested that same tree
+  (#199, [[2026-11-23-ci-run-trims]]). Until 2026-11-09 work was pushed straight to `master`,
   and CI ran only after the push. The `pull_request` trigger was added that day for Dependabot's PRs (`2fb04af`).
 - **`master` runs are never cancelled** (#119). Until 2026-11-10 every run shared the group `tests-<ref>` with
   `cancel-in-progress: true`, so a second merge cancelled the first merge's run on `master` (runs 41074550651 and

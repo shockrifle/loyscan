@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-23 · a push to master skips the gate when a green PR run recorded the same tree · decisions/2026-11-23-ci-run-trims, workflows/ci (What runs, minutes per change), scripts/_index · #199 commit 2
 - 2026-11-23 · Tests workflow decides first whether the run needs the gate; a wiki-only PR skips Gradle · decisions/2026-11-23-ci-run-trims (new), decisions/_index, workflows/ci, workflows/tdd, workflows/_index, scripts/_index · #199 commit 1
 - 2026-11-23 · review of PR #201 round 3: commit email set to the noreply address in the owner's clone, and documented · workflows/build-and-run, decisions/2026-11-23-public-repository · review of PR #201
 - 2026-11-23 · repo switched to public; master protected, secret scanning, Dependabot alerts, fork-PR approval · decisions/2026-11-23-public-repository (Active, what the switch changed), CLAUDE (Public-safe), /CLAUDE.md, workflows/ci, workflows/code-review, workflows/release, decisions/2026-11-09-pull-request-workflow, decisions/2026-11-05-r8-smoke-test-on-a-device · #200

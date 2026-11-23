@@ -136,7 +136,8 @@ Then `gh pr merge <p> --rebase --delete-branch`. Switch back: `git switch master
 delete the local branch. The merge rewrites the commits, so their SHAs on `master` differ from the branch's.
 Watch the CI run on `master` for the merged head, picked by its SHA, not the newest run (`gh run list --branch master
 --event push --commit $(git rev-parse HEAD)`, then `gh run watch <id>`; the run can take a few seconds to appear, so
-retry an empty list). If it fails, `master` is red: investigate and
+retry an empty list). A run whose `Decide` step found a green PR run had tested the same tree skips the gate and is
+green in under a minute (`wiki/workflows/ci.md`, "What runs"). If it fails, `master` is red: investigate and
 report, don't pile on fixes without telling me.
 
 ## 8. Update the issue

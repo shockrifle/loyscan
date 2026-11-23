@@ -50,12 +50,46 @@ decide_pull_request() {
   fi
 }
 
+# push (to master, the only branch the workflow runs on for a push): skip when a green pull_request run of this
+# workflow, on a branch of this repo, recorded this very tree (the "Record the tested tree" step). A rebase-merge of an
+# up-to-date PR lands exactly the tree its PR run tested, and master requires PRs to be up to date.
+decide_push() {
+  local answer ids id facts expected
+  expected="pull_request completed success .github/workflows/tests.yml $REPO"
+  answer=$(mktemp)
+  if ! gh api "repos/$REPO/actions/artifacts?name=tested-tree-$tree&per_page=100" >"$answer" ||
+    ! ids=$(jq -r '.artifacts[]
+        | select(.expired == false and .workflow_run.head_repository_id == .workflow_run.repository_id)
+        | .workflow_run.id' "$answer"); then
+    echo "Couldn't look up whether a PR run tested this tree: running the gate."
+    rm -f "$answer"
+    return
+  fi
+  for id in $ids; do
+    if gh api "repos/$REPO/actions/runs/$id" >"$answer" &&
+      facts=$(jq -r '[.event, .status, .conclusion, .path, .head_repository.full_name] | map(tostring) | join(" ")' "$answer") &&
+      [ "$facts" = "$expected" ]; then
+      echo "Run $id, a green pull_request run of this workflow, tested this tree: skipping the gate."
+      run=false
+      rm -f "$answer"
+      return
+    fi
+  done
+  rm -f "$answer"
+  echo "No green PR run recorded this tree: running the gate."
+}
+
 case "${EVENT:-}" in
   pull_request) decide_pull_request ;;
+  push) decide_push ;;
   *) echo "A ${EVENT:-<unknown>} run: running the gate." ;;
 esac
 
 printf 'run=%s\nmarker=%s\ntree=%s\n' "$run" "$marker" "$tree"
+# The file the "Record the tested tree" step uploads; its name, not its content, is what a push looks up.
+if [ "$marker" = true ] && [ -n "${RUNNER_TEMP:-}" ]; then
+  printf '%s\n' "$tree" >"$RUNNER_TEMP/tested-tree"
+fi
 if [ -n "${GITHUB_OUTPUT:-}" ]; then
   printf 'run=%s\nmarker=%s\ntree=%s\n' "$run" "$marker" "$tree" >>"$GITHUB_OUTPUT"
 fi
