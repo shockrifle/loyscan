@@ -20,7 +20,7 @@ logo". Done in four slices, 2026-11-13 to 2026-11-16.
   `SharedLogoViewModel.kt`; `SharedLogo(uri)`, `openSharedLogo`, `sharedLogoDirections` in `Navigation.kt`; then the
   store picker's logo mode ([[add-card]]) and `StoreLogo(storeId, picture)`.
 - `StoreLogoScreen.kt`, `StoreLogoViewModel.kt`: the screen and its state. Its preview, `LogoPreview`, is in
-  `ui/CardTileFace.kt` with the list tile's face it draws (#192, #162), shared with the custom store form's logo slot.
+  `ui/LogoPreview.kt` and draws the list tile's face, `ui/CardTileFace.kt` (#192, #162), shared with the custom store form's logo slot.
 - `ui/LogoSearch.kt`: "Find a logo online".
 - `data/repository/StoreRepository.kt` (`setLogo`), `data/photos/CardPhotos.kt` (`cropLogo`): storage, see the decision.
 
@@ -30,7 +30,7 @@ logo". Done in four slices, 2026-11-13 to 2026-11-16.
   (`CardTileFace`, #192), so the two can't drift apart: the logo at 60% of its height, centred, on the brand colour, or
   the store's initials when it has none or the logo can't load; never the store name, which a tile doesn't draw since
   #183 ([[card-list]]). It is full width, so the initials, which stop growing at a tile's size, look smaller on it than
-  on a tile. TalkBack reads it as the store's name, as it reads a tile (until #192: "Logo of <name>" with a logo); "Every card of this store shows this logo."; **Choose image**,
+  on a tile. TalkBack reads it as the store's name, as it reads a tile; "Every card of this store shows this logo."; **Choose image**,
   **Use a card's photo** while a card of the store has a front photo, **Find a logo online**, and **Remove logo** while
   it has one.
 - **Choose image** opens the system photo picker (images only, no permission; the same `PicturePicker` as the card

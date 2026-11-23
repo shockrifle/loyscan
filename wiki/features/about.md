@@ -7,7 +7,7 @@ and brand colours to say whose card a card is, so the note is required before th
 listing's own note is #75.
 
 **Entry points** (under `app/src/main/java/com/bdaniel/loyscan/`):
-- `ListScreen.kt:148`: the Info (i) icon in the card list's top bar, "About", → `ListDirections.toAbout` →
+- `ListScreen.kt` (`ListScreen`'s top bar): the Info (i) icon in the card list's top bar, "About", → `ListDirections.toAbout` →
   `navigate(About)` while the list is current (`Navigation.kt:35`).
 - `AboutScreen.kt`: the screen; route `About`, `AboutDirections.toBack` → `navigateUp()` while About is current
   (`Navigation.kt:40-48`); registered in `AppNavigation` (`MainActivity.kt:152`).

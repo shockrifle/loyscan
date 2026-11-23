@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-23 · review of PR #198: LogoPreview in its own file (ui/LogoPreview.kt); ListScreen.kt line links replaced by symbol names; a history clause dropped from store-logo · features/store-logo, features/edit-store, features/about, features/card-list, features/card-transition, tech-debt/shared-element-key-from-async-state · review of PR #198
 - 2026-11-23 · the store logo preview draws the unlabelled list tile (`CardTileFace`): initials, not the name; read out as the name; moved to ui/ · features/store-logo, features/edit-store · #192, #162
 - 2026-11-23 · a list tile's face drawn by `CardTileFace` (ui/), for the logo preview to share · features/card-list · #192
 - 2026-11-20 · a logo tile's label sits on the photo's dark band; the look-alike initials trade-off of unlabelled tiles · features/card-list · review of PR #191
