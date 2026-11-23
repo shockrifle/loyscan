@@ -1,5 +1,7 @@
 package com.bdaniel.loyscan.ui
 
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,10 +15,8 @@ import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -27,7 +27,15 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import coil.compose.AsyncImage
+import com.bdaniel.loyscan.ui.theme.CardShape
+import com.bdaniel.loyscan.domain.storeInitials
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.draw.clip
 import com.bdaniel.loyscan.ui.theme.Spacing
+
+/** The store's logo preview ([LogoPreview]): the store logo screen's, and the custom store form's logo slot. */
+const val STORE_LOGO_PREVIEW_TAG = "storeLogoPreview"
 
 /** A tile's front photo (#10). */
 const val CARD_TILE_PHOTO_TAG = "cardTilePhoto"
@@ -38,7 +46,8 @@ const val CARD_TILE_LOGO_TAG = "cardTileLogo"
 /**
  * What a card's tile draws (#192): the brand [color] at card proportions, and on it the front [photo], else the store's
  * [logo] at [TILE_LOGO_FRACTION], else the store's [initials]; the card's [label], if any, along the bottom edge. The
- * My cards tile ([com.bdaniel.loyscan.CardItem]) draws this.
+ * My cards tile ([com.bdaniel.loyscan.CardItem]) and the store's logo preview ([LogoPreview]) both draw this, so they
+ * can't drift apart.
  *
  * [modifier] comes after the colour and the proportions: the list's tile hangs its shared element on it.
  */
@@ -128,6 +137,23 @@ fun CardTileFace(
                 }
             }
         }
+    }
+}
+
+/**
+ * The store as its cards' tiles show it (#192): its unlabelled tile, the [logo] on the brand [color], else the initials
+ * of its [name]. On the store logo screen and in the custom store form's logo slot (#151), there drawn with the form's
+ * name and colour as typed. TalkBack reads it as the store's name, as it reads a tile.
+ */
+@Composable
+fun LogoPreview(name: String, color: String, logo: String?) {
+    Box(
+        Modifier
+            .clip(CardShape) // the face draws the colour; the list's Card clips its corners, here this does
+            .semantics(mergeDescendants = true) { contentDescription = name }
+            .testTag(STORE_LOGO_PREVIEW_TAG),
+    ) {
+        CardTileFace(color = color, initials = storeInitials(name), logo = logo)
     }
 }
 

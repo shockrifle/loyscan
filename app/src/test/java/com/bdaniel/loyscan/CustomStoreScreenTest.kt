@@ -1,9 +1,13 @@
 package com.bdaniel.loyscan
 
+import androidx.navigation.testing.invoke
+import com.bdaniel.loyscan.ui.STORE_LOGO_PREVIEW_TAG
 import org.robolectric.annotation.GraphicsMode
 import com.bdaniel.loyscan.testing.WithFontScale
 import com.bdaniel.loyscan.testing.assertTextFitsAndDoesNotOverlap
 import androidx.compose.ui.test.assert
+import com.bdaniel.loyscan.ui.CARD_TILE_LOGO_TAG
+import androidx.compose.ui.test.hasContentDescriptionExactly
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -41,7 +45,6 @@ import com.bdaniel.loyscan.testing.aLoyaltyCard
 import com.bdaniel.loyscan.testing.cardId
 import com.bdaniel.loyscan.testing.SOME_INSTANT
 import com.bdaniel.loyscan.testing.aStore
-import androidx.navigation.testing.invoke
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -62,8 +65,11 @@ class CustomStoreScreenTest {
     private val context: Context = ApplicationProvider.getApplicationContext()
     private val logoScreens = mutableListOf<String>()
 
-    /** The store's name in the logo slot's preview, not in the name field. */
-    private val previewName = hasText("My Shop") and hasAnyAncestor(hasTestTag(STORE_LOGO_PREVIEW_TAG))
+    /** A text drawn in the logo slot's preview, not in the name field. Its node merges them: read the unmerged tree. */
+    private fun inThePreview(text: String) = hasText(text) and hasAnyAncestor(hasTestTag(STORE_LOGO_PREVIEW_TAG))
+
+    /** The store's logo in the logo slot's preview, drawn as a tile draws it (#192). */
+    private val previewLogo = hasTestTag(CARD_TILE_LOGO_TAG) and hasAnyAncestor(hasTestTag(STORE_LOGO_PREVIEW_TAG))
     private val scanned = mutableListOf<String>()
     private var backs = 0
 
@@ -243,20 +249,22 @@ class CustomStoreScreenTest {
         waitForAnImageToLoad()
 
         composeRule.onNodeWithText("Logo").performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithTag(STORE_LOGO_PREVIEW_IMAGE_TAG, useUnmergedTree = true).performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithContentDescription("Logo of My Shop", useUnmergedTree = true).assertExists()
-        composeRule.onNode(previewName).assertDoesNotExist()
+        composeRule.onNode(previewLogo, useUnmergedTree = true).performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithTag(STORE_LOGO_PREVIEW_TAG).assert(hasContentDescriptionExactly("My Shop")) // #192: as a tile is read
+        composeRule.onNode(inThePreview("MS"), useUnmergedTree = true).assertDoesNotExist()
     }
 
     @Test
-    fun editingAStoreWithoutALogo_showsItsNameInTheLogoSlot_asTyped() { // #151: the form's current name and colour
+    fun editingAStoreWithoutALogo_showsTheInitialsOfItsNameInTheLogoSlot_asTyped() { // #151: the form's name; #192: initials
         stores.stores.value = listOf(aStore(id = "custom", name = "My Shop", isCustom = true))
         setScreen(CustomStore("custom"))
 
-        composeRule.onNode(previewName).performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithTag(CUSTOM_STORE_NAME_TAG).performTextReplacement("My Shop 2")
-        composeRule.onNode(hasText("My Shop 2") and hasAnyAncestor(hasTestTag(STORE_LOGO_PREVIEW_TAG))).assertExists()
-        composeRule.onNodeWithTag(STORE_LOGO_PREVIEW_IMAGE_TAG, useUnmergedTree = true).assertDoesNotExist()
+        composeRule.onNode(inThePreview("MS"), useUnmergedTree = true).performScrollTo().assertIsDisplayed()
+        composeRule.onNode(inThePreview("My Shop"), useUnmergedTree = true).assertDoesNotExist()
+        composeRule.onNodeWithTag(CUSTOM_STORE_NAME_TAG).performTextReplacement("Big Deal")
+        composeRule.onNode(inThePreview("BD"), useUnmergedTree = true).assertExists()
+        composeRule.onNodeWithTag(STORE_LOGO_PREVIEW_TAG).assert(hasContentDescriptionExactly("Big Deal"))
+        composeRule.onNode(previewLogo, useUnmergedTree = true).assertDoesNotExist()
     }
 
     @Test
@@ -339,7 +347,7 @@ class CustomStoreScreenTest {
             "A hozzá tartozó 2 kártya is törlődik vele.", "Mégse", "Nem sikerült törölni a boltot. Próbáld újra.",
         )
         val symbologyNames = CustomStoreViewModel.FORMATS.filter { it != BarcodeFormat.QR_CODE }.map { it.displayName }
-        shown.assertEveryTextIsTranslated("My Shop", *symbologyNames.toTypedArray())
+        shown.assertEveryTextIsTranslated("My Shop", "MS", *symbologyNames.toTypedArray()) // its initials in the logo slot (#192)
     }
 
     @Test
@@ -389,7 +397,7 @@ class CustomStoreScreenTest {
         setScreen(CustomStore("custom"), fontScale = 2f)
 
         composeRule.onNodeWithText("Change logo").assertExists()
-        composeRule.assertTextFitsAndDoesNotOverlap()
+        composeRule.assertTextFitsAndDoesNotOverlap(fitsByDesign = setOf("CS")) // the slot's initials shrink to fit, as on a tile (#192)
     }
 
     private fun givenACustomStoreWithALogo() {

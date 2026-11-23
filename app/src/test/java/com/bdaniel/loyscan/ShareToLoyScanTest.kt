@@ -1,5 +1,9 @@
 package com.bdaniel.loyscan
 
+import com.bdaniel.loyscan.ui.STORE_LOGO_PREVIEW_TAG
+import com.bdaniel.loyscan.ui.CARD_TILE_LOGO_TAG
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasTestTag
 import android.app.Application
 import android.content.ComponentName
 import android.content.Intent
@@ -167,7 +171,7 @@ class ShareToLoyScanTest {
         composeRule.onNodeWithText("Crop").performClick()
 
         waitForText("Remove logo")
-        composeRule.onNodeWithTag(STORE_LOGO_PREVIEW_IMAGE_TAG, useUnmergedTree = true).assertExists()
+        composeRule.onNode(hasTestTag(CARD_TILE_LOGO_TAG) and hasAnyAncestor(hasTestTag(STORE_LOGO_PREVIEW_TAG)), useUnmergedTree = true).assertExists()
         val logo = runBlocking { stores.getAll().first().single { it.name == "Test Store" }.logo }
         assertThat(logo).isNotNull()
         composeRule.onNodeWithContentDescription("Back").performClick()

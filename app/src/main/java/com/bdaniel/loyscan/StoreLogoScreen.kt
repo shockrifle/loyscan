@@ -1,14 +1,15 @@
 package com.bdaniel.loyscan
 
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import android.net.Uri
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -29,46 +30,32 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.bdaniel.loyscan.ui.CARD_ASPECT_RATIO
 import com.bdaniel.loyscan.ui.CardPhoto
-import com.bdaniel.loyscan.ui.TILE_LOGO_FRACTION
 import com.bdaniel.loyscan.ui.LogoSearch
 import com.bdaniel.loyscan.ui.PhotoCropScreen
-import com.bdaniel.loyscan.ui.contrastingTextColor
 import com.bdaniel.loyscan.ui.hiltImageLoader
 import com.bdaniel.loyscan.ui.rememberLogoSearch
 import com.bdaniel.loyscan.ui.scanner.PicturePicker
 import com.bdaniel.loyscan.ui.scanner.rememberPicturePicker
+import com.bdaniel.loyscan.ui.LogoPreview
 import com.bdaniel.loyscan.ui.theme.CardShape
 import com.bdaniel.loyscan.ui.theme.Spacing
 import com.bdaniel.loyscan.ui.theme.icons.Icons
-import com.bdaniel.loyscan.ui.toBrandColorOrNull
-
-/** The logo screen's preview: the store as a card tile, its logo or its name on the brand colour. */
-const val STORE_LOGO_PREVIEW_TAG = "storeLogoPreview"
-
-/** The logo in the preview, when the store has one that loads. */
-const val STORE_LOGO_PREVIEW_IMAGE_TAG = "storeLogoPreviewImage"
-
 
 /**
  * A store's logo (#151), reached from the store picker or a custom store's edit form: a preview of the store's tile,
@@ -209,45 +196,3 @@ private fun CardPhotoChoiceDialog(
 }
 
 private val CARD_PHOTO_CHOICE_WIDTH = 72.dp
-
-/**
- * The store as its cards' tiles show it: the [logo] on the brand [color], or the [name] when it has none or it can't
- * load. Also the custom store form's logo slot (#151), drawn with the form's name and colour as typed.
- */
-@Composable
-internal fun LogoPreview(name: String, color: String, logo: String?) {
-    val background = color.toBrandColorOrNull() ?: MaterialTheme.colorScheme.surfaceVariant
-    var logoFailed by remember(logo) { mutableStateOf(false) }
-    val shown = logo?.takeUnless { logoFailed }
-    val description = stringResource(R.string.logo_of_store, name)
-    Box(
-        Modifier
-            .fillMaxWidth()
-            .aspectRatio(CARD_ASPECT_RATIO)
-            .clip(CardShape)
-            .background(background)
-            .testTag(STORE_LOGO_PREVIEW_TAG),
-        contentAlignment = Alignment.Center,
-    ) {
-        if (shown != null) {
-            AsyncImage(
-                model = CardPhoto(shown),
-                contentDescription = null,
-                imageLoader = hiltImageLoader(),
-                onError = { logoFailed = true },
-                modifier = Modifier
-                    .fillMaxSize(TILE_LOGO_FRACTION)
-                    .semantics { contentDescription = description }
-                    .testTag(STORE_LOGO_PREVIEW_IMAGE_TAG),
-            )
-        } else {
-            Text(
-                name,
-                style = MaterialTheme.typography.headlineLarge,
-                color = background.contrastingTextColor(),
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(Spacing.l),
-            )
-        }
-    }
-}
