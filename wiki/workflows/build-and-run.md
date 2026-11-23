@@ -36,6 +36,10 @@ half set up. Missing: …"*.
 On Windows, use `gradlew.bat` or Git Bash. `local.properties` (the SDK path) is git-ignored and must exist
 locally.
 
+**Commit email.** The repo is public, and a commit's author email is public with it. A clone sets a GitHub noreply
+address in its own config before the first commit: `git config user.email "<id>+<login>@users.noreply.github.com"`
+(the owner's clone has it since 2026-11-23, [[2026-11-23-public-repository]]).
+
 ## IDE settings
 
 **Android Studio's `.idea/` folder is not tracked** (#174). Opening the project imports it from Gradle, which writes
