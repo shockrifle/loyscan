@@ -33,7 +33,7 @@ fun licenceProblems(files: Map<String, String>, licences: Set<String>, ownWork: 
 private const val USER = """([\p{L}][^\s\\/"'`()<>]*)"""
 private val USER_PATHS = listOf(
     Regex("""(?i)(?<![\p{L}\p{N}])[a-z]:[\\/]{1,2}users[\\/]{1,2}$USER"""),
-    Regex("""(?<![\w.~:-])(?:/c/[Uu]sers|/Users|/home)/$USER"""),
+    Regex("""(?<![\w.~:-])(?:(?:/mnt)?/[a-z]/[Uu]sers|/Users|/home)/$USER"""),
 )
 private val EMAIL = Regex("""(?<![\w.+-])[\w.+-]+@[\w-]+(?:\.[\w-]+)*\.[A-Za-z]{2,}(?![\w-])""")
 private val LICENCE_NAME = Regex("""LICENSE-[\w-]*\w""")
