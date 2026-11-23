@@ -1,7 +1,8 @@
 # Continuous integration (GitHub Actions)
 
 Every pull request into `master`, and every push to it (a merged PR), runs the unit tests, the Kover coverage
-gate and lint on GitHub Actions. A PR is merged only when its run is green ([[code-review]]). A red run on `master` means
+gate and lint on GitHub Actions, unless the run's first step finds it needs no gate: a PR that changes only wiki pages
+(below, #199). A PR is merged only when its run is green ([[code-review]]). A red run on `master` means
 `master` is broken, so fix it before merging anything else. Workflow: `.github/workflows/tests.yml` (added for #29).
 GitHub enforces the gate: `master` is protected and requires the job's check, `test` (the job name, not the workflow
 name `Tests`), on a branch up to date with `master`, for admins too ([[2026-11-23-public-repository]]).
@@ -20,6 +21,19 @@ Which runs cancel which (#119):
 - **Runs on `master` (a merged PR) and manual runs:** never cancelled. Each has a group of its own (keyed by its run
   id), so two merges in quick succession get one run each, and every merged commit is checked. These runs can
   overlap: when watching `master` after a merge, pick the run for the merged head's SHA, not just the latest run.
+
+**Decide** comes first, right after the checkout (`fetch-depth: 2`): `.github/scripts/ci-gate.sh` writes `run=true` or
+`run=false`, and every later step has `steps.gate.outputs.run == 'true'` in its `if:`. The job itself always runs, so
+on `run=false` the required `test` check is green after about half a minute, not "skipped" ([[2026-11-23-ci-run-trims]]):
+- **A pull request** whose changed files (`git diff --no-renames --name-only HEAD^1 HEAD`: the checkout is GitHub's merge
+  commit and its first parent the base) are all under `wiki/` → `run=false`. Not when one of them is a page a test
+  reads (`wiki/integrations/google-play.md`, read by `StoreListingTest` and `PrivacyPolicyTest`), nor when the list is
+  empty or the base can't be read. A file moved into `wiki/` counts by its old path too.
+- **Anything else** (other PRs, every push to `master`, a manual run) → `run=true`.
+
+`.github/scripts/check-ci-gate.sh` checks those rules case by case in throwaway repos (step **CI gate checks**), and
+`TestsWorkflowTest` (in the gate) checks the wiring: the triggers, Decide right after the checkout, every later step
+gated with no `||` around the gate, and no `if:` on the job.
 
 The single build step:
 
