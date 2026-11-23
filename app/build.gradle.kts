@@ -145,6 +145,12 @@ android {
                 .withPathSensitivity(PathSensitivity.RELATIVE)
             it.inputs.files("$projectDir/src/main/assets/catalogue/stores.json").withPropertyName("storeCatalogue")
                 .withPathSensitivity(PathSensitivity.RELATIVE)
+            // PublicSafeRepoTest reads every file git tracks (#200): any edited file, a wiki page too, must rerun it.
+            it.inputs.files(
+                fileTree(rootDir) {
+                    exclude("**/build/**", ".git/**", ".gradle/**", ".kotlin/**", ".idea/**", ".claude/worktrees/**", "local.properties")
+                },
+            ).withPropertyName("repoFiles").withPathSensitivity(PathSensitivity.RELATIVE)
         }
     }
 }

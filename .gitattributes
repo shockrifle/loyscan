@@ -10,3 +10,5 @@ wiki/_log.md merge=union
 play/listing/**/*.txt text eol=lf
 # The privacy policy is published as it is, and PrivacyPolicyTest matches its lines word for word (#75).
 play/privacy-policy/*.md text eol=lf
+# The licence is gnu.org's text byte for byte; PublicSafeRepoTest checks its SHA-256 (#200).
+LICENSE text eol=lf
