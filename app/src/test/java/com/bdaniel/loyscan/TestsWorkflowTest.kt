@@ -107,6 +107,52 @@ class TestsWorkflowTest {
         assertThat(steps.filter { ".github/scripts/check-ci-gate.sh" in it.text }).hasSize(1)
     }
 
+    @Test
+    fun theDecision_canReadTheActionsApi_andNothingMore() {
+        assertThat(workflow).contains("\npermissions:\n  actions: read\n  contents: read\n\n")
+        assertThat(workflow.split("\npermissions:")).hasSize(2)
+        assertThat(steps[1].text).contains("\n          GH_TOKEN: \${{ github.token }}")
+    }
+
+    @Test
+    fun aGreenPullRequestRun_recordsItsTree_unlessItsCachesNeedMasterToRun() {
+        val record = steps.single { it.label == "Record the tested tree" }
+        val terms = record.condition.orEmpty().split("&&").map { it.trim() }
+
+        assertThat(terms).containsExactly(
+            "success()",
+            "github.event_name == 'pull_request'",
+            "steps.gate.outputs.marker == 'true'",
+            "steps.robolectric-save.outcome == 'skipped'",
+            GATE,
+        )
+        assertThat(steps.single { "id: robolectric-save" in it.text }.label).isEqualTo("Save Robolectric jars")
+        assertThat(record.text).contains("\n        uses: actions/upload-artifact@v7\n")
+        assertThat(record.text).contains("\n          name: tested-tree-\${{ steps.gate.outputs.tree }}\n")
+        assertThat(record.text).contains("\n          path: \${{ runner.temp }}/tested-tree\n")
+        // A failed upload only costs master a full run; it mustn't turn a green run red.
+        assertThat(record.text).contains("\n        continue-on-error: true\n")
+    }
+
+    @Test
+    fun theTreeIsRecorded_onlyAfterEveryStepThatChecksSomething() {
+        val record = steps.indexOfFirst { it.label == "Record the tested tree" }
+        val checks = steps.drop(2).filterNot { step ->
+            val condition = step.condition.orEmpty()
+            "always()" in condition || "failure()" in condition || step.label == "Record the tested tree"
+        }
+
+        assertThat(checks.map { it.index }.all { it < record }).isTrue()
+    }
+
+    @Test
+    fun thePushLookup_asksForTheNameTheRecordIsSavedUnder() {
+        val script = File("../.github/scripts/ci-gate.sh").readText()
+
+        assertThat(script).contains("actions/artifacts?name=tested-tree-\$tree&")
+        assertThat(script).contains("expected=\"pull_request completed success .github/workflows/tests.yml \$REPO\"")
+    }
+
     private companion object {
         const val GATE = "steps.gate.outputs.run == 'true'"
     }
