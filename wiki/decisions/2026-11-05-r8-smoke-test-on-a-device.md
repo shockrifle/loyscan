@@ -17,7 +17,8 @@ own consumer rules: Room, Hilt, kotlinx.serialization, Coil, CameraX, Glance, an
 ## Options considered
 
 - **Where the smoke test runs.**
-  - A CI emulator job: fully automatic, but several times the current Actions minutes on a private repo ([[ci]]).
+  - A CI emulator job: fully automatic, but several times the current Actions minutes on a private repo ([[ci]]). (The repo is public since 2026-11-23, so
+    minutes are no longer capped; the device choice stands.)
   - A documented manual tap-through: cheapest, but nothing is automated.
   - A local instrumented test, run on a device: **chosen** (decided with the user, 2026-11-05).
 - **What the test drives.**

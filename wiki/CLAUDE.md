@@ -98,8 +98,9 @@ Work is tracked in GitHub Issues on `shockrifle/loyscan` (use `gh`). The split:
 - **Linking.** Commits and the PR reference the issue (`Fixes #N` closes it when the PR merges into `master`). Wiki pages that
   correspond to an issue (tech-debt, hacks, features in progress) link it; issues link the wiki page with a full
   `https://github.com/shockrifle/loyscan/blob/master/wiki/...` URL.
-- **Public-safe.** The repo is private but is treated as public: no local absolute paths, personal data,
-  credentials, or third-party proprietary material in issues, commits or wiki pages.
+- **Public-safe.** The repo is public ([[2026-11-23-public-repository]]): no local absolute paths, personal data,
+  credentials, or third-party proprietary material in issues, commits or wiki pages. `PublicSafeRepoTest` checks the
+  tracked files; the rest is swept by hand ([[public-safe-sweep]]).
 
 ## When NOT to update
 

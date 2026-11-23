@@ -78,8 +78,8 @@ The three secrets are repository secrets, so any workflow run with access to sec
 anyone with write access, who could also push a tag on a branch whose `release.yml` skips the "on `master`" check.
 That check guards against mistakes (a tag on the wrong commit), not against a collaborator. Pull requests from forks
 get no secrets. Limiting an Actions environment to `v*` tags would not close this alone, since a collaborator can tag
-any commit; an environment with required reviewers, or rules on who may create `v*` tags, would. Environments need a
-paid plan while the repo is private (as understood 2026-11-17; not checked against GitHub's plans page).
+any commit; an environment with required reviewers, or rules on who may create `v*` tags, would. None is set up. (Until
+2026-11-23 the repo was private and environments needed a paid plan; public repos have them.)
 
 ## Checks
 

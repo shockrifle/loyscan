@@ -8,7 +8,8 @@ From 2026-10-08 every change was committed straight to `master`, reviewed locall
 ([[code-review]]). On 2026-11-09 Dependabot started opening update PRs, and CI got a `pull_request` trigger for
 them ([[ci]]). The same day the user decided that pull requests should be the normal way every change lands
 (#116). The repo is private on GitHub's free plan, so branch protection isn't available: the API answers
-`403 Upgrade to GitHub Pro or make this repository public`, checked 2026-11-09.
+`403 Upgrade to GitHub Pro or make this repository public`, checked 2026-11-09. (Since 2026-11-23 the repo is public
+and `master` is protected: [[2026-11-23-public-repository]].)
 
 ## Options considered
 
@@ -35,7 +36,7 @@ them ([[ci]]). The same day the user decided that pull requests should be the no
   branch onto `master` and force-push it, when Dependabot ignores a `recreate` or the PR conflicts with `master`:
   without it such a PR can't be finished (#114, [[ci]] → Dependabot).
 - Without branch protection, "merge only after green CI and review" is a rule the commands follow, not something
-  GitHub enforces.
+  GitHub enforces. Superseded for CI on 2026-11-23: GitHub now requires the `test` check ([[code-review]]).
 
 ## Why
 

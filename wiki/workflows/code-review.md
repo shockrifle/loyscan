@@ -25,7 +25,9 @@ has merge conflicts" even with CI green. Rebase the second branch locally (`git 
 driver keeps both lines), push it with `--force-with-lease`, and merge once CI is green on the new head. Seen
 2026-11-12 with #146 and #147.
 
-GitHub doesn't enforce any of this: branch protection needs a paid plan for a private repo. The commands follow it.
+GitHub enforces the CI part: `master` is protected, and a PR merges only with a green `test` check on a branch up to date
+with `master`, admins included, with no force-push or deletion of `master` ([[2026-11-23-public-repository]]). No
+approving review is required (a sole owner can't approve their own PR): the review is a rule the commands follow.
 
 Dependabot's PRs have no issue and go through `/dependency-pr` instead ([[ci]] → Dependabot).
 
