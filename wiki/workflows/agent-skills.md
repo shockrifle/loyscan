@@ -19,4 +19,4 @@ copies: [[2026-11-09-adapted-third-party-skills]].
 - Edit it like any agent document (`writing-for-agents`), and update the row above in the same commit.
 - The copies don't track upstream. To pull in an upstream improvement, diff the upstream file against the original
   it was adapted from (Matt Pocock's repo as of 2026-10-31), then port the change by hand.
-- Each adapted file ends with a credit line naming the source and licence; keep it.
+- Each adapted file carries a credit line naming the source and licence (`LICENSE-<name>`): at the end of a skill page, in the header of the wizard template and of every wizard it generates. Keep it; `PublicSafeRepoTest` fails on an adapted file without one ([[2026-11-23-public-repository]]).

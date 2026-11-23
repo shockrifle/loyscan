@@ -36,6 +36,7 @@ class PublicSafeRepoTest {
             "/c" + "/Users/" + "carol/x",
             "/Users" + "/dave/x",
             "/home" + "/erin/x",
+            "/mnt/c" + "/Users/" + "frank/x",
         ).joinToString("\n")
 
         assertThat(publicSafeProblems(text)).containsExactly(
@@ -43,6 +44,7 @@ class PublicSafeRepoTest {
             "line 2: a local path naming a user (carol)",
             "line 3: a local path naming a user (dave)",
             "line 4: a local path naming a user (erin)",
+            "line 5: a local path naming a user (frank)",
         ).inOrder()
     }
 

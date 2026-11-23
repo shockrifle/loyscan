@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-23 · review of PR #201: the run deletion and the switch worded as pending; WSL paths checked too; credit lines in wizard headers · decisions/2026-11-23-public-repository, workflows/agent-skills · review of PR #201
 - 2026-11-23 · repo made public: sweep, GPL-3.0-or-later, PublicSafeRepoTest · decisions/2026-11-23-public-repository (new), workflows/public-safe-sweep (new), workflows/tdd (PublicSafeRepoTest row), decisions/_index, workflows/_index, index · #200
 - 2026-11-23 · review of PR #198: LogoPreview in its own file (ui/LogoPreview.kt); ListScreen.kt line links replaced by symbol names; a history clause dropped from store-logo · features/store-logo, features/edit-store, features/about, features/card-list, features/card-transition, tech-debt/shared-element-key-from-async-state · review of PR #198
 - 2026-11-23 · the store logo preview draws the unlabelled list tile (`CardTileFace`): initials, not the name; read out as the name; moved to ui/ · features/store-logo, features/edit-store · #192, #162

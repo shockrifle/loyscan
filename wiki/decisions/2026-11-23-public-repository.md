@@ -1,10 +1,10 @@
 # The repository goes public, under the GPL
 
-**Status:** Active · **Date:** 2026-11-23 · **Issue:** #200
+**Status:** Accepted; the switch itself is pending · **Date:** 2026-11-23 · **Issue:** #200 · **Commits:** c265b04
 
-The repository is made public, licensed GPL-3.0-or-later. Before the switch the history, the issues and PRs and the
-tracked files were swept for anything the public-safe rule ([[CLAUDE]], "Public-safe") forbids, and every old
-Actions run was deleted. `PublicSafeRepoTest` keeps the tracked files that way. How to sweep again:
+The repository is to be made public, licensed GPL-3.0-or-later. Before the switch the history, the issues and PRs
+and the tracked files were swept for anything the public-safe rule ([[CLAUDE]], "Public-safe") forbids; every old
+Actions run is deleted as the last step before it. `PublicSafeRepoTest` keeps the tracked files that way. How to sweep again:
 [[public-safe-sweep]].
 
 ## Context
@@ -29,8 +29,8 @@ Go public, with these owner decisions (2026-11-23):
   swept and is clean).
 - **Licence: GPL-3.0-or-later.** `LICENSE` is gnu.org's text byte for byte; the notice, with the copyright holder,
   is in `README.md`.
-- **Old Actions runs: deleted, not scanned.** Their logs and artifacts went with them, so the run IDs cited in
-  [[ci]], [[tdd]] and old issues no longer open; they stay as recorded measurements.
+- **Old Actions runs: deleted, not scanned**, as the last step before the switch. Their logs and artifacts go with
+  them, so the run IDs cited in [[ci]], [[tdd]] and old issues stop opening; they stay as recorded measurements.
 
 ## Why
 
@@ -47,7 +47,7 @@ still leave doubt.
 | Issues, PRs, comments, reviews | Dumped through `gh api` (558 texts) and grepped the same way, plus private IPs and secret-like assignments | Clean: the long numbers are CI run IDs and made-up card numbers; nothing was edited |
 | Commit comments, releases, repo metadata, branch names | `gh api` | None or clean |
 | Tracked files | `PublicSafeRepoTest`, and a read of `play/`, the catalogue and `.claude/` | Clean. Third-party files: the adapted skills (MIT, `.claude/skills/LICENSE-mattpocock-skills`, now also credited in the wizard template and the wizard it generated), the Gradle wrapper jar (Apache-2.0, Gradle's) |
-| Actions runs | `gh api -X DELETE …/actions/runs/{id}` for each | 264 runs and their 134 artifacts deleted |
+| Actions runs | `gh api -X DELETE …/actions/runs/{id}` for each | 264 runs and 134 artifacts at the sweep; not deleted yet |
 
 ## Consequences
 
