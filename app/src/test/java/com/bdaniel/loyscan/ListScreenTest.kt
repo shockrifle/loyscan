@@ -1,5 +1,7 @@
 package com.bdaniel.loyscan
 
+import com.bdaniel.loyscan.ui.CARD_TILE_LOGO_TAG
+import com.bdaniel.loyscan.ui.CARD_TILE_PHOTO_TAG
 import androidx.activity.ComponentActivity
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility

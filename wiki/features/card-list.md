@@ -3,7 +3,8 @@
 The start destination: a top bar titled "My Cards" with a Sort menu, an About button and a Settings icon, a search field, and a 2-column grid of card
 tiles, one per row in `loyalty_cards`, live-updating from Room. Sort, search and multi-select: #7.
 
-**Entry points:** `ListScreen` and `CardItem` in `app/src/main/java/com/bdaniel/loyscan/ListScreen.kt`;
+**Entry points:** `ListScreen` and `CardItem` in `app/src/main/java/com/bdaniel/loyscan/ListScreen.kt`, the tile's face
+(`CardTileFace`, shared with the store's logo preview, #192) in `app/src/main/java/com/bdaniel/loyscan/ui/CardTileFace.kt`;
 `ListViewModel` (`app/src/main/java/com/bdaniel/loyscan/ListViewModel.kt`); sort and search in
 `app/src/main/java/com/bdaniel/loyscan/domain/CardSearch.kt`; route `CardList`
 (`app/src/main/java/com/bdaniel/loyscan/Navigation.kt:11-12`).
@@ -42,7 +43,8 @@ tiles, one per row in `loyalty_cards`, live-updating from Room. Sort, search and
 - Grid items are keyed by card id, so a re-sort moves tiles rather than rebinding them. A use counted on opening a
   card can re-sort the list; on the way back, the opened card's tile is put back where it was tapped
   ([[card-transition]] → Returning to a list the use re-sorted, #61).
-- Tile (`CardItem`): a `Card` containing a box in bank-card (ID-1, 85.60 × 53.98 mm) proportions filled with the brand
+- Tile (`CardItem`: the `Card`, its click, selection, shared element and TalkBack description around `CardTileFace`,
+  which draws the rest): a `Card` containing a box in bank-card (ID-1, 85.60 × 53.98 mm) proportions filled with the brand
   color (or `surfaceVariant` if the color string is empty or malformed, via `toBrandColorOrNull()`). It shows the store's
   initials, large (`Store.initials`: the first letter or digit of the name's first two words, upper case;
   `StoreTest`), or the store's logo when the user gave the store one (#151, [[2026-11-13-user-supplied-store-logos]]):

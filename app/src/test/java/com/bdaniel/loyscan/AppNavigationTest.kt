@@ -1,5 +1,6 @@
 package com.bdaniel.loyscan
 
+import com.bdaniel.loyscan.ui.CARD_TILE_PHOTO_TAG
 import android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 import android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
 import android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_FULL
