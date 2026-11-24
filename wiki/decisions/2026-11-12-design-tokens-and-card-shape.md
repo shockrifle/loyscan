@@ -64,7 +64,7 @@ For the widget, the choices were **square tiles** or **card-ratio tiles**.
   - The widget background uses `appWidgetBackground()`, and its padding comes from `Spacing`.
   - `minResizeHeight` goes from 40dp to 90dp, so one tile fits at the minimum width.
   - Corners are square on API 29–30.
-  - *Amended by [#182](https://github.com/shockrifle/loyscan/issues/182) (2026-11-24):* from Android 12 a tile's
+  - *Amended by [#182](https://github.com/shockrifle/loyscan/issues/182) (2026-11-24):* from Android 12
     the widget rounds its background with a fixed 12dp and the tiles with 8dp (12dp less the 4dp edge), so they nest
     in the widget's corners, not `CardShape`'s proportion; the widget's edge and the gap between tiles are 4dp, not 8dp ([[card-widget]]).
 

@@ -43,13 +43,13 @@ All paths are under `app/src/main/java/com/bdaniel/loyscan/` unless written in f
   rounds its own background with `WIDGET_CORNER_RADIUS` (12dp, `ui/theme/Shapes.kt`), and a tile's corners are that
   less the 4dp between the widget's edge and the tile, 8dp, so they nest concentrically (#182, `widgetBackgroundRadius`,
   `widgetTileCornerRadius`). The widget rounds its background itself because the launcher otherwise rounds it with a
-  radius the app can't read: Launcher3 enforces corners only on a background view that doesn't already clip to its
-  outline. On a device (ASUS AI2302, Android 15, Nova launcher, 2026-11-24) the platform's
+  radius the app can't read. Launcher3 skips its own rounding when the background view already clips to its outline,
+  and Nova did the same on the device below; a launcher that forces its own radius would still show unnested corners. On an Android 15 phone with Nova launcher (2026-11-24) the platform's
   `system_app_widget_background_radius` was 28dp, while Nova drew the background at about 22dp, so tiles derived from
   the platform value didn't match it; rounding the background with that 28dp did match, but made the small tiles look
   like pills, hence the fixed 12dp. Before Android 12 the widget's background is square, and so are the tiles
   (Glance's `cornerRadius` does nothing on 10–11). **Checked on devices on 2026-11-24:** the 12dp background, 8dp
-  tiles and 4dp spacing looked right on the ASUS AI2302 (Android 15, Nova) and a Zebra TC77 (Android 14). Until #182 the corners were 6% of the tile's height, like the app's
+  tiles and 4dp spacing looked right on an Android 15 phone with Nova and an Android 14 handheld. Until #182 the corners were 6% of the tile's height, like the app's
   `CardShape`, unrelated to the background's. Glance has no `aspectRatio` or grid spacing, so `widget/WidgetLayout.kt`
   computes the columns and the tile height from `LocalSize`, and 2dp of padding around the grid and around each tile
   (`WIDGET_HALF_SPACING`) makes the 4dp edge and the 4dp gap between tiles (`WIDGET_SPACING`, #182; both were 8dp).
