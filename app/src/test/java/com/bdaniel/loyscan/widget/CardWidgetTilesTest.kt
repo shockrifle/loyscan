@@ -36,14 +36,21 @@ class CardWidgetTilesTest {
     }
 
     @Test
-    fun toWidgetTiles_labelIsTheCardsLabel_orTheStoreNameWhenItHasNone() {
+    fun toWidgetTiles_labelIsTheCardsLabel_andNoneWhenItHasNone() { // #181: a tile never shows the store name (#183)
         val labelled = aLoyaltyCard(id = cardId(1), label = "My Tesco")
         val unlabelled = aLoyaltyCard(id = cardId(2), label = null, store = aStore(name = "Tesco"))
 
         val tiles = listOf(labelled, unlabelled).toWidgetTiles(CardSort.NAME)
 
         assertThat(tiles.single { it.cardId == cardId(1) }.label).isEqualTo("My Tesco")
-        assertThat(tiles.single { it.cardId == cardId(2) }.label).isEqualTo("Tesco")
+        assertThat(tiles.single { it.cardId == cardId(2) }.label).isNull()
+    }
+
+    @Test
+    fun toWidgetTiles_carryTheStoreName_forTalkBack() { // #181
+        val card = aLoyaltyCard(label = "Gold", store = aStore(name = "Tesco"))
+
+        assertThat(listOf(card).toWidgetTiles(CardSort.NAME).single().storeName).isEqualTo("Tesco")
     }
 
     @Test
@@ -57,15 +64,15 @@ class CardWidgetTilesTest {
 
     @Test
     fun backgroundColor_isTheBrandColour_orAFallbackWhenItIsEmptyOrMalformed() {
-        assertThat(WidgetTile("c", "#112233", "A", "A").backgroundColor()).isEqualTo(Color(0xFF112233))
-        assertThat(WidgetTile("c", "", "A", "A").backgroundColor()).isEqualTo(Color(0xFF5A5A66))
-        assertThat(WidgetTile("c", "not a colour", "A", "A").backgroundColor()).isEqualTo(Color(0xFF5A5A66))
+        assertThat(WidgetTile("c", "#112233", "A", "A", null).backgroundColor()).isEqualTo(Color(0xFF112233))
+        assertThat(WidgetTile("c", "", "A", "A", null).backgroundColor()).isEqualTo(Color(0xFF5A5A66))
+        assertThat(WidgetTile("c", "not a colour", "A", "A", null).backgroundColor()).isEqualTo(Color(0xFF5A5A66))
     }
 
     @Test
     fun textColor_contrastsWithTheBackground() {
-        assertThat(WidgetTile("c", "#000000", "A", "A").textColor()).isEqualTo(Color.White)
-        assertThat(WidgetTile("c", "#FFFFFF", "A", "A").textColor()).isEqualTo(Color.Black)
+        assertThat(WidgetTile("c", "#000000", "A", "A", null).textColor()).isEqualTo(Color.White)
+        assertThat(WidgetTile("c", "#FFFFFF", "A", "A", null).textColor()).isEqualTo(Color.Black)
     }
 
     @Test
