@@ -61,7 +61,8 @@ class MainActivity : ComponentActivity() {
             // A share reaches this activity again only if its sender asked for SINGLE_TOP. Opening it here would
             // replace what is open, e.g. a half-filled card form (#83), so it goes to a LoyScan of its own.
             if (intent.sharedPicture() != null) intent.forwardToATaskOfItsOwn(this)
-            // A widget tap is a deliberate request for one card, so it opens it over whatever is on screen (#11).
+            // A widget tap is a deliberate request for one card, so it opens it over the list, in place of whatever
+            // is open (#11, #213).
             intent.openCard()?.let(openCards::trySend)
         }
         enableEdgeToEdge()
