@@ -73,6 +73,16 @@ class CardWidgetContentTest {
     }
 
     @Test
+    @Config(sdk = [29]) // #182: before Android 12 the widget's background is square, and so are its tiles
+    fun content_beforeAndroid12_leavesTheTilesSquare() = runGlanceAppWidgetUnitTest {
+        setAppWidgetSize(DpSize(300.dp, 200.dp))
+        setContext(context)
+        provideComposable { CardWidgetContent(tiles) }
+
+        onAllNodes(hasClickAction() and hasCornerRadius(0.dp)).assertCountEquals(2)
+    }
+
+    @Test
     fun content_hasA4dpEdgeAndGap_madeOf2dpAroundTheGridAndAroundEachTile() = runGlanceAppWidgetUnitTest { // #182
         setAppWidgetSize(DpSize(300.dp, 200.dp))
         setContext(context)

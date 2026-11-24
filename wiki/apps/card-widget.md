@@ -117,7 +117,7 @@ Glance's `@layout/glance_default_loading_layout` as the initial layout). Glance 
 - `widget/CardWidgetContentTest` — `runGlanceAppWidgetUnitTest` (Glance's JVM unit test, `glance-appwidget-testing`):
   one clickable node per card, each showing its initials and label, at a set widget size (`setAppWidgetSize`). Since
   #182 it also reads a node's Glance modifiers (`MappedNode.emittable.modifier`): the grid and each tile's cell have 2dp
-  of padding, and each tile has the 12dp corner radius at API 32. Glance's `CornerRadiusModifier` is internal to Kotlin,
+  of padding, and each tile has the 12dp corner radius at API 32 and none at API 29. Glance's `CornerRadiusModifier` is internal to Kotlin,
   so the test reads its radius by reflection. That the corners look concentric on a home screen is checked by hand. A new test seam — see [[tdd]] and [[architecture]]. The Glance
   unit API matches a click by component + `ActionParameters`, not by the intent extras the tile uses, so that a tile
   opens **its own** card is an on-device check, not a unit assertion.
