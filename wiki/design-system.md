@@ -30,8 +30,9 @@ fails on a non-zero `.dp` literal or a `RoundedCornerShape` outside `ui/theme/` 
 ## The card's shape
 
 `CardShape` is `RoundedCornerShape(6%)`: an ID-1 card has 3.18 mm corners on a 53.98 mm short side
-(`CARD_CORNER_FRACTION`). Every depiction of the physical card uses it with the card's ratio (`CARD_ASPECT_RATIO`,
-`ui/CardPhoto.kt`), so the card looks the same at every size.
+(`CARD_CORNER_FRACTION`). Every depiction of the physical card in the app uses it with the card's ratio (`CARD_ASPECT_RATIO`,
+`ui/CardPhoto.kt`), so the card looks the same at every size. The widget's tiles keep the ratio but take their
+corners from the widget's background (#182, below).
 
 ## Card cut-outs
 

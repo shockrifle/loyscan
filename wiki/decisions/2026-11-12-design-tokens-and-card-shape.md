@@ -73,7 +73,9 @@ For the widget, the choices were **square tiles** or **card-ratio tiles**.
 - **Plain object:** the widget must share the values, and Glance can't read a Compose `CompositionLocal` from the
   app theme. No screen needs a different scale, so a local would add only indirection.
 - **Proportional card corners:** a tile is meant to read as "your card". The list, crop frame, viewfinder and widget
-  all show the same object at different sizes, and a percent corner keeps it looking the same at every size.
+  all show the same object at different sizes, and a percent corner keeps it looking the same at every size. (#182
+  later gave the widget's tiles corners that nest in the widget's rounded background instead: inside a widget, the
+  tiles read as part of it.)
 - **Visual-only viewfinder:** restricting decoding to the box would only make scanning fail more often. A barcode
   just outside the box still scanning is a feature. A scan line counts as animation, which #108 leaves out.
 - **Card-ratio widget tiles:** they match the rest of the app. Square tiles would fit more text but look like app

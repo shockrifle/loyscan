@@ -69,4 +69,3 @@ val WIDGET_SIZES: Set<DpSize> =
     listOf(110, 120, 131, 143, 156, 171, 187, 205, 224, 240, 262, 286, 313, 342, 374, 410)
         .map { DpSize(it.dp, LAYOUT_HEIGHT) }
         .toSet()
-
