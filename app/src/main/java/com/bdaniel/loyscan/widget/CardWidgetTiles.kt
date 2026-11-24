@@ -18,6 +18,7 @@ data class WidgetTile(
     val initials: String,
     val storeName: String,
     val label: String?,
+    val logo: String? = null,
 )
 
 /** The widget's tiles, in the list's [sort] order (#7, [sortedBy]); see [CardWidgetTilesTest]. */
@@ -29,6 +30,7 @@ fun List<LoyaltyCard>.toWidgetTiles(sort: CardSort): List<WidgetTile> =
             initials = card.store.initials,
             storeName = card.store.name,
             label = card.label,
+            logo = card.store.logo,
         )
     }
 

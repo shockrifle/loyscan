@@ -54,6 +54,17 @@ class CardWidgetTilesTest {
     }
 
     @Test
+    fun toWidgetTiles_carryTheStoresLogo_orNoneWithoutOne() { // #181
+        val withLogo = aLoyaltyCard(id = cardId(1), store = aStore(id = "a", logo = "logo-1"))
+        val withoutLogo = aLoyaltyCard(id = cardId(2), store = aStore(id = "b", logo = null))
+
+        val tiles = listOf(withLogo, withoutLogo).toWidgetTiles(CardSort.NAME)
+
+        assertThat(tiles.single { it.cardId == cardId(1) }.logo).isEqualTo("logo-1")
+        assertThat(tiles.single { it.cardId == cardId(2) }.logo).isNull()
+    }
+
+    @Test
     fun toWidgetTiles_carriesTheStoresBrandColour() {
         val card = aLoyaltyCard(store = aStore(color = "#112233"))
 

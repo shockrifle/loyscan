@@ -12,6 +12,7 @@ import com.bdaniel.loyscan.testing.aLoyaltyCardEntity
 import com.bdaniel.loyscan.testing.aStore
 import com.bdaniel.loyscan.testing.aStoreEntity
 import com.bdaniel.loyscan.testing.cardId
+import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -57,6 +58,21 @@ class RoomLoyaltyCardRepositoryTest {
     @Test
     fun getAllWithStore_returnsDomainCards() = runTest {
         assertThat(repository.getAllWithStore().first()).containsExactly(card)
+    }
+
+    @Test
+    fun getAllWithStore_emitsAgain_whenItsStoresLogoIsSetOrRemoved() = runTest { // #181: the widget redraws on it
+        val stores = RoomStoreRepository(db.storeDao(), photos)
+
+        repository.getAllWithStore().test {
+            assertThat(awaitItem().single().store.logo).isNull()
+
+            stores.setLogo("other", "logo-1")
+            assertThat(awaitItem().single().store.logo).isEqualTo("logo-1")
+
+            stores.setLogo("other", null)
+            assertThat(awaitItem().single().store.logo).isNull()
+        }
     }
 
     @Test

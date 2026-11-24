@@ -43,6 +43,23 @@ class CardWidgetUpdaterTest {
     }
 
     @Test
+    fun refresh_runsWhenAStoresLogoIsSet_changed_orRemoved() = runTest { // #181: the tiles show it
+        val card = aLoyaltyCard(id = cardId(1), label = "Tesco")
+        val cards = FakeLoyaltyCardRepository(listOf(card))
+        val refresher = FakeRefresher(hasWidget = true)
+        CardWidgetUpdater(cards, FakeUserPreferencesRepository(), refresher, backgroundScope).ensureObserving()
+        runCurrent()
+
+        for (logo in listOf("logo-1", "logo-2", null)) {
+            val before = refresher.refreshes
+            cards.cards.value = listOf(card.copy(store = card.store.copy(logo = logo)))
+            runCurrent()
+
+            assertThat(refresher.refreshes).isGreaterThan(before)
+        }
+    }
+
+    @Test
     fun refresh_runsWhenTheSortChanges() = runTest {
         val cards = FakeLoyaltyCardRepository(
             listOf(aLoyaltyCard(id = cardId(1), label = "A", useCount = 1), aLoyaltyCard(id = cardId(2), label = "B", useCount = 9))
