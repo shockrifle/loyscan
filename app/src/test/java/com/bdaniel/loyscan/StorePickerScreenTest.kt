@@ -24,6 +24,19 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
+import android.app.Application
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.test.core.app.ApplicationProvider
+import com.bdaniel.loyscan.di.CardPhotosModule
+import com.bdaniel.loyscan.di.ImageLoaderEntryPoint
+import com.bdaniel.loyscan.testing.WAIT_TIMEOUT_MS
+import com.bdaniel.loyscan.testing.writeOnePixelPng
+import dagger.hilt.android.EntryPointAccessors
+import org.robolectric.shadows.ShadowLooper
+import java.io.File
 
 @RunWith(AndroidJUnit4::class)
 class StorePickerScreenTest {
@@ -241,6 +254,94 @@ class StorePickerScreenTest {
     }
 
     @Test
+    @Config(qualifiers = "w411dp-h891dp") // the full list's row is below the default screen's fold
+    fun aStoreWithALogo_showsItInItsRow_inEverySection() { // #186
+        storedPhoto("logo")
+        setScreen(
+            aStore(id = "reads", name = "Reads It", logo = "logo", frequentlyAdded = true, cardNumberRule = luhn8Rule(BarcodeFormat.CODE_128)),
+            route = StorePicker("12345674", BarcodeFormat.CODE_128),
+        )
+        waitForAnImageToLoad()
+
+        composeRule.onNodeWithText("Suggested").assertIsDisplayed()
+        composeRule.onNodeWithText("Frequently added").assertIsDisplayed()
+        composeRule.onNodeWithText("All stores").assertIsDisplayed()
+        composeRule.onAllNodesWithTag(STORE_BADGE_LOGO_TAG, useUnmergedTree = true).assertCountEquals(3)
+        composeRule.onAllNodesWithTag(STORE_BADGE_INITIALS_TAG, useUnmergedTree = true).assertCountEquals(0)
+    }
+
+    @Test
+    fun aStoreWithALogo_showsItInSearchResults() { // #186
+        storedPhoto("logo")
+        setScreen(aStore(id = "first", name = "First Store", logo = "logo"), aStore(id = "second", name = "Second Store"))
+
+        composeRule.onNodeWithTag(STORE_SEARCH_TAG).performTextInput("first")
+        waitForAnImageToLoad()
+
+        composeRule.onNodeWithTag(STORE_BADGE_LOGO_TAG, useUnmergedTree = true).assertIsDisplayed()
+    }
+
+    @Test
+    fun inLogoMode_aStoreWithALogo_showsItInItsRow() { // #186
+        storedPhoto("logo")
+        setScreen(aStore(id = "first", name = "First Store", logo = "logo"), route = StorePicker(logoPicture = "staged-1"))
+        waitForAnImageToLoad()
+
+        composeRule.onNodeWithTag(STORE_BADGE_LOGO_TAG, useUnmergedTree = true).assertIsDisplayed()
+    }
+
+    @Test
+    fun aStoreWithoutALogo_showsItsInitials_andNoImage() { // #186
+        setScreen(aStore(id = "first", name = "First Store"))
+
+        composeRule.onNodeWithTag(STORE_BADGE_INITIALS_TAG, useUnmergedTree = true).assertIsDisplayed()
+        composeRule.onNodeWithTag(STORE_BADGE_LOGO_TAG, useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun aStoreWhoseLogoFileIsMissing_showsItsInitials_andNoImage() { // #186: the loader finds no file to decode
+        setScreen(aStore(id = "first", name = "First Store", logo = "lost"))
+
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) {
+            ShadowLooper.idleMainLooper() // the loader's result comes on the main looper
+            composeRule.onAllNodesWithTag(STORE_BADGE_INITIALS_TAG, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
+        }
+        composeRule.onNodeWithTag(STORE_BADGE_LOGO_TAG, useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun storeNames_lineUp_whetherOrNotTheStoreHasALogo() { // #186
+        storedPhoto("logo")
+        setScreen(
+            aStore(id = "a", name = "A Logo", logo = "logo"),
+            aStore(id = "b", name = "B Initials"),
+        )
+        waitForAnImageToLoad()
+
+        val lefts = listOf("A Logo", "B Initials").map { name ->
+            composeRule.onNodeWithText(name, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot.left
+        }
+        assertThat(lefts.toSet()).hasSize(1)
+        // The badge comes before the name.
+        assertThat(lefts.first()).isGreaterThan(
+            composeRule.onAllNodesWithTag(STORE_BADGE_INITIALS_TAG, useUnmergedTree = true)[0].fetchSemanticsNode().boundsInRoot.left
+        )
+    }
+
+    @Test
+    fun aRowsTalkBackText_isTheStoreNameOnly_withOrWithoutALogo() { // #186: the badge adds nothing to it
+        storedPhoto("logo")
+        setScreen(aStore(id = "first", name = "First Store", logo = "logo"), aStore(id = "second", name = "Second Store"))
+        waitForAnImageToLoad()
+
+        for (name in listOf("First Store", "Second Store")) {
+            val row = composeRule.onNode(hasText(name) and hasClickAction()).fetchSemanticsNode().config
+            assertThat(row[SemanticsProperties.Text].map { it.text }).containsExactly(name)
+            assertThat(row.contains(SemanticsProperties.ContentDescription)).isFalse()
+        }
+    }
+
+    @Test
     fun back_goesBack() {
         setScreen()
 
@@ -268,7 +369,7 @@ class StorePickerScreenTest {
             "Válassz boltot", "Vissza", "Boltok keresése", "Egyéb kártya", "Egy bolt, ami nincs a listán", "Javasolt",
             "Gyakran hozzáadott", "Minden bolt", "My Shop szerkesztése", "Tesco logója", "Nincs ilyen bolt: „xyz”",
         )
-        shown.assertEveryTextIsTranslated("Reads It", "Tesco", "My Shop", "xyz")
+        shown.assertEveryTextIsTranslated("Reads It", "Tesco", "My Shop", "xyz", "RI", "T", "MS") // the badges' initials are data (#186)
     }
 
     @Test
@@ -276,7 +377,19 @@ class StorePickerScreenTest {
     fun atFontScale2_onANarrowScreen_noTextIsClippedOrOverlaps() { // #108; Robolectric's default screen is 320dp wide
         setScreen(aStore(id = "first", name = "First Store"), aStore(id = "second", name = "Second Store"), fontScale = 2f)
 
-        composeRule.assertTextFitsAndDoesNotOverlap()
+        composeRule.assertTextFitsAndDoesNotOverlap(fitsByDesign = setOf("FS", "SS")) // the badges' initials shrink to fit (#186)
+    }
+
+    private val application: Application = ApplicationProvider.getApplicationContext()
+
+    /** A real picture where the app's image loader finds a logo [name]. */
+    private fun storedPhoto(name: String) =
+        File(application.filesDir, CardPhotosModule.PHOTO_DIRECTORY).resolve(name).writeOnePixelPng()
+
+    /** Waits until the app's image loader has a picture in its memory cache: the logo has loaded. */
+    private fun waitForAnImageToLoad() {
+        val loader = EntryPointAccessors.fromApplication(application, ImageLoaderEntryPoint::class.java).getImageLoader()
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) { ShadowLooper.idleMainLooper(); (loader.memoryCache?.size ?: 0) > 0 }
     }
 
     private fun setScreen(vararg stores: Store, route: StorePicker = StorePicker(), country: String? = "HU", fontScale: Float = 1f) {

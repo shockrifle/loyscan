@@ -300,6 +300,21 @@ class CardFormScreenTest {
     }
 
     @Test
+    fun theStoreChooser_showsAStoresLogoInItsRow() { // #186: its rows are the store picker's
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        File(context.filesDir, CardPhotosModule.PHOTO_DIRECTORY).resolve("logo").writeOnePixelPng()
+        stores.stores.value = listOf(store, aStore(id = "logo", name = "Logo Store", logo = "logo"))
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, number = "12345674"))
+        setScreen(CardForm("ruled", cardId = cardId(1)))
+
+        composeRule.onNodeWithText("Change store").performClick()
+        val loader = EntryPointAccessors.fromApplication(context, ImageLoaderEntryPoint::class.java).getImageLoader()
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) { ShadowLooper.idleMainLooper(); (loader.memoryCache?.size ?: 0) > 0 }
+
+        composeRule.onNodeWithTag(STORE_BADGE_LOGO_TAG, useUnmergedTree = true).assertIsDisplayed()
+    }
+
+    @Test
     fun theStoreChooser_canBeClosedWithoutChangingTheStore() { // #8
         cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, number = "12345674"))
         setScreen(CardForm("ruled", cardId = cardId(1)))

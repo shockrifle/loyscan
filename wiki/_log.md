@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-24 · store picker rows show a store badge (logo on the brand colour, else initials) in place of the colour dot · features/add-card, features/store-logo · #186
 - 2026-11-23 · review of PR #202: a wiki-only PR runs PublicSafeRepoTest alone instead of no Gradle · decisions/2026-11-23-ci-run-trims, workflows/ci, workflows/tdd · owner decision on the review's major finding
 - 2026-11-23 · Dependabot monthly, no automatic rebases; /dependency-pr rebases a BEHIND PR before merging · workflows/ci (Dependabot), decisions/2026-11-23-ci-run-trims, workflows/tdd · #199 commit 3
 - 2026-11-23 · a push to master skips the gate when a green PR run recorded the same tree · decisions/2026-11-23-ci-run-trims, workflows/ci (What runs, minutes per change), scripts/_index · #199 commit 2

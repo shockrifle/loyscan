@@ -1,7 +1,8 @@
 # Store logo
 
 The user gives a store a logo of their own, and every card of that store shows it on the brand colour: on its tile
-(unless the card has a front photo) and in the card screen's header. The app ships no logos and holds no links to
+(unless the card has a front photo) and in the card screen's header; the store's row in the store picker and the
+card form's "Change store" dialog shows it too, in a round badge ([[add-card]], #186). The app ships no logos and holds no links to
 logo files ([[2026-11-12-no-bundled-store-logos]]); why it is stored the way it is:
 [[2026-11-13-user-supplied-store-logos]]. Issue [#151](https://github.com/shockrifle/loyscan/issues/151).
 
@@ -72,7 +73,8 @@ logo". Done in four slices, 2026-11-13 to 2026-11-16.
   alias (cold start, reopened from recents); unit tests can't see the share sheet.
 - **Remove logo** clears it; the initials on colour come back and its file is deleted.
 - **A store that is gone** says "This store is no longer available." and offers nothing.
-- **A logo whose file is missing** is no logo, here, on the tiles and in the header (`CardPhotos.withoutMissing`).
+- **A logo whose file is missing** is no logo, here, on the tiles and in the header (`CardPhotos.withoutMissing`). The
+  store picker's badge isn't checked that way: a missing file fails to load, and the badge shows the initials (#186).
 - **Language:** every text is a string resource in English and Hungarian ("Bolt logója", "Kép kiválasztása",
   "Logó keresése az interneten", "Az egész kép").
 
