@@ -10,6 +10,7 @@ import androidx.glance.testing.GlanceNodeMatcher
 import androidx.glance.testing.unit.MappedNode
 import androidx.glance.unit.Dimension
 import androidx.glance.testing.unit.hasClickAction
+import androidx.glance.testing.unit.hasContentDescriptionEqualTo
 import androidx.glance.testing.unit.hasText
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -24,8 +25,8 @@ class CardWidgetContentTest {
     private val context = ApplicationProvider.getApplicationContext<Context>()
 
     private val tiles = listOf(
-        WidgetTile("c1", "#112233", "TE", "Tesco"),
-        WidgetTile("c2", "#223344", "AL", "Aldi"),
+        WidgetTile("c1", "#112233", "TE", "Tesco", "Gold"),
+        WidgetTile("c2", "#223344", "AL", "Aldi", "Family"),
     )
 
     @Test
@@ -34,14 +35,36 @@ class CardWidgetContentTest {
         setContext(context)
         provideComposable { CardWidgetContent(tiles) }
 
-        onNode(hasText("Tesco")).assertExists()
+        onNode(hasText("Gold")).assertExists()
         onNode(hasText("TE")).assertExists() // #108
-        onNode(hasText("Aldi")).assertExists()
+        onNode(hasText("Family")).assertExists()
         onNode(hasText("AL")).assertExists()
         // One clickable tile per card. That a tile opens its own card (a start-activity intent carrying that card's
         // id) is checked on a device: the Glance unit API matches a start-activity action by component and
         // ActionParameters, not by the intent extras the tile uses, so it can't assert the id here (#11 field check).
         onAllNodes(hasClickAction()).assertCountEquals(2)
+    }
+
+    @Test
+    fun anUnlabelledTile_showsOnlyItsInitials_neverTheStoreName() = runGlanceAppWidgetUnitTest { // #181, as #183
+        setAppWidgetSize(DpSize(300.dp, 200.dp))
+        setContext(context)
+        provideComposable { CardWidgetContent(listOf(WidgetTile("c1", "#112233", "TE", "Tesco", label = null))) }
+
+        onAllNodes(hasText("TE")).assertCountEquals(1)
+        onAllNodes(hasText("Tesco")).assertCountEquals(0)
+    }
+
+    @Test
+    fun aTile_isDescribedAsItsStoreAndLabel_orItsStoreAlone() = runGlanceAppWidgetUnitTest { // #181: TalkBack
+        setAppWidgetSize(DpSize(300.dp, 200.dp))
+        setContext(context)
+        provideComposable {
+            CardWidgetContent(listOf(tiles.first(), WidgetTile("c3", "#334455", "SP", "Spar", label = null)))
+        }
+
+        onAllNodes(hasClickAction() and hasContentDescriptionEqualTo("Tesco, Gold")).assertCountEquals(1)
+        onAllNodes(hasClickAction() and hasContentDescriptionEqualTo("Spar")).assertCountEquals(1)
     }
 
     @Test

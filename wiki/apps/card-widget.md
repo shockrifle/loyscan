@@ -32,9 +32,11 @@ All paths are under `app/src/main/java/com/bdaniel/loyscan/` unless written in f
   list's sort from Name to Recently used reordered the tiles, and clearing the label put the store name back, each
   without reopening the app.
 - `widget/CardWidgetTiles.kt` — the pure logic, unit-tested: `List<LoyaltyCard>.toWidgetTiles(sort)` sorts with
-  the list's `sortedBy(sort)` ([[card-list]], #7) and maps each card to a `WidgetTile(cardId, color, initials, label)`,
-  the `label` being the card's label or, when it has none, the store name. The list tile drew the same text until #183;
-  it now draws only the label, while the widget still shows the store name for an unlabelled card (the widget: #181).
+  the list's `sortedBy(sort)` ([[card-list]], #7) and maps each card to a `WidgetTile(cardId, color, initials,
+  storeName, label)`. The `label` is the card's own label, `null` when it has none: since #181 a tile never shows the
+  store name, the same rule as My cards since #183 (until #181 an unlabelled card's widget tile showed the store name).
+  `storeName` is only for TalkBack: `WidgetTile.description()` is "store, label", or the store alone, as the list's tile
+  joins them, and the tile carries it as its `semantics { contentDescription }`.
   `WidgetTile.backgroundColor()` / `.textColor()` reuse [[card-detail]]'s `toBrandColorOrNull()` and
   `contrastingTextColor()`, falling back to a neutral grey for an empty or malformed brand colour.
 - `widget/CardWidgetContent` — the Glance composable (since #108, [[design-system]]): a `LazyVerticalGrid` of
@@ -120,7 +122,9 @@ Glance's `@layout/glance_default_loading_layout` as the initial layout). Glance 
 - `widget/CardWidgetTilesTest` — the sort order, the label fallback, the initials and the colour helpers (Robolectric, because
   the colour parse goes through `android.graphics.Color`).
 - `widget/CardWidgetContentTest` — `runGlanceAppWidgetUnitTest` (Glance's JVM unit test, `glance-appwidget-testing`):
-  one clickable node per card, each showing its initials and label, at a set widget size (`setAppWidgetSize`). Since
+  one clickable node per card, each showing its initials and label (an unlabelled one only its initials, never the store
+  name), described for TalkBack as "store, label" (`hasContentDescriptionEqualTo`, #181), at a set widget size
+  (`setAppWidgetSize`). Since
   #182 it also reads a node's Glance modifiers (`MappedNode.emittable.modifier`): the grid and each tile's cell have 2dp
   of padding; at API 32 the background has the 12dp corner radius and each tile 8dp, and at API 29 neither is rounded. Glance's `CornerRadiusModifier` is internal to Kotlin,
   so the test reads its radius by reflection. That the corners look concentric on a home screen is checked by hand. A new test seam — see [[tdd]] and [[architecture]]. The Glance

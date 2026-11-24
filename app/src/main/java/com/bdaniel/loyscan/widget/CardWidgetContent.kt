@@ -15,6 +15,8 @@ import androidx.glance.appwidget.lazy.GridCells
 import androidx.glance.appwidget.lazy.LazyVerticalGrid
 import androidx.glance.appwidget.lazy.items
 import androidx.glance.background
+import androidx.glance.semantics.contentDescription
+import androidx.glance.semantics.semantics
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
 import androidx.glance.layout.Column
@@ -30,9 +32,9 @@ import com.bdaniel.loyscan.openCardIntent
 import com.bdaniel.loyscan.ui.theme.Spacing
 
 /**
- * One clickable card-ratio tile per [tiles] entry, each opening its card (#11): the store's initials and the card's label
- * on its brand colour, like the list's plain tile. One column in a narrow widget, two from 240dp (#108, [widgetColumns]),
- * laid out for each of [WIDGET_SIZES]; a tile fills its cell, so a layout shown wider or narrower than it was made for
+ * One clickable card-ratio tile per [tiles] entry, each opening its card (#11): the store's initials and the card's label,
+ * if any, on its brand colour, like the list's plain tile; TalkBack reads it as "store, label" (#181). One column in a
+ * narrow widget, two from 240dp (#108, [widgetColumns]), laid out for each of [WIDGET_SIZES]; a tile fills its cell, so a layout shown wider or narrower than it was made for
  * doesn't cut it.
  * From Android 12 the tiles' corners nest in the widget background's rounded corners ([widgetTileCornerRadius], #182);
  * before it, the widget and its tiles are square. Empty until the first card is added.
@@ -63,13 +65,14 @@ fun CardWidgetContent(tiles: List<WidgetTile>) {
                         .cornerRadius(cornerRadius)
                         .background(ColorProvider(tile.backgroundColor()))
                         .clickable(actionStartActivity(openCardIntent(context, tile.cardId, tile.color)))
+                        .semantics { contentDescription = tile.description() }
                         .padding(Spacing.xs),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     val color = ColorProvider(tile.textColor())
                     Text(text = tile.initials, style = TextStyle(color = color, fontSize = INITIALS_SIZE, fontWeight = FontWeight.Bold))
-                    Text(text = tile.label, style = TextStyle(color = color), maxLines = 1)
+                    tile.label?.let { Text(text = it, style = TextStyle(color = color), maxLines = 1) }
                 }
             }
         }
