@@ -39,11 +39,17 @@ All paths are under `app/src/main/java/com/bdaniel/loyscan/` unless written in f
   `contrastingTextColor()`, falling back to a neutral grey for an empty or malformed brand colour.
 - `widget/CardWidgetContent` — the Glance composable (since #108, [[design-system]]): a `LazyVerticalGrid` of
   card-ratio tiles, one column below 240dp of widget width and two from 240dp, on `appWidgetBackground()`. A tile is
-  the brand colour with the store's initials over the label, like the list's plain tile. From Android 12 its corners
-  nest in the widget's rounded background (#182): the radius is the platform's `system_app_widget_background_radius`
-  (16dp in AOSP) less the 4dp between the widget's edge and the tile, so 12dp on AOSP (`widgetBackgroundRadius`,
-  `widgetTileCornerRadius`). Before Android 12 the widget's background is square, and so are the tiles (Glance's
-  `cornerRadius` does nothing on 10–11 anyway). Until #182 the corners were 6% of the tile's height, like the app's
+  the brand colour with the store's initials over the label, like the list's plain tile. From Android 12 the widget
+  rounds its own background with `WIDGET_CORNER_RADIUS` (12dp, `ui/theme/Shapes.kt`), and a tile's corners are that
+  less the 4dp between the widget's edge and the tile, 8dp, so they nest concentrically (#182, `widgetBackgroundRadius`,
+  `widgetTileCornerRadius`). The widget rounds its background itself because the launcher otherwise rounds it with a
+  radius the app can't read: Launcher3 enforces corners only on a background view that doesn't already clip to its
+  outline. On a device (ASUS AI2302, Android 15, Nova launcher, 2026-11-24) the platform's
+  `system_app_widget_background_radius` was 28dp, while Nova drew the background at about 22dp, so tiles derived from
+  the platform value didn't match it; rounding the background with that 28dp did match, but made the small tiles look
+  like pills, hence the fixed 12dp. Before Android 12 the widget's background is square, and so are the tiles
+  (Glance's `cornerRadius` does nothing on 10–11). **Checked on devices on 2026-11-24:** the 12dp background, 8dp
+  tiles and 4dp spacing looked right on the ASUS AI2302 (Android 15, Nova) and a Zebra TC77 (Android 14). Until #182 the corners were 6% of the tile's height, like the app's
   `CardShape`, unrelated to the background's. Glance has no `aspectRatio` or grid spacing, so `widget/WidgetLayout.kt`
   computes the columns and the tile height from `LocalSize`, and 2dp of padding around the grid and around each tile
   (`WIDGET_HALF_SPACING`) makes the 4dp edge and the 4dp gap between tiles (`WIDGET_SPACING`, #182; both were 8dp).
@@ -108,16 +114,15 @@ Glance's `@layout/glance_default_loading_layout` as the initial layout). Glance 
 
 - `widget/WidgetLayoutTest` — the column count by width, the tile size and ratio, the 4dp spacing, the tile's corner
   radius from the background's, and the height of one row, against values worked out by hand (plain JUnit).
-  `widget/WidgetBackgroundRadiusTest` reads the platform's background radius through Robolectric's framework resources
-  (API 32, at xxhdpi so a radius left in pixels would fail): 16dp, the AOSP value, from Android 12 and none before it.
-  A launcher or device maker may use another radius; the tiles follow whatever the platform resource says. `widget/CardWidgetInfoTest` reads the provider XML through
+  It also checks the background radius is 12dp from Android 12 and none before (`widgetBackgroundRadius(sdkInt)`);
+  `ui/theme/ThemeTest` pins `WIDGET_CORNER_RADIUS`. `widget/CardWidgetInfoTest` reads the provider XML through
   the app's resources and checks `minResizeHeight` fits one tile at `minResizeWidth` (#108).
 - `widget/CardWidgetTilesTest` — the sort order, the label fallback, the initials and the colour helpers (Robolectric, because
   the colour parse goes through `android.graphics.Color`).
 - `widget/CardWidgetContentTest` — `runGlanceAppWidgetUnitTest` (Glance's JVM unit test, `glance-appwidget-testing`):
   one clickable node per card, each showing its initials and label, at a set widget size (`setAppWidgetSize`). Since
   #182 it also reads a node's Glance modifiers (`MappedNode.emittable.modifier`): the grid and each tile's cell have 2dp
-  of padding, and each tile has the 12dp corner radius at API 32 and none at API 29. Glance's `CornerRadiusModifier` is internal to Kotlin,
+  of padding; at API 32 the background has the 12dp corner radius and each tile 8dp, and at API 29 neither is rounded. Glance's `CornerRadiusModifier` is internal to Kotlin,
   so the test reads its radius by reflection. That the corners look concentric on a home screen is checked by hand. A new test seam — see [[tdd]] and [[architecture]]. The Glance
   unit API matches a click by component + `ActionParameters`, not by the intent extras the tile uses, so that a tile
   opens **its own** card is an on-device check, not a unit assertion.
@@ -138,8 +143,6 @@ the logic it drives is tested above ([[2026-10-09-coverage-gate-kover]]).
 
 ## Not done yet (this slice)
 
-- The concentric corners and the 4dp spacing (#182) are not yet checked on a device; the unit tests see the modifiers,
-  not the drawn widget.
 - No front photo on a tile — a tile is the brand-colour tile with the initials, as the list's non-photo tile is. Photo tiles are a
   follow-up.
 - No empty-state message: a widget with no cards shows nothing.

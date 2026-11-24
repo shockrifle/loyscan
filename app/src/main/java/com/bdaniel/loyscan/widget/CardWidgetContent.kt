@@ -1,6 +1,7 @@
 package com.bdaniel.loyscan.widget
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
@@ -41,12 +42,14 @@ fun CardWidgetContent(tiles: List<WidgetTile>) {
     val context = LocalContext.current
     val width = LocalSize.current.width
     val tileSize = widgetTileSize(width)
-    val cornerRadius = widgetTileCornerRadius(widgetBackgroundRadius(context))
+    val backgroundRadius = widgetBackgroundRadius()
+    val cornerRadius = widgetTileCornerRadius(backgroundRadius)
     LazyVerticalGrid(
         gridCells = GridCells.Fixed(widgetColumns(width)),
         modifier = GlanceModifier
             .fillMaxSize()
             .appWidgetBackground()
+            .cornerRadius(backgroundRadius ?: 0.dp)
             .background(GlanceTheme.colors.widgetBackground)
             .padding(WIDGET_HALF_SPACING),
     ) {

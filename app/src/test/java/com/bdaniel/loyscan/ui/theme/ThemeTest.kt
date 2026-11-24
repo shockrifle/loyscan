@@ -41,6 +41,11 @@ class ThemeTest {
     }
 
     @Test
+    fun theWidgetsCorners_are12dp() { // #182: the widget's own radius, not the platform's (28dp on some devices)
+        assertThat(WIDGET_CORNER_RADIUS).isEqualTo(12.dp)
+    }
+
+    @Test
     fun theCardShape_hasCornersInProportionToAnId1Card() {
         // 3.18 mm corners on a 53.98 mm short side.
         assertThat(CardShape).isEqualTo(RoundedCornerShape(percent = 6))

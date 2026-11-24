@@ -52,6 +52,18 @@ class WidgetLayoutTest {
     }
 
     @Test
+    fun fromAndroid12_theBackgroundIsRoundedWithTheWidgetsOwnRadius() { // #182
+        assertThat(widgetBackgroundRadius(sdkInt = 31)).isEqualTo(12.dp)
+        assertThat(widgetBackgroundRadius(sdkInt = 35)).isEqualTo(12.dp)
+    }
+
+    @Test
+    fun beforeAndroid12_theBackgroundHasNoRadius() {
+        assertThat(widgetBackgroundRadius(sdkInt = 30)).isNull()
+        assertThat(widgetBackgroundRadius(sdkInt = 29)).isNull()
+    }
+
+    @Test
     fun aTilesCorners_nestInTheWidgetBackgroundsCorners() { // #182
         // The background's radius less the 4dp between the widget's edge and the tile.
         assertThat(widgetTileCornerRadius(16.dp)).isEqualTo(12.dp)
