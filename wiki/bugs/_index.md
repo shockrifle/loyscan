@@ -10,6 +10,8 @@ _(none — suspected issues live in [[tech-debt/_index|tech-debt]] until confirm
 
 ## Resolved
 
+- [[2026-11-24-widget-tap-reused-the-open-card]] — a widget tap over another card's screen showed that card again:
+  `launchSingleTop` kept its entry and view model and only updated the arguments (#213)
 - [[2026-11-11-restored-form-saved-a-duplicate]] — a card form restored after its activity was destroyed mid-save
   could add the card a second time; the new card's id is now kept in the saved state from the start (#99)
 - [[2026-10-28-save-navigates-after-back]] — a card save that ended after Back still opened the card, and leaving the

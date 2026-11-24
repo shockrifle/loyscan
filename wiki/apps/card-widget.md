@@ -121,19 +121,18 @@ navigation (the share flow, [[add-card]], #77). The widget follows that pattern 
   (`savedInstanceState == null`, the **dead-process** case the issue asks about) and on a warm tap through
   `addOnNewIntentListener`. `MainActivity` is the only activity, so `SINGLE_TOP` makes a warm tap reach the running
   instance's `onNewIntent` rather than stack a second one. `AppNavigation` collects the channel and calls
-  `NavController.openCard(cardId, color)` (`Navigation.kt`), which **pushes** `Detail(cardId, color)` over whatever is
-  open (`launchSingleTop`, no `popUpTo`). Opening a card from the widget counts a use at a till, as tapping it in the
-  list does (#4).
-- **A half-filled add/edit form survives a widget tap** (#11, the decision mirrors #83): the card is pushed on top,
-  so Back returns to the form with its input intact, rather than popping back to the list. Unlike a share, the tap
-  does not forward to a LoyScan of its own; it opens in the running task.
+  `NavController.openCard(cardId, color)` (`Navigation.kt`), which opens `Detail(cardId, color)` **over the list, in
+  place of whatever was open above it** (`popUpTo<CardList>()`), so Back returns to the list (#213). A tap for the card
+  already on top does nothing: no second entry, no reload, and no use counted; any other tap counts a use at a till, as
+  tapping the card in the list does (#4). The tap opens in the running task; unlike a share it doesn't forward to a
+  LoyScan of its own.
+- **Until #213** the card was pushed over whatever was open (`launchSingleTop`), so a half-filled form survived a tap
+  (#11, #83), but another card's screen kept showing that card ([[2026-11-24-widget-tap-reused-the-open-card]]).
 
-**On-device check (#102): verified on a device (ASUS AI2302, Android 15, 2026-11-05).** With a half-filled add form
-open and the app running, a warm tap on a tile opened that tile's card in the same task (`dumpsys` showed the one task
-`#40488`, no second LoyScan), and Back returned to the form with its text intact; a repeat tap on another tile opened
-that card in the same task. Each tile opened its own card (Auchan tile → Auchan, Tesco tile → Tesco), confirming the
-intent-extras match the Glance unit test can't assert. The exact task behaviour of a `standard` activity launched from
-a widget is hard to prove on Robolectric.
+**On-device check (#102), before #213 (ASUS AI2302, Android 15, 2026-11-05).** With a half-filled add form open, a warm
+tap opened that tile's card in the same task (`dumpsys`: one task, no second LoyScan) and Back returned to the form; a
+repeat tap on another tile opened that card in the same task. Each tile opened its own card, confirming the
+intent-extras match the Glance unit test can't assert. Since #213 Back from it goes to the list.
 
 ## Manifest
 
@@ -181,10 +180,11 @@ Glance's `@layout/glance_default_loading_layout` as the initial layout). Glance 
   card flow emits then (the `@Transaction` query observes the stores table).
 - `OpenCardIntentTest` — the intent round-trips, and is `null` for a bare intent or one from recents.
 - `WidgetTapOpensCardTest` — end to end: `MainActivity` launched **cold** by `openCardIntent` opens that card's
-  detail, and a **warm** `onNewIntent` opens it while the app is already running. Mirrors `ShareToLoyScanTest`. The
-  cold launch is the dead-process case.
-- `WidgetOpenCardDirectionsTest` — `NavController.openCard` opens the card over the list, and over a `CardForm`
-  **without discarding it** (`TestNavHostController`).
+  detail (the dead-process case), a **warm** `onNewIntent` opens it while the app runs, and one for card B over card
+  A's screen shows B (#213). Mirrors `ShareToLoyScanTest`.
+- `WidgetOpenCardDirectionsTest` (`TestNavHostController`) — `openCard` opens the card over the list from the list, a
+  `CardForm` or another card's screen, in a new entry, and Back lands on the list; for the card on top it keeps the
+  same entry and back stack (#213).
 
 The `com.bdaniel.loyscan.widget.glance` package (`CardWidget`, `CardWidgetReceiver`, `GlanceCardWidgetRefresher`,
 `WidgetLogosModule`) is

@@ -3,6 +3,7 @@ package com.bdaniel.loyscan
 import androidx.compose.runtime.Immutable
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.toRoute
 import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.domain.ScannedBarcode
@@ -269,14 +270,16 @@ private fun addCardStep(storeId: String, scannedContent: String?, scannedFormat:
 
 
 /**
- * Opens the card [cardId] (its store colour [color]) from the home-screen widget (#11). It pushes the card over
- * whatever is open rather than popping back to the list, so a half-filled add/edit form the user was on survives a
- * widget tap and Back returns to it (#83's concern, decided for the widget in #11). `launchSingleTop` keeps a second
- * tap on the same card from stacking a duplicate. Opening a card is a use at a till, as tapping it in the list is (#4).
+ * Opens the card [cardId] (its store colour [color]) from the home-screen widget (#11), in place of whatever was open
+ * above the list, so Back from it returns to the list (#213). A tap for the card already on top leaves it as it is.
+ * Not `launchSingleTop`: over another card's screen it kept that entry, with its view model still showing the other
+ * card, and only updated the entry's arguments (#213). Opening a card is a use at a till, as tapping it in the list is (#4).
  */
 fun NavController.openCard(cardId: String, color: String) {
+    val top = currentBackStackEntry
+    if (top != null && top.destination.hasRoute<Detail>() && top.toRoute<Detail>().cardId == cardId) return
     navigate(Detail(cardId, color)) {
-        launchSingleTop = true
+        popUpTo<CardList>()
     }
 }
 
