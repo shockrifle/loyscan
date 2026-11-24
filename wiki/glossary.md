@@ -72,6 +72,9 @@ separators removed, letter case applied). Rules turn it into barcode content. Se
 **`EMPTY`** — Companion sentinel (`LoyaltyCard.EMPTY`, `Store.EMPTY`) with id `""` and empty or null fields; used as
 `stateIn` initial value so screens never deal with `null`. Its empty id is why the detail screen's shared key comes from the route ([[shared-element-key-from-async-state]]).
 
+**ECI** — Extended Channel Interpretation: a segment in a 2D barcode that names the character set of the data after
+it (ECI 26 is UTF-8). Printed loyalty cards carry none, so LoyScan draws none ([[zxing-core]] → Contract, #214).
+
 **Entity** — Room table class in `data/local/db/entity/` (`StoreEntity`, `LoyaltyCardEntity`). Stays inside `data/`.
 
 **Frequently added** — Catalogue stores flagged `frequentlyAdded`, offered first in the store picker to a user in one

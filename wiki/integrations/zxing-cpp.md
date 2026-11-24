@@ -89,6 +89,9 @@ Code: `app/src/main/java/com/bdaniel/loyscan/ui/scanner/ZxingCppFrameReader.kt` 
 - **A reader exception is per frame and only logged.** `ScanAnalyzer` logs "Couldn't read a camera frame" (tag
   `ScanAnalyzer`) and skips the frame. If a symbology never scans, look for that warning first, then for "Dropped a
   … result" (a format the app doesn't store).
+- **No ECI flag.** 3.1.1 doesn't say whether a code carried an ECI: a QR code with and without one reads the same in
+  every text mode, with symbology identifier `]Q1` for both. So a redraw can't follow the scanned code's ECI, and
+  draws none ([[zxing-core]] → Contract, #214).
 - **No JVM tests of reading.** The native library is built for Android ABIs only. Reading real barcodes is checked
   on a device (2026-10-19, on 3.1.1 with the final format list: EAN-13, Code 128, QR, PDF417, DataBar and DataBar
   Stacked, Code 39 including a PZN-shaped `-12345678` read as plain Code 39; all from screens or labels, not

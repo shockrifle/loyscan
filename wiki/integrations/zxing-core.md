@@ -17,11 +17,23 @@ Java, no Android or network code. Only its writers are used, in `BarcodeEncoder`
   formats. The screen scales it (`barcodeRects`): whole-pixel modules when there's room, so all bars of one width
   match; 1D barcodes are stretched to the full height (in an area taller than wide they run down its height instead,
   turned a quarter: scan mode in portrait, [[card-detail]], #34), 2D ones keep square modules and are never turned.
-- **No charset hint unless needed.** With `EncodeHintType.CHARACTER_SET` set, ZXing prepends an ECI header to Aztec,
-  PDF417 and byte-mode QR codes, even for ASCII; the card's own barcode has none, and a till may pass it on as a
-  prefix or reject the code. ZXing's own reader strips it, so a read-back test can't see it. `BarcodeEncoder` passes
-  UTF-8 only for content ISO-8859-1 can't hold (`hintsFor`); test:
-  `BarcodeEncoderTest.latin1Content_isEncodedWithoutACharsetHeader`.
+- **No ECI, ever (#214).** With `EncodeHintType.CHARACTER_SET` set, ZXing writes an ECI segment into Aztec, Data
+  Matrix (compact mode), PDF417 and QR codes, even for ASCII. Printed cards carry none: a scanned QR card with Á and Ő
+  held its UTF-8 bytes in plain byte mode, while the redraw started with ECI 26 (UTF-8). A till set to pass ECIs on
+  would send `\000026` in front of the data, or reject the code. So `BarcodeEncoder` never passes a charset hint
+  (`hintsFor`): text ISO-8859-1 can hold goes in as it is (one byte per letter, ZXing's default), and other text goes
+  to the 2D writers as its UTF-8 bytes, one character per byte (`asBytesFor`), GS1 Data Matrix and GS1 QR included.
+  The 1D writers get the text as it is: they reject non-ASCII anyway, and a UTF-8 lead byte U+00F1–F4 would be a
+  Code 128 function character. The scanned code's own ECI can't be followed instead: [[zxing-cpp]] 3.1.1 doesn't say
+  whether a code had one. Tests: `BarcodeEncoderTest.nonLatin1Content_inQr_readsBackWithoutAnEci`,
+  `nonLatin1Content_isWrittenAsItsUtf8BytesWithoutAnEci`, `nonLatin1Gs1Content_keepsItsGs1MarkWithoutAnEci`,
+  `latin1AccentedContent_isWrittenAsLatin1Bytes`, `latin1Content_isEncodedWithoutACharsetHeader`.
+  **How a test sees an ECI** (ZXing 3.5.4's reader, which strips the segment from the text): QR's symbology identifier
+  is `]Q2` with one, `]Q1` without (GS1: `]Q4` / `]Q3`); GS1 Data Matrix `]d5` / `]d2`. Aztec and PDF417 report `]z0`
+  and `]L0` either way, and plain Data Matrix `]d1`, but these readers decode a code with ECI 26 as UTF-8 and one
+  without as ISO-8859-1, so UTF-8 bytes with no ECI read back as `KÃ¡rtya Å\u0090 42` for `Kártya Ő 42`: the
+  test compares with that, written out by hand. The QR reader guesses UTF-8 and returns the text itself; its
+  `BYTE_SEGMENTS` give the bytes.
 - `BarcodeEncoderTest` decodes every format with ZXing's own `MultiFormatReader`, so a format that stops encoding
   correctly fails the build.
 
@@ -59,8 +71,13 @@ Java, no Android or network code. Only its writers are used, in `BarcodeEncoder`
 - **Those four characters are never letters in Code 128.** Because of the same escape mapping, Code 128 content that
   contains `ñ`, `ò`, `ó` or `ô` would be written with a function character in that place, not the letter, and no error
   is raised. So `BarcodeEncoder` skips Code 128 (and GS1-128) for such content (`CODE_128_ESCAPES`), and the chain
-  moves on to QR, in ISO-8859-1 without an ECI header. GS1-128, and a DataBar card's GS1-128 fallback, move on to GS1 QR instead (#45). Test:
+  moves on to QR, without an ECI (one byte per letter for Latin-1 text, UTF-8 bytes otherwise). GS1-128, and a DataBar card's GS1-128 fallback, move on to GS1 QR instead (#45). Test:
   `BarcodeEncoderTest.code128ContentWithAnEscapeCharacter_fallsBackToQr` (#46).
+- **Data Matrix throws on a charset hint for non-Latin-1 text.** Its default encoder rejects such text with a
+  `CHARACTER_SET` hint ("Message contains characters outside ISO-8859-1 encoding", 3.5.4), so before #214 a Data
+  Matrix card with, say, Ő fell back to QR (and Code 128 before it, which rejects it too). Given the UTF-8 bytes as
+  ISO-8859-1 text it encodes them, so such a card is now drawn as Data Matrix and `holdsAsIs` is true. Test:
+  `BarcodeEncoderTest.nonLatin1Content_holdsAsDataMatrix`.
 - **Rejection is an exception.** 1D writers throw `IllegalArgumentException` for content they can't hold (EAN-13 with
   the wrong length or check digit, a non-ASCII character in Code 128, an odd-length ITF); the 2D writers throw
   `WriterException` when content is too long. `BarcodeEncoder` catches both and moves to the next format.

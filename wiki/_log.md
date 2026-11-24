@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-24 · 2D codes never carry an ECI: text Latin-1 can't hold goes to ZXing as its UTF-8 bytes; how a test sees an ECI; Data Matrix's charset-hint quirk; ECI glossary entry; zxing-cpp has no ECI flag · integrations/zxing-core, integrations/zxing-cpp, glossary · #214
 - 2026-11-24 · home-screen-widget decision: the warm-tap consequence leads with the #213 behaviour, the #11 one kept as history (PR #215 review) · decisions/2026-11-04-home-screen-widget · #213
 - 2026-11-24 · widget tap opens the card over the list (Back → list), a tap for the card on top does nothing; postmortem of the reused card entry · bugs/2026-11-24-widget-tap-reused-the-open-card, bugs/_index, apps/card-widget, decisions/2026-11-04-home-screen-widget · #213
 - 2026-11-24 · /next-task stops the plan critic and the reviewer (TaskStop) when their work is over · workflows/code-review · #207
