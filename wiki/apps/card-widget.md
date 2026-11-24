@@ -81,15 +81,18 @@ All paths are under `app/src/main/java/com/bdaniel/loyscan/` unless written in f
   functions are tested. Nor is the widget checked at a large font
   scale: a small tile's two lines can be cut there.
 
-- `widget/WidgetLogos.kt` — the logos as bitmaps (#181). `WidgetLogos.forTiles(tiles)` decodes each logo the tiles
-  show once, by name (a new logo always gets a new file name, so a name is never stale), from a stream it closes
-  (#88), with `inSampleSize` and then scaled down, never up, to fit the **logo box**: the largest tile of all
-  `WIDGET_SIZES` (216 × 136.2dp, at 224dp wide) less the margin, 200 × 120.2dp (`widgetLogoBox`), in pixels at the
-  screen's density (`widgetLogoBoxPx`). One bitmap serves every layout size. When the logos shown together would take
-  more than `WIDGET_LOGO_BUDGET_BYTES` (4 MB, ARGB), all are scaled down alike to fit it (`widgetLogoScale`). A missing
-  file, a file that isn't a picture, or a name that isn't a photo's is left out, so its tiles show the initials; a logo
-  no longer shown is forgotten. It is an app `@Singleton` (`widget/glance/WidgetLogosModule.kt`), so a redraw doesn't
-  decode again. Why a budget: Android refuses a widget update whose bitmaps exceed 1.5 × the screen's pixels × 4 bytes
+- `widget/WidgetLogos.kt` — the logos as bitmaps (#181). `WidgetLogos.forTiles(tiles)` reads each logo's size from
+  its header, fits it, scaled down and never up, to the **logo box**: the largest tile of all `WIDGET_SIZES`
+  (216 × 136.2dp, at 224dp wide) less the margin, 200 × 120.2dp (`widgetLogoBox`), in pixels at the screen's density
+  (`widgetLogoBoxPx`). When the logos shown together would take more than `WIDGET_LOGO_BUDGET_BYTES` (4 MB, ARGB), all
+  are scaled down alike to fit it (`widgetLogoScale`). Each logo is then decoded straight to that size (`inSampleSize`,
+  then scaled), from a stream it closes (#88). One bitmap serves every layout size. It keeps only the bitmaps it last
+  handed out, so it never holds more than the budget, and decodes a logo again only when its size changes (another
+  logo came or went past the budget); a logo's name is never reused, so a kept bitmap is never stale. A missing file,
+  a file that isn't a picture, or a name that isn't a photo's is left out, so its tiles show the initials; a logo no
+  longer shown is forgotten. It is an app `@Singleton` (`widget/glance/WidgetLogosModule.kt`), so a redraw doesn't
+  decode again (review of PR #205: it first kept every full-size decode for the process's life and rescaled on each
+  draw). Why a budget: Android refuses a widget update whose bitmaps exceed 1.5 × the screen's pixels × 4 bytes
   (about 15 MB on a 1080 × 2400 phone), and the platform's RemoteViews keeps one copy per `Bitmap` object for all the
   responsive sizes and collection items, which is why one object per logo is reused (read in the platform and
   glance-appwidget 1.2.0 sources, 2026-11-24; not measured). **Not checked on a device yet:** the logos' look, the tile
@@ -146,7 +149,8 @@ Glance's `@layout/glance_default_loading_layout` as the initial layout). Glance 
   logo scaled down to fit the box, a small one not scaled up, a missing file, a non-picture and an invalid name left
   out without throwing, one bitmap for all of a store's cards and for later calls (the file deleted between them, so the
   stream was closed), a logo no longer shown forgotten, and three logos over the budget scaled to 163 × 163 (√(2/3) of
-  200, worked out by hand) while two within it keep their size.
+  200, worked out by hand), the same bitmaps on the next call, while two within it keep their size; by default two
+  1024 × 1024 logos (8 MiB) come back at 724 × 724, within 4 MiB.
 - `widget/CardWidgetTilesTest` — the sort order, the label (none without one, never the store name), the store name and
   logo, the initials and the colour helpers (Robolectric, because
   the colour parse goes through `android.graphics.Color`).

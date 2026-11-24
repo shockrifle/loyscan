@@ -133,7 +133,24 @@ class WidgetLogosTest {
     }
 
     @Test
-    fun theDefaultBudget_is4MB() {
-        assertThat(WIDGET_LOGO_BUDGET_BYTES).isEqualTo(4L * 1024 * 1024)
+    fun logosOverTheBudget_areScaledOnce_andTheSameBitmapsComeBackLater() = runTest { // #181 review
+        val names = listOf(png("a", 1000, 1000), png("b", 1000, 1000), png("c", 1000, 1000))
+        val tiles = names.mapIndexed { i, name -> tile("c$i", name) }
+        val logos = logos(box = IntSize(200, 200), budget = 320_000)
+
+        val first = logos.forTiles(tiles)
+        val second = logos.forTiles(tiles)
+
+        names.forEach { assertThat(second.getValue(it)).isSameInstanceAs(first.getValue(it)) }
+    }
+
+    @Test
+    fun byDefault_theLogosShownTogether_stayWithin4MB() = runTest { // #181
+        // Two 1024 × 1024 logos are 8 MiB (ARGB); 4 MiB scales each side by √½, 0.7071: 724 × 724.
+        val names = listOf(png("a", 1024, 1024), png("b", 1024, 1024))
+
+        val shown = WidgetLogos(::file, IntSize(1024, 1024)).forTiles(names.mapIndexed { i, name -> tile("c$i", name) })
+
+        assertThat(shown.values.map { it.size() }).containsExactly(IntSize(724, 724), IntSize(724, 724))
     }
 }
