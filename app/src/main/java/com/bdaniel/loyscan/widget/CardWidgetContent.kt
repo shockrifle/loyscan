@@ -26,38 +26,41 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.bdaniel.loyscan.openCardIntent
+import com.bdaniel.loyscan.ui.theme.Spacing
 
 /**
  * One clickable card-ratio tile per [tiles] entry, each opening its card (#11): the store's initials and the card's label
  * on its brand colour, like the list's plain tile. One column in a narrow widget, two from 240dp (#108, [widgetColumns]),
  * laid out for each of [WIDGET_SIZES]; a tile fills its cell, so a layout shown wider or narrower than it was made for
  * doesn't cut it.
- * Corners are rounded from Android 12; Glance can't round them before. Empty until the first card is added.
+ * From Android 12 the tiles' corners nest in the widget background's rounded corners ([widgetTileCornerRadius], #182);
+ * before it, the widget and its tiles are square. Empty until the first card is added.
  */
 @Composable
 fun CardWidgetContent(tiles: List<WidgetTile>) {
     val context = LocalContext.current
     val width = LocalSize.current.width
     val tileSize = widgetTileSize(width)
+    val cornerRadius = widgetTileCornerRadius(widgetBackgroundRadius(context))
     LazyVerticalGrid(
         gridCells = GridCells.Fixed(widgetColumns(width)),
         modifier = GlanceModifier
             .fillMaxSize()
             .appWidgetBackground()
             .background(GlanceTheme.colors.widgetBackground)
-            .padding(WIDGET_PADDING),
+            .padding(WIDGET_HALF_SPACING),
     ) {
         items(tiles, itemId = { it.cardId.hashCode().toLong() }) { tile ->
-            Box(modifier = GlanceModifier.padding(WIDGET_PADDING)) {
+            Box(modifier = GlanceModifier.padding(WIDGET_HALF_SPACING)) {
                 Column(
                     modifier = GlanceModifier
                         // The cell's real width, which can differ from the layout's; the height is the layout's.
                         .fillMaxWidth()
                         .height(tileSize.height)
-                        .cornerRadius(widgetTileCornerRadius(tileSize))
+                        .cornerRadius(cornerRadius)
                         .background(ColorProvider(tile.backgroundColor()))
                         .clickable(actionStartActivity(openCardIntent(context, tile.cardId, tile.color)))
-                        .padding(WIDGET_PADDING),
+                        .padding(Spacing.xs),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {

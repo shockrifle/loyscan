@@ -8,7 +8,8 @@ import org.junit.Test
 
 /**
  * The widget's grid (#108): one column below 240dp of width, two from 240dp, card-ratio tiles. Expected sizes are worked
- * out by hand: the grid and every tile have 4dp of padding, so a cell is (width − 8) / columns and a tile 8dp narrower.
+ * out by hand: the edge and the gap between tiles are 4dp (#182), made of 2dp around the grid and 2dp around every tile,
+ * so a cell is (width − 4) / columns and a tile 4dp narrower.
  */
 class WidgetLayoutTest {
 
@@ -26,18 +27,18 @@ class WidgetLayoutTest {
 
     @Test
     fun aTile_hasTheCardsRatio_inTwoColumns() {
-        val tile = widgetTileSize(300.dp) // cells of 146dp
+        val tile = widgetTileSize(300.dp) // cells of 148dp
 
-        assertThat(tile.width.value).isWithin(0.01f).of(138f)
-        assertThat(tile.height.value).isWithin(0.01f).of(87.02f) // 138 × 53.98 / 85.60
+        assertThat(tile.width.value).isWithin(0.01f).of(144f)
+        assertThat(tile.height.value).isWithin(0.01f).of(90.81f) // 144 × 53.98 / 85.60
     }
 
     @Test
     fun aTile_hasTheCardsRatio_inOneColumn() {
-        val tile = widgetTileSize(200.dp) // one cell of 192dp
+        val tile = widgetTileSize(200.dp) // one cell of 196dp
 
-        assertThat(tile.width.value).isWithin(0.01f).of(184f)
-        assertThat(tile.height.value).isWithin(0.01f).of(116.03f)
+        assertThat(tile.width.value).isWithin(0.01f).of(192f)
+        assertThat(tile.height.value).isWithin(0.01f).of(121.08f)
     }
 
     @Test
@@ -46,9 +47,25 @@ class WidgetLayoutTest {
     }
 
     @Test
-    fun aTilesCorners_areInProportionToAnId1Card() {
-        // 6% of the short side: an ID-1 card has 3.18 mm corners on a 53.98 mm side.
-        assertThat(widgetTileCornerRadius(DpSize(184.dp, 116.03.dp)).value).isWithin(0.01f).of(6.96f)
+    fun theEdgeAndTheGapBetweenTiles_are4dp() { // #182, was 8dp
+        assertThat(WIDGET_SPACING).isEqualTo(4.dp)
+    }
+
+    @Test
+    fun aTilesCorners_nestInTheWidgetBackgroundsCorners() { // #182
+        // The background's radius less the 4dp between the widget's edge and the tile.
+        assertThat(widgetTileCornerRadius(16.dp)).isEqualTo(12.dp)
+        assertThat(widgetTileCornerRadius(28.dp)).isEqualTo(24.dp)
+    }
+
+    @Test
+    fun aBackgroundRadiusSmallerThanTheInset_givesSquareTiles_notANegativeRadius() {
+        assertThat(widgetTileCornerRadius(2.dp)).isEqualTo(0.dp)
+    }
+
+    @Test
+    fun withNoBackgroundRadius_beforeAndroid12_theTilesAreSquare() {
+        assertThat(widgetTileCornerRadius(null)).isEqualTo(0.dp)
     }
 
     @Test
@@ -75,7 +92,7 @@ class WidgetLayoutTest {
 
     @Test
     fun theHeightOfAWidgetHoldingOneTile_isTheTileAndThePadding() {
-        // At 110dp: a 94dp tile, 59.28dp high, and 4dp of padding twice above and below.
-        assertThat(widgetHeightForOneTile(110.dp).value).isWithin(0.01f).of(75.28f)
+        // At 110dp: a 102dp tile, 64.32dp high, and the 4dp edge above and below.
+        assertThat(widgetHeightForOneTile(110.dp).value).isWithin(0.01f).of(72.32f)
     }
 }
