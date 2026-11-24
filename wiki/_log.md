@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-24 · widget rounds its own background at a fixed 12dp and tiles at 8dp (platform radius was 28dp on a device, launcher drew ~22dp); device check done · apps/card-widget, design-system, decisions/2026-11-12-design-tokens-and-card-shape · #182 device check
 - 2026-11-24 · widget tiles: corners nest in the widget background's (its radius less the 4dp edge) from Android 12; edge and gap 4dp · apps/card-widget, design-system, decisions/2026-11-12-design-tokens-and-card-shape · #182
 - 2026-11-24 · store picker rows show a store badge (logo on the brand colour, else initials) in place of the colour dot · features/add-card, features/store-logo · #186
 - 2026-11-23 · review of PR #202: a wiki-only PR runs PublicSafeRepoTest alone instead of no Gradle · decisions/2026-11-23-ci-run-trims, workflows/ci, workflows/tdd · owner decision on the review's major finding

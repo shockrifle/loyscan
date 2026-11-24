@@ -1,6 +1,5 @@
 package com.bdaniel.loyscan.widget
 
-import android.content.Context
 import android.os.Build
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
@@ -8,6 +7,7 @@ import androidx.compose.ui.unit.coerceAtLeast
 import androidx.compose.ui.unit.dp
 import com.bdaniel.loyscan.ui.CARD_ASPECT_RATIO
 import com.bdaniel.loyscan.ui.theme.Spacing
+import com.bdaniel.loyscan.ui.theme.WIDGET_CORNER_RADIUS
 
 /** The space between the widget's edge and its tiles, and between two tiles (#182; 8dp until then). */
 val WIDGET_SPACING = Spacing.xs
@@ -35,15 +35,11 @@ fun widgetTileSize(width: Dp): DpSize {
 }
 
 /**
- * The corner radius of the widget's background, which the home screen rounds from Android 12
- * (`system_app_widget_background_radius`, 16dp in AOSP; a device maker can change it). Null before Android 12, whose
- * widgets have square corners.
+ * The corner radius the widget rounds its background with: [WIDGET_CORNER_RADIUS] from Android 12, null before it, whose
+ * widgets have square corners (Glance can't round a view there).
  */
-fun widgetBackgroundRadius(context: Context, sdkInt: Int = Build.VERSION.SDK_INT): Dp? {
-    if (sdkInt < Build.VERSION_CODES.S) return null
-    val resources = context.resources
-    return (resources.getDimension(android.R.dimen.system_app_widget_background_radius) / resources.displayMetrics.density).dp
-}
+fun widgetBackgroundRadius(sdkInt: Int = Build.VERSION.SDK_INT): Dp? =
+    if (sdkInt < Build.VERSION_CODES.S) null else WIDGET_CORNER_RADIUS
 
 /**
  * A tile's corner radius (#182): the widget background's radius less the [WIDGET_SPACING] between the widget's edge

@@ -47,9 +47,11 @@ cut-out's size and place are tested through its node ([[barcode-scanner]]).
 The widget reads `Spacing` too, since it can't read the app's theme. Its edge and the gap between its tiles are both
 `xs` (4dp, `WIDGET_SPACING`), on purpose tighter than the `m` gap between the list's tiles: a widget is small, and the
 tiles nest in its rounded background (#182). Glance has no grid spacing, so half of it pads the grid and half each tile.
-Its tiles have the card ratio. Their corners are not `CardShape`'s: from Android 12 they are the widget background's
-radius (`system_app_widget_background_radius`) less the 4dp edge, so they nest concentrically; before Android 12 the
-widget and its tiles are square (`widget/WidgetLayout.kt`, [[card-widget]]).
+Its tiles have the card ratio. Their corners are not `CardShape`'s: from Android 12 the widget rounds its background
+with `WIDGET_CORNER_RADIUS` (12dp, `Shapes.kt`) and the tiles with that less the 4dp edge (8dp), so they nest
+concentrically; before Android 12 the widget and its tiles are square (`widget/WidgetLayout.kt`, [[card-widget]]).
+The platform's widget radius isn't used: it is 28dp on some devices, too round for small tiles, and launchers draw
+their own radius anyway.
 
 ## Type and buttons
 

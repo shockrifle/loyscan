@@ -62,14 +62,15 @@ class CardWidgetContentTest {
     }
 
     @Test
-    @Config(sdk = [32]) // #182: Android 12+, where the widget's background has rounded corners
-    fun content_roundsEachTile_concentricWithTheWidgetsBackground() = runGlanceAppWidgetUnitTest {
+    @Config(sdk = [32]) // #182: Android 12+, where the widget rounds its background
+    fun content_roundsTheBackground_andEachTileConcentricWithIt() = runGlanceAppWidgetUnitTest {
         setAppWidgetSize(DpSize(300.dp, 200.dp))
         setContext(context)
         provideComposable { CardWidgetContent(tiles) }
 
-        // The platform's 16dp background radius less the 4dp edge.
-        onAllNodes(hasClickAction() and hasCornerRadius(12.dp)).assertCountEquals(2)
+        // The widget rounds its own background, so the launcher leaves it alone; a tile's corners are 4dp less.
+        onAllNodes(hasCornerRadius(12.dp)).assertCountEquals(1)
+        onAllNodes(hasClickAction() and hasCornerRadius(8.dp)).assertCountEquals(2)
     }
 
     @Test
@@ -80,6 +81,7 @@ class CardWidgetContentTest {
         provideComposable { CardWidgetContent(tiles) }
 
         onAllNodes(hasClickAction() and hasCornerRadius(0.dp)).assertCountEquals(2)
+        onAllNodes(hasCornerRadius(12.dp)).assertCountEquals(0)
     }
 
     @Test
