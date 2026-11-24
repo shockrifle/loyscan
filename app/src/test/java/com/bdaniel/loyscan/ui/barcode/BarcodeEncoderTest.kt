@@ -2,6 +2,7 @@ package com.bdaniel.loyscan.ui.barcode
 
 import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.domain.Gs1
+import com.google.common.truth.Expect
 import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
 import com.google.zxing.BinaryBitmap
@@ -16,6 +17,7 @@ import com.google.zxing.RGBLuminanceSource
 import com.google.zxing.Result
 import com.google.zxing.ResultMetadataType
 import com.google.zxing.common.HybridBinarizer
+import org.junit.Rule
 import org.junit.Test
 
 /**
@@ -24,6 +26,10 @@ import org.junit.Test
  * numbers only.
  */
 class BarcodeEncoderTest {
+
+    /** Collects every failed check, so a loop over formats shows each red format, not only the first. */
+    @get:Rule
+    val expect: Expect = Expect.create()
 
     @Test
     fun everyFormat_encodesAsItselfOrFallsBack_andReadsBackAsTheContent() {
@@ -269,6 +275,76 @@ class BarcodeEncoderTest {
     }
 
     @Test
+    fun nonLatin1Content_inQr_readsBackWithoutAnEci() { // #214
+        // A printed card's QR code holds the UTF-8 bytes in byte mode with no ECI; a till set to pass ECIs on would
+        // send "\000026" in front of the data. ZXing's reader reports "]Q2" for a QR code with an ECI, "]Q1" without.
+        val barcode = BarcodeEncoder.encode("Kártya Ő 42", BarcodeFormat.QR_CODE)!!
+
+        val result = read(barcode)
+
+        expect.that(barcode.format).isEqualTo(BarcodeFormat.QR_CODE)
+        expect.that(result.resultMetadata[ResultMetadataType.SYMBOLOGY_IDENTIFIER]).isEqualTo("]Q1")
+        expect.that(result.text).isEqualTo("Kártya Ő 42")
+        // K á(C3 A1) r t y a space Ő(C5 90) space 4 2
+        expect.that(result.byteSegments()).isEqualTo(
+            bytes(0x4B, 0xC3, 0xA1, 0x72, 0x74, 0x79, 0x61, 0x20, 0xC5, 0x90, 0x20, 0x34, 0x32),
+        )
+    }
+
+    @Test
+    fun nonLatin1Content_isWrittenAsItsUtf8BytesWithoutAnEci() { // #214
+        // These readers can't show an ECI in the identifier ("]z0", "]L0" either way), but they read a code with an
+        // ECI 26 as UTF-8 and one without as ISO-8859-1 (ZXing 3.5.4). So the UTF-8 bytes with no ECI read back as
+        // this, written out by hand: á (C3 A1) is "Ã¡", Ő (C5 90) is "Å" and U+0090.
+        val readWithoutAnEci = "KÃ¡rtya Å\u0090 42"
+        listOf(BarcodeFormat.DATA_MATRIX, BarcodeFormat.AZTEC, BarcodeFormat.PDF_417).forEach { format ->
+
+            val barcode = BarcodeEncoder.encode("Kártya Ő 42", format)!!
+
+            expect.withMessage(format.name).that(barcode.format).isEqualTo(format)
+            if (barcode.format == format) expect.withMessage(format.name).that(decode(barcode)).isEqualTo(readWithoutAnEci)
+        }
+    }
+
+    @Test
+    fun nonLatin1Content_holdsAsDataMatrix() { // #214: it fell back to QR while the charset hint made Data Matrix throw
+        assertThat(BarcodeEncoder.holdsAsIs("Kártya Ő 42", BarcodeFormat.DATA_MATRIX)).isTrue()
+    }
+
+    @Test
+    fun nonLatin1Gs1Content_keepsItsGs1MarkWithoutAnEci() { // #214
+        // "]Q3" / "]d2": FNC1 first, no ECI. With an ECI ZXing reports "]Q4" / "]d5".
+        mapOf(
+            BarcodeFormat.GS1_QR_CODE to (BarcodeFormat.GS1_QR_CODE to "]Q3"),
+            BarcodeFormat.DATABAR to (BarcodeFormat.GS1_QR_CODE to "]Q3"),
+            BarcodeFormat.GS1_DATA_MATRIX to (BarcodeFormat.GS1_DATA_MATRIX to "]d2"),
+        ).forEach { (format, drawnAsAndIdentifier) ->
+            val (drawnAs, identifier) = drawnAsAndIdentifier
+
+            val barcode = BarcodeEncoder.encode("91Kártya Ő", format)!!
+
+            expect.withMessage(format.name).that(barcode.format).isEqualTo(drawnAs)
+            expect.withMessage(format.name).that(read(barcode).resultMetadata[ResultMetadataType.SYMBOLOGY_IDENTIFIER])
+                .isEqualTo(identifier)
+        }
+    }
+
+    @Test
+    fun latin1AccentedContent_isWrittenAsLatin1Bytes() { // #214: unchanged; only text Latin-1 can't hold is UTF-8
+        // One byte per letter: á is E1. As UTF-8 (C3 A1) these readers would return "KÃ¡rtya 42".
+        listOf(BarcodeFormat.QR_CODE, BarcodeFormat.DATA_MATRIX, BarcodeFormat.AZTEC, BarcodeFormat.PDF_417)
+            .forEach { format ->
+
+                val barcode = BarcodeEncoder.encode("Kártya 42", format)!!
+
+                expect.withMessage(format.name).that(barcode.format).isEqualTo(format)
+                expect.withMessage(format.name).that(decode(barcode)).isEqualTo("Kártya 42")
+            }
+        val qr = read(BarcodeEncoder.encode("Kártya 42", BarcodeFormat.QR_CODE)!!)
+        expect.that(qr.byteSegments()).isEqualTo(bytes(0x4B, 0xE1, 0x72, 0x74, 0x79, 0x61, 0x20, 0x34, 0x32))
+    }
+
+    @Test
     fun everyBarcode_carriesItsSymbologysQuietZone() {
         // Minimum light modules on each side, per symbology spec (EAN/UPC: the larger, left one). ZXing gives 1D codes
         // only 4-5 a side at size 0, and Aztec and Data Matrix none.
@@ -315,6 +391,13 @@ class BarcodeEncoderTest {
         assertThat(qr.isLinear).isFalse()
         assertThat(qr.height).isEqualTo(qr.width)
     }
+
+    /** The data bytes of a code's byte-mode segments, joined, as ZXing's reader reports them. */
+    @Suppress("UNCHECKED_CAST")
+    private fun Result.byteSegments(): List<Byte> =
+        (resultMetadata[ResultMetadataType.BYTE_SEGMENTS] as List<ByteArray>).flatMap { it.toList() }
+
+    private fun bytes(vararg values: Int): List<Byte> = values.map { it.toByte() }
 
     /** A 1D barcode's row as text, `1` for a dark module: short enough to read in a failure message. */
     private fun EncodedBarcode.bars() = (0 until width).joinToString("") { if (this[it, 0]) "1" else "0" }

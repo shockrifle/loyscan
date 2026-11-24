@@ -88,8 +88,8 @@ object BarcodeEncoder {
         if (zxingFormat == ZxingFormat.CODE_128 && content.any { it in CODE_128_ESCAPES }) return null
         return try {
             // Size 0: the smallest matrix, one pixel per module (and one row for 1D); the screen scales it.
-            val matrix =
-                MultiFormatWriter().encode(content.withFnc1For(format), zxingFormat, 0, 0, hintsFor(content, format))
+            val matrix = MultiFormatWriter()
+                .encode(content.withFnc1For(format).asBytesFor(zxingFormat), zxingFormat, 0, 0, hintsFor(format))
             EncodedBarcode(format, matrix)
         } catch (e: WriterException) {
             null
@@ -100,13 +100,24 @@ object BarcodeEncoder {
     }
 
     /**
-     * UTF-8 only for content ISO-8859-1 (ZXing's default) can't hold: with a charset hint ZXing prepends an ECI
-     * header, which the card's own barcode doesn't have and a till may pass on as a prefix or reject.
+     * Never a charset hint: with one ZXing writes an ECI segment, which a card's own barcode doesn't have and a till
+     * may pass on as a prefix ("\000026") or reject (#214). Text ISO-8859-1 can't hold goes in as bytes instead
+     * ([asBytesFor]).
      */
-    private fun hintsFor(content: String, format: BarcodeFormat): Map<EncodeHintType, Any> =
-        (if (Charsets.ISO_8859_1.newEncoder().canEncode(content)) NO_MARGIN
-        else mapOf(EncodeHintType.CHARACTER_SET to Charsets.UTF_8.name()).plus(NO_MARGIN))
-            .plus(gs1HintsFor(format))
+    private fun hintsFor(format: BarcodeFormat): Map<EncodeHintType, Any> = NO_MARGIN.plus(gs1HintsFor(format))
+
+    /**
+     * For a 2D code, text ISO-8859-1 (ZXing's default) can't hold becomes its UTF-8 bytes, one character per byte, so
+     * ZXing writes those bytes in byte mode with no ECI, as printed cards do (#214). Latin-1 text stays one byte per
+     * letter, as before. 1D writers get the text as it is: they reject non-ASCII, and a UTF-8 lead byte U+00F1–F4
+     * would be a Code 128 function character ([CODE_128_ESCAPES]).
+     */
+    private fun String.asBytesFor(format: ZxingFormat): String =
+        if (format !in BYTE_MODE_FORMATS || Charsets.ISO_8859_1.newEncoder().canEncode(this)) this
+        else String(toByteArray(Charsets.UTF_8), Charsets.ISO_8859_1)
+
+    private val BYTE_MODE_FORMATS =
+        setOf(ZxingFormat.AZTEC, ZxingFormat.DATA_MATRIX, ZxingFormat.PDF_417, ZxingFormat.QR_CODE)
 
     /**
      * GS1 Data Matrix and GS1 QR start with FNC1, which `GS1_FORMAT` adds. The Data Matrix writer reads it only in its
