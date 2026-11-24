@@ -13,6 +13,7 @@ import com.bdaniel.loyscan.testing.CARD_ID
 import com.bdaniel.loyscan.testing.WAIT_TIMEOUT_MS
 import com.bdaniel.loyscan.testing.aLoyaltyCardEntity
 import com.bdaniel.loyscan.testing.aStoreEntity
+import com.bdaniel.loyscan.testing.cardId
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
@@ -82,6 +83,29 @@ class WidgetTapOpensCardTest {
         composeRule.onNodeWithText("My loyalty card").assertExists()
     }
 
+    @Test
+    fun aWarmOpenCardIntent_withAnotherCardsScreenOpen_opensTheTappedCard() { // #213
+        runBlocking {
+            db.storeDao().insert(aStoreEntity(id = "store-a", name = "Store A", color = "#aa0000"))
+            db.storeDao().insert(aStoreEntity(id = "store-b", name = "Store B", color = "#0000bb"))
+            db.loyaltyCardDao().insert(aLoyaltyCardEntity(id = cardId(11), storeId = "store-a"))
+            db.loyaltyCardDao().insert(aLoyaltyCardEntity(id = cardId(12), storeId = "store-b"))
+        }
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        scenario = ActivityScenario.launch(openCardIntent(context, cardId(11), "#aa0000"))
+        waitForText("Store A") // card A's screen: its top bar is the store name, which a list tile never shows as text
+
+        val intent = openCardIntent(context, cardId(12), "#0000bb")
+        scenario!!.onActivity { InstrumentationRegistry.getInstrumentation().callActivityOnNewIntent(it, intent) }
+
+        waitForText("Store B")
+        waitForTextToGo("Store A")
+    }
+
     private fun waitForText(text: String) =
         composeRule.waitUntil(WAIT_TIMEOUT_MS) { composeRule.onAllNodes(hasText(text)).fetchSemanticsNodes().isNotEmpty() }
+
+    /** A screen that is leaving can still show [text] for a while, so asserting it is gone at once is racy (#62). */
+    private fun waitForTextToGo(text: String) =
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) { composeRule.onAllNodes(hasText(text)).fetchSemanticsNodes().isEmpty() }
 }

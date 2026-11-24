@@ -1,6 +1,6 @@
 # Home-screen widget: Glance, an intent extra, and a first slice
 
-**Status:** Active · tile shape and layout amended by [[2026-11-12-design-tokens-and-card-shape]] (#108), store logos on tiles by #181 · **Date:** 2026-11-04 · **Issue:** [#11](https://github.com/shockrifle/loyscan/issues/11) (open: slice) · **Commits:** 61e9d13, ccbeb60, 3eead59
+**Status:** Active · tile shape and layout amended by [[2026-11-12-design-tokens-and-card-shape]] (#108), store logos on tiles by #181, a tap opens the card over the list since #213 ([[2026-11-24-widget-tap-reused-the-open-card]]) · **Date:** 2026-11-04 · **Issue:** [#11](https://github.com/shockrifle/loyscan/issues/11) (open: slice) · **Commits:** 61e9d13, ccbeb60, 3eead59
 
 The home-screen widget ([[card-widget]]), and the three choices that shaped its first slice.
 
@@ -51,7 +51,10 @@ intent `MainActivity` reads, not through URI deep links (the share flow, [[add-c
   preferences — while no widget is placed. A failure never propagates: the widget is optional and must not crash the app.
 - **A warm tap opens the card without discarding a half-filled form** (the #83 concern, decided for the widget):
   `openCard` pushes the card over whatever is open instead of popping to the list, and `SINGLE_TOP` lands the tap in
-  the running task. The exact task behaviour of a `standard` activity launched from a widget can't be proven on
+  the running task. *Superseded 2026-11-24 (#213):* the tap opens the card over the list, in place of whatever was
+  open, so Back returns to the list, as #213 and #189 ask; a half-filled form is dropped. Pushing with
+  `launchSingleTop` had also kept another card's screen showing that card
+  ([[2026-11-24-widget-tap-reused-the-open-card]]). The exact task behaviour of a `standard` activity launched from a widget can't be proven on
   Robolectric, so it is an on-device check and **#11 stays open** (`Refs`, not `Fixes`) until confirmed.
 - `glance-testing`'s unit API matches a tile's click by component, not by intent extras, so the "right card is
   opened" guarantee rests on `CardWidgetTilesTest` (cardId↔tile) plus the intent/navigation tests, not on the
