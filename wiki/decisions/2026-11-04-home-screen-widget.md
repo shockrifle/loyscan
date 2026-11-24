@@ -49,12 +49,11 @@ intent `MainActivity` reads, not through URI deep links (the share flow, [[add-c
   `updateAll` on a change; it is (idempotently) started both from the Application and from the receiver's `onUpdate`,
   so a widget placed mid-session is followed, and it observes nothing — reading nothing from the database or the
   preferences — while no widget is placed. A failure never propagates: the widget is optional and must not crash the app.
-- **A warm tap opens the card without discarding a half-filled form** (the #83 concern, decided for the widget):
-  `openCard` pushes the card over whatever is open instead of popping to the list, and `SINGLE_TOP` lands the tap in
-  the running task. *Superseded 2026-11-24 (#213):* the tap opens the card over the list, in place of whatever was
-  open, so Back returns to the list, as #213 and #189 ask; a half-filled form is dropped. Pushing with
-  `launchSingleTop` had also kept another card's screen showing that card
-  ([[2026-11-24-widget-tap-reused-the-open-card]]). The exact task behaviour of a `standard` activity launched from a widget can't be proven on
+- **A warm tap opens the card over the list, in place of whatever was open** (since #213, 2026-11-24): Back
+  returns to the list, as #213 and #189 ask, and a half-filled form is dropped; `SINGLE_TOP` lands the tap in the
+  running task. *Until #213* `openCard` pushed the card over whatever was open, so a half-filled form survived a tap
+  (the #83 concern, decided for the widget in #11); its `launchSingleTop` also kept another card's screen showing that
+  card ([[2026-11-24-widget-tap-reused-the-open-card]]). The exact task behaviour of a `standard` activity launched from a widget can't be proven on
   Robolectric, so it is an on-device check and **#11 stays open** (`Refs`, not `Fixes`) until confirmed.
 - `glance-testing`'s unit API matches a tile's click by component, not by intent extras, so the "right card is
   opened" guarantee rests on `CardWidgetTilesTest` (cardId↔tile) plus the intent/navigation tests, not on the
