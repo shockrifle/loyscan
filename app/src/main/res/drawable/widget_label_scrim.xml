@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The scrim behind a widget tile's label on a logo (#181): clear at the top of the label's box, fading to
+     PHOTO_LABEL_SCRIM (black at 60%, the My cards tile's) at the tile's edge. Glance has no gradient brush, so the
+     widget draws this as the label box's background image. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <gradient android:angle="270" android:startColor="#00000000" android:endColor="#99000000" />
+</shape>

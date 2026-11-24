@@ -46,9 +46,14 @@ All paths are under `app/src/main/java/com/bdaniel/loyscan/` unless written in f
   the brand colour with the store's initials over the label, like the list's plain tile. **A tile whose store's logo
   decoded** (#181) shows the logo instead of the initials, fitted whole (`ContentScale.Fit`) inside an 8dp margin on
   every side (`WIDGET_LOGO_MARGIN`, `Spacing.s`, the margin chosen while planning #181), and the label, if any, at the
-  bottom edge over the logo in the contrasting text colour, with no band behind it (the My cards tile has a scrim
-  there, [[card-list]]; the issue asked for none). A store with no logo, or one whose logo is missing or can't be
-  decoded, shows the initials. From Android 12 the widget
+  bottom edge over the logo, in white on a scrim behind the label alone: a fade from clear at the top of the label's
+  box (4dp above the text) to the My cards scrim colour (`PHOTO_LABEL_SCRIM`, black at 60%, [[card-list]]) at the
+  tile's edge. Glance has no gradient brush, so the scrim is a drawable, `res/drawable/widget_label_scrim.xml`, the label
+  box's background image. The issue asked for the label straight on the brand colour with no band. The owner checked
+  it on an Android 15 phone and an Android 14 handheld on 2026-11-24 and changed it twice: on the brand colour the label
+  was hard to read over a logo; a solid band with a fade above it, as on My cards, covered too much of the logo; a fade
+  that turned dark at the label's middle was tried and dropped for the plain clear-to-dark one. A store with no logo,
+  or one whose logo is missing or can't be decoded, shows the initials, with the label on the brand colour as before. From Android 12 the widget
   rounds its own background with `WIDGET_CORNER_RADIUS` (12dp, `ui/theme/Shapes.kt`), and a tile's corners are that
   less the 4dp between the widget's edge and the tile, 8dp, so they nest concentrically (#182, `widgetBackgroundRadius`,
   `widgetTileCornerRadius`). The widget rounds its background itself because the launcher otherwise rounds it with a
@@ -95,9 +100,10 @@ All paths are under `app/src/main/java/com/bdaniel/loyscan/` unless written in f
   draw). Why a budget: Android refuses a widget update whose bitmaps exceed 1.5 × the screen's pixels × 4 bytes
   (about 15 MB on a 1080 × 2400 phone), and the platform's RemoteViews keeps one copy per `Bitmap` object for all the
   responsive sizes and collection items, which is why one object per logo is reused (read in the platform and
-  glance-appwidget 1.2.0 sources, 2026-11-24; not measured). **Not checked on a device yet:** the logos' look, the tile
-  height with a logo (a `Fit` image kept its intrinsic height in an earlier attempt, below), TalkBack's reading, and a
-  widget with many stores' logos.
+  glance-appwidget 1.2.0 sources, 2026-11-24; not measured). **Checked on devices on 2026-11-24:** the owner
+  looked at logo tiles on an Android 15 phone and an Android 14 handheld (the label's scrim above came from that).
+  **Not checked on a device yet:** the tile height with a logo measured against one without (a `Fit` image kept its
+  intrinsic height in an earlier attempt, below), TalkBack's reading, and a widget with many stores' logos.
 
 ## Opening a card — an intent extra, not a URI deep link
 
@@ -164,8 +170,10 @@ Glance's `@layout/glance_default_loading_layout` as the initial layout). Glance 
   unit API matches a click by component + `ActionParameters`, not by the intent extras the tile uses, so that a tile
   opens **its own** card is an on-device check, not a unit assertion. Since #181: a tile with a logo shows that bitmap
   (`EmittableImage`, `BitmapImageProvider`), fitted, with 8dp of padding, on its brand colour (`BackgroundModifier.Color`,
-  read through `ColorProvider.getColor`); no initials and no store name; its label in a bottom-centre box, white on a
-  dark colour and black on a light one, with no background; a tile whose logo didn't decode shows the initials.
+  read through `ColorProvider.getColor`); no initials and no store name; its label white on a dark and a light
+  brand colour alike, in a box whose only background is the scrim drawable, aligned to the bottom; the drawable runs
+  top to bottom from clear to `PHOTO_LABEL_SCRIM`; a labelled tile without a logo has no scrim; a tile
+  whose logo didn't decode shows the initials.
 - `widget/CardWidgetUpdaterTest` — the live-update trigger: it fires when a card or the sort changes the tiles, not on
   a change a tile doesn't show, never when no widget is placed, starts once a widget is placed mid-session, and a
   refresh that throws is swallowed so observation continues. Since #181 it fires when a store's logo is set, changed or

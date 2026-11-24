@@ -2,6 +2,7 @@ package com.bdaniel.loyscan.widget
 
 import android.graphics.Bitmap
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceModifier
@@ -33,6 +34,7 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
+import com.bdaniel.loyscan.R
 import com.bdaniel.loyscan.openCardIntent
 import com.bdaniel.loyscan.ui.theme.Spacing
 
@@ -79,8 +81,10 @@ fun CardWidgetContent(tiles: List<WidgetTile>, logos: Map<String, Bitmap> = empt
 }
 
 /**
- * The store's [logo] fitted whole inside [WIDGET_LOGO_MARGIN] (#181), and the card's label, if any, on the brand colour
- * at the bottom edge, over the logo, with no band behind it.
+ * The store's [logo] fitted whole inside [WIDGET_LOGO_MARGIN] (#181), and the card's label, if any, at the bottom edge
+ * over the logo, in white on a scrim in the My cards tile's colour (`res/drawable/widget_label_scrim.xml`) behind the
+ * label alone, fading from clear at its top to dark at the tile's edge. Straight on the brand colour the label was hard to read
+ * over a logo, and a solid band with a fade above it covered too much of it (device checks, 2026-11-24).
  */
 @Composable
 private fun LogoTile(tile: WidgetTile, logo: Bitmap, modifier: GlanceModifier) {
@@ -93,12 +97,15 @@ private fun LogoTile(tile: WidgetTile, logo: Bitmap, modifier: GlanceModifier) {
         )
         tile.label?.let { label ->
             Box(modifier = GlanceModifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
-                Text(
-                    text = label,
-                    style = TextStyle(color = ColorProvider(tile.textColor())),
-                    maxLines = 1,
-                    modifier = GlanceModifier.padding(horizontal = Spacing.xs, vertical = Spacing.xs),
-                )
+                // The scrim is the label box's own background, so it ends just above the label: clear at the box's
+                // top, at full strength at the tile's edge.
+                Box(
+                    modifier = GlanceModifier.fillMaxWidth().background(ImageProvider(R.drawable.widget_label_scrim))
+                        .padding(Spacing.xs),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(text = label, style = TextStyle(color = ColorProvider(Color.White)), maxLines = 1)
+                }
             }
         }
     }

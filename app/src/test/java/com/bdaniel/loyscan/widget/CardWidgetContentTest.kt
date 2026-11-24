@@ -12,6 +12,12 @@ import androidx.glance.GlanceModifier
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.ContentScale
 import androidx.glance.layout.EmittableBox
+import androidx.glance.AndroidResourceImageProvider
+import android.graphics.drawable.GradientDrawable
+import androidx.compose.ui.graphics.toArgb
+import com.bdaniel.loyscan.R
+import com.bdaniel.loyscan.ui.PHOTO_LABEL_SCRIM
+import com.google.common.truth.Truth.assertThat
 import androidx.glance.text.EmittableText
 import androidx.glance.appwidget.testing.unit.runGlanceAppWidgetUnitTest
 import androidx.glance.layout.PaddingModifier
@@ -102,7 +108,10 @@ class CardWidgetContentTest {
     }
 
     @Test
-    fun aLabelOnALogoTile_isAtTheBottom_inTheContrastingColour_withNoBand() = runGlanceAppWidgetUnitTest { // #181
+    fun aLabelOnALogoTile_isWhite_onADarkScrimBehindItAlone() = runGlanceAppWidgetUnitTest {
+        // #181, changed after the device checks (2026-11-24): a label straight on the brand colour over the logo was
+        // hard to read, and a solid band with a fade above it covered too much of the logo, so a scrim in the My cards
+        // colour sits behind the label alone, and the label is white whatever the brand colour.
         setAppWidgetSize(DpSize(300.dp, 200.dp))
         setContext(context)
         provideComposable {
@@ -115,9 +124,28 @@ class CardWidgetContentTest {
             )
         }
 
-        onNode(hasText("Gold") and hasTextColour(Color.White) and hasNoBackground()).assertExists()
-        onNode(hasText("Silver") and hasTextColour(Color.Black) and hasNoBackground()).assertExists()
-        onAllNodes(holdsAtTheBottom("Gold") or holdsAtTheBottom("Silver")).assertCountEquals(2)
+        onNode(hasText("Gold") and hasTextColour(Color.White)).assertExists()
+        onNode(hasText("Silver") and hasTextColour(Color.White)).assertExists()
+        onAllNodes(holdsOnTheScrimAtTheBottom("Gold") or holdsOnTheScrimAtTheBottom("Silver")).assertCountEquals(2)
+    }
+
+    @Test
+    fun theScrim_runsFromClearAtTheLabelsTop_toTheListsScrimColourAtTheBottom() {
+        // #181, device checks: no solid band, no middle stop; one fade from clear to the My cards scrim colour.
+        val scrim = context.getDrawable(R.drawable.widget_label_scrim) as GradientDrawable
+
+        assertThat(scrim.colors?.toList()).containsExactly(0x00000000, PHOTO_LABEL_SCRIM.toArgb()).inOrder()
+        assertThat(scrim.orientation).isEqualTo(GradientDrawable.Orientation.TOP_BOTTOM)
+    }
+
+    @Test
+    fun aLabelledTileWithoutALogo_hasNoScrim() = runGlanceAppWidgetUnitTest { // #181: initials stay on the colour
+        setAppWidgetSize(DpSize(300.dp, 200.dp))
+        setContext(context)
+        provideComposable { CardWidgetContent(listOf(tiles.first())) }
+
+        onNode(hasText("Gold") and hasTextColour(Color.White)).assertExists() // white on #112233, its contrast colour
+        onAllNodes(holdsOnTheScrimAtTheBottom("Gold")).assertCountEquals(0)
     }
 
     @Test
@@ -193,18 +221,22 @@ class CardWidgetContentTest {
             .any { it.colorProvider.getColor(context) == colour }
     }
 
-    private fun hasNoBackground() = GlanceNodeMatcher<MappedNode>("has no background") { node ->
-        node.value.emittable.modifier.elements().none { it is BackgroundModifier }
-    }
-
     private fun hasTextColour(colour: Color) = GlanceNodeMatcher<MappedNode>("has text colour $colour") { node ->
         (node.value.emittable as? EmittableText)?.style?.color?.getColor(context) == colour
     }
 
-    /** A box that aligns its content to the bottom centre and holds the text [text]. */
-    private fun holdsAtTheBottom(text: String) = GlanceNodeMatcher<MappedNode>("holds '$text' at the bottom") { node ->
-        val box = node.value.emittable as? EmittableBox
-        box?.contentAlignment == Alignment.BottomCenter && box.children.any { (it as? EmittableText)?.text == text }
+    /**
+     * A bottom-aligned box holding a box with the scrim drawable, and no solid colour, behind [text]: the scrim covers
+     * the label alone, not a band above it.
+     */
+    private fun holdsOnTheScrimAtTheBottom(text: String) = GlanceNodeMatcher<MappedNode>("holds '$text' on the scrim") { node ->
+        val outer = node.value.emittable as? EmittableBox ?: return@GlanceNodeMatcher false
+        val label = outer.children.singleOrNull() as? EmittableBox ?: return@GlanceNodeMatcher false
+        val backgrounds = label.modifier.elements().filterIsInstance<BackgroundModifier>()
+        val onScrim = backgrounds.singleOrNull()
+            .let { it is BackgroundModifier.Image && (it.imageProvider as? AndroidResourceImageProvider)?.resId == R.drawable.widget_label_scrim }
+        outer.contentAlignment == Alignment.BottomCenter && onScrim &&
+            label.children.any { (it as? EmittableText)?.text == text }
     }
 
     // Glance's `CornerRadiusModifier` is internal to Kotlin, so its radius is read by reflection.
