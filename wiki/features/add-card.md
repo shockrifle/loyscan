@@ -27,7 +27,14 @@ with the picture's barcode (#77, below). Everything runs offline on the local da
   name. The search field narrows it to stores whose name or an alias contains the text, ignoring case and accents
   (`StoreSearch.search`: NFD, combining marks removed), so "mobelix" finds "Möbelix". Sorting uses the same key. With
   no match the screen says "No store matches “…”". Tapping a store opens the scanner for it. "Other card", first in
-  the list and shown whatever the search, opens the custom-store form. A custom store's row has an Edit button
+  the list and shown whatever the search, opens the custom-store form. Each store's row starts with its **badge**
+  (`StoreBadge` in `StoreList.kt`, #186): a 40dp circle in the brand colour with the store's logo fitted inside
+  ([[store-logo]]), else its initials, as the My cards tile shows a store; the owner's choice on 2026-11-24, in place
+  of the colour dot. A logo that can't be loaded or whose file is missing shows the initials (the image loader's error,
+  not `CardPhotos.withoutMissing`); while it loads, only the colour. Every row has the badge, so names line up. The
+  initials are kept out of the row's merged semantics (`clearAndSetSemantics`), so TalkBack still reads the row as
+  the store's name. The rows are shared with the card form's "Change store" dialog ([[edit-card]]), which shows the
+  badges too. A custom store's row has an Edit button
   ([[edit-store]]); a catalogue store's, in every section, a logo button ([[store-logo]], #151). While nothing is searched, "Frequently added" (step 1 of #6,
   [[2026-10-30-frequently-added-stores]]) lists the catalogue stores flagged `frequentlyAdded` whose `countryCodes`
   contain the user's country (`UserCountry`: SIM, then network, then locale), by name, between "Other card" and an
@@ -185,6 +192,13 @@ with the picture's barcode (#77, below). Everything runs offline on the local da
 - `StorePickerViewModelTest`, `StorePickerScreenTest` (incl. "Other card" and "Frequently added": the user's
   country's flagged stores by name, hidden while searching or when there are none); `data/device/DeviceUserCountryTest`
   (SIM, network, locale, none; Robolectric's `ShadowTelephonyManager` and locale qualifiers).
+- The badge (#186): `StorePickerScreenTest.aStoreWithALogo_showsItInItsRow_inEverySection` (Suggested, Frequently added,
+  All stores), `…_showsItInSearchResults`, `inLogoMode_aStoreWithALogo_showsItInItsRow`,
+  `aStoreWithoutALogo_showsItsInitials_andNoImage`, `aStoreWhoseLogoFileIsMissing_…`,
+  `storeNames_lineUp_whetherOrNotTheStoreHasALogo` (a guard: seen red with the badge dropped from a row without a
+  logo), `aRowsTalkBackText_isTheStoreNameOnly_withOrWithoutALogo`; `CardFormScreenTest.theStoreChooser_showsAStoresLogoInItsRow`.
+  The initials are in the unmerged tree, so the Hungarian test counts them as data and the font-scale test as
+  auto-sized (`fitsByDesign`).
 - `CustomStoreViewModelTest` (defaults, a blank name, what is saved, one save only, a failed save, process death),
   `CustomStoreScreenTest`; the format list in `domain/BarcodeFormatTest` and
   `BarcodeEncoderTest.everyFormatACustomStoreCanPick_isDrawnAsItself`; `RoomStoreRepositoryTest.add_…`.
