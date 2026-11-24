@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-24 · /next-task stops the plan critic and the reviewer (TaskStop) when their work is over · workflows/code-review · #207
 - 2026-11-24 · widget logo tile's label on a clear-to-dark scrim behind it alone (owner's choice after device checks) · apps/card-widget, decisions/2026-11-04-home-screen-widget · #181
 - 2026-11-24 · WidgetLogos decodes each logo straight to its shown size and keeps only the bitmaps shown, within the budget (PR #205 review) · apps/card-widget · #181
 - 2026-11-24 · widget tiles show the store's logo (fitted in an 8dp margin, label at the bottom, decoded once to the largest tile's box, 4 MB budget) · apps/card-widget, features/store-logo, decisions/2026-11-04-home-screen-widget, workflows/tdd · #181

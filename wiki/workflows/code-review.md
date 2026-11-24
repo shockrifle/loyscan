@@ -84,6 +84,10 @@ Why it is set up this way:
   session revises the plan, then shows the user the seams and the findings it rejected. A wrong seam costs a
   rewrite once the code exists, which is why the user confirms the plan before implementation and isn't only
   told about it.
+- **`/next-task` stops both subagents when their work is over** (TaskStop): the plan critic once its model is
+  checked, the reviewer once every merge gate has passed, before the merge. A subagent that starts a background task
+  of its own (a gate run, a CI watch) otherwise stays alive after handing back its report; on #181 the reviewer kept
+  running after the merge until the user asked for it to be stopped (#207).
 
 ## What the review enforces about tests
 

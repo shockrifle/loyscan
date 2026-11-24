@@ -59,8 +59,9 @@ them with AskUserQuestion: the recommended one first, each with a one-line reaso
   `.claude/agents/plan-critic.md` sets the model and its read-only tools). Its prompt is the issue (title, body,
   comments) and the plan, verbatim, and nothing else. Check which model really answered
   (`python -I .claude/scripts/reviewer_model.py <agent id> --expect claude-sonnet-5-5 --effort high`) and tell
-  me if it isn't Sonnet at high effort; it is not a gate. Work through its findings: revise the plan for the ones
-  that hold; for the ones you reject, keep a one-line reason.
+  me if it isn't Sonnet at high effort; it is not a gate. Then stop it (TaskStop with its agent ID): its report is
+  its whole job, and a background task of its own would keep it running. Work through its findings: revise the
+  plan for the ones that hold; for the ones you reject, keep a one-line reason.
 - Show me the revised plan in a few lines, with the seam of every test, plus the critic's findings you rejected
   and why, and ask me to confirm it (AskUserQuestion). Implement only the plan I confirmed.
 
@@ -132,7 +133,9 @@ If `origin/master` moved after `git fetch origin`: `git rebase origin/master`, r
 `git push --force-with-lease`, wait for CI again, and tell me. A red PR run: investigate and report before
 adding fix commits.
 
-Then `gh pr merge <p> --rebase --delete-branch`. Switch back: `git switch master`, `git pull --ff-only`, and
+Once every gate has passed, stop the reviewer (TaskStop with its agent ID): its rounds are over, and a background
+task it started (a gate run, a CI watch) would keep it running after the merge. Then
+`gh pr merge <p> --rebase --delete-branch`. Switch back: `git switch master`, `git pull --ff-only`, and
 delete the local branch. The merge rewrites the commits, so their SHAs on `master` differ from the branch's.
 Watch the CI run on `master` for the merged head, picked by its SHA, not the newest run (`gh run list --branch master
 --event push --commit $(git rev-parse HEAD)`, then `gh run watch <id>`; the run can take a few seconds to appear, so
