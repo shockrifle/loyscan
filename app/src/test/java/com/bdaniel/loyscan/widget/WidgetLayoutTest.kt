@@ -1,6 +1,7 @@
 package com.bdaniel.loyscan.widget
 
 import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
@@ -106,5 +107,21 @@ class WidgetLayoutTest {
     fun theHeightOfAWidgetHoldingOneTile_isTheTileAndThePadding() {
         // At 110dp: a 102dp tile, 64.32dp high, and the 4dp edge above and below.
         assertThat(widgetHeightForOneTile(110.dp).value).isWithin(0.01f).of(72.32f)
+    }
+
+    @Test
+    fun theLogoBox_isTheLargestTileLessAn8dpMargin() { // #181
+        // The largest tile is at 224dp, one column: a cell of 220dp, a tile of 216 × 136.21dp (216 / 1.5858); 410dp,
+        // two columns, gives 199dp. Less 8dp on every side: 200 × 120.21dp.
+        val box = widgetLogoBox()
+
+        assertThat(box.width.value).isWithin(0.01f).of(200f)
+        assertThat(box.height.value).isWithin(0.01f).of(120.21f)
+    }
+
+    @Test
+    fun theLogoBoxInPixels_isItsDpTimesTheDensity_roundedDown() { // #181: 200 × 2.75 = 550, 120.21 × 2.75 = 330.6
+        assertThat(widgetLogoBoxPx(density = 2.75f)).isEqualTo(IntSize(550, 330))
+        assertThat(widgetLogoBoxPx(density = 1f)).isEqualTo(IntSize(200, 120))
     }
 }

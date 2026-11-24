@@ -1,6 +1,6 @@
 # Home-screen widget: Glance, an intent extra, and a first slice
 
-**Status:** Active · tile shape and layout amended by [[2026-11-12-design-tokens-and-card-shape]] (#108) · **Date:** 2026-11-04 · **Issue:** [#11](https://github.com/shockrifle/loyscan/issues/11) (open: slice) · **Commits:** 61e9d13, ccbeb60, 3eead59
+**Status:** Active · tile shape and layout amended by [[2026-11-12-design-tokens-and-card-shape]] (#108), store logos on tiles by #181 · **Date:** 2026-11-04 · **Issue:** [#11](https://github.com/shockrifle/loyscan/issues/11) (open: slice) · **Commits:** 61e9d13, ccbeb60, 3eead59
 
 The home-screen widget ([[card-widget]]), and the three choices that shaped its first slice.
 
@@ -25,6 +25,10 @@ intent `MainActivity` reads, not through URI deep links (the share flow, [[add-c
    remote view — more work and risk. Deferred to a follow-up.
    *Amended 2026-11-12 (#108):* the full-width label strips became card-ratio tiles with the store's initials over the
    label, in one or two columns by width ([[2026-11-12-design-tokens-and-card-shape]]). Still no photo.
+   *Amended 2026-11-24 (#181):* a tile of a store with a logo shows the logo, the first `Bitmap` in the widget's
+   RemoteViews. The risk named above is handled by decoding each logo once, to the largest tile less its margin at the
+   screen's density, and keeping all the logos shown within a 4 MB budget (`WidgetLogos`, [[card-widget]]). Still no
+   front photo (#185).
 
 ## Why
 
@@ -51,4 +55,4 @@ intent `MainActivity` reads, not through URI deep links (the share flow, [[add-c
 - `glance-testing`'s unit API matches a tile's click by component, not by intent extras, so the "right card is
   opened" guarantee rests on `CardWidgetTilesTest` (cardId↔tile) plus the intent/navigation tests, not on the
   content test — another on-device check.
-- **Follow-ups (not built):** front-photo tiles, and an empty-state message when there are no cards.
+- **Follow-ups (not built):** front-photo tiles (#185), and an empty-state message when there are no cards.

@@ -2,7 +2,8 @@
 
 A Glance app-widget that shows the user's cards as tiles; tapping one opens that card's [[card-detail]]
 screen, even from a dead process (#11). Added 2026-11-04 as the first slice: brand-colour tiles with the
-card's list label, no photo yet. One runtime surface alongside the [[android-app]] activity.
+card's list label, no photo yet; since #181 (2026-11-24) a tile shows its store's logo ([[store-logo]]). One runtime
+surface alongside the [[android-app]] activity.
 
 All paths are under `app/src/main/java/com/bdaniel/loyscan/` unless written in full.
 
@@ -10,8 +11,9 @@ All paths are under `app/src/main/java/com/bdaniel/loyscan/` unless written in f
 
 - `widget/glance/CardWidget.kt` — `CardWidget : GlanceAppWidget`. `provideGlance` reads the cards and the sort
   preference from the repositories through a Hilt `@EntryPoint` (`CardWidgetEntryPoint`, the same trick as
-  `hiltImageLoader()`, [[architecture]] → Composition/DI), collects them in `provideContent`, and renders
-  `CardWidgetContent`. This renders the **current** cards whenever Glance asks (e.g. when the widget is added). The
+  `hiltImageLoader()`, [[architecture]] → Composition/DI), maps them to tiles and their logos (`WidgetLogos.forTiles`,
+  below), collects that in `provideContent`, and renders `CardWidgetContent`. The first tiles and logos are read before
+  `provideContent`, so a tile never draws its initials before its logo arrives. This renders the **current** cards whenever Glance asks (e.g. when the widget is added). The
   `widget.glance` sub-package holds the Glance runtime glue that runs only on a real home screen; the tested content
   and logic (`widget/CardWidgetContent.kt`, `CardWidgetTiles.kt`, `CardWidgetUpdater.kt`) stay in `widget`.
 - **Staying in step with the cards** is a separate job: a Glance widget renders a snapshot and does not follow a
@@ -33,7 +35,7 @@ All paths are under `app/src/main/java/com/bdaniel/loyscan/` unless written in f
   without reopening the app.
 - `widget/CardWidgetTiles.kt` — the pure logic, unit-tested: `List<LoyaltyCard>.toWidgetTiles(sort)` sorts with
   the list's `sortedBy(sort)` ([[card-list]], #7) and maps each card to a `WidgetTile(cardId, color, initials,
-  storeName, label)`. The `label` is the card's own label, `null` when it has none: since #181 a tile never shows the
+  storeName, label, logo)`, `logo` being the store's logo file name. The `label` is the card's own label, `null` when it has none: since #181 a tile never shows the
   store name, the same rule as My cards since #183 (until #181 an unlabelled card's widget tile showed the store name).
   `storeName` is only for TalkBack: `WidgetTile.description()` is "store, label", or the store alone, as the list's tile
   joins them, and the tile carries it as its `semantics { contentDescription }`.
@@ -41,7 +43,12 @@ All paths are under `app/src/main/java/com/bdaniel/loyscan/` unless written in f
   `contrastingTextColor()`, falling back to a neutral grey for an empty or malformed brand colour.
 - `widget/CardWidgetContent` — the Glance composable (since #108, [[design-system]]): a `LazyVerticalGrid` of
   card-ratio tiles, one column below 240dp of widget width and two from 240dp, on `appWidgetBackground()`. A tile is
-  the brand colour with the store's initials over the label, like the list's plain tile. From Android 12 the widget
+  the brand colour with the store's initials over the label, like the list's plain tile. **A tile whose store's logo
+  decoded** (#181) shows the logo instead of the initials, fitted whole (`ContentScale.Fit`) inside an 8dp margin on
+  every side (`WIDGET_LOGO_MARGIN`, `Spacing.s`, the margin chosen while planning #181), and the label, if any, at the
+  bottom edge over the logo in the contrasting text colour, with no band behind it (the My cards tile has a scrim
+  there, [[card-list]]; the issue asked for none). A store with no logo, or one whose logo is missing or can't be
+  decoded, shows the initials. From Android 12 the widget
   rounds its own background with `WIDGET_CORNER_RADIUS` (12dp, `ui/theme/Shapes.kt`), and a tile's corners are that
   less the 4dp between the widget's edge and the tile, 8dp, so they nest concentrically (#182, `widgetBackgroundRadius`,
   `widgetTileCornerRadius`). The widget rounds its background itself because the launcher otherwise rounds it with a
@@ -73,6 +80,21 @@ All paths are under `app/src/main/java/com/bdaniel/loyscan/` unless written in f
   `widgetTileSize` is checked on a device (2026-11-12: one column at ~131dp, two at ~278dp, tiles uncut), and only the
   functions are tested. Nor is the widget checked at a large font
   scale: a small tile's two lines can be cut there.
+
+- `widget/WidgetLogos.kt` — the logos as bitmaps (#181). `WidgetLogos.forTiles(tiles)` decodes each logo the tiles
+  show once, by name (a new logo always gets a new file name, so a name is never stale), from a stream it closes
+  (#88), with `inSampleSize` and then scaled down, never up, to fit the **logo box**: the largest tile of all
+  `WIDGET_SIZES` (216 × 136.2dp, at 224dp wide) less the margin, 200 × 120.2dp (`widgetLogoBox`), in pixels at the
+  screen's density (`widgetLogoBoxPx`). One bitmap serves every layout size. When the logos shown together would take
+  more than `WIDGET_LOGO_BUDGET_BYTES` (4 MB, ARGB), all are scaled down alike to fit it (`widgetLogoScale`). A missing
+  file, a file that isn't a picture, or a name that isn't a photo's is left out, so its tiles show the initials; a logo
+  no longer shown is forgotten. It is an app `@Singleton` (`widget/glance/WidgetLogosModule.kt`), so a redraw doesn't
+  decode again. Why a budget: Android refuses a widget update whose bitmaps exceed 1.5 × the screen's pixels × 4 bytes
+  (about 15 MB on a 1080 × 2400 phone), and the platform's RemoteViews keeps one copy per `Bitmap` object for all the
+  responsive sizes and collection items, which is why one object per logo is reused (read in the platform and
+  glance-appwidget 1.2.0 sources, 2026-11-24; not measured). **Not checked on a device yet:** the logos' look, the tile
+  height with a logo (a `Fit` image kept its intrinsic height in an earlier attempt, below), TalkBack's reading, and a
+  widget with many stores' logos.
 
 ## Opening a card — an intent extra, not a URI deep link
 
@@ -118,8 +140,15 @@ Glance's `@layout/glance_default_loading_layout` as the initial layout). Glance 
   radius from the background's, and the height of one row, against values worked out by hand (plain JUnit).
   It also checks the background radius is 12dp from Android 12 and none before (`widgetBackgroundRadius(sdkInt)`);
   `ui/theme/ThemeTest` pins `WIDGET_CORNER_RADIUS`. `widget/CardWidgetInfoTest` reads the provider XML through
-  the app's resources and checks `minResizeHeight` fits one tile at `minResizeWidth` (#108).
-- `widget/CardWidgetTilesTest` — the sort order, the label fallback, the initials and the colour helpers (Robolectric, because
+  the app's resources and checks `minResizeHeight` fits one tile at `minResizeWidth` (#108). Since #181 also the logo
+  box, 200 × 120.21dp, and its pixels at a density (550 × 330 at 2.75).
+- `widget/WidgetLogosTest` — real PNGs in a `TemporaryFolder`, `@GraphicsMode(NATIVE)` (#181): a wide and a square
+  logo scaled down to fit the box, a small one not scaled up, a missing file, a non-picture and an invalid name left
+  out without throwing, one bitmap for all of a store's cards and for later calls (the file deleted between them, so the
+  stream was closed), a logo no longer shown forgotten, and three logos over the budget scaled to 163 × 163 (√(2/3) of
+  200, worked out by hand) while two within it keep their size.
+- `widget/CardWidgetTilesTest` — the sort order, the label (none without one, never the store name), the store name and
+  logo, the initials and the colour helpers (Robolectric, because
   the colour parse goes through `android.graphics.Color`).
 - `widget/CardWidgetContentTest` — `runGlanceAppWidgetUnitTest` (Glance's JVM unit test, `glance-appwidget-testing`):
   one clickable node per card, each showing its initials and label (an unlabelled one only its initials, never the store
@@ -129,10 +158,15 @@ Glance's `@layout/glance_default_loading_layout` as the initial layout). Glance 
   of padding; at API 32 the background has the 12dp corner radius and each tile 8dp, and at API 29 neither is rounded. Glance's `CornerRadiusModifier` is internal to Kotlin,
   so the test reads its radius by reflection. That the corners look concentric on a home screen is checked by hand. A new test seam — see [[tdd]] and [[architecture]]. The Glance
   unit API matches a click by component + `ActionParameters`, not by the intent extras the tile uses, so that a tile
-  opens **its own** card is an on-device check, not a unit assertion.
+  opens **its own** card is an on-device check, not a unit assertion. Since #181: a tile with a logo shows that bitmap
+  (`EmittableImage`, `BitmapImageProvider`), fitted, with 8dp of padding, on its brand colour (`BackgroundModifier.Color`,
+  read through `ColorProvider.getColor`); no initials and no store name; its label in a bottom-centre box, white on a
+  dark colour and black on a light one, with no background; a tile whose logo didn't decode shows the initials.
 - `widget/CardWidgetUpdaterTest` — the live-update trigger: it fires when a card or the sort changes the tiles, not on
   a change a tile doesn't show, never when no widget is placed, starts once a widget is placed mid-session, and a
-  refresh that throws is swallowed so observation continues.
+  refresh that throws is swallowed so observation continues. Since #181 it fires when a store's logo is set, changed or
+  removed; `RoomLoyaltyCardRepositoryTest.getAllWithStore_emitsAgain_whenItsStoresLogoIsSetOrRemoved` shows the real
+  card flow emits then (the `@Transaction` query observes the stores table).
 - `OpenCardIntentTest` — the intent round-trips, and is `null` for a bare intent or one from recents.
 - `WidgetTapOpensCardTest` — end to end: `MainActivity` launched **cold** by `openCardIntent` opens that card's
   detail, and a **warm** `onNewIntent` opens it while the app is already running. Mirrors `ShareToLoyScanTest`. The
@@ -140,15 +174,15 @@ Glance's `@layout/glance_default_loading_layout` as the initial layout). Glance 
 - `WidgetOpenCardDirectionsTest` — `NavController.openCard` opens the card over the list, and over a `CardForm`
   **without discarding it** (`TestNavHostController`).
 
-The `com.bdaniel.loyscan.widget.glance` package (`CardWidget`, `CardWidgetReceiver`, `GlanceCardWidgetRefresher`) is
+The `com.bdaniel.loyscan.widget.glance` package (`CardWidget`, `CardWidgetReceiver`, `GlanceCardWidgetRefresher`,
+`WidgetLogosModule`) is
 Glance/AppWidget glue that runs only on a real home screen — the `provideGlance` wiring, the system receiver and the
 `updateAll`/`getGlanceIds` calls — so the package is excluded from the coverage gate, like the theme and the icons;
 the logic it drives is tested above ([[2026-10-09-coverage-gate-kover]]).
 
 ## Not done yet (this slice)
 
-- No front photo on a tile — a tile is the brand-colour tile with the initials, as the list's non-photo tile is. Photo tiles are a
-  follow-up.
+- No front photo on a tile — a tile shows the store's logo or its initials (#185 adds photos).
 - No empty-state message: a widget with no cards shows nothing.
 - The live-update trigger only observes while the app process is alive. Cards change only through the running app,
   so that covers every real change; a widget added while the app is dead renders current cards when it is next shown.

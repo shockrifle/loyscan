@@ -3,6 +3,7 @@ package com.bdaniel.loyscan.widget
 import android.os.Build
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.coerceAtLeast
 import androidx.compose.ui.unit.dp
 import com.bdaniel.loyscan.ui.CARD_ASPECT_RATIO
@@ -65,3 +66,21 @@ val WIDGET_SIZES: Set<DpSize> =
     listOf(110, 120, 131, 143, 156, 171, 187, 205, 224, 240, 262, 286, 313, 342, 374, 410)
         .map { DpSize(it.dp, LAYOUT_HEIGHT) }
         .toSet()
+
+/** The margin between a tile's edge and its store's logo (#181): the logo is fitted whole inside it. */
+val WIDGET_LOGO_MARGIN = Spacing.s
+
+/**
+ * The box a logo is decoded to fit (#181): the largest tile of all [WIDGET_SIZES] less [WIDGET_LOGO_MARGIN] on every
+ * side, so one bitmap serves every layout without being drawn larger than it is.
+ */
+fun widgetLogoBox(): DpSize {
+    val tile = WIDGET_SIZES.map { widgetTileSize(it.width) }.maxBy { it.width }
+    return DpSize(tile.width - WIDGET_LOGO_MARGIN * 2, tile.height - WIDGET_LOGO_MARGIN * 2)
+}
+
+/** [widgetLogoBox] in pixels at [density], rounded down: the size [WidgetLogos] decodes a logo to fit. */
+fun widgetLogoBoxPx(density: Float): IntSize {
+    val box = widgetLogoBox()
+    return IntSize((box.width.value * density).toInt(), (box.height.value * density).toInt())
+}
