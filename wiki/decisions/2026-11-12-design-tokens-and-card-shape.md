@@ -56,14 +56,15 @@ For the widget, the choices were **square tiles** or **card-ratio tiles**.
 - **Widget:**
   - Tiles have the card ratio and `CardShape`-like corners. Their height is computed from `LocalSize`, because
     Glance has no `aspectRatio`. *Amended by #216 (2026-11-25):* the height comes from the tile's real width through
-    a layout of our own ([[2026-11-25-widget-tile-height-from-its-real-width]]). *Implementation note (2026-11-12, on a device):* the sizes come from
+    a layout of our own, and a tile narrower than 120dp is square ([[2026-11-25-widget-tile-height-from-its-real-width]]). *Implementation note (2026-11-12, on a device):* the sizes come from
     `SizeMode.Responsive` with a fixed set of widths, not `SizeMode.Exact`, and a tile fills its cell's width. With
     `Exact` a launcher's reported sizes decided the layout, and one that reported sizes the widget didn't have got a
     layout cut in half ([[card-widget]]).
   - There is one column below 240dp of widget width and two from 240dp (`LazyVerticalGrid`).
   - A tile shows the store's initials and the card's label, like the list's plain tile.
   - The widget background uses `appWidgetBackground()`, and its padding comes from `Spacing`.
-  - `minResizeHeight` goes from 40dp to 90dp, so one tile fits at the minimum width.
+  - `minResizeHeight` goes from 40dp to 90dp, so one tile fits at the minimum width (110dp since #216, for a square
+    tile).
   - Corners are square on API 29–30.
   - *Amended by [#182](https://github.com/shockrifle/loyscan/issues/182) (2026-11-24):* from Android 12
     the widget rounds its background with a fixed 12dp and the tiles with 8dp (12dp less the 4dp edge), so they nest

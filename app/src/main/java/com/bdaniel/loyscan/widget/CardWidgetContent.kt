@@ -40,12 +40,12 @@ import com.bdaniel.loyscan.openCardIntent
 import com.bdaniel.loyscan.ui.theme.Spacing
 
 /**
- * One clickable card-ratio tile per [tiles] entry, each opening its card (#11), on its brand colour: the store's logo
- * from [logos] fitted whole inside [WIDGET_LOGO_MARGIN], else the store's initials (#108, #181), and the card's label, if
- * any, never the store's name. TalkBack reads a tile as "store, label" (#181). One column in a narrow widget, two from
- * 240dp (#108, [widgetColumns]), laid out for each of [WIDGET_SIZES]. A tile fills its cell, and its height comes from
- * that real width (`res/layout/widget_tile.xml`, #216), so a layout shown wider or narrower than it was made for
- * keeps the card's ratio.
+ * One clickable tile per [tiles] entry, each opening its card (#11), on its brand colour: the store's logo from [logos]
+ * fitted whole inside [WIDGET_LOGO_MARGIN], else the store's initials (#108, #181), and the card's label, if any, never
+ * the store's name. TalkBack reads a tile as "store, label" (#181). One column in a narrow widget, two from 240dp (#108,
+ * [widgetColumns]), laid out for each of [WIDGET_SIZES]. A tile is square below 120dp of width and card-shaped from it
+ * ([widgetTileShape], #216); it fills its cell, and its height comes from that real width (`res/layout/widget_tile.xml`),
+ * so a layout shown wider or narrower than it was made for keeps its tiles' shape.
  * From Android 12 the tiles' corners nest in the widget background's rounded corners ([widgetTileCornerRadius], #182);
  * before it, the widget and its tiles are square. Empty until the first card is added.
  */
@@ -53,6 +53,10 @@ import com.bdaniel.loyscan.ui.theme.Spacing
 fun CardWidgetContent(tiles: List<WidgetTile>, logos: Map<String, Bitmap> = emptyMap()) {
     val context = LocalContext.current
     val width = LocalSize.current.width
+    val sizer = when (widgetTileShape(width)) {
+        WidgetTileShape.SQUARE -> R.drawable.widget_tile_square
+        WidgetTileShape.CARD -> R.drawable.widget_tile_card
+    }
     val backgroundRadius = widgetBackgroundRadius()
     val cornerRadius = widgetTileCornerRadius(backgroundRadius)
     LazyVerticalGrid(
@@ -68,7 +72,9 @@ fun CardWidgetContent(tiles: List<WidgetTile>, logos: Map<String, Bitmap> = empt
             Box(modifier = GlanceModifier.fillMaxWidth().padding(WIDGET_HALF_SPACING)) {
                 // The tile's height comes from the cell's real width, which can differ from the layout's.
                 AndroidRemoteViews(
-                    remoteViews = RemoteViews(context.packageName, R.layout.widget_tile),
+                    remoteViews = RemoteViews(context.packageName, R.layout.widget_tile).apply {
+                        setImageViewResource(R.id.widget_tile_sizer, sizer)
+                    },
                     containerViewId = R.id.widget_tile_face,
                     modifier = GlanceModifier.fillMaxWidth(),
                 ) {

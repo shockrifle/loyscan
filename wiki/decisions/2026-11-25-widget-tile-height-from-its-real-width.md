@@ -1,6 +1,7 @@
 # Widget tiles get their height from their real width
 
-**Status:** Active · amends [[2026-11-12-design-tokens-and-card-shape]] (how the tile height is computed) ·
+**Status:** Active · amends [[2026-11-12-design-tokens-and-card-shape]] (how the tile height is computed; square tiles
+below 120dp) ·
 **Date:** 2026-11-25 · **Issue:** [#216](https://github.com/shockrifle/loyscan/issues/216)
 
 ## Context
@@ -26,9 +27,14 @@ widget gave 102 × 113dp tiles.
 ## Decision
 
 Each tile is `res/layout/widget_tile.xml`, embedded with `AndroidRemoteViews`: a `RelativeLayout` whose sizer
-`ImageView` (`match_parent` × `wrap_content`, `adjustViewBounds`) shows `res/drawable/widget_tile_card.xml`, and a
-face container aligned to the sizer's top and bottom that Glance fills with the tile's content. The tile's height is
-the ratio at its real width, whatever layout the launcher shows.
+`ImageView` (`match_parent` × `wrap_content`, `adjustViewBounds`) shows a transparent shape, and a face container
+aligned to the sizer's top and bottom that Glance fills with the tile's content. The tile's height is the shape's ratio
+at its real width, whatever layout the launcher shows.
+
+The shape is square below 120dp of tile width and the card's above (#216): `widgetTileShape` picks
+`widget_tile_square.xml` or `widget_tile_card.xml` from the layout's width. `WIDGET_SIZES` are the four switch points
+(110, 128, 240, 252dp); the 16 finer steps existed only to keep a layout-computed height near the card's ratio.
+`minResizeHeight` is 110dp, one square tile at the 110dp minimum width.
 
 ## Why
 
@@ -41,8 +47,16 @@ the ratio at its real width, whatever layout the launcher shows.
 
 ## Consequences
 
-- A tile is never taller than its ratio allows, on any launcher, for any layout it picks.
-- The layout's width now chooses only the columns. Where a launcher shows a layout made for another width, the columns
-  can be the other width's (two columns in a widget that would show one).
+- The shape still comes from the layout, the only width a RemoteViews layout knows: a tile is square below 120dp only
+  where the launcher picks the layout for the widget's real width. Shown another width's layout, it takes that layout's
+  shape, never taller than wide (#216's first criterion holds for such a launcher only; agreed with the owner,
+  2026-11-25).
+- A launcher sizes a widget in whole cells of its own grid; where one cell is 128dp or wider (the Android 14 handheld's
+  is 160dp, 2026-11-25), a one-column widget never has square tiles.
+- The logo box stays 200 × 120.2dp, a 216dp card tile less the margins, kept from the 16-size layouts; on the widest
+  one-column tiles (up to 232dp) a logo is drawn up to 7% larger than it was decoded.
+- A tile is never taller than its shape allows, on any launcher, for any layout it picks.
+- The layout's width now chooses only the columns and the shape. Where a launcher shows a layout made for another width,
+  the columns can be the other width's (two columns in a widget that would show one).
 - The tile's height is a view of our own, not a Glance modifier, so Glance's unit test can't see it; the render test
   does.

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A square widget tile's shape (#216): the tile sizer's transparent picture (res/layout/widget_tile.xml). It is
+     larger than any tile, so the sizer only ever scales it down. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@android:color/transparent" />
+    <size android:width="856dp" android:height="856dp" />
+</shape>

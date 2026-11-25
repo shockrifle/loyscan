@@ -79,6 +79,28 @@ class CardWidgetRenderTest {
     }
 
     @Test
+    fun aLauncherPickingTheLayoutForTheWidgetsWidth_showsSquareTilesBelow120dp_andCardTilesFrom120dp() { // #216
+        assertSquareBelow120dp_cardFrom120dp(110..480)
+    }
+
+    @Test
+    @Config(qualifiers = "440dpi") // a phone's 2.75 density: tiles are whole pixels, the sizes in dp are not
+    fun atAPhonesDensity_tilesAreSquareBelow120dp_andCardTilesFrom120dp() { // #216
+        assertSquareBelow120dp_cardFrom120dp(110..480 step 3)
+    }
+
+    @Test
+    fun theNarrowestWidget_atItsLowestHeight_showsOneWholeSquareTile() { // #216: minResizeHeight
+        val rendered = widget.show(layoutWidth = 110.dp, realWidth = 110.dp, realHeight = 110.dp)
+            .also { it.savePng("layout-110-at-110x110") }
+
+        val tile = rendered.tiles.first()
+        assertThat(tile.width).isWithin(rendered.pixel).of(102f)
+        assertThat(tile.height).isWithin(rendered.pixel).of(102f)
+        assertThat(tile.bottom).isAtMost(110f - 4f + rendered.pixel)
+    }
+
+    @Test
     fun anyLayoutShownAtAnyWidth_neverDrawsATileTallerThanItIsWide() { // #216, whatever layout a launcher picks
         for (layout in WIDGET_SIZES.map { it.width }) {
             for (realWidth in 110..480 step 5) {
@@ -90,5 +112,36 @@ class CardWidgetRenderTest {
                 }
             }
         }
+    }
+
+    /**
+     * For each of [realWidths], the layout a launcher picks for that width (the widest that fits) has tiles of the
+     * width's columns, square when narrower than 120dp and at the card's ratio from 120dp. Expected values from the
+     * issue: a cell is (width - 4) / columns, a tile 4dp narrower.
+     */
+    private fun assertSquareBelow120dp_cardFrom120dp(realWidths: IntProgression) {
+        val layouts = WIDGET_SIZES.map { it.width }.sorted()
+        for (realWidth in realWidths) {
+            val layout = layouts.last { it.value <= realWidth }
+            val rendered = widget.show(layout, realWidth.dp)
+            if (realWidth in PNG_WIDTHS) rendered.savePng("layout-${layout.value.toInt()}-at-$realWidth")
+            val columns = if (realWidth < 240) 1 else 2
+            val tileWidth = (realWidth - 4f) / columns - 4f
+            assertThat(rendered.tiles).hasSize(3)
+            for (tile in rendered.tiles) {
+                val where = "${tile.description}, layout $layout at ${realWidth}dp"
+                // Each 2dp padding is a whole number of pixels (5px of 5.5 at 2.75) and the grid splits whole pixels
+                // between its columns, so a tile can be a few pixels off the exact share.
+                assertWithMessage(where).that(tile.width).isWithin(3 * rendered.pixel).of(tileWidth)
+                // The sizer's picture is whole pixels too, and the ImageView rounds its height down.
+                val height = if (tileWidth < 120f) tile.width else tile.width / CARD_ASPECT_RATIO
+                assertWithMessage(where).that(tile.height).isWithin(2 * rendered.pixel).of(height)
+            }
+        }
+    }
+
+    private companion object {
+        /** Widths around the shape's and the columns' switch points, drawn for a person to look at. */
+        val PNG_WIDTHS = setOf(110, 127, 128, 160, 239, 240, 251, 252, 300)
     }
 }
