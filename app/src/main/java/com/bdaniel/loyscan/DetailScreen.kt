@@ -63,7 +63,6 @@ import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
@@ -104,14 +103,17 @@ const val STORE_HEADER_TAG = "storeHeader"
 /** The store's initials in the band, when it has no logo or the logo can't be shown (#210). */
 const val STORE_BAND_INITIALS_TAG = "storeBandInitials"
 
-/** The brand-colour band's height, the status bar's area included (#210). */
-private val BAND_HEIGHT = 140.dp
+/** The band's logo or initials: their height, from the top of the icons to 16dp above the band's bottom (#210). */
+private val BAND_LOGO_HEIGHT = 128.dp
 
-/** The band's row of buttons: Back, Edit and Delete. */
-private val BAND_BUTTONS_HEIGHT = 48.dp
+/** A button's touch target in the band, its 24dp icon centred in it: the row of Back, Edit and Delete is this tall. */
+private val BAND_BUTTON_SIZE = 48.dp
 
-/** The least the band leaves the logo or initials, under a very tall status bar; the band grows then. */
-private val BAND_MARK_MIN_HEIGHT = 40.dp
+/** Where a button's icon starts, (48 - 24) / 2 below the row's top: the logo's top lines up with it. */
+private val BAND_ICON_TOP = 12.dp
+
+/** The logo's inset on both sides: the end corner's two buttons and the row's padding, so it is centred and clear. */
+private val BAND_LOGO_SIDE_INSET = BAND_BUTTON_SIZE * 2 + Spacing.xs
 
 /** A 1D barcode's height in scan mode, when it runs across the screen (landscape). */
 private val SCAN_MODE_LINEAR_HEIGHT = 200.dp
@@ -298,11 +300,11 @@ fun SharedTransitionScope.DetailScreen(
     }
 }
 
-/** Asks before deleting the card. A failed delete is said here, and "Delete" tries again. */
 /**
- * The card screen's top (#210): one band in the [brandColor], behind the status bar too, [BAND_HEIGHT] tall whatever
- * that bar's height. Back sits in its start corner, Edit and Delete in its end one, and below them, centred, the
- * store's logo, else its initials as its tile draws them ([StoreInitials]), never its name: the sheet shows the name.
+ * The card screen's top (#210): one band in the [brandColor], behind the status bar too. Back sits in its start corner,
+ * Edit and Delete in its end one, and between them, centred, the store's logo, [BAND_LOGO_HEIGHT] tall from the top of
+ * the icons, with 16dp of band below; else its initials as its tile draws them ([StoreInitials]), never its name: the
+ * sheet shows the name.
  * TalkBack reads the logo or initials as a heading with the store's name. [onEdit] is null while Edit can't open yet.
  * Why one band: `wiki/decisions/2026-11-24-detail-header-band.md`.
  */
@@ -313,12 +315,10 @@ private fun StoreBand(store: Store, brandColor: Color, onBack: () -> Unit, onEdi
     val logo = store.logo?.takeUnless { logoFailed }
     // The system bars a top app bar keeps clear of: the status bar above, a bar or cut-out at the side in landscape.
     val insets = TopAppBarDefaults.windowInsets
-    val statusBar = with(LocalDensity.current) { insets.getTop(this).toDp() }
-    val markHeight = maxOf(BAND_HEIGHT - statusBar - BAND_BUTTONS_HEIGHT, BAND_MARK_MIN_HEIGHT)
     // Black or white on the brand colour, as the initials and the tile's text are.
     val contentColor = brandColor.contrastingTextColor()
     CompositionLocalProvider(LocalContentColor provides contentColor) {
-        Column(
+        Box(
             modifier = Modifier
                 .testTag(STORE_HEADER_TAG)
                 .fillMaxWidth()
@@ -326,7 +326,7 @@ private fun StoreBand(store: Store, brandColor: Color, onBack: () -> Unit, onEdi
                 .windowInsetsPadding(insets),
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth().height(BAND_BUTTONS_HEIGHT).padding(horizontal = Spacing.xs),
+                modifier = Modifier.fillMaxWidth().height(BAND_BUTTON_SIZE).padding(horizontal = Spacing.xs),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 IconButton(onClick = onBack) {
@@ -340,10 +340,12 @@ private fun StoreBand(store: Store, brandColor: Color, onBack: () -> Unit, onEdi
                     Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete))
                 }
             }
+            // Beside the buttons rather than below them, so the logo can be large (#210).
             Box(
                 modifier = Modifier
+                    .padding(start = BAND_LOGO_SIDE_INSET, top = BAND_ICON_TOP, end = BAND_LOGO_SIDE_INSET, bottom = Spacing.l)
                     .fillMaxWidth()
-                    .height(markHeight)
+                    .height(BAND_LOGO_HEIGHT)
                     // No empty heading while the card loads (the transition's first frames).
                     .then(
                         if (store.name.isEmpty()) Modifier
@@ -357,10 +359,7 @@ private fun StoreBand(store: Store, brandColor: Color, onBack: () -> Unit, onEdi
                         contentDescription = null, // The heading says the store's name.
                         imageLoader = hiltImageLoader(),
                         onError = { logoFailed = true },
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = Spacing.l, vertical = Spacing.s)
-                            .testTag(STORE_LOGO_TAG),
+                        modifier = Modifier.fillMaxSize().testTag(STORE_LOGO_TAG),
                     )
                 } else {
                     // Kept out of the heading, so TalkBack reads the store's name, not the letters.
@@ -375,6 +374,7 @@ private fun StoreBand(store: Store, brandColor: Color, onBack: () -> Unit, onEdi
     }
 }
 
+/** Asks before deleting the card. A failed delete is said here, and "Delete" tries again. */
 @Composable
 private fun ConfirmDelete(failed: Boolean, deleting: Boolean, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
