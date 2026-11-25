@@ -104,7 +104,8 @@ All paths are under `app/src/main/java/com/bdaniel/loyscan/` unless written in f
   Android 15 phone at 82dp wide (Nova allows less than `minResizeWidth`; Android showed the 110dp layout) drew square
   74.9dp tiles, at 131 and 180dp one column of card tiles, at 278dp two columns of card tiles; the Android 14 handheld's
   launcher at its narrowest, 160dp, card tiles; an Android 11 emulator (Launcher3, the pre-Android-12 grid through a
-  `RemoteViewsService`) at its narrowest, 130dp, a card tile. No tile was taller than wide. Not reached on a device: two
+  `RemoteViewsService`) at its narrowest, 130dp, a card tile. No tile was taller than wide, and on the Nova phone a tapped tile still opened its card (the click now sits in
+  the tile layout's face). Not reached on a device: two
   columns of square tiles (240–252dp) and square tiles before Android 12; the render tests cover the first. Nor is the widget checked at a large font
   scale: a small tile's two lines can be cut there.
 
@@ -206,7 +207,8 @@ Glance's `@layout/glance_default_loading_layout` as the initial layout). Glance 
   (every 5dp) draws no tile taller than wide. Since the square tiles: the layout picked for each width from 110 to 480dp
   draws square tiles below 120dp and card tiles from 120dp, at 1x and again at a phone's 2.75 density (a tile's padding
   is whole pixels there, so sizes are checked within a few pixels); the 110dp widget at its 110dp minimum height shows a
-  whole square tile, 4dp from the bottom. Each test draws what it measured into `app/build/outputs/widget-renders/`.
+  whole square tile, 4dp from the bottom. A layout shown at another width keeps its shape at the real width: the 128dp
+  layout in a 115dp widget has card tiles, the 110dp layout in a 200dp widget square ones. Each test draws what it measured into `app/build/outputs/widget-renders/`.
 - `widget/CardWidgetUpdaterTest` — the live-update trigger: it fires when a card or the sort changes the tiles, not on
   a change a tile doesn't show, never when no widget is placed, starts once a widget is placed mid-session, and a
   refresh that throws is swallowed so observation continues. Since #181 it fires when a store's logo is set, changed or

@@ -90,6 +90,22 @@ class CardWidgetRenderTest {
     }
 
     @Test
+    fun aLayoutMadeForAnotherWidth_keepsItsShape_atTheRealWidth() { // #216: the layout picks the shape, not the size
+        // A launcher that picks the 128dp layout for a 115dp widget gives low card tiles; one that keeps the 110dp
+        // layout in a 200dp widget gives large square ones. Either way the size is the real width's.
+        val card = widget.show(layoutWidth = 128.dp, realWidth = 115.dp).also { it.savePng("layout-128-at-115") }
+        for (tile in card.tiles) {
+            assertWithMessage(tile.description).that(tile.width).isWithin(card.pixel).of(107f)
+            assertWithMessage(tile.description).that(tile.height).isWithin(2 * card.pixel).of(107f / CARD_ASPECT_RATIO)
+        }
+        val square = widget.show(layoutWidth = 110.dp, realWidth = 200.dp).also { it.savePng("layout-110-at-200") }
+        for (tile in square.tiles) {
+            assertWithMessage(tile.description).that(tile.width).isWithin(square.pixel).of(192f)
+            assertWithMessage(tile.description).that(tile.height).isWithin(square.pixel).of(192f)
+        }
+    }
+
+    @Test
     fun theNarrowestWidget_atItsLowestHeight_showsOneWholeSquareTile() { // #216: minResizeHeight
         val rendered = widget.show(layoutWidth = 110.dp, realWidth = 110.dp, realHeight = 110.dp)
             .also { it.savePng("layout-110-at-110x110") }
