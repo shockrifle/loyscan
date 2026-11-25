@@ -22,6 +22,13 @@ class EncodedBarcode(
     /** A one-row (1D) barcode, to be stretched to any height; otherwise modules are square. */
     val isLinear: Boolean get() = format !in TWO_DIMENSIONAL
 
+    /**
+     * A matrix code: QR, Data Matrix or Aztec, GS1 ones included, of the format drawn. The card screen caps its width
+     * (#212). Usually square, but ZXing can pick a rectangular Data Matrix (up to 3:1); PDF417, a stacked code, isn't
+     * one.
+     */
+    val isMatrixCode: Boolean get() = !isLinear && format != BarcodeFormat.PDF_417
+
     operator fun get(x: Int, y: Int): Boolean {
         val mx = x - margin
         val my = if (isLinear) y else y - margin
