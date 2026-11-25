@@ -20,19 +20,25 @@ title, the header and the sheet.
 
 ## Decision
 
-b), chosen by the user while shaping the issue (2026-11-24, #210). The band is `BAND_HEIGHT` (140dp) tall whatever
-the status bar's height: the logo or initials get what the status bar and the 48dp row of buttons leave, at least
-`BAND_MARK_MIN_HEIGHT` (40dp, the band grows only under a status bar taller than 52dp). A store without a logo shows
-its initials as its tile does (`StoreInitials`, `app/src/main/java/com/bdaniel/loyscan/ui/CardTileFace.kt`), never the
+b), chosen by the user while shaping the issue (2026-11-24, #210), and refined on a device the next day: the logo
+sits **beside** the buttons, not below them. Built first with the logo in a row of its own under the buttons, a
+140dp band left it about 50dp tall, too small. Now the logo's box is `BAND_LOGO_HEIGHT` (128dp) tall, its top in line
+with the top of the Back, Edit and Delete icons, centred across the band between the end corner's two buttons and the
+same inset at the start (`BAND_LOGO_SIDE_INSET`), with 16dp of band below it. The band is the status bar plus 156dp,
+about 180dp on a phone; the issue's "about 140dp" was reworded to this layout. A store without a logo shows its
+initials as its tile does (`StoreInitials`, `app/src/main/java/com/bdaniel/loyscan/ui/CardTileFace.kt`), never the
 name: the sheet below keeps the label and the store's name. TalkBack reads the logo or initials as a heading with the
 store's name. The buttons are black or white, whichever contrasts more with the brand colour (`contrastingTextColor()`),
 as the initials are; the top bar drew them in its own `onSurfaceVariant`.
 
 ## Why
 
-- The barcode moves up by about 120dp without a scroll, and the logo stays large enough to check at the till that it
-  is the right store's card. a) gains more room but makes the logo too small for that; c) gains the room only after a
-  scroll, when the barcode is wanted at once.
+- The barcode moves up by about 110dp without a scroll (the old top bar and header were 264dp plus the status bar),
+  and the logo stays large enough to check at the till that it is the right store's card. a) gains more room but makes
+  the logo too small for that; c) gains the room only after a scroll, when the barcode is wanted at once.
+- Beside the buttons rather than below them: the band's height then goes to the logo, not to an empty strip beside
+  the buttons. Centred with equal insets rather than using all the room between the buttons, so it sits on the
+  screen's centre line like the sheet below.
 - Initials, not the name, because the band is the store's mark, as on its tile ([[card-list]], #183); the name is text
   on the sheet anyway.
 

@@ -17,7 +17,7 @@ shape for the card. Why they look like this: [[2026-11-12-design-tokens-and-card
 | `xl` | 24 | Space between groups on a screen (label and store / barcode and number / note and photos) |
 | `xxl` | 32 | Padding around an empty-state message |
 
-A size that is no step of the scale (a 3dp selection border, the room left for the Add button, the 140dp card screen band)
+A size that is no step of the scale (a 3dp selection border, the room left for the Add button, the card screen band's 128dp logo)
 is a named constant next to its screen (`val UPPER_CASE = 3.dp`), not a `.dp` literal. `testing/DesignValuesTest`
 fails on a non-zero `.dp` literal or a `RoundedCornerShape` outside `ui/theme/` ([[tdd]]).
 

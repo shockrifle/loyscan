@@ -1,7 +1,7 @@
 # Card detail
 
-Shows one card at the checkout: a 140dp band in the store's brand color with Back, Edit and Delete and the store's logo
-(or initials), then a `Card` with the card's label, the store name, the barcode on white, the display number in large
+Shows one card at the checkout: a band in the store's brand color with Back, Edit and Delete and, between them, the
+store's logo (or initials), then a `Card` with the card's label, the store name, the barcode on white, the display number in large
 type and the card's note. The screen runs at full brightness; a double-tap on the barcode opens a full-screen scan mode.
 
 **Entry points:** `DetailScreen` (`app/src/main/java/com/bdaniel/loyscan/DetailScreen.kt`);
@@ -19,18 +19,20 @@ UUID string.
 - If no card has the route's id (deleted, or a stale route), the screen stays on `LoyaltyCard.EMPTY`, or on the
   last card it showed. It doesn't crash: [[2026-10-09-missing-card-throws-from-room]].
 - **The band** (#210, [[2026-11-24-detail-header-band]]): no top bar and no title. `StoreBand` (`STORE_HEADER_TAG`) is
-  one brand-colour band, `BAND_HEIGHT` (140dp) tall with the status bar's area whatever that bar's height (the band
-  grows only when the logo would get less than 40dp). It keeps clear of the system bars as a top app bar does
-  (`TopAppBarDefaults.windowInsets`). Back sits in its start corner, Edit and Delete in its end one, in a 48dp row; below
-  them, centred across the band, the store's logo when the user gave it one (#151,
+  one brand-colour band from the top of the screen, the status bar's area included, and keeps clear of the system bars
+  as a top app bar does (`TopAppBarDefaults.windowInsets`). Back sits in its start corner, Edit and Delete in its end
+  one, in a 48dp row. Between them, centred across the band with the same inset on both sides
+  (`BAND_LOGO_SIDE_INSET`, the end corner's two buttons), is a `BAND_LOGO_HEIGHT` (128dp) box whose top lines up with
+  the icons' top (12dp into the row) and 16dp of band below it: the band is the status bar plus 156dp, about 180dp on a
+  phone. The box holds the store's logo when the user gave it one (#151,
   [[2026-11-13-user-supplied-store-logos]]): a `CardPhoto` file through `hiltImageLoader()` ([[coil-image-loading]]),
   `STORE_LOGO_TAG`. A store without a logo, or whose logo can't be loaded or whose file is missing
   (`CardPhotos.withoutMissing` in `DetailViewModel`), shows its initials as its tile draws them (`StoreInitials` in
   `ui/CardTileFace.kt`, shared with `CardTileFace`), never its name. The sheet keeps the label and the store's name
   above the barcode. TalkBack reads the logo or initials as one heading with the store's name; the initials are kept
   out of it (`clearAndSetSemantics`, as the store picker's badge does), so it never spells them out. Before the card
-  loads, the name is empty and there is no heading. Tests: `DetailScreenTest.theBand_is140dpTall_underAShortStatusBar_withItsButtonsInTheTopCorners_andTheLogoCentredBelowThem`,
-  `theBand_is140dpTall_underATallStatusBar_withItsButtonsInTheTopCorners_andTheLogoCentredBelowThem`,
+  loads, the name is empty and there is no heading. Tests: `DetailScreenTest.underAShortStatusBar_theBand_holdsItsButtonsInTheTopCorners_andA128dpLogoCentredBetweenThem`,
+  `underATallStatusBar_theBand_holdsItsButtonsInTheTopCorners_andA128dpLogoCentredBetweenThem`,
   `thereIsNoTopBarTitle_theStoresNameIsShownOnlyOnTheSheet`, `aStoresLogo_isShownInTheBand_inPlaceOfItsInitials`,
   `aStoreWithoutALogo_showsItsInitialsInTheBand_notItsName`, `aLogoThatCantBeLoaded_showsTheStoresInitials`,
   `aLogoWhoseFileIsMissing_showsTheStoresInitials`, `talkBack_readsTheBand_asAHeadingWithTheStoresName_overItsInitials`,

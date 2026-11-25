@@ -68,6 +68,7 @@ import com.bdaniel.loyscan.testing.WAIT_TIMEOUT_MS
 import com.bdaniel.loyscan.testing.aLoyaltyCard
 import com.bdaniel.loyscan.testing.aStore
 import com.google.common.truth.Truth.assertThat
+import com.google.common.collect.Range
 import com.bdaniel.loyscan.testing.ShownTexts
 import org.robolectric.shadows.ShadowToast
 import androidx.compose.ui.test.isDialog
@@ -331,12 +332,12 @@ class DetailScreenTest {
     }
 
     @Test
-    fun theBand_is140dpTall_underAShortStatusBar_withItsButtonsInTheTopCorners_andTheLogoCentredBelowThem() { // #210
+    fun underAShortStatusBar_theBand_holdsItsButtonsInTheTopCorners_andA128dpLogoCentredBetweenThem() { // #210
         assertTheBandsLayout(statusBar = 24.dp)
     }
 
     @Test
-    fun theBand_is140dpTall_underATallStatusBar_withItsButtonsInTheTopCorners_andTheLogoCentredBelowThem() { // #210: a camera cut-out
+    fun underATallStatusBar_theBand_holdsItsButtonsInTheTopCorners_andA128dpLogoCentredBetweenThem() { // #210: a camera cut-out
         assertTheBandsLayout(statusBar = 48.dp)
     }
 
@@ -354,19 +355,26 @@ class DetailScreenTest {
         val edit = composeRule.onNodeWithContentDescription("Edit").getBoundsInRoot()
         val delete = composeRule.onNodeWithContentDescription("Delete").getBoundsInRoot()
         val logo = composeRule.onNodeWithTag(STORE_LOGO_TAG, useUnmergedTree = true).getBoundsInRoot()
+        // The icons themselves, inside their buttons: what the eye lines the logo up with.
+        val glyphs = listOf("Back", "Edit", "Delete").map {
+            composeRule.onNode(hasContentDescription(it), useUnmergedTree = true).getBoundsInRoot()
+        }
 
         // One band from the top of the screen, the status bar's area included.
         assertThat(band.top.value).isWithin(0.5f).of(0f)
-        assertThat(band.height.value).isWithin(0.5f).of(140f)
-        // The buttons below the status bar, Back in the start corner, Edit and Delete in the end one.
-        listOf(back, edit, delete).forEach { assertThat(it.top.value).isAtLeast(statusBar.value - 0.5f) }
+        // The buttons just below the status bar, Back in the start corner, Edit and Delete in the end one.
+        listOf(back, edit, delete).forEach { assertThat(it.top.value).isIn(Range.closed(statusBar.value, statusBar.value + 8f)) }
         assertThat((back.left - band.left).value).isAtMost(8f)
         assertThat((band.right - delete.right).value).isAtMost(8f)
         assertThat(edit.right.value).isAtMost(delete.left.value + 0.5f)
-        // The logo below them, centred across the band. It is fitted (ContentScale.Fit) and centred in its bounds,
-        // so bounds centred in the band centre the logo.
-        assertThat(logo.top.value).isAtLeast(maxOf(back.bottom, edit.bottom, delete.bottom).value - 0.5f)
-        assertThat(logo.bottom.value).isAtMost(band.bottom.value + 0.5f)
+        // The logo 128dp tall, its top in line with the icons' top, between the buttons, and 16dp of band below it.
+        glyphs.forEach { assertThat(logo.top.value).isWithin(0.5f).of(it.top.value) }
+        assertThat(logo.height.value).isWithin(0.5f).of(128f)
+        assertThat((band.bottom - logo.bottom).value).isWithin(0.5f).of(16f)
+        assertThat(logo.left.value).isAtLeast(back.right.value - 0.5f)
+        assertThat(logo.right.value).isAtMost(edit.left.value + 0.5f)
+        // Centred across the band. It is fitted (ContentScale.Fit) and centred in its bounds, so bounds centred in
+        // the band centre the logo.
         assertThat(((logo.left + logo.right) / 2).value).isWithin(1f).of(((band.left + band.right) / 2).value)
     }
 

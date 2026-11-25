@@ -15,8 +15,8 @@ Room emits. During the list → detail shared-element transition, the first fram
 ## Decision
 `Detail(val cardId: String, val color: String, …)` (in `app/src/main/java/com/bdaniel/loyscan/Navigation.kt`).
 `ListDirections.toCard(id, color)` passes `card.store.color`; `AppNavigation` extracts it with `toRoute<Detail>()`
-and hands it to `DetailScreen(cardId, color, …)` (`AppNavigation` in `app/src/main/java/com/bdaniel/loyscan/MainActivity.kt`), which uses it for the top bar, header
-background and header text contrast until the card has loaded; from then on the screen draws the loaded card's
+and hands it to `DetailScreen(cardId, color, …)` (`AppNavigation` in `app/src/main/java/com/bdaniel/loyscan/MainActivity.kt`), which uses it for the band's background and
+the contrast of its initials and icons until the card has loaded (the top bar and header until #210, [[2026-11-24-detail-header-band]]); from then on the screen draws the loaded card's
 `store.color` (since #226; until then it drew the route's colour throughout). (Corrected 2026-10-28: this paragraph still named the 2025-12-12 `Int` id,
 `card.brand` and a line number in `Navigation.kt`.)
 
