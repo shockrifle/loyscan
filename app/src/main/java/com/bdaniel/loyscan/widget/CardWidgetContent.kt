@@ -1,6 +1,7 @@
 package com.bdaniel.loyscan.widget
 
 import android.graphics.Bitmap
+import android.widget.RemoteViews
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -12,6 +13,7 @@ import androidx.glance.ImageProvider
 import androidx.glance.LocalContext
 import androidx.glance.LocalSize
 import androidx.glance.action.clickable
+import androidx.glance.appwidget.AndroidRemoteViews
 import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.appWidgetBackground
 import androidx.glance.appwidget.cornerRadius
@@ -29,7 +31,6 @@ import androidx.glance.layout.Column
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.padding
 import androidx.glance.layout.fillMaxWidth
-import androidx.glance.layout.height
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
@@ -42,8 +43,9 @@ import com.bdaniel.loyscan.ui.theme.Spacing
  * One clickable card-ratio tile per [tiles] entry, each opening its card (#11), on its brand colour: the store's logo
  * from [logos] fitted whole inside [WIDGET_LOGO_MARGIN], else the store's initials (#108, #181), and the card's label, if
  * any, never the store's name. TalkBack reads a tile as "store, label" (#181). One column in a narrow widget, two from
- * 240dp (#108, [widgetColumns]), laid out for each of [WIDGET_SIZES]; a tile fills its cell, so a layout shown wider or
- * narrower than it was made for doesn't cut it.
+ * 240dp (#108, [widgetColumns]), laid out for each of [WIDGET_SIZES]. A tile fills its cell, and its height comes from
+ * that real width (`res/layout/widget_tile.xml`, #216), so a layout shown wider or narrower than it was made for
+ * keeps the card's ratio.
  * From Android 12 the tiles' corners nest in the widget background's rounded corners ([widgetTileCornerRadius], #182);
  * before it, the widget and its tiles are square. Empty until the first card is added.
  */
@@ -51,7 +53,6 @@ import com.bdaniel.loyscan.ui.theme.Spacing
 fun CardWidgetContent(tiles: List<WidgetTile>, logos: Map<String, Bitmap> = emptyMap()) {
     val context = LocalContext.current
     val width = LocalSize.current.width
-    val tileSize = widgetTileSize(width)
     val backgroundRadius = widgetBackgroundRadius()
     val cornerRadius = widgetTileCornerRadius(backgroundRadius)
     LazyVerticalGrid(
@@ -64,17 +65,22 @@ fun CardWidgetContent(tiles: List<WidgetTile>, logos: Map<String, Bitmap> = empt
             .padding(WIDGET_HALF_SPACING),
     ) {
         items(tiles, itemId = { it.cardId.hashCode().toLong() }) { tile ->
-            Box(modifier = GlanceModifier.padding(WIDGET_HALF_SPACING)) {
-                val face = GlanceModifier
-                    // The cell's real width, which can differ from the layout's; the height is the layout's.
-                    .fillMaxWidth()
-                    .height(tileSize.height)
-                    .cornerRadius(cornerRadius)
-                    .background(ColorProvider(tile.backgroundColor()))
-                    .clickable(actionStartActivity(openCardIntent(context, tile.cardId, tile.color)))
-                    .semantics { contentDescription = tile.description() }
-                val logo = tile.logo?.let(logos::get)
-                if (logo != null) LogoTile(tile, logo, face) else InitialsTile(tile, face)
+            Box(modifier = GlanceModifier.fillMaxWidth().padding(WIDGET_HALF_SPACING)) {
+                // The tile's height comes from the cell's real width, which can differ from the layout's.
+                AndroidRemoteViews(
+                    remoteViews = RemoteViews(context.packageName, R.layout.widget_tile),
+                    containerViewId = R.id.widget_tile_face,
+                    modifier = GlanceModifier.fillMaxWidth(),
+                ) {
+                    val face = GlanceModifier
+                        .fillMaxSize()
+                        .cornerRadius(cornerRadius)
+                        .background(ColorProvider(tile.backgroundColor()))
+                        .clickable(actionStartActivity(openCardIntent(context, tile.cardId, tile.color)))
+                        .semantics { contentDescription = tile.description() }
+                    val logo = tile.logo?.let(logos::get)
+                    if (logo != null) LogoTile(tile, logo, face) else InitialsTile(tile, face)
+                }
             }
         }
     }

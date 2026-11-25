@@ -68,4 +68,27 @@ class CardWidgetRenderTest {
 
         for (tile in rendered.tiles) assertWithMessage(tile.description).that(tile.width).isWithin(rendered.pixel).of(142f)
     }
+
+    @Test
+    fun aLayoutShownInANarrowerWidget_keepsTheCardsRatioAtTheRealWidth() { // #216: its height was the layout's
+        val rendered = widget.show(layoutWidth = 205.dp, realWidth = 150.dp)
+
+        for (tile in rendered.tiles) {
+            assertWithMessage(tile.description).that(tile.height).isWithin(rendered.pixel).of(142f / CARD_ASPECT_RATIO)
+        }
+    }
+
+    @Test
+    fun anyLayoutShownAtAnyWidth_neverDrawsATileTallerThanItIsWide() { // #216, whatever layout a launcher picks
+        for (layout in WIDGET_SIZES.map { it.width }) {
+            for (realWidth in 110..480 step 5) {
+                val rendered = widget.show(layout, realWidth.dp)
+                assertThat(rendered.tiles).hasSize(3)
+                for (tile in rendered.tiles) {
+                    assertWithMessage("${tile.description}, layout $layout at ${realWidth}dp")
+                        .that(tile.height).isAtMost(tile.width + rendered.pixel)
+                }
+            }
+        }
+    }
 }
