@@ -103,7 +103,9 @@ outputs ([[tdd]] → the layer table).
 - **The Glance widget** ([[card-widget]], #11) keeps its logic out of the composable: which tiles, in what order and
   their colour is a pure function (`toWidgetTiles`, `WidgetTile`) tested in plain/Robolectric JUnit, and the composable
   is asserted with Glance's JVM unit test (`runGlanceAppWidgetUnitTest`, `glance-appwidget-testing`) without inflating
-  RemoteViews. The `GlanceAppWidget`/receiver glue runs only on a real home screen and is excluded from coverage.
+  RemoteViews. Where a tile lands and how big it is, which depends on the layout the launcher picks and the widget's real
+  width, is measured on the real RemoteViews inflated in a host view (`widget/WidgetRender.kt`, #216). The
+  `GlanceAppWidget`/receiver glue runs only on a real home screen and is excluded from coverage.
 - **The wired-up app** (`MainActivity`, Hilt, navigation) runs in `@HiltAndroidTest`s on Robolectric.
   `testing/TemporaryPreferencesModule` swaps `PreferencesModule` for a new preferences file per test, and
   `testing/InMemoryDatabaseModule` (`@TestInstallIn`) swaps `DatabaseModule` for an empty in-memory database
