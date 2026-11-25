@@ -34,7 +34,7 @@ the way they are, what's fragile, and how to work on it.
 ## How-to
 
 - Workflows: [[tdd]] (start here before writing code), [[build-and-run]], [[ci]], [[database-schema-changes]], [[add-a-catalogue-store]], [[add-a-string]], [[test-backup-on-a-device]], [[code-review]] (PRs, incl. `/next-task`), [[agent-skills]], [[release]], [[public-safe-sweep]]
-- Runbooks: [[cli-build-jvm-target-mismatch]], [[reset-local-database]], [[leaked-signing-secret]]
+- Runbooks: [[cli-build-jvm-target-mismatch]], [[gradlew-hangs-in-git-bash]], [[reset-local-database]], [[leaked-signing-secret]]
 - Integrations: [[coil-image-loading]], [[zxing-core]], [[zxing-cpp]], [[google-play]]
 - Scripts: [[reviewer-model]] (which model a reviewer subagent really ran on) — see [[scripts/_index|scripts]]
 
