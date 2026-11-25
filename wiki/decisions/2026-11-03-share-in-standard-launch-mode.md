@@ -4,7 +4,8 @@
 [[2026-11-03-share-into-the-sharing-apps-task]]
 
 `MainActivity` is back to the default `standard` launch mode, and a share that still reaches an open LoyScan through
-`onNewIntent` is passed on to a new LoyScan task. A share sent through the chooser, or with `NEW_TASK` and/or
+`onNewIntent` is passed on to a new LoyScan task. Since #189 the share runs in `ShareActivity`, a subclass with the
+same launch mode and forward (amendment below). A share sent through the chooser, or with `NEW_TASK` and/or
 `SINGLE_TOP`, doesn't replace what LoyScan has open, so a half-filled card form survives it (#83). A sender using
 `CLEAR_TOP` or `CLEAR_TASK` would still reset LoyScan's task (Consequences).
 
@@ -13,7 +14,9 @@ task affinity and `documentLaunchMode="always"`: every share is a task of its ow
 never reach ([[2026-11-25-launcher-stacked-on-a-share-task]]). This reverses one consequence below, chosen by the
 product owner on 2026-11-25: a share sent with `NEW_TASK` alone no longer stacks on LoyScan's task, and Back from it
 leaves to the sender instead of returning to the half-filled form; the form stays untouched in LoyScan's own task.
-The standard launch mode and the `onNewIntent` forward stand.
+The standard launch mode and the `onNewIntent` forward stand: a share sent with `NEW_TASK | SINGLE_TOP` while a
+share's activity is on top still reaches it through `onNewIntent` (seen on a device, 2026-11-25), and is forwarded to
+a task of its own. Passages below that the amendment changes are marked *(superseded, #189)*.
 
 ## Context
 
@@ -37,7 +40,7 @@ The standard launch mode and the `onNewIntent` forward stand.
 
 ## Decision
 
-`standard` launch mode (no `android:launchMode` on `MainActivity`). `onNewIntent` with a shared picture starts the same
+`standard` launch mode (no `android:launchMode` on `MainActivity`, nor since #189 on `ShareActivity`). `onNewIntent` with a shared picture starts the same
 intent in a new LoyScan task (`NEW_TASK | MULTIPLE_TASK | NEW_DOCUMENT`, read grant passed on;
 `forwardToATaskOfItsOwn` in `app/src/main/java/com/bdaniel/loyscan/MainActivity.kt`). Chosen by the product owner on
 2026-11-03 after the device check.
@@ -45,17 +48,19 @@ intent in a new LoyScan task (`NEW_TASK | MULTIPLE_TASK | NEW_DOCUMENT`, read gr
 ## Why
 
 No share should cost the user what they were typing. With `standard`, a share with `NEW_TASK` alone stacks a new
-LoyScan activity on LoyScan's own task, and Back from its flow returns to the form (seen on a device). The
+LoyScan activity on LoyScan's own task, and Back from its flow returns to the form (seen on a device) *(superseded,
+#189: such a share now starts a task of its own, and the form stays in LoyScan's task)*. The
 `onNewIntent` path is kept only for senders that ask for `SINGLE_TOP`, and it sends them where chooser shares go.
 
 ## Consequences
 
 - Seen on a device (2026-11-03, adb): a `NEW_TASK` share over a half-filled form stacked a second LoyScan in the same
-  task; Back twice returned to the form, input intact. A `NEW_TASK | SINGLE_TOP` share reached `onNewIntent` and the
+  task; Back twice returned to the form, input intact *(superseded, #189: a `NEW_TASK` share now starts its own task)*. A `NEW_TASK | SINGLE_TOP` share reached `onNewIntent` and the
   form stayed. That adb share carries no read grant, so on the device it took the drop path below. A forward with a
   real grant (the new task reading the picture) has run only in Robolectric, whose `startActivity` doesn't check
   grants. It is not checked on a device: no app seen sends a share with `SINGLE_TOP`.
-- By Android's task rules, a sender using `NEW_TASK | CLEAR_TOP` would finish and recreate the `standard`
+- *(Superseded, #189: a share starts `ShareActivity` in a task of its own, so these flags no longer reach LoyScan's
+  task.)* By Android's task rules, a sender using `NEW_TASK | CLEAR_TOP` would finish and recreate the `standard`
   `MainActivity` in LoyScan's task, and `CLEAR_TASK` would clear the task. Both lose an open form, and neither goes
   through `onNewIntent`, so the forward can't catch them. No sender seen does this, and `singleTop` had the same
   exposure *(inferred; not seen on a device)*.
