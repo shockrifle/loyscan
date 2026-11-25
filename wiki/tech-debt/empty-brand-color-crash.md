@@ -1,6 +1,6 @@
 # An empty or invalid brand color crashes the detail screen
 
-**Status:** Resolved 2026-10-09 (#14) · **Issue:** [#14](https://github.com/shockrifle/loyscan/issues/14) · **Since:** 2025-12-12 (`45a33e1`) · **Where:**
+**Status:** Resolved 2026-10-09 (`12357a3`, #14) · **Issue:** [#14](https://github.com/shockrifle/loyscan/issues/14) · **Since:** 2025-12-12 (`45a33e1`) · **Where:**
 `DetailScreen`'s `Color(color.toColorInt())` and the header `Box` background / text color below it, in
 `app/src/main/java/com/bdaniel/loyscan/DetailScreen.kt` (as of `45a33e1`)
 

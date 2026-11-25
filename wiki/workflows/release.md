@@ -86,5 +86,6 @@ any commit; an environment with required reviewers, or rules on who may create `
 - `ReleaseWorkflowTest` (JVM, in the gate) reads `release.yml` and `release-bundle.sh`: secrets reach a step only as
   an `env:` entry, nothing echoes, traces (`set -x`) or runs Gradle with `--info`/`--debug`, the trigger is a `v*` tag,
   the tag must be on `master`, the release is created as a draft.
-- `check-release-build.sh` (CI, [[ci]]) runs `release-bundle.sh` with a throwaway key on every PR: the signed AAB,
+- `check-release-build.sh` (CI, [[ci]]) runs `release-bundle.sh` with a throwaway key on every PR that runs the gate
+  (not a wiki-only one, [[ci]] → What runs): the signed AAB,
   the version check and the logs. The workflow itself first runs for real on the first tag.

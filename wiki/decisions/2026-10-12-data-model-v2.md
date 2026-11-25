@@ -70,4 +70,4 @@ separately discussed with the user).
   to the rule format that old rows fail needs a DB version bump whose migration rewrites them. Decoding to "no
   rule" instead was rejected: it would silently change typed cards' barcodes.
 - The demo seed still ships in every build. The catalogue (#3) replaces it ([[seed-data]]). (Update 2026-10-13: done.
-  The demo cards are debug-only, and catalogue stores load on every open, see [[store-catalogue]].)
+  The demo cards are debug-only (removed in #55, [[seed-data]]), and catalogue stores load on every open, see [[store-catalogue]].)

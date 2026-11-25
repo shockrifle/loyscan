@@ -92,7 +92,7 @@ with the picture's barcode (#77, below). Everything runs offline on the local da
     exact format, without the mark the rule has, or in another symbology), and none for a typed number. Ranked by `matchingScan` in `domain/StoreSearch.kt`: exact format, then the same
     symbology with or without the GS1 mark, then the rest, each by name. The exact format ranks first because
     a loose rule can read another store's barcode by symbology: until 2026-10-30 SuperShop's rule (any 16 digits,
-    Code 128) read a Tesco GS1-128 barcode (found in review). Since it requires `20000101` it doesn't
+    Code 128) read a Tesco GS1-128 barcode (found in review). Since it requires a `20000101` or `20170001` start (and reads QR codes) it doesn't
     (`ShippedCatalogueTest.aTescoScan_isNotOfferedAsSuperShop`, #52). Every match is offered, so the user chooses
     when several rules read the same number. Stores without a rule are never offered. Tapping one makes the form that store's
     (`CardFormViewModel.switchStore`): the scan and the label stay, the check runs against the new rule, and the card
@@ -169,8 +169,8 @@ with the picture's barcode (#77, below). Everything runs offline on the local da
     reads the barcode under "Suggested", above "Frequently added", ranked as the card form ranks the stores it offers
     (`matchingScan`: exact format, then the same symbology with or without the GS1 mark, then the rest, each by name;
     stores without a rule never). Nothing is picked for the user, and they stay in the full list; with none, there is
-    no "Suggested" heading. The catalogue's loose rules (SuperShop: any 16 digits, Auchan: any valid EAN-13) show up as
-    false suggestions until their prefixes are confirmed (#52, #31). The form after a store is the usual one, so its
+    no "Suggested" heading. SuperShop's and Auchan's rules, once loose enough to show up as
+    false suggestions, now require a confirmed start (`20000101`/`20170001`, `2097`; #52, #31). The form after a store is the usual one, so its
     "It looks like a card from:" works as after a camera scan ([[2026-10-22-store-suggestion-trigger]]). "Other card"
     carries the scan on: the created store's form opens instead of its scanner. Editing a custom store from that
     picker doesn't carry it.

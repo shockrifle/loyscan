@@ -33,7 +33,7 @@ Also travels in the `Detail` route — see [[2025-12-12-brand-color-in-route]].
 colour. Loaded with Coil — [[coil-image-loading]].
 
 **Catalogue store** — A store from the shipped catalogue `app/src/main/assets/catalogue/stores.json`
-(`domain/catalogue/CatalogueEntry`): slug id like `hu-ikea-family`, shipped with no logo, `isCustom = false`. Its row is
+(`CatalogueEntry` in `app/src/main/java/com/bdaniel/loyscan/domain/catalogue/StoreCatalogue.kt`): slug id like `hu-ikea-family`, shipped with no logo, `isCustom = false`. Its row is
 rewritten from the catalogue on every DB open, except `logo`: the user may give it one, which the sync never touches
 (#151). See [[store-catalogue]].
 
@@ -118,7 +118,7 @@ the **upload key** ([[google-play]], [[2026-11-17-release-signing-on-ci]]).
 Added by `EncodedBarcode` per symbology, since ZXing's are too narrow or missing ([[zxing-core]]).
 
 **Repository** — interfaces in `data/repository/` exposing domain `Flow`s, implemented by `@Singleton` `Room*Repository`
-classes and bound in `di/RepositoryModule.kt`; the ViewModels' only data dependency (tests use a fake).
+classes and `DataStoreUserPreferencesRepository`, bound in `di/RepositoryModule.kt`; the ViewModels' only data dependency (tests use a fake).
 
 **Room schema export** — JSON snapshots of each DB version written by KSP to `app/schemas/<db class>/<version>.json`
 (`app/build.gradle.kts`, `ksp { room.schemaLocation }`). Committed; needed to write migrations. See [[database-schema-changes]].

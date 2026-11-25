@@ -29,10 +29,10 @@ keys) can still be removed. Found while building the crop flow: `cancelCrop` lef
 ### Where do logs go?
 Timber, with a `DebugTree` planted only in debug builds (`LoyScanApplication.onCreate`). Release builds log
 nothing. Image-load failures are logged at WARN with the message prefix `Image loading failed for:`
-(`ImageLoaderModule.provideImageLoader` in `app/src/main/java/com/bdaniel/loyscan/di/ImageLoaderModule.kt`) — but only for images loaded through
-the shared loader; see [[list-screen-bypasses-image-loader]].
+(`ImageLoaderModule.provideImageLoader` in `app/src/main/java/com/bdaniel/loyscan/di/ImageLoaderModule.kt`) — every Coil load goes through it since #10 ([[list-screen-bypasses-image-loader]], resolved); the widget
+decodes its logos itself (`WidgetLogos`).
 
 ### Why don't catalogue stores show the retailer's logo?
 Google Play's IP policy asks for the owner's permission to use a logo, and getting it from each retailer isn't
-practical. Their press kits allow editorial use at most. The tile shows the name on the brand colour, or the user's
-own front card photo. Research and sources: [[2026-11-12-no-bundled-store-logos]].
+practical. Their press kits allow editorial use at most. The tile shows the user's own front card photo, else
+the logo the user gave the store ([[store-logo]], #151), else the store's initials on the brand colour. Research and sources: [[2026-11-12-no-bundled-store-logos]].

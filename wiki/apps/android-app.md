@@ -5,15 +5,18 @@ versionName `1.0.0` (versionCode 10000; `loyscan.versionName` in `gradle.propert
 
 ## Entry points
 
-- `LoyScanApplication` (`@HiltAndroidApp`) — plants Timber `DebugTree` in debug builds only
+- `LoyScanApplication` (`@HiltAndroidApp`) — plants Timber `DebugTree` in debug builds only and starts the widget's live-update
+  observer (`CardWidgetUpdater.ensureObserving`, [[card-widget]])
   (`LoyScanApplication.onCreate` in `app/src/main/java/com/bdaniel/loyscan/LoyScanApplication.kt`).
 - `MainActivity` (`@AndroidEntryPoint`, launcher) — `enableEdgeToEdge()`, then
   `LoyScanTheme { Surface(background) { SharedTransitionLayout { AppNavigation() } } }` — the `Surface` is the
   only opaque app background; screens are transparent ([[card-transition]])
   (`MainActivity.onCreate` in `app/src/main/java/com/bdaniel/loyscan/MainActivity.kt`).
-- `AppNavigation` — opens each picture shared to the activity (`sharedPictures`, #77); holds a phone in portrait on every screen but the card (`ScreenOrientation`,
-  [[2026-10-28-portrait-on-phones]]); start destination [[card-list]]; [[card-detail]], [[barcode-scanner]] and the interim scan-result
-  dialog ([[scanner-result-dialog-until-add-card-flow]]).
+- `AppNavigation` — opens each picture shared to the activity (`sharedPictures`, #77), each picture shared as a store logo
+  (`sharedLogos`, #151) and each card a widget tile asks for (`openCards`, [[card-widget]]); holds a phone in portrait on every screen but the card (`ScreenOrientation`,
+  [[2026-10-28-portrait-on-phones]]); start destination [[card-list]]; also [[card-detail]], the [[add-card]] screens (store picker, custom
+  store, [[barcode-scanner]], card form, shared picture), the [[store-logo]] screens and [[about]]. (The interim scan-result
+  dialog, [[scanner-result-dialog-until-add-card-flow]], was removed in `67d98fa`.)
 
 ## Manifest facts
 

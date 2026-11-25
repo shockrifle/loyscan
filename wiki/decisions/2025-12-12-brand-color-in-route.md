@@ -26,6 +26,8 @@ synchronous data source.
 ## Consequences
 - The color is now duplicated (route and DB). If the brand color could change while the detail screen is open,
   the route value would be stale — not possible today (no edit UI).
+  (Update 2026-11-25, wiki sweep: it is reachable now: card screen → Add → store picker → edit a custom store's colour (#53) → Back leaves the
+  card screen on the route's old colour until the card is reopened; `DetailScreen` draws only the route's `color`.)
 - The route color was used unguarded until #14 ([[empty-brand-color-crash]], resolved): it is now parsed with a fallback.
 - The same reasoning applied to the shared-element key, which came from the ViewModel until #16; the card id is
   now passed from the route too ([[shared-element-key-from-async-state]]).

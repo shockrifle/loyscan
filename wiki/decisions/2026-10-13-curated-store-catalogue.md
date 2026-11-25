@@ -5,7 +5,7 @@
 
 The app ships its own small list of stores (Hungary first) in its own JSON format. Stores are matched by a
 country-prefixed slug id and written into the `stores` table each time the database opens. The catalogue has no
-logos. The SQL demo seed was removed, and the demo cards now exist only in debug builds ([[seed-data]]).
+logos. The SQL demo seed was removed, and the demo cards were left in debug builds only, then removed in #55 ([[seed-data]]).
 
 ## Context
 - A card needs a store with a barcode format and, where the barcode isn't the printed number, a card-number rule
@@ -67,4 +67,4 @@ logos. The SQL demo seed was removed, and the demo cards now exist only in debug
 - Removing an entry from the catalogue doesn't remove its row, so cards keep their store.
 - A new release with a changed rule changes typed cards' barcodes for that store, which is intended. Scanned cards
   keep their scanned content ([[2026-10-12-data-model-v2]]).
-- The release build has no cards and no way to add one until #6.
+- The release build has no cards and no way to add one until #6. (Update 2026-11-25, wiki sweep: cards can be added since #6, [[add-card]].)

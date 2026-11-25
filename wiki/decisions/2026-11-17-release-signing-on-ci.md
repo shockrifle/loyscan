@@ -43,7 +43,8 @@ Chosen by the owner when #74 was planned:
 
 ## Consequences
 
-- `.github/scripts/check-release-build.sh` checks it on every CI run with a throwaway key made the same way
+- `.github/scripts/check-release-build.sh` checks it on every CI run that runs the gate
+  ([[2026-11-23-ci-run-trims]]) with a throwaway key made the same way
   ([[ci]]): the AAB verifies with `jarsigner` and its signer's SHA-256 is the throwaway key's, a half set-up build
   fails naming only the missing variable, and neither log contains the password. `jarsigner -verify -strict` isn't
   used: it fails on any self-signed certificate, which every upload key is.

@@ -7,7 +7,8 @@
 `onNewIntent` is passed on to a new LoyScan task. Since #189 the share runs in `ShareActivity`, a subclass with the
 same launch mode and forward (amendment below). A share sent through the chooser, or with `NEW_TASK` and/or
 `SINGLE_TOP`, doesn't replace what LoyScan has open, so a half-filled card form survives it (#83). A sender using
-`CLEAR_TOP` or `CLEAR_TASK` would still reset LoyScan's task (Consequences).
+`CLEAR_TOP` or `CLEAR_TASK` reset LoyScan's task until #189; since then such a share starts `ShareActivity` in a task of
+its own and LoyScan's task is left alone (Consequences, checked on a device 2026-11-25).
 
 **Amended 2026-11-25 (#189):** shares no longer start `MainActivity`. They start `ShareActivity`, a subclass, with no
 task affinity and `documentLaunchMode="always"`: every share is a task of its own, which the launcher and the widget

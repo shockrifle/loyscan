@@ -84,5 +84,6 @@ change as `libs.kotlinx.serialization.json`). This was the user's choice (2026-1
   literals are dropped; with long input, the extra characters are appended unformatted.
 - Adding an algorithm means adding a `CheckDigitAlgorithm` entry and its test vectors.
 - No real store rules exist yet. They arrive with the catalogue (#3), and each one gets its own unit test there.
+  (Update 2026-11-25, wiki sweep: they came with #3; 22 of the 23 catalogue stores have a rule, [[store-catalogue]].)
 - Tests: `app/src/test/java/com/bdaniel/loyscan/domain/cardnumber/` — the first real JVM tests in the repo
   ([[no-automated-tests]]).

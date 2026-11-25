@@ -54,7 +54,7 @@ Why it is set up this way:
   reviewer is the same model as the main session. Sonnet is a different model and uses less of the plan's
   allowance, and high effort makes up some of the depth it lacks. If findings get noticeably shallower, use
   `opus`.
-- **Check the model from the API traffic, not from labels.** `/next-task` makes it a push gate. Run [[reviewer-model]]
+- **Check the model from the API traffic, not from labels.** `/next-task` makes it a merge gate. Run [[reviewer-model]]
   (`python -I .claude/scripts/reviewer_model.py <agent id> --expect claude-sonnet-5-5 --effort high`). It compares
   what each API request asked for (`params.model`, `params.output_config.effort`) with what answered
   (`message.model`, per message id) in the subagent's transcript (`~/.claude/projects/<project>/<session>/subagents/agent-<id>.jsonl`).

@@ -27,4 +27,5 @@ file goes: [[2026-11-03-card-photos-as-private-files]].
   for the permission like the scanner does ([[android-app]]).
 - Without a camera app, or on Android 11+ without the `<queries>` entry, only the gallery is offered.
 - Nothing guides the user to frame the card; cropping to the card's ratio is still open in #10.
+  (Update 2026-11-25, wiki sweep: the crop came in [[2026-11-04-card-photos-interactive-crop]]; #10 is closed.)
 - The process can die while the camera app is in front, so the capture is kept in the form's saved state.

@@ -15,7 +15,7 @@ Notable scripts, CLIs and custom Gradle tasks: what each does, how to invoke it,
 - `.github/scripts/check-release-wizard.sh`: runs the release-signing wizard with piped answers in a sandbox ([[ci]], #74).
 - `.github/scripts/check-release-build.sh`: the release build's checks, run on CI and in Git Bash ([[ci]], #74).
 - `.github/scripts/ci-gate.sh`: the Tests workflow's first step; writes `run=true|false` (does this run need the gate),
-  `marker` (may a green PR run record its tree) and `tree` to `$GITHUB_OUTPUT`; on a push it asks the Actions API with
+  `wiki` (a wiki-only PR: only the wiki checks run), `setup` (set up the JDK and Gradle), `marker` (may a green PR run record its tree) and `tree` to `$GITHUB_OUTPUT`; on a push it asks the Actions API with
   `gh` and `jq` ([[ci]] → What runs, [[2026-11-23-ci-run-trims]], #199).
 - `.github/scripts/check-ci-gate.sh`: runs `ci-gate.sh` case by case in throwaway git repos and checks what it writes;
   on CI and in Git Bash ([[ci]], #199).

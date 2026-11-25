@@ -1,6 +1,6 @@
 # Changes land through pull requests, rebase-merged by the agent after green CI
 
-**Status:** Active · **Date:** 2026-11-09 · **PR:** #117 (#116)
+**Status:** Active, CI runs amended by [[2026-11-23-ci-run-trims]] · **Date:** 2026-11-09 · **PR:** #117 (#116)
 
 ## Context
 
@@ -55,5 +55,6 @@ and `master` is protected: [[2026-11-23-public-repository]].)
 - The commit SHAs on a branch differ from the ones on `master` after the merge (GitHub rewrites them as it
   rebases). Issue comments and wiki pages cite the `master` SHAs.
 - CI runs twice per change: on the PR (the merge commit) and on `master` after the merge.
+  (Update 2026-11-25, wiki sweep: since #199 the `master` push skips the gate when a green PR run tested the same tree.)
 - `Fixes #N` closes the issue when the PR merges, not on a push.
 - Wiki pages written before 2026-11-09 say the repo has no PRs; that was true for their history.

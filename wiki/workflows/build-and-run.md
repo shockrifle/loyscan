@@ -1,6 +1,7 @@
 # Build and run
 
-A standard Gradle-wrapper project with no custom tasks or scripts; coverage tasks come from the Kover plugin.
+A standard Gradle-wrapper project. Coverage tasks come from the Kover plugin; the one custom task, `:app:printVersion`, and the
+release and CI scripts are listed in [[scripts/_index|scripts]].
 
 **Gradle runs on JDK 17 or newer** (AGP 9's minimum). Since AGP 9 (#115) Kotlin takes its JVM target (21) from
 `compileOptions`, so the JDK that runs Gradle no longer decides the bytecode: a terminal build on JDK 19 works
