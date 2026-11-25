@@ -174,6 +174,10 @@ Glance's `@layout/glance_default_loading_layout` as the initial layout). Glance 
   brand colour alike, in a box whose only background is the scrim drawable, aligned to the bottom; the drawable runs
   top to bottom from clear to `PHOTO_LABEL_SCRIM`; a labelled tile without a logo has no scrim; a tile
   whose logo didn't decode shows the initials.
+- `widget/CardWidgetRenderTest` — the tiles as a home screen lays them out (#216): the real RemoteViews for a layout
+  width, inflated at a real width that may differ from it (`widget/WidgetRender.kt`, [[tdd]]), each tile's size read from
+  its view. A layout shown at its own width has card tiles filling their cells, in one and two columns; one shown in a
+  narrower widget fills the real width. Each test draws what it measured into `app/build/outputs/widget-renders/`.
 - `widget/CardWidgetUpdaterTest` — the live-update trigger: it fires when a card or the sort changes the tiles, not on
   a change a tile doesn't show, never when no widget is placed, starts once a widget is placed mid-session, and a
   refresh that throws is swallowed so observation continues. Since #181 it fires when a store's logo is set, changed or
