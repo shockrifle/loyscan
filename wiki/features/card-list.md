@@ -7,12 +7,12 @@ tiles, one per row in `loyalty_cards`, live-updating from Room. Sort, search and
 (`CardTileFace`, shared with the store's logo preview, #192) in `app/src/main/java/com/bdaniel/loyscan/ui/CardTileFace.kt`;
 `ListViewModel` (`app/src/main/java/com/bdaniel/loyscan/ListViewModel.kt`); sort and search in
 `app/src/main/java/com/bdaniel/loyscan/domain/CardSearch.kt`; route `CardList`
-(`app/src/main/java/com/bdaniel/loyscan/Navigation.kt:11-12`).
+(`app/src/main/java/com/bdaniel/loyscan/Navigation.kt`).
 
 ## Behavior
 
 - Data: `ListViewModel.cards` ← `LoyaltyCardRepository.getAllWithStore()` (each card with its store), sorted by the
-  stored choice, then narrowed by the query (`ListViewModel.kt:52-68`). Initial value `null` (not loaded): the grid is
+  stored choice, then narrowed by the query (`ListViewModel.cards`). Initial value `null` (not loaded): the grid is
   briefly empty on cold start, and "No card matches" waits for the load, since a query restored after process death
   is there at once (`ListScreenTest.aRestoredSearch_doesNotSayNothingMatches_beforeTheCardsHaveLoaded`). The SQL has no `ORDER BY`; ordering is done in Kotlin (`CardSort`), so it ignores
   case and accents the way search does.

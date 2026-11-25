@@ -111,7 +111,7 @@ the committed `app/schemas/…/<version>.json` when an entity changed without a 
 ### Wiki
 Run the "When to update" checklist in `wiki/CLAUDE.md` against the change and list what is missing:
 - a feature, decision, bug, hack or tech-debt page the change calls for, or an existing page it made inaccurate
-  (stale `path:line` links, a behaviour that changed)
+  (a symbol it renamed or moved, a behaviour that changed)
 - the `wiki/_log.md` line (newest first, one line, never rewriting earlier entries)
 - every `[[link]]` resolves to an existing page; dates are absolute; paths are repo-relative
 - wiki updates are in the same commit as the code that triggered them

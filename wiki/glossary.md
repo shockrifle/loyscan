@@ -6,7 +6,7 @@ Alphabetical.
 **AnimatedVisibilityScope** — Compose scope passed from each `composable<Route> { }` block (`this`) into a screen;
 required by `Modifier.sharedElement`. See [[card-transition]].
 
-**AppNavigation** — The `NavHost` composable, defined in `MainActivity.kt:69-116`, that maps routes to screens.
+**AppNavigation** — The `NavHost` composable, defined in `app/src/main/java/com/bdaniel/loyscan/MainActivity.kt`, that maps routes to screens.
 
 **Barcode content** — The exact string a card's barcode encodes. Derived from the core number by the store's
 card-number rule (`CardNumberEngine.barcodeContent`); equals the raw number when there is no rule.
@@ -46,7 +46,7 @@ See [[2026-10-09-card-number-rule-engine]].
 **Card number** — `LoyaltyCard.number`: the raw input, as typed or exactly as scanned (`scannedFormat` set).
 Barcode content and display number are derived from it on read ([[2026-10-12-data-model-v2]]).
 
-**CardList** — Navigation route `object CardList` (`Navigation.kt:11-12`), the start destination: "My Cards".
+**CardList** — Navigation route `object CardList` (`app/src/main/java/com/bdaniel/loyscan/Navigation.kt`), the start destination: "My Cards".
 Was `object List` until #17, which shadowed `kotlin.collections.List` — [[list-route-shadows-kotlin-list]].
 
 **`card/{id}`** — The shared-content key that links a list tile to the detail screen in the shared-element transition.
@@ -57,7 +57,7 @@ separators removed, letter case applied). Rules turn it into barcode content. Se
 
 **DAO** — Room data-access interface in `data/local/db/dao/`. Reads return `Flow`.
 
-**Detail** — Navigation route `data class Detail(val cardId: String, val color: String, val countUse: Boolean = true, val added: Boolean = false)` (`Navigation.kt:40-41`).
+**Detail** — Navigation route `data class Detail(val cardId: String, val color: String, val countUse: Boolean = true, val added: Boolean = false)` (`app/src/main/java/com/bdaniel/loyscan/Navigation.kt`).
 
 **Display number** — `LoyaltyCard.displayNumber`: the number formatted by the store rule's display pattern
 (`CardNumberEngine.displayNumber`); the trimmed number when there is no rule. Shown on the detail screen.
@@ -102,7 +102,7 @@ until #1.
 `loyalty_cards`. UUID string id; fields per [[2026-10-12-data-model-v2]].
 
 **LoyaltyCardWithStore** — Room result class: the card `@Embedded`, its store loaded by `@Relation`
-(`data/local/db/dao/LoyaltyCardDao.kt:16-22`). Was `LoyaltyCardWithBrand` (a hand-aliased `JOIN`) until #1.
+(`app/src/main/java/com/bdaniel/loyscan/data/local/db/dao/LoyaltyCardDao.kt`). Was `LoyaltyCardWithBrand` (a hand-aliased `JOIN`) until #1.
 
 **`loyscan.db`** — The on-device SQLite file name (`di/DatabaseModule.kt`, `provideAppDatabase`).
 
@@ -125,7 +125,7 @@ classes and bound in `di/RepositoryModule.kt`; the ViewModels' only data depende
 
 **Shared element** — Compose `Modifier.sharedElement(rememberSharedContentState(key), animatedVisibilityScope)`
 — the same key on two destinations animates bounds between them. Requires the `SharedTransitionLayout` set up in
-`MainActivity.kt:60`. See [[card-transition]].
+`MainActivity.onCreate`. See [[card-transition]].
 
 **SharedTransitionScope** — Receiver of `AppNavigation`, `ListScreen`, `DetailScreen`, `CardItem`, so they can call
 `sharedElement`. Experimental API (`@OptIn(ExperimentalSharedTransitionApi::class)`).
@@ -137,7 +137,7 @@ classes and bound in `di/RepositoryModule.kt`; the ViewModels' only data depende
 (`isCustom`, UUID id). `domain/Store.kt`; table `stores`. Several cards can share one store. Carries the optional
 card-number rule. Was `Brand` until #1 — [[2026-10-12-data-model-v2]].
 
-**Timber** — Logging library; `DebugTree` planted in debug builds only (`LoyScanApplication.kt:11-13`).
+**Timber** — Logging library; `DebugTree` planted in debug builds only (`LoyScanApplication.onCreate`).
 
 
 **Upload key** — The PKCS12 keystore that signs the AABs uploaded to Play; outside the repo, in Actions secrets for

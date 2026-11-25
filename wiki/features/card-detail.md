@@ -4,9 +4,9 @@ Shows one card at the checkout: a top bar and a 200dp header in the store's bran
 name), then a `Card` with the card's label, the store name, the barcode on white, the display number in large
 type and the card's note. The screen runs at full brightness; a double-tap on the barcode opens a full-screen scan mode.
 
-**Entry points:** `DetailScreen` (`app/src/main/java/com/bdaniel/loyscan/DetailScreen.kt:89-97`);
+**Entry points:** `DetailScreen` (`app/src/main/java/com/bdaniel/loyscan/DetailScreen.kt`);
 `DetailViewModel` (`app/src/main/java/com/bdaniel/loyscan/DetailViewModel.kt`); route
-`Detail(cardId, color, countUse, added)` (`app/src/main/java/com/bdaniel/loyscan/Navigation.kt:40-41`), where `cardId` is the card's
+`Detail(cardId, color, countUse, added)` (`app/src/main/java/com/bdaniel/loyscan/Navigation.kt`), where `cardId` is the card's
 UUID string.
 
 ## Behavior

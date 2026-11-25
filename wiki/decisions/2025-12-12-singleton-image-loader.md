@@ -13,9 +13,9 @@
 
 ## Decision
 `ImageLoaderModule.provideImageLoader` is a `@Singleton` `@Provides`, plus `ImageLoaderEntryPoint`
-(`app/src/main/java/com/bdaniel/loyscan/di/ImageLoaderModule.kt:18-46`). The composable `hiltImageLoader()` reads
+(`app/src/main/java/com/bdaniel/loyscan/di/ImageLoaderModule.kt`). The composable `hiltImageLoader()` reads
 it via `EntryPointAccessors.fromApplication`, `remember`ed per context
-(`app/src/main/java/com/bdaniel/loyscan/ui/ImageLoader.kt:10-19`). The error log level was lowered from `e` to `w`.
+(`app/src/main/java/com/bdaniel/loyscan/ui/ImageLoader.kt`). The error log level was lowered from `e` to `w`.
 
 ## Why
 Inferred from the commit ("extracted image loader"): one shared loader means one memory/disk cache and no

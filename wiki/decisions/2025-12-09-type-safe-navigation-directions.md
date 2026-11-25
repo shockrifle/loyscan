@@ -17,7 +17,7 @@ passed into screens, with `DetailViewModel` reading `"cardId"` from `SavedStateH
 - Each screen gets an `@Immutable` **Directions** data class of lambdas (`ListDirections`, `DetailDirections`),
   built by a `NavController` extension (`listDirections()`, `detailDirections()`). Screens never see the
   `NavController`.
-- ViewModels read args with `savedStateHandle.toRoute<Detail>()` (`DetailViewModel.kt:22`).
+- ViewModels read args with `savedStateHandle.toRoute<Detail>()` (`DetailViewModel`).
 - Requires the `kotlin-serialization` plugin (added in the same commit) and navigation-compose 2.9.6.
 
 ## Why

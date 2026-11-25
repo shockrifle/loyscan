@@ -8,9 +8,10 @@ listing's own note is #75.
 
 **Entry points** (under `app/src/main/java/com/bdaniel/loyscan/`):
 - `ListScreen.kt` (`ListScreen`'s top bar): the Info (i) icon in the card list's top bar, "About", → `ListDirections.toAbout` →
-  `navigate(About)` while the list is current (`Navigation.kt:35`).
+  `navigate(About)` while the list is current (`listDirections` in `app/src/main/java/com/bdaniel/loyscan/Navigation.kt`).
 - `AboutScreen.kt`: the screen; route `About`, `AboutDirections.toBack` → `navigateUp()` while About is current
-  (`Navigation.kt:40-48`); registered in `AppNavigation` (`MainActivity.kt:152`).
+  (`About` and `aboutDirections` in `app/src/main/java/com/bdaniel/loyscan/Navigation.kt`); registered in `AppNavigation`
+  (`app/src/main/java/com/bdaniel/loyscan/MainActivity.kt`).
 
 ## Behavior
 

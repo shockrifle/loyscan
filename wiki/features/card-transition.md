@@ -4,9 +4,9 @@ Tapping a tile morphs the tile's colored box into the whole detail screen (and b
 Compose's experimental shared-element API.
 
 **Entry points:** `SharedTransitionLayout` wrapping `AppNavigation`
-(`app/src/main/java/com/bdaniel/loyscan/MainActivity.kt:56-63`); the `CardItem` box's
+(`MainActivity.onCreate` in `app/src/main/java/com/bdaniel/loyscan/MainActivity.kt`); the `CardItem` box's
 `.sharedElement(key = cardTransitionKey(card.id))` in `ListScreen.kt`; `Scaffold(modifier = Modifier.sharedElement(…))`
-in `app/src/main/java/com/bdaniel/loyscan/DetailScreen.kt:157-161`.
+in `DetailScreen` (`app/src/main/java/com/bdaniel/loyscan/DetailScreen.kt`).
 
 ## How it's wired
 
@@ -33,7 +33,7 @@ in `app/src/main/java/com/bdaniel/loyscan/DetailScreen.kt:157-161`.
 
 Both `ListScreen` and `DetailScreen` pass `containerColor = Color.Transparent` to their `Scaffold`, and
 `MainActivity` wraps `SharedTransitionLayout` in a full-size `Surface(color = MaterialTheme.colorScheme.background)`
-(`app/src/main/java/com/bdaniel/loyscan/MainActivity.kt:56-63`).
+(`MainActivity.onCreate`).
 
 - **Why transparent:** the detail `Scaffold` *is* the shared element; with an opaque container it morphed out of
   the colored tile as a plain surface-colored rectangle. With the NavHost's default cross-fade, two opaque screen

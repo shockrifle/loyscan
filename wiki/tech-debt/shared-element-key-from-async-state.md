@@ -1,9 +1,9 @@
 # Detail shared-element key depends on async-loaded data
 
 **Status:** Resolved 2026-10-28 (#16) · **Issue:** [#16](https://github.com/shockrifle/loyscan/issues/16) · **Since:** 2025-12-04 (`1ea9fe0`) · **Where:**
-`app/src/main/java/com/bdaniel/loyscan/DetailScreen.kt:157-161`
+`DetailScreen`'s shared-element `Scaffold` in `app/src/main/java/com/bdaniel/loyscan/DetailScreen.kt` (as of `1ea9fe0`)
 
-**Resolved:** `DetailScreen` takes `cardId` from the route, as it takes `color` (`MainActivity.kt:90-99`), and
+**Resolved:** `DetailScreen` takes `cardId` from the route, as it takes `color` (`AppNavigation` in `app/src/main/java/com/bdaniel/loyscan/MainActivity.kt`), and
 keys its `Scaffold` with `cardTransitionKey(cardId)`, the helper the list tile uses too (`ListScreen.kt`, `cardTransitionKey`).
 The regression test, `DetailScreenTest.aTileOpeningTheCard_growsIntoTheScreen_beforeTheCardHasLoaded`, confirmed
 the suspicion on Robolectric, not on a device: with the old key and a card not loaded yet, the detail screen didn't
@@ -25,5 +25,5 @@ arrived, or mis-animate on fast taps. The size of the effect depended on how qui
 observed on a device.
 
 ## How to pay it down
-(Done in #16, see Resolved above.) Pass `cardId` (from `toRoute<Detail>()`, as is already done for `color` in `MainActivity.kt:68`) into
+(Done in #16, see Resolved above.) Pass `cardId` (from `toRoute<Detail>()`, as is already done for `color` in `AppNavigation`) into
 `DetailScreen` and build the key from it. If it fixes a visible glitch, write a `bugs/` page.

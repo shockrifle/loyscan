@@ -59,8 +59,8 @@ Treat this as a checklist at the end of every non-trivial task:
 
 - [ ] **New app / top-level surface** (e.g. a widget, Wear OS module, second Gradle module) →
       `apps/` (rare).
-- [ ] **Non-trivial feature implemented or modified** → `features/<feature>.md`, with entry-point
-      `path:line` links. Update [[architecture]] if the layering changed.
+- [ ] **Non-trivial feature implemented or modified** → `features/<feature>.md`, with its entry points
+      (path and symbol). Update [[architecture]] if the layering changed.
 - [ ] **Architectural/design decision made** → `decisions/YYYY-MM-DD-<slug>.md`. Capture the *why*;
       skip if the why is obvious from the diff.
 - [ ] **Workaround/hack added** → `hacks/<slug>.md`. **Longer-lived accepted debt** →
@@ -111,7 +111,7 @@ Work is tracked in GitHub Issues on `shockrifle/loyscan` (use `gh`). The split:
   tech debt, phrased as "X is not implemented", not "we will build X".)
 - Areas the current task didn't touch.
 
-When in doubt, prefer linking to the source (`path:line`, commit SHA) over copying it. **When in doubt
+When in doubt, prefer linking to the source (path and symbol, commit SHA) over copying it. **When in doubt
 whether something is wiki-worthy, don't write it** — a smaller true wiki beats a padded one.
 
 ## How to write pages
@@ -119,9 +119,11 @@ whether something is wiki-worthy, don't write it** — a smaller true wiki beats
 - **One concept per page.** Split when a page passes ~200 lines.
 - **Lead with the answer**, then provenance and detail.
 - **Cross-reference liberally** with `[[page-name]]`. Every link must resolve to an existing page.
-- **Provenance is mandatory for non-obvious claims**: repo-relative paths with line numbers when the
-  code is stable (`app/src/main/java/com/bdaniel/loyscan/data/local/db/AppDatabase.kt:10`), symbol names when
-  lines churn, commit SHAs (short, 7 chars). Mark inferences explicitly: *"(inferred from diff; not
+- **Provenance is mandatory for non-obvious claims**: the repo-relative path and the symbol (`AppDatabase.VERSION` in
+  `app/src/main/java/com/bdaniel/loyscan/data/local/db/AppDatabase.kt`), and commit SHAs (short, 7 chars). **No line
+  numbers**: they went stale with every edit above them, even in files that rarely change (#222), and nothing checks
+  them. For code as it was, give the SHA ("as of `45a33e1`") and the current name ("now `getByIdWithStore`").
+  `WikiReferencesTest` fails on a line number, on a repo path that isn't tracked and on a test method no test declares. Mark inferences explicitly: *"(inferred from diff; not
   stated in commit)"*. Commit messages in this repo are terse, so most "why"s are inferences —
   say so.
 - **Contradictions**: if a page disagrees with the code or with another page, keep the truer version,
@@ -163,7 +165,7 @@ whether something is wiki-worthy, don't write it** — a smaller true wiki beats
 ```markdown
 # <Title>
 
-**Status:** Open | Resolved (sha) · **Since:** YYYY-MM-DD (sha) · **Where:** path:line
+**Status:** Open | Resolved (sha) · **Since:** YYYY-MM-DD (sha) · **Where:** path + symbol
 
 ## What
 ## Why it exists
