@@ -28,7 +28,7 @@ get written, new code would go back to being tested afterwards, or not at all.
    least code that makes it pass, then clean up with the tests green. "Right reason" means the failure message
    names the missing behaviour, not a compile error elsewhere.
 2. **Bug fixes start with a failing regression test** that reproduces the bug through the public API. You see it
-   fail, then fix. The test stays, named after the behaviour (`emptyBrandColor_doesNotCrash`), not the issue
+   fail, then fix. The test stays, named after the behaviour (`emptyStoreColor_doesNotCrash`), not the issue
    number. A `// #N` comment links it.
 3. **JVM-first.** Every test is in `app/src/test/`. Room, `SavedStateHandle`, Compose UI and Hilt run on
    Robolectric. Add instrumented tests only for something Robolectric can't do, such as the camera (#4), and record

@@ -4,15 +4,15 @@
 # Env: EVENT (github.event_name), REPO (owner/name), GITHUB_OUTPUT, and GH_TOKEN for the API.
 # Writes to $GITHUB_OUTPUT:
 #   run=true|false   whether the gate runs
-#   wiki=true|false  a wiki-only PR: run only PublicSafeRepoTest, which reads every tracked file, wiki pages too
+#   wiki=true|false  a wiki-only PR: run only the tests that read every wiki page (PublicSafeRepoTest, WikiReferencesTest)
 #   setup=true|false whether the JDK and Gradle are set up (for the gate, or for that one test)
 #   marker=true|false  pull_request only: whether a green run may record its tree as tested (see the workflow)
 #   tree=<sha>       HEAD's tree, which names that record
 # Anything unexpected (no base commit, an API error) gives run=true: a full run costs minutes, a wrong skip a check.
 set -euo pipefail
 
-# Wiki pages a test besides PublicSafeRepoTest reads (StoreListingTest, PrivacyPolicyTest): a change to one runs the
-# gate like code does. PublicSafeRepoTest reads every wiki page, so a wiki-only PR still runs that one test.
+# Wiki pages a test besides PublicSafeRepoTest and WikiReferencesTest reads (StoreListingTest, PrivacyPolicyTest): a
+# change to one runs the gate like code does. Those two read every wiki page, so a wiki-only PR still runs them.
 tested_wiki='^wiki/integrations/google-play\.md$'
 # What the cache keys in tests.yml hash or are made by: setup-gradle's Gradle files, the wrapper, the version catalog,
 # and the workflow and scripts that form the keys. A PR changing one leaves master's entries stale unless master runs.
@@ -44,7 +44,7 @@ decide_pull_request() {
     if [[ $f =~ $cache_inputs ]]; then touches_cache=true; fi
   done
   if [ "$wiki_only" = true ]; then
-    echo "The PR changes only wiki pages: skipping the gate, running only PublicSafeRepoTest."
+    echo "The PR changes only wiki pages: skipping the gate, running only the wiki checks."
     run=false
     wiki=true
   elif [ "$touches_cache" = true ]; then

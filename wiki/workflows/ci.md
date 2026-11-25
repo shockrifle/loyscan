@@ -2,7 +2,7 @@
 
 Every pull request into `master`, and every push to it (a merged PR), runs the unit tests, the Kover coverage
 gate and lint on GitHub Actions, unless the run's first step finds it needs no gate: a PR that changes only wiki pages
-(which runs `PublicSafeRepoTest` alone), or a push to `master` of a tree a green PR run already tested (below, #199). A PR is merged only when its run is green ([[code-review]]). A red run on `master` means
+(which runs only `PublicSafeRepoTest` and `WikiReferencesTest`), or a push to `master` of a tree a green PR run already tested (below, #199). A PR is merged only when its run is green ([[code-review]]). A red run on `master` means
 `master` is broken, so fix it before merging anything else. Workflow: `.github/workflows/tests.yml` (added for #29).
 GitHub enforces the gate: `master` is protected and requires the job's check, `test` (the job name, not the workflow
 name `Tests`), on a branch up to date with `master`, for admins too ([[2026-11-23-public-repository]]).
@@ -25,13 +25,14 @@ Which runs cancel which (#119):
 
 **Decide** comes first, right after the checkout (`fetch-depth: 2`): `.github/scripts/ci-gate.sh` writes `run=true` or
 `run=false`, and every later step has `steps.gate.outputs.run == 'true'` in its `if:`, except the JDK and Gradle setup
-(`setup == 'true'`: the gate or a wiki-only PR's one test) and **Public-safe check (wiki-only PR)** (`wiki == 'true'`).
+(`setup == 'true'`: the gate or a wiki-only PR's tests) and **Wiki checks (wiki-only PR)** (`wiki == 'true'`).
 The job itself always runs, so the required `test` check reports green on a skip, not "skipped"
 ([[2026-11-23-ci-run-trims]]):
 - **A pull request** whose changed files (`git diff --no-renames --name-only HEAD^1 HEAD`: the checkout is GitHub's merge
   commit and its first parent the base) are all under `wiki/` → `run=false`, `wiki=true`: the run sets up Gradle and
   runs only `PublicSafeRepoTest`, which reads every tracked file, so a personal path or email address in a wiki page
-  still fails the PR. Not when one of the files is a page another test reads (`wiki/integrations/google-play.md`, read
+  still fails the PR, and `WikiReferencesTest`, so a page naming a path or a test method that doesn't exist does too
+  (#222). Not when one of the files is a page another test reads (`wiki/integrations/google-play.md`, read
   by `StoreListingTest` and `PrivacyPolicyTest`), nor when the list is empty or the base can't be read. A file moved
   into `wiki/` counts by its old path too.
   Every other PR runs the gate. It also writes `marker=true`, unless a changed file is one the cache keys are made of
@@ -53,7 +54,7 @@ inputs (every Dependabot Gradle PR) leaves no marker, so its push runs in full a
 
 `.github/scripts/check-ci-gate.sh` checks those rules case by case in throwaway repos (step **CI gate checks**), and
 `TestsWorkflowTest` (in the gate) checks the wiring: the triggers, Decide right after the checkout, every later step
-gated by its own output with no `||` around it, the wiki-only step running `PublicSafeRepoTest` alone, and no `if:` on
+gated by its own output with no `||` around it, the wiki-only step running only `PublicSafeRepoTest` and `WikiReferencesTest`, and no `if:` on
 the job.
 
 The single build step:
@@ -130,10 +131,10 @@ been measured yet. The last cold runs, on 2026-11-10 before lint was added, took
 
 **Minutes per change** (#199, estimates from the figures above; a skipped run on `master` is the checkout, the Decide
 step and the job's setup, under a minute; a wiki-only PR's run also sets up Gradle and compiles the tests for
-`PublicSafeRepoTest`, a few minutes, not yet measured):
+`PublicSafeRepoTest` and `WikiReferencesTest`, a few minutes, not yet measured):
 - A PR: one full run per push to its branch (a newer push cancels the older run), plus a skipped run on `master` after
   the merge. Before #199 the `master` run was a second full run.
-- A wiki-only PR: a public-safe-only run per push, plus one full run on `master` after the merge (nothing recorded its
+- A wiki-only PR: a wiki-checks-only run per push, plus one full run on `master` after the merge (nothing recorded its
   tree).
 - A PR changing a cache key's inputs (a dependency bump): its runs, plus a full run on `master`, as before.
 

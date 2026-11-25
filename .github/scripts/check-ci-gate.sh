@@ -112,9 +112,9 @@ no_api_calls() { [ ! -s "$FAKE_GH/calls" ] || { cat "$FAKE_GH/calls"; fail "$1: 
 
 # ── Pull requests: which run the gate ───────────────────────────────────────────────────────────────────────────────
 repo wiki/index.md wiki/new-page.md; decide pull_request
-expect "a PR changing only wiki pages skips the gate, but runs the public-safe check" run=false marker=false setup=true wiki=true
+expect "a PR changing only wiki pages skips the gate, but runs the wiki checks" run=false marker=false setup=true wiki=true
 repo rm:wiki/index.md; decide pull_request
-expect "a PR deleting a wiki page skips the gate, but runs the public-safe check" run=false marker=false setup=true wiki=true
+expect "a PR deleting a wiki page skips the gate, but runs the wiki checks" run=false marker=false setup=true wiki=true
 repo wiki/index.md README.md; decide pull_request
 expect "a PR changing a wiki page and another file runs the gate" run=true setup=true wiki=false
 repo wiki/integrations/google-play.md; decide pull_request

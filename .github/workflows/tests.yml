@@ -32,7 +32,7 @@ jobs:
           fetch-depth: 2
 
       # Whether this run needs the gate (#199): wiki/workflows/ci.md -> What runs. Every later step runs only on
-      # run=true, except the JDK and Gradle setup (setup=true) and a wiki-only PR's public-safe check (wiki=true); the
+      # run=true, except the JDK and Gradle setup (setup=true) and a wiki-only PR's wiki checks (wiki=true); the
       # job itself always runs, so the required `test` check reports green on a skip, not "skipped".
       - name: Decide
         id: gate
@@ -86,10 +86,11 @@ jobs:
         run: for attempt in 1 2 3; do ./gradlew --version && exit 0; sleep 30; done; exit 1
 
       # A wiki-only PR skips the gate, but PublicSafeRepoTest reads every tracked file, wiki pages too: the public repo
-      # must not take a personal path or email address from a wiki page either (#200, #199).
-      - name: Public-safe check (wiki-only PR)
+      # must not take a personal path or email address from a wiki page either (#200, #199). WikiReferencesTest checks
+      # that the paths and test names every wiki page gives still exist (#222).
+      - name: Wiki checks (wiki-only PR)
         if: steps.gate.outputs.wiki == 'true'
-        run: ./gradlew testDebugUnitTest --tests 'com.bdaniel.loyscan.PublicSafeRepoTest'
+        run: ./gradlew testDebugUnitTest --tests 'com.bdaniel.loyscan.PublicSafeRepoTest' --tests 'com.bdaniel.loyscan.WikiReferencesTest'
 
       - name: Tests and coverage gate
         if: steps.gate.outputs.run == 'true'

@@ -6,8 +6,8 @@
 
 **Resolved:** both screens now parse with `String.toBrandColorOrNull()`
 (`app/src/main/java/com/bdaniel/loyscan/ui/BrandColor.kt`) and fall back to `surfaceVariant`. It was written test-first:
-`DetailScreenTest.emptyBrandColor_doesNotCrash` / `malformedBrandColor_doesNotCrash` and
-`ListScreenTest.emptyOrMalformedBrandColor_doesNotCrash` failed before the fix, with `StringIndexOutOfBoundsException`
+`DetailScreenTest.emptyStoreColor_doesNotCrash` / `malformedStoreColor_doesNotCrash` and
+`ListScreenTest.emptyOrMalformedStoreColor_doesNotCrash` (named `…BrandColor…` until brands became stores) failed before the fix, with `StringIndexOutOfBoundsException`
 for `""` and `IllegalArgumentException: Unknown color` for a malformed string. The list had the same bug for
 malformed colours: its guard only checked `isNotEmpty()`.
 
