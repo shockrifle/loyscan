@@ -1,5 +1,6 @@
 package com.bdaniel.loyscan
 
+import com.bdaniel.loyscan.testing.lineCitations
 import com.bdaniel.loyscan.testing.repoPaths
 import com.bdaniel.loyscan.testing.testMembers
 import com.google.common.truth.Truth.assertThat
@@ -9,8 +10,8 @@ import java.util.concurrent.TimeUnit
 import org.junit.Test
 
 /**
- * The wiki names code that moves on without it (#222). Every repo path a wiki page names must be a tracked file or
- * folder, and every test method or property it names must be declared by that test class. The rules run on snippets first, then
+ * The wiki names code that moves on without it (#222). No wiki page cites a line number, every repo path a page names
+ * must be a tracked file or folder, and every test method or property it names must be declared by that test class. The rules run on snippets first, then
  * on the wiki pages `git ls-files` lists, except the append-only `_log.md` and the raw `assets/`. A wiki-only PR runs
  * this test on CI too. wiki/CLAUDE.md, "How to write pages"
  */
@@ -79,7 +80,44 @@ class WikiReferencesTest {
         assertThat(testMembers(text)).isEmpty()
     }
 
+    @Test
+    fun aFileWithALineOrARange_isALineCitation() {
+        val text = listOf(
+            "see `app/src/main/java/com/bdaniel/loyscan/MainActivity.kt:90-99`",
+            "(`Navigation.kt:40-41`) and data/local/db/dao/LoyaltyCardDao.kt:16-22, 80-88",
+            "app/build.gradle.kts:3, proguard-rules.pro:12 and .github/workflows/tests.yml:88",
+        ).joinToString("\n")
+
+        assertThat(lineCitations(text)).containsExactly(
+            "line 1: app/src/main/java/com/bdaniel/loyscan/MainActivity.kt:90-99",
+            "line 2: Navigation.kt:40-41",
+            "line 2: data/local/db/dao/LoyaltyCardDao.kt:16-22",
+            "line 3: app/build.gradle.kts:3",
+            "line 3: proguard-rules.pro:12",
+            "line 3: .github/workflows/tests.yml:88",
+        ).inOrder()
+    }
+
+    @Test
+    fun timesShasIssuesPortsAndSymbols_areNotLineCitations() {
+        val text = listOf(
+            "at 12:30, commit `45a33e1`, #222, a `]L0` prefix, https://example.com:8080/x and github.com/o/r#L5",
+            "`AppNavigation` in `app/src/main/java/com/bdaniel/loyscan/MainActivity.kt`, `Detail.cardId`",
+            "`git show 9fc953d:app/src/main/java/com/bdaniel/loyscan/DetailViewModel.kt`",
+        ).joinToString("\n")
+
+        assertThat(lineCitations(text)).isEmpty()
+    }
+
     // ---- The rules, on the wiki ----
+
+    @Test
+    fun noWikiPage_citesALineNumber() {
+        val problems = WIKI_PAGES.flatMap { page -> lineCitations(File(ROOT, page).readText()).map { "$page $it" } }
+
+        assertWithMessage("line numbers the wiki cites; cite the path and the symbol (wiki/CLAUDE.md, provenance)")
+            .that(problems).isEmpty()
+    }
 
     @Test
     fun everyRepoPathTheWikiNames_isTracked() {

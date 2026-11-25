@@ -27,9 +27,9 @@ screen's keys this way (`CardFormViewModel.clearCropping`, #10); keys read only 
 keys) can still be removed. Found while building the crop flow: `cancelCrop` left the crop screen on screen.
 
 ### Where do logs go?
-Timber, with a `DebugTree` planted only in debug builds (`LoyScanApplication.kt:11-13`). Release builds log
+Timber, with a `DebugTree` planted only in debug builds (`LoyScanApplication.onCreate`). Release builds log
 nothing. Image-load failures are logged at WARN with the message prefix `Image loading failed for:`
-(`app/src/main/java/com/bdaniel/loyscan/di/ImageLoaderModule.kt:35`) — but only for images loaded through
+(`ImageLoaderModule.provideImageLoader` in `app/src/main/java/com/bdaniel/loyscan/di/ImageLoaderModule.kt`) — but only for images loaded through
 the shared loader; see [[list-screen-bypasses-image-loader]].
 
 ### Why don't catalogue stores show the retailer's logo?

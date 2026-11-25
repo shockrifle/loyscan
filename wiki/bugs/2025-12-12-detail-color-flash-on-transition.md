@@ -12,7 +12,7 @@ body.
 
 ## Root cause
 `DetailScreen` computed `color` from `viewModel.card` — a `StateFlow` with `initialValue = LoyaltyCard.EMPTY`
-fed by an async Room query (`DetailViewModel.kt:24-31`). On the first frames `card.brand.color == ""`, which the
+fed by an async Room query (`DetailViewModel.card`, before `45a33e1`). On the first frames `card.brand.color == ""`, which the
 old code mapped to `Color.Transparent`. Shared-element transitions render the destination immediately, so the
 async gap is visible.
 

@@ -6,11 +6,11 @@ versionName `1.0.0` (versionCode 10000; `loyscan.versionName` in `gradle.propert
 ## Entry points
 
 - `LoyScanApplication` (`@HiltAndroidApp`) — plants Timber `DebugTree` in debug builds only
-  (`app/src/main/java/com/bdaniel/loyscan/LoyScanApplication.kt:7-14`).
+  (`LoyScanApplication.onCreate` in `app/src/main/java/com/bdaniel/loyscan/LoyScanApplication.kt`).
 - `MainActivity` (`@AndroidEntryPoint`, launcher) — `enableEdgeToEdge()`, then
   `LoyScanTheme { Surface(background) { SharedTransitionLayout { AppNavigation() } } }` — the `Surface` is the
   only opaque app background; screens are transparent ([[card-transition]])
-  (`app/src/main/java/com/bdaniel/loyscan/MainActivity.kt:44-67`).
+  (`MainActivity.onCreate` in `app/src/main/java/com/bdaniel/loyscan/MainActivity.kt`).
 - `AppNavigation` — opens each picture shared to the activity (`sharedPictures`, #77); holds a phone in portrait on every screen but the card (`ScreenOrientation`,
   [[2026-10-28-portrait-on-phones]]); start destination [[card-list]]; [[card-detail]], [[barcode-scanner]] and the interim scan-result
   dialog ([[scanner-result-dialog-until-add-card-flow]]).
@@ -56,7 +56,7 @@ versionName `1.0.0` (versionCode 10000; `loyscan.versionName` in `gradle.propert
 ## Theme
 
 `LoyScanTheme` is the Android Studio template: Material 3 with dynamic color on API 31+, purple fallback palette
-on API 29–30 (`app/src/main/java/com/bdaniel/loyscan/ui/theme/Theme.kt:36-58`). Card colors come from brand
+on API 29–30 (`LoyScanTheme` in `app/src/main/java/com/bdaniel/loyscan/ui/theme/Theme.kt`). Card colors come from brand
 data, not the theme. Icons are hand-written `ImageVector`s — [[2025-12-08-hand-rolled-icons]].
 
 ## Build types

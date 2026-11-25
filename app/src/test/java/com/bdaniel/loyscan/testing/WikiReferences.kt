@@ -1,6 +1,7 @@
 package com.bdaniel.loyscan.testing
 
-// What a wiki page names in the code, read from its text (#222): the repo paths and the test members it names.
+// What a wiki page names in the code, read from its text (#222): the repo paths, the test members and the line numbers
+// it names.
 // WikiReferencesTest checks these on snippets first, then on the tracked wiki pages, against the tracked files.
 
 /**
@@ -27,6 +28,17 @@ fun testMembers(text: String): List<String> =
         TEST_MEMBER.findAll(line).map { "line ${index + 1}: ${it.groupValues[1]}" }.toList()
     }
 
+/**
+ * The citations of a file by line number in [text] (a file name with its extension, a colon and a line or a range),
+ * each as "line N: citation". Line numbers go stale with every edit above them, so the wiki cites a symbol instead.
+ */
+fun lineCitations(text: String): List<String> =
+    text.lines().withIndex().flatMap { (index, line) ->
+        LINE_CITATION.findAll(line).map { "line ${index + 1}: ${it.value}" }.toList()
+    }
+
+/** Not a host's port (`example.com:8080/x`): the number may not run on into a path. */
+private val LINE_CITATION = Regex("""(?<![\w.-])[\w./-]*\w\.[A-Za-z]{1,10}:\d+(?:-\d+)?(?![\w/])""")
 private val REPO_PATH = Regex("""(?<![\w./~@-])(?:app|gradle|play|wiki|\.github|\.claude)/[\w./<>…*{}-]*[\w/>…*}]""")
 private val PLACEHOLDER = Regex("""[<>…*{}]|\.\.\.""")
 private val TEST_MEMBER = Regex("""`(\w+Test\.\w+)(?:\(\))?`""")

@@ -41,7 +41,7 @@ terms, with domain→entity mappers. Time comes from an injected `java.time.Cloc
 
 ### Composition / DI
 
-- `LoyScanApplication` is `@HiltAndroidApp` (`LoyScanApplication.kt:7`); `MainActivity` is `@AndroidEntryPoint`.
+- `LoyScanApplication` is `@HiltAndroidApp` (`app/src/main/java/com/bdaniel/loyscan/LoyScanApplication.kt`); `MainActivity` is `@AndroidEntryPoint`.
 - `DatabaseModule` provides the singleton `AppDatabase` (file `loyscan.db`, seeded on creation — see
   [[store-catalogue]]) and unscoped DAO providers (`di/DatabaseModule.kt`). Two `RoomDatabase.Callback`s run
   on every open through the raw database: `CatalogueDatabaseCallback` writes the catalogue rows, and
@@ -53,7 +53,7 @@ terms, with domain→entity mappers. Time comes from an injected `java.time.Cloc
   pinned by `PreferencesModuleTest`) behind `UserPreferencesRepository` ([[2026-10-28-datastore-for-user-preferences]]).
 - `CardPhotosModule` provides `FileCardPhotos` over `files/card_photos/`, bound as `CardPhotos` ([[card-photos]]).
 - `ImageLoaderModule` provides a singleton Coil `ImageLoader`. Composables can't `@Inject`, so it is reached
-  through a Hilt `@EntryPoint` wrapped in the `hiltImageLoader()` composable (`ui/ImageLoader.kt:10-19`).
+  through a Hilt `@EntryPoint` wrapped in the `hiltImageLoader()` composable (`app/src/main/java/com/bdaniel/loyscan/ui/ImageLoader.kt`).
   See [[2025-12-12-singleton-image-loader]] and [[coil-image-loading]].
 - ViewModels are obtained with `hiltViewModel()` as a default parameter of each screen.
 
@@ -134,7 +134,8 @@ its test: write it, watch it fail, then write the code ([[tdd]], [[2026-10-12-td
 here exist; read them next to the code.
 
 1. **Data at rest.** Rows live in `stores` and `loyalty_cards` (FK `storeId` → `stores.id`, `ON DELETE CASCADE`,
-   indexed; string ids): `data/local/db/entity/LoyaltyCardEntity.kt:10-36`. Lists, rules and timestamps go
+   indexed; string ids): `LoyaltyCardEntity` in
+   `app/src/main/java/com/bdaniel/loyscan/data/local/db/entity/LoyaltyCardEntity.kt`. Lists, rules and timestamps go
    through `data/local/db/Converters.kt` ([[2026-10-12-data-model-v2]]). Catalogue stores are written from
    `app/src/main/assets/catalogue/stores.json` on every open ([[store-catalogue]]); cards come only from the
    add-card flow ([[add-card]]).
@@ -145,21 +146,22 @@ here exist; read them next to the code.
    (`…_unknownId_emitsNull`).
    Then the code: `LoyaltyCardDao.getAllWithStore()` / `getByIdWithStore(id)` select cards inside `@Transaction`,
    and Room fills `@Relation val store: StoreEntity` with a second query
-   (`data/local/db/dao/LoyaltyCardDao.kt:16-22, 80-88`). They return `Flow`, so the UI updates when either table changes.
+   (`LoyaltyCardWithStore`, `getAllWithStore` and `getByIdWithStore` in
+   `app/src/main/java/com/bdaniel/loyscan/data/local/db/dao/LoyaltyCardDao.kt`). They return `Flow`, so the UI updates when either table changes.
    The single-card query returns `Flow<…?>`: with a non-null type Room throws for a missing row
    ([[2026-10-09-missing-card-throws-from-room]]).
 3. **Mapping.** *Test first:* `LoyaltyCardMapperTest.toDomainModel_copiesEveryField`.
    Then `LoyaltyCardWithStore.toDomainModel()` builds `LoyaltyCard(…, store = Store(…))`
-   (`data/mapper/LoyaltyCardMapper.kt:14-29`). The derived fields (`barcodeContent`, `displayNumber`,
+   (`app/src/main/java/com/bdaniel/loyscan/data/mapper/LoyaltyCardMapper.kt`). The derived fields (`barcodeContent`, `displayNumber`,
    `barcodeFormat`) are computed by `LoyaltyCard` itself; test: `domain/LoyaltyCardTest`.
 4. **Repository.** *Test first:* `RoomLoyaltyCardRepositoryTest`: a real in-memory database in, domain cards out.
    Then `RoomLoyaltyCardRepository.getAllWithStore()` = `dao.getAllWithStore().map { it.toDomainModel() }`
-   (`data/repository/RoomLoyaltyCardRepository.kt:22`), behind the `LoyaltyCardRepository` interface. Change
+   (`app/src/main/java/com/bdaniel/loyscan/data/repository/RoomLoyaltyCardRepository.kt`), behind the `LoyaltyCardRepository` interface. Change
    `FakeLoyaltyCardRepository` in the same step, so it keeps the interface's contract.
 5. **List ViewModel.** *Test first:* `ListViewModelTest`: built with the fake repositories and a `SavedStateHandle`,
    Turbine on `cards`. It checks the initial empty list, then each update, the stored sort and the search.
    Then `ListViewModel.cards` = the repository flow combined with the sort preference and the query, sorted then
-   searched, `.stateIn(viewModelScope, WhileSubscribed(5_000), null)` (`null`: not loaded yet; `ListViewModel.kt:52-68`, [[card-list]]).
+   searched, `.stateIn(viewModelScope, WhileSubscribed(5_000), null)` (`null`: not loaded yet; [[card-list]]).
 6. **List UI.** *Test first:* `ListScreenTest`: a fake-backed ViewModel and a recording `ListDirections`. It
    checks one tile per card, and that a click calls `toCard(id, color)`.
    Then `ListScreen` collects `cards` and renders a 2-column `LazyVerticalGrid` of `CardItem`s, keyed by card id. Each `CardItem`'s
@@ -167,21 +169,22 @@ here exist; read them next to the code.
    `directions.toCard(card.id, card.store.color)` ([[card-list]]).
 7. **Navigation.** *Test first:* `AppNavigationTest`, the one end-to-end test for this flow: real Hilt and
    navigation over `InMemoryDatabaseModule`, list → detail → back.
-   Then `NavController.listDirections(entry).toCard` → `navigate(Detail(id, color))` (`Navigation.kt:23-33, 40-41`).
+   Then `NavController.listDirections(entry).toCard` → `navigate(Detail(id, color))`
+   (`listDirections` and `Detail` in `app/src/main/java/com/bdaniel/loyscan/Navigation.kt`).
    `AppNavigation` maps `composable<Detail>` to `DetailScreen`, pulling `cardId` and `color` out of the route and
-   passing them as plain parameters (`MainActivity.kt:90-99`).
+   passing them as plain parameters (`app/src/main/java/com/bdaniel/loyscan/MainActivity.kt`).
 8. **Detail ViewModel.** *Test first:* `DetailViewModelTest` with `SavedStateHandle(route = Detail(…))`. It
    checks `EMPTY` first, then the routed card. A missing card stays `EMPTY`, and a deleted card keeps the last
    value.
    Then `DetailViewModel` reads `savedStateHandle.toRoute<Detail>().cardId`, then
    `repository.getByIdWithStore(cardId).filterNotNull().stateIn(…, initialValue = LoyaltyCard.EMPTY)`, with
-   a photo whose file is missing left off on the way (`CardPhotos.withoutMissing`, [[card-photos]]) (`DetailViewModel.kt:41-49`).
+   a photo whose file is missing left off on the way (`CardPhotos.withoutMissing`, [[card-photos]]) (`DetailViewModel.card`).
 9. **Detail UI.** *Test first:* `DetailScreenTest`: it shows the label and the display number (formatted by the
    store's rule), the back arrow calls `toBack`, an empty or malformed route color doesn't crash, and a tile
    grows into the screen before the card has loaded.
    Then `DetailScreen` paints the top bar and header with the **route** color (available on frame 1), and fills
    text/logo from the **ViewModel** card (available once Room emits). The whole `Scaffold` is the matching shared
-   element, keyed from the **route** `cardId` (`DetailScreen.kt:157-161`, #16). Back → `directions.toBack()` → `navigateUp()`.
+   element, keyed from the **route** `cardId` (`cardTransitionKey(cardId)` in `DetailScreen`, #16). Back → `directions.toBack()` → `navigateUp()`.
    See [[card-detail]], [[card-transition]].
 
 ### Checklist for a new screen/feature (derived from the example)
