@@ -63,7 +63,8 @@ how the user frames what is stored.
   frame feels, and the gesture on a real high-resolution picture.
 - The crop screen is laid out for portrait and is not usable in landscape: the frame is sized from the width, so in
   landscape it overflows the height and the stored crop would not match what is shown. The app doesn't lock
-  orientation. Left as a follow-up (fit the frame to the region, or lock the screen to portrait).
+  orientation (Update 2026-11-25, wiki sweep: since #63 phones are held in portrait on every screen but the card, `ScreenOrientation`
+  [[2026-10-28-portrait-on-phones]]; the overflow remains on screens 600dp or wider and in split-screen). Left as a follow-up (fit the frame to the region, or lock the screen to portrait).
 - A photo staged for the crop screen but never framed lingers like an abandoned pick — up to a day plus the next
   process start — before the sweep deletes it ([[2026-11-03-card-photos-as-private-files]]).
 - `CardPhotos.import` (copy-and-encode in one) is gone; the form stages then crops. `encodeCardPhoto` keeps the

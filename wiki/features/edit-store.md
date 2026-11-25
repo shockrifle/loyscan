@@ -3,14 +3,16 @@
 A custom store ("Other card", [[add-card]]) has an Edit button in the store picker. It opens the custom-store form
 for that store, which saves its new name, colour and barcode format for typed numbers and returns to the picker. The
 form's Delete action deletes the store and its cards after a confirmation that says how many cards go with it.
-Catalogue stores have no Edit button and can't be changed or deleted. Issue [#53](https://github.com/shockrifle/loyscan/issues/53).
+Catalogue stores have no Edit button and can't be renamed, recoloured or deleted; only their logo can be set
+([[store-logo]]). Issue [#53](https://github.com/shockrifle/loyscan/issues/53).
 
 **Entry points** (under `app/src/main/java/com/bdaniel/loyscan/`):
 - `StorePickerScreen.kt`: the trailing Edit icon on a custom store's row ("Edit <name>") →
   `StorePickerDirections.toEditStore(storeId)` → `CustomStore(storeId)` (`Navigation.kt`).
 - `CustomStoreViewModel.kt`, `CustomStoreScreen.kt`: the same form as creating, in edit mode
   (`CustomStoreState.editing`, title "Edit store", button "Save").
-- `StoreRepository.update(store)` → `StoreDao.updateCustom(…)`; `StoreRepository.delete(id)` → `StoreDao.deleteCustom(id)`
+- `StoreRepository.update(store)` → `StoreDao.updateCustom(…)`; `StoreRepository.delete(id)` → `StoreDao.deleteCustomReturningCardPhotos(id)` (runs `deleteCustom` and returns the photo
+  and logo names whose files then go)
   (`data/local/db/dao/StoreDao.kt`); the card count from `LoyaltyCardRepository.countForStore(storeId)` →
   `LoyaltyCardDao.countForStore`.
 

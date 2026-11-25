@@ -11,7 +11,8 @@ number and store of one card. Deleting a card is on [[card-detail]].
 - `ListScreen.kt`: Edit in the `SelectionBar` → `ListDirections.toEditCard(id, storeId)` → the same route, over the list.
 - `CardFormViewModel.kt`, `CardFormScreen.kt`: the same form as adding, in edit mode (`CardFormState.editing`, title
   "Edit card").
-- `LoyaltyCardRepository.update(card)` → `LoyaltyCardDao.update(LoyaltyCardEdit)`, mapped with `LoyaltyCard.toEdit()`
+- `LoyaltyCardRepository.update(card)` → `LoyaltyCardDao.updateReturningDroppedPhotos(LoyaltyCardEdit)` (the partial
+  `update` plus the photo names it dropped, whose files the repository deletes), mapped with `LoyaltyCard.toEdit()`
   (`data/mapper/LoyaltyCardMapper.kt`).
 - `StoreList.kt`: `StoreChooser`, the full-screen dialog "Change store" opens, over `StoreSearchList`, the search field
   and list it shares with the store picker.
@@ -72,4 +73,5 @@ number and store of one card. Deleting a card is on [[card-detail]].
 
 ## Not implemented
 
-Deleting several cards at once belongs to the list's multi-select (#7). A custom store's barcode format belongs to the store, so changing it is editing the store (#53).
+Nothing on the form itself. Out of scope here: deleting several cards is the list's multi-select ([[card-list]], #7); a
+custom store's barcode format belongs to the store, so changing it is editing the store ([[edit-store]], #53).

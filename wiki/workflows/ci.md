@@ -225,7 +225,7 @@ KSP stay in one group:
 - **GitHub Actions** (the `uses:` versions in the workflows), all in one PR.
 
 Each PR runs the Tests workflow. A Gradle bump changes setup-gradle's cache key and the toml part of the Robolectric one, so its run
-starts cold (about 5 minutes); the Gradle distribution still comes from its own cache unless the wrapper itself is
+starts cold (roughly 13–17 minutes with lint, an estimate: Runtime, above); the Gradle distribution still comes from its own cache unless the wrapper itself is
 bumped (Caches, above). Its `master` run after the merge runs in full too (it changed a cache key's inputs), which saves
 the new caches.
 

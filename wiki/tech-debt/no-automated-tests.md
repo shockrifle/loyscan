@@ -1,6 +1,6 @@
 # No automated tests
 
-**Status:** Resolved 2026-10-12 (#13; last piece #29) · **Issue:** [#13](https://github.com/shockrifle/loyscan/issues/13) · **Since:** 2025-12-03 (`00933cd`) · **Where:** `app/src/test/`
+**Status:** Resolved 2026-10-12 (#13; last piece #29, `22b070c`) · **Issue:** [#13](https://github.com/shockrifle/loyscan/issues/13) · **Since:** 2025-12-03 (`00933cd`) · **Where:** `app/src/test/`
 
 **Resolved:** every layer has tests (#30), coverage is gated at 90 % (#27), test-first is the documented default
 (#28), and CI runs the tests and the gate on every push (#29, [[ci]]). Feature work keeps it paid down; the

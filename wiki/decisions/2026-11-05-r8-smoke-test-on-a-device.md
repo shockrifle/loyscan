@@ -3,7 +3,8 @@
 **Status:** Active · **Date:** 2026-11-05 · **Commits:** cffe39e, eea7cf8
 
 The release build runs R8 (`isMinifyEnabled`, `isShrinkResources`). It is checked in three ways:
-- CI builds it on every push.
+- CI builds it on every run that runs the gate (not a wiki-only PR or an already-tested `master` push,
+  [[2026-11-23-ci-run-trims]]).
 - A JVM test pins the one keep rule the app needs.
 - `MinifiedAppSmokeTest`, a UiAutomator test, drives the minified app on a real device. It runs by hand before a
   release, not on CI (#73).

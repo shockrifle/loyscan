@@ -4,8 +4,9 @@ Tapping a tile morphs the tile's colored box into the whole detail screen (and b
 Compose's experimental shared-element API.
 
 **Entry points:** `SharedTransitionLayout` wrapping `AppNavigation`
-(`MainActivity.onCreate` in `app/src/main/java/com/bdaniel/loyscan/MainActivity.kt`); the `CardItem` box's
-`.sharedElement(key = cardTransitionKey(card.id))` in `ListScreen.kt`; `Scaffold(modifier = Modifier.sharedElement(…))`
+(`MainActivity.onCreate` in `app/src/main/java/com/bdaniel/loyscan/MainActivity.kt`); the
+`.sharedElement(rememberSharedContentState(key = cardTransitionKey(card.id)))` that `CardItem` (`ListScreen.kt`) hangs on
+its `CardTileFace`, the tile's coloured box (`app/src/main/java/com/bdaniel/loyscan/ui/CardTileFace.kt`); `Scaffold(modifier = Modifier.sharedElement(…))`
 in `DetailScreen` (`app/src/main/java/com/bdaniel/loyscan/DetailScreen.kt`).
 
 ## How it's wired

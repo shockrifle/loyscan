@@ -1,6 +1,6 @@
 # Detail shared-element key depends on async-loaded data
 
-**Status:** Resolved 2026-10-28 (#16) · **Issue:** [#16](https://github.com/shockrifle/loyscan/issues/16) · **Since:** 2025-12-04 (`1ea9fe0`) · **Where:**
+**Status:** Resolved 2026-10-28 (`1d16f07`, #16) · **Issue:** [#16](https://github.com/shockrifle/loyscan/issues/16) · **Since:** 2025-12-04 (`1ea9fe0`) · **Where:**
 `DetailScreen`'s shared-element `Scaffold` in `app/src/main/java/com/bdaniel/loyscan/DetailScreen.kt` (as of `45a33e1`)
 
 **Resolved:** `DetailScreen` takes `cardId` from the route, as it takes `color` (`AppNavigation` in `app/src/main/java/com/bdaniel/loyscan/MainActivity.kt`), and

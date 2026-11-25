@@ -78,7 +78,8 @@ researched again on 2026-11-12 and the answer kept: [[2026-11-12-no-bundled-stor
   [supershop.hu/ugyfelszolgalat](https://supershop.hu/ugyfelszolgalat), the second from a digital card; the first
   catalogue's `5540` was wrong). One
   card per store, so a rule requires the first three or four digits seen, or the issuer prefix where the number looks
-  like an ISO card number. Every rule except Coop's (whose barcode starts with `90`) now requires a start, so no
+  like an ISO card number. Every rule except Coop's (whose barcode starts with `90`) and Líra's (7 digits behind a fixed `00000` prefix)
+  requires a start, so no
   rule reads another store's scan (`ShippedCatalogueTest.storesWithConfirmedLeadingDigits_rejectOtherStoresCards`,
   [#52](https://github.com/shockrifle/loyscan/issues/52)). Other starts that the first catalogue listed (Penny
   `9980`/`9981`, dm `90`, Rossmann `2`) were left out until a card shows them. A card from a number range not seen

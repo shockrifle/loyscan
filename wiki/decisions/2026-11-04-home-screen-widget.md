@@ -1,6 +1,6 @@
 # Home-screen widget: Glance, an intent extra, and a first slice
 
-**Status:** Active · tile shape and layout amended by [[2026-11-12-design-tokens-and-card-shape]] (#108), store logos on tiles by #181, a tap opens the card over the list since #213 ([[2026-11-24-widget-tap-reused-the-open-card]]) · **Date:** 2026-11-04 · **Issue:** [#11](https://github.com/shockrifle/loyscan/issues/11) (open: slice) · **Commits:** 61e9d13, ccbeb60, 3eead59
+**Status:** Active · tile shape and layout amended by [[2026-11-12-design-tokens-and-card-shape]] (#108), store logos on tiles by #181, a tap opens the card over the list since #213 ([[2026-11-24-widget-tap-reused-the-open-card]]) · **Date:** 2026-11-04 · **Issue:** [#11](https://github.com/shockrifle/loyscan/issues/11) (closed 2026-11-12) · **Commits:** 61e9d13, ccbeb60, 3eead59
 
 The home-screen widget ([[card-widget]]), and the three choices that shaped its first slice.
 
@@ -54,7 +54,7 @@ intent `MainActivity` reads, not through URI deep links (the share flow, [[add-c
   running task. *Until #213* `openCard` pushed the card over whatever was open, so a half-filled form survived a tap
   (the #83 concern, decided for the widget in #11); its `launchSingleTop` also kept another card's screen showing that
   card ([[2026-11-24-widget-tap-reused-the-open-card]]). The exact task behaviour of a `standard` activity launched from a widget can't be proven on
-  Robolectric, so it is an on-device check and **#11 stays open** (`Refs`, not `Fixes`) until confirmed.
+  Robolectric, so it is an on-device check and **#11 stays open** (`Refs`, not `Fixes`) until confirmed. (Update 2026-11-25, wiki sweep: confirmed on a device and #11 closed 2026-11-12.)
 - `glance-testing`'s unit API matches a tile's click by component, not by intent extras, so the "right card is
   opened" guarantee rests on `CardWidgetTilesTest` (cardId↔tile) plus the intent/navigation tests, not on the
   content test — another on-device check.

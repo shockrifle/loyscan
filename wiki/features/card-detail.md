@@ -89,7 +89,8 @@ UUID string.
   (`directions.toEdit(cardId, storeId)`, [[edit-card]]); it is disabled until the card has loaded.
 - **Delete** (#8): the top bar's Delete icon asks "Delete this card?" ("It is removed from this phone for good.").
   "Cancel" or a tap outside closes the dialog. "Delete" calls `DetailViewModel.delete()` →
-  `LoyaltyCardRepository.delete(id)` (`LoyaltyCardDao.deleteById`, one `DELETE`), and once it is gone
+  `LoyaltyCardRepository.delete(id)` (`deleteAll` for one id: `LoyaltyCardDao.deleteReturningPhotos`, one transaction
+  that reads the card's photo names and deletes the row, then the photo files go, [[card-photos]]), and once it is gone
   (`Deletion.DELETED`; the enum in `Deletion.kt` is shared with deleting a custom store, [[edit-store]]) the screen goes back (`directions.toBack()`, to the list). Until then the card stays on screen:
   the card flow skips the `null` a deleted card emits. A failed delete (the repository throws) is logged with Timber,
   and the dialog says "The card couldn't be deleted. Try again."; "Delete" tries again (as a failed save does, #49).

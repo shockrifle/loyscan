@@ -1,6 +1,6 @@
 # zxing-cpp 3.0.2 couldn't hand back a DataBar scan
 
-**Fixed in:** the commit that closes #5 (after `8ed8052`) · **Date:** 2026-10-19 · **Area:** [[barcode-scanner]], [[zxing-cpp]]
+**Fixed in:** `169d3ba` (closes #5) · **Date:** 2026-10-19 · **Area:** [[barcode-scanner]], [[zxing-cpp]]
 
 ## Symptom
 On a real phone, the scanner read EAN-13, Code 128, QR and PDF417 but never a GS1 DataBar (the omnidirectional and

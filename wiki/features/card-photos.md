@@ -99,7 +99,8 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   never answered is swept (Orphans). The `.jpg` name gives the camera app an `image/jpeg` target. No capture starts
   while a photo is copied in or framed, or once saving has started (`startCapture` returns `null`).
 - **On the list** ([[card-list]]): the front photo is the card's tile, with the label on a dark scrim; a card with only
-  a back photo, or a front photo that can't be loaded, keeps the initials.
+  a back photo, or a front photo that can't be loaded, shows its store's logo ([[store-logo]]), else the initials
+  (`CardTileFace` in `app/src/main/java/com/bdaniel/loyscan/ui/CardTileFace.kt`).
 - **On the card** ([[card-detail]]): under the note, the photos it has, front first; a tap shows one full screen
   on black (`PhotoViewer`, `PHOTO_VIEWER_TAG`), and a tap or Back closes it.
 - **Store logos live here too** (#151, [[2026-11-13-user-supplied-store-logos]]): `cropLogo` stores a staged picture
@@ -114,7 +115,7 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
 - **A photo whose file is missing** (its file was deleted or otherwise lost while the row still names it) is
   treated as no photo (#87), and a store logo whose file is missing as no logo (#151). `CardPhotos.withoutMissing(card)` (`data/photos/CardPhotos.kt`) drops such a name from
   the card `DetailViewModel` shows, from the cards `ListViewModel` lists, and from the card `CardFormViewModel` edits. So
-  the card screen shows no thumbnail or viewer for it, the tile shows the initials (#89), and the form shows that side
+  the card screen shows no thumbnail or viewer for it, the tile shows the store's logo, else the initials (#89), and the form shows that side
   as "Add … photo". Saving the edit writes the side as `null`, which
   clears the name; until then the row keeps it.
 - **Backup:** cloud backup carries no app data at all, the photos included, on every supported version; device-to-device
