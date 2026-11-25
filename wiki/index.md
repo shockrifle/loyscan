@@ -19,7 +19,7 @@ the way they are, what's fragile, and how to work on it.
 ## Features
 
 - [[card-list]] — "My Cards" grid (start destination)
-- [[card-detail]] — one card: store header, label, display number
+- [[card-detail]] — one card: store band, label, display number
 - [[card-transition]] — shared-element animation between list and detail
 - [[add-card]] — adding a card: pick the store, scan or type the number, save
 - [[edit-card]] — editing a card's label, number and store; deleting is on [[card-detail]]
