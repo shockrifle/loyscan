@@ -116,19 +116,26 @@ fun CardTileFace(
             }
         }
         CentredOverLabel(label = labelContent, modifier = Modifier.matchParentSize()) {
-            if (!onPicture) {
-                // Shrinks to fit at large font scales, so it doesn't run into the label.
-                Box(Modifier.fillMaxWidth().padding(horizontal = Spacing.s), contentAlignment = Alignment.Center) {
-                    Text(
-                        text = initials,
-                        style = MaterialTheme.typography.headlineLarge,
-                        color = textColor,
-                        maxLines = 1,
-                        autoSize = TextAutoSize.StepBased(maxFontSize = MaterialTheme.typography.headlineLarge.fontSize),
-                    )
-                }
-            }
+            if (!onPicture) StoreInitials(initials = initials, color = textColor)
         }
+    }
+}
+
+/**
+ * A store's [initials] as its tile draws them, centred on one line in [color] (#192). The card screen's band draws them
+ * too (#210), so the two can't drift apart. They shrink to fit at large font scales, so on a tile they don't run into
+ * the label.
+ */
+@Composable
+fun StoreInitials(initials: String, color: Color, modifier: Modifier = Modifier) {
+    Box(modifier.fillMaxWidth().padding(horizontal = Spacing.s), contentAlignment = Alignment.Center) {
+        Text(
+            text = initials,
+            style = MaterialTheme.typography.headlineLarge,
+            color = color,
+            maxLines = 1,
+            autoSize = TextAutoSize.StepBased(maxFontSize = MaterialTheme.typography.headlineLarge.fontSize),
+        )
     }
 }
 

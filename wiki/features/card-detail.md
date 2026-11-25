@@ -1,7 +1,7 @@
 # Card detail
 
-Shows one card at the checkout: a top bar and a 200dp header in the store's brand color with its logo (or store
-name), then a `Card` with the card's label, the store name, the barcode on white, the display number in large
+Shows one card at the checkout: a 140dp band in the store's brand color with Back, Edit and Delete and the store's logo
+(or initials), then a `Card` with the card's label, the store name, the barcode on white, the display number in large
 type and the card's note. The screen runs at full brightness; a double-tap on the barcode opens a full-screen scan mode.
 
 **Entry points:** `DetailScreen` (`app/src/main/java/com/bdaniel/loyscan/DetailScreen.kt`);
@@ -18,22 +18,37 @@ UUID string.
   when Room emits. Why: [[2025-12-12-brand-color-in-route]].
 - If no card has the route's id (deleted, or a stale route), the screen stays on `LoyaltyCard.EMPTY`, or on the
   last card it showed. It doesn't crash: [[2026-10-09-missing-card-throws-from-room]].
-- The header shows the store's logo when the user gave it one (#151, [[2026-11-13-user-supplied-store-logos]]): a
-  `CardPhoto` file through `hiltImageLoader()` ([[coil-image-loading]]), described by the store's name
-  (`STORE_LOGO_TAG`, in `STORE_HEADER_TAG`). A logo that can't be loaded, or whose file is missing
-  (`CardPhotos.withoutMissing` in `DetailViewModel`), shows the name instead. Tests:
-  `DetailScreenTest.aStoresLogo_isShownInTheHeader_inPlaceOfItsName`, `aLogoThatCantBeLoaded_showsTheStoreName`,
-  `aLogoWhoseFileIsMissing_showsTheStoreName`.
+- **The band** (#210, [[2026-11-24-detail-header-band]]): no top bar and no title. `StoreBand` (`STORE_HEADER_TAG`) is
+  one brand-colour band, `BAND_HEIGHT` (140dp) tall with the status bar's area whatever that bar's height (the band
+  grows only when the logo would get less than 40dp). It keeps clear of the system bars as a top app bar does
+  (`TopAppBarDefaults.windowInsets`). Back sits in its start corner, Edit and Delete in its end one, in a 48dp row; below
+  them, centred across the band, the store's logo when the user gave it one (#151,
+  [[2026-11-13-user-supplied-store-logos]]): a `CardPhoto` file through `hiltImageLoader()` ([[coil-image-loading]]),
+  `STORE_LOGO_TAG`. A store without a logo, or whose logo can't be loaded or whose file is missing
+  (`CardPhotos.withoutMissing` in `DetailViewModel`), shows its initials as its tile draws them (`StoreInitials` in
+  `ui/CardTileFace.kt`, shared with `CardTileFace`), never its name. The sheet keeps the label and the store's name
+  above the barcode. TalkBack reads the logo or initials as one heading with the store's name; the initials are kept
+  out of it (`clearAndSetSemantics`, as the store picker's badge does), so it never spells them out. Before the card
+  loads, the name is empty and there is no heading. Tests: `DetailScreenTest.theBand_is140dpTall_underAShortStatusBar_withItsButtonsInTheTopCorners_andTheLogoCentredBelowThem`,
+  `theBand_is140dpTall_underATallStatusBar_withItsButtonsInTheTopCorners_andTheLogoCentredBelowThem`,
+  `thereIsNoTopBarTitle_theStoresNameIsShownOnlyOnTheSheet`, `aStoresLogo_isShownInTheBand_inPlaceOfItsInitials`,
+  `aStoreWithoutALogo_showsItsInitialsInTheBand_notItsName`, `aLogoThatCantBeLoaded_showsTheStoresInitials`,
+  `aLogoWhoseFileIsMissing_showsTheStoresInitials`, `talkBack_readsTheBand_asAHeadingWithTheStoresName_overItsInitials`,
+  `talkBack_readsTheBand_asAHeadingWithTheStoresName_overItsLogo`, `beforeTheCardHasLoaded_theBandIsNoEmptyHeading`,
+  `theBarcode_isAGroupOfItsOwn_insetFromTheSheet` (the sheet's order). Until 2026-11-25 (#210) a 64dp top bar titled
+  with the store's name sat over a 200dp header with the logo or the name.
 - The brand colour is parsed with `toBrandColorOrNull()`. An empty or malformed colour falls back to `surfaceVariant`
   instead of crashing ([[empty-brand-color-crash]], resolved). Tests: `DetailScreenTest.anEmptyStoredColour_fallsBackToSurfaceVariant`,
   `aMalformedStoredColour_fallsBackToSurfaceVariant` (the stored colour); `emptyStoreColor_doesNotCrash` and
   `malformedStoreColor_doesNotCrash` (the route's, which is drawn only before the card loads). The colour's source:
-  `beforeTheCardHasLoaded_theHeaderAndTheTopBar_areInTheRoutesColour`,
-  `aStoresNewColour_isShownOnTheOpenCard_inTheHeaderAndTheTopBar`; end to end
+  `beforeTheCardHasLoaded_theBand_isInTheRoutesColour`,
+  `aStoresNewColour_isShownOnTheOpenCard_inTheBand`; end to end
   `AppNavigationTest.aCustomStoresNewColour_isShownOnItsOpenCard_onReturnFromThePicker`.
-- Header text color: black or white, whichever contrasts more with the brand color (`contrastingTextColor()`, the
-  tile's rule, [[card-list]]). Until 2026-10-28 it was white below a luminance of 0.5, which put white on mid tones
-  where black reads better.
+- The band's initials and its Back, Edit and Delete icons: black or white, whichever contrasts more with the brand
+  color (`contrastingTextColor()`, the tile's rule, [[card-list]]). Until 2026-10-28 the header's text was white below
+  a luminance of 0.5, which put white on mid tones where black reads better; until #210 the top bar drew its icons in
+  `onSurfaceVariant`. Tests: `DetailScreenTest.onADarkBrandColour_theBandsButtonsAreWhite`,
+  `onALightBrandColour_theBandsButtonsAreBlack`.
 - The number shown is `LoyaltyCard.displayNumber`: the number formatted by the store's card-number rule (for a
   scanned card, the core the rule recovers from the scan), or the raw number when there is no rule or no match
   ([[2026-10-12-data-model-v2]]). A GS1 scan (`BarcodeFormat.isGs1`: the `GS1_` formats, DataBar) with no matching rule is shown as printed under
@@ -104,7 +119,7 @@ UUID string.
   the number sat under the navigation bar (`DetailScreenTest.scanMode_andThePhotoViewer_stayAboveTheNavigationBar`).
 - Back arrow → `directions.toBack()` → `navigateUp()`. The Edit icon opens the card form for this card
   (`directions.toEdit(cardId, storeId)`, [[edit-card]]); it is disabled until the card has loaded.
-- **Delete** (#8): the top bar's Delete icon asks "Delete this card?" ("It is removed from this phone for good.").
+- **Delete** (#8): the band's Delete icon asks "Delete this card?" ("It is removed from this phone for good.").
   "Cancel" or a tap outside closes the dialog. "Delete" calls `DetailViewModel.delete()` →
   `LoyaltyCardRepository.delete(id)` (`deleteAll` for one id: `LoyaltyCardDao.deleteReturningPhotos`, one transaction
   that reads the card's photo names and deletes the row, then the photo files go, [[card-photos]]), and once it is gone

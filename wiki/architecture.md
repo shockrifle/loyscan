@@ -183,7 +183,7 @@ here exist; read them next to the code.
 9. **Detail UI.** *Test first:* `DetailScreenTest`: it shows the label and the display number (formatted by the
    store's rule), the back arrow calls `toBack`, an empty or malformed route color doesn't crash, and a tile
    grows into the screen before the card has loaded.
-   Then `DetailScreen` paints the top bar and header with the **route** color until the card has loaded (frame 1
+   Then `DetailScreen` paints its band ([[2026-11-24-detail-header-band]]) with the **route** color until the card has loaded (frame 1
    on), then with the loaded card's store color (#226), and fills text/logo from the **ViewModel** card
    (available once Room emits). (Corrected 2026-11-25: this said the route color was used throughout.) The whole `Scaffold` is the matching shared
    element, keyed from the **route** `cardId` (`cardTransitionKey(cardId)` in `DetailScreen`, #16). Back → `directions.toBack()` → `navigateUp()`.

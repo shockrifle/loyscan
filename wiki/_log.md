@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-25 · card screen's top bar and header become one 140dp brand-colour band (Back, Edit/Delete, logo or initials as a heading named by the store); decision page; header wording updated · features/card-detail, features/store-logo, decisions/{_index,2026-11-24-detail-header-band}, architecture, design-system, integrations/coil-image-loading, glossary, index · #210
 - 2026-11-25 · card screen draws a QR, Data Matrix or Aztec code at most 160dp wide (PDF417, 1D and scan mode unchanged); Data Matrix can be rectangular; zxing-core's full-width note now scan mode · features/card-detail, integrations/zxing-core · #212
 - 2026-11-25 · runbook for `./gradlew … 2>&1` hanging in Git Bash when piped into a native Windows program (stuck in gradlew's `xargs -n1`); build-and-run, index and root CLAUDE.md point at it · runbooks/{_index,gradlew-hangs-in-git-bash}, workflows/build-and-run, index · recurring hung agent Gradle runs
 - 2026-11-25 · review of PR #228: brand-color-in-route Decision paragraph says the route colour draws only until the card loads; its stale-route Consequences bullet rewritten as the present rule with one history line; card-transition notes the switch · decisions/2025-12-12-brand-color-in-route, features/card-transition · #226

@@ -41,9 +41,10 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -62,18 +63,25 @@ import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.bdaniel.loyscan.ui.theme.CardShape
 import com.bdaniel.loyscan.ui.theme.Spacing
 import com.bdaniel.loyscan.domain.LoyaltyCard
+import com.bdaniel.loyscan.domain.Store
 import com.bdaniel.loyscan.ui.CARD_ASPECT_RATIO
 import com.bdaniel.loyscan.ui.CardPhoto
 import com.bdaniel.loyscan.ui.FullBrightness
 import com.bdaniel.loyscan.ui.KeepScreenOn
+import com.bdaniel.loyscan.ui.StoreInitials
 import com.bdaniel.loyscan.ui.barcode.Barcode
 import com.bdaniel.loyscan.ui.barcode.BarcodeEncoder
 import com.bdaniel.loyscan.ui.barcode.EncodedBarcode
@@ -87,14 +95,23 @@ import kotlinx.coroutines.launch
 
 const val PHOTO_VIEWER_TAG = "photoViewer"
 
-/** The store's logo in the card screen's header (#151). */
+/** The store's logo in the card screen's band (#151, #210). */
 const val STORE_LOGO_TAG = "storeLogo"
 
-/** The card screen's header: the store's logo, or its name, on the brand colour (#151). */
+/** The card screen's band: Back, Edit and Delete, and the store's logo or initials, on the brand colour (#151, #210). */
 const val STORE_HEADER_TAG = "storeHeader"
 
-/** The brand-colour header above the card sheet. */
-private val HEADER_HEIGHT = 200.dp
+/** The store's initials in the band, when it has no logo or the logo can't be shown (#210). */
+const val STORE_BAND_INITIALS_TAG = "storeBandInitials"
+
+/** The brand-colour band's height, the status bar's area included (#210). */
+private val BAND_HEIGHT = 140.dp
+
+/** The band's row of buttons: Back, Edit and Delete. */
+private val BAND_BUTTONS_HEIGHT = 48.dp
+
+/** The least the band leaves the logo or initials, under a very tall status bar; the band grows then. */
+private val BAND_MARK_MIN_HEIGHT = 40.dp
 
 /** A 1D barcode's height in scan mode, when it runs across the screen (landscape). */
 private val SCAN_MODE_LINEAR_HEIGHT = 200.dp
@@ -152,30 +169,18 @@ fun SharedTransitionScope.DetailScreen(
     Box(Modifier.fillMaxSize()) {
         Scaffold(
             topBar = {
-                TopAppBar(
-                    title = { Text(text = card.store.name) },
-                    navigationIcon = {
-                        IconButton(onClick = { directions.toBack() }) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.back))
+                StoreBand(
+                    store = card.store,
+                    brandColor = brandColor,
+                    onBack = { directions.toBack() },
+                    // Edit needs the card's id, which is empty until Room emits.
+                    onEdit = if (card.id.isEmpty()) null else {
+                        {
+                            offeringAnother = false
+                            directions.toEdit(card.id, card.store.id)
                         }
                     },
-                    actions = {
-                        IconButton(
-                            onClick = {
-                                offeringAnother = false
-                                directions.toEdit(card.id, card.store.id)
-                            },
-                            enabled = card.id.isNotEmpty(),
-                        ) {
-                            Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.edit))
-                        }
-                        IconButton(onClick = { confirmingDelete = true }) {
-                            Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete))
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = brandColor
-                    )
+                    onDelete = { confirmingDelete = true },
                 )
             },
             snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -191,36 +196,6 @@ fun SharedTransitionScope.DetailScreen(
                     .fillMaxSize()
                     .padding(paddingValues)
             ) {
-                // The store's logo (#151) when it loads; one that can't be loaded shows the name, as a missing one does.
-                var logoFailed by remember(card.store.logo) { mutableStateOf(false) }
-                val logo = card.store.logo?.takeUnless { logoFailed }
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(HEADER_HEIGHT)
-                        .background(brandColor)
-                        .testTag(STORE_HEADER_TAG),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (logo != null) {
-                        AsyncImage(
-                            model = CardPhoto(logo),
-                            contentDescription = card.store.name,
-                            imageLoader = hiltImageLoader(),
-                            onError = { logoFailed = true },
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(Spacing.l)
-                                .testTag(STORE_LOGO_TAG)
-                        )
-                    } else {
-                        Text(
-                            text = card.store.name,
-                            style = MaterialTheme.typography.headlineLarge,
-                            color = brandColor.contrastingTextColor(),
-                        )
-                    }
-                }
                 Card(
                     modifier = Modifier
                         .fillMaxSize()
@@ -324,6 +299,82 @@ fun SharedTransitionScope.DetailScreen(
 }
 
 /** Asks before deleting the card. A failed delete is said here, and "Delete" tries again. */
+/**
+ * The card screen's top (#210): one band in the [brandColor], behind the status bar too, [BAND_HEIGHT] tall whatever
+ * that bar's height. Back sits in its start corner, Edit and Delete in its end one, and below them, centred, the
+ * store's logo, else its initials as its tile draws them ([StoreInitials]), never its name: the sheet shows the name.
+ * TalkBack reads the logo or initials as a heading with the store's name. [onEdit] is null while Edit can't open yet.
+ * Why one band: `wiki/decisions/2026-11-24-detail-header-band.md`.
+ */
+@Composable
+private fun StoreBand(store: Store, brandColor: Color, onBack: () -> Unit, onEdit: (() -> Unit)?, onDelete: () -> Unit) {
+    // The store's logo (#151) when it loads; one that can't be loaded shows the initials, as a missing one does.
+    var logoFailed by remember(store.logo) { mutableStateOf(false) }
+    val logo = store.logo?.takeUnless { logoFailed }
+    // The system bars a top app bar keeps clear of: the status bar above, a bar or cut-out at the side in landscape.
+    val insets = TopAppBarDefaults.windowInsets
+    val statusBar = with(LocalDensity.current) { insets.getTop(this).toDp() }
+    val markHeight = maxOf(BAND_HEIGHT - statusBar - BAND_BUTTONS_HEIGHT, BAND_MARK_MIN_HEIGHT)
+    // Black or white on the brand colour, as the initials and the tile's text are.
+    val contentColor = brandColor.contrastingTextColor()
+    CompositionLocalProvider(LocalContentColor provides contentColor) {
+        Column(
+            modifier = Modifier
+                .testTag(STORE_HEADER_TAG)
+                .fillMaxWidth()
+                .background(brandColor)
+                .windowInsetsPadding(insets),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth().height(BAND_BUTTONS_HEIGHT).padding(horizontal = Spacing.xs),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.back))
+                }
+                Spacer(Modifier.weight(1f))
+                IconButton(onClick = { onEdit?.invoke() }, enabled = onEdit != null) {
+                    Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.edit))
+                }
+                IconButton(onClick = onDelete) {
+                    Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete))
+                }
+            }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(markHeight)
+                    // No empty heading while the card loads (the transition's first frames).
+                    .then(
+                        if (store.name.isEmpty()) Modifier
+                        else Modifier.semantics(mergeDescendants = true) { heading(); contentDescription = store.name }
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (logo != null) {
+                    AsyncImage(
+                        model = CardPhoto(logo),
+                        contentDescription = null, // The heading says the store's name.
+                        imageLoader = hiltImageLoader(),
+                        onError = { logoFailed = true },
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = Spacing.l, vertical = Spacing.s)
+                            .testTag(STORE_LOGO_TAG),
+                    )
+                } else {
+                    // Kept out of the heading, so TalkBack reads the store's name, not the letters.
+                    StoreInitials(
+                        initials = store.initials,
+                        color = contentColor,
+                        modifier = Modifier.clearAndSetSemantics { testTag = STORE_BAND_INITIALS_TAG },
+                    )
+                }
+            }
+        }
+    }
+}
+
 @Composable
 private fun ConfirmDelete(failed: Boolean, deleting: Boolean, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     AlertDialog(

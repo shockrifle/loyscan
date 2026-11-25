@@ -25,8 +25,8 @@ in #55 ([[seed-data]]).
 - `AsyncImage` **without** `imageLoader =` silently uses Coil's own default singleton, which has no logging
   and no `CardPhotoMapper`, so a card photo fails on it. The list tiles did this until #10
   ([[list-screen-bypasses-image-loader]], resolved); every `AsyncImage` now passes `hiltImageLoader()`.
-- No placeholder or error drawable is set. A tile or header whose photo or logo can't load sets an `onError` flag and
-  falls back to the initials or the name.
+- No placeholder or error drawable is set. A tile or the card screen's band whose photo or logo can't load sets an
+  `onError` flag and falls back to the initials.
 - **No `INTERNET` permission** since #157 (2026-11-17), so a URL load fails at run time. Coil 2's `coil-base` still
   ships its OkHttp network fetcher; only the permission is gone. `AppPermissionsTest` fails if the permission comes
   back, from the app's manifest or a library's ([[android-app]] → Manifest facts). The SVG decoder (`coil-svg`) was

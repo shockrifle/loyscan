@@ -83,6 +83,10 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.isHeading
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.unit.Dp
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 // A typical phone: Robolectric's default 320x470dp screen is shorter than the header, barcode and number together.
@@ -95,8 +99,11 @@ class DetailScreenTest {
 
     private val card = aLoyaltyCard(label = "Gold card", store = aStore(name = "Test Store"), number = "0042")
 
-    /** The store's name in the header, not the top bar's (#151). */
-    private val headerName = hasText("Test Store") and hasAnyAncestor(hasTestTag(STORE_HEADER_TAG))
+    /** The store's name as text in the band, which shows its logo or initials instead (#210). */
+    private val nameInTheBand = hasText("Test Store") and hasAnyAncestor(hasTestTag(STORE_HEADER_TAG))
+
+    /** The store's initials in the band (#210): kept out of TalkBack's reading, so found by their tag. */
+    private val initialsInTheBand = hasTestTag(STORE_BAND_INITIALS_TAG) and hasAnyAncestor(hasTestTag(STORE_HEADER_TAG))
 
     private val keepsScreenOn get() = composeRule.activity.window.attributes.flags and FLAG_KEEP_SCREEN_ON != 0
 
@@ -145,9 +152,11 @@ class DetailScreenTest {
         setScreen()
 
         val surface = composeRule.onNodeWithTag(BARCODE_SURFACE_TAG).fetchSemanticsNode().boundsInRoot
-        // The store's name on the sheet: the header and the top bar show it too, further up.
-        val store = composeRule.onAllNodesWithText("Test Store").fetchSemanticsNodes().map { it.boundsInRoot }
-            .filter { it.bottom <= surface.top }.maxBy { it.bottom }
+        // The sheet keeps the label and the store's name above the barcode (#210).
+        val label = composeRule.onNodeWithText("Gold card").fetchSemanticsNode().boundsInRoot
+        val store = composeRule.onNodeWithText("Test Store").fetchSemanticsNode().boundsInRoot
+        assertThat(label.bottom).isAtMost(store.top)
+        assertThat(store.bottom).isAtMost(surface.top)
         val screen = composeRule.onRoot().fetchSemanticsNode().boundsInRoot
         val dp = composeRule.density.density
 
@@ -264,35 +273,153 @@ class DetailScreenTest {
             .isAtLeast(composeRule.onNodeWithText("0042").getUnclippedBoundsInRoot().bottom)
     }
 
-    @Test
-    fun aStoresLogo_isShownInTheHeader_inPlaceOfItsName() { // #151
+    /** Shows the card with a store logo that loads, a one-pixel picture. */
+    private fun setScreenWithALogo(wrap: @Composable (@Composable () -> Unit) -> Unit = { it() }) {
         File(composeRule.activity.filesDir, CardPhotosModule.PHOTO_DIRECTORY).resolve("logo").writeOnePixelPng()
-        setScreen(card = card.copy(store = card.store.copy(logo = "logo")), photos = FakeCardPhotos("logo"))
+        setScreen(card = card.copy(store = card.store.copy(logo = "logo")), photos = FakeCardPhotos("logo"), wrap = wrap)
         val loader = EntryPointAccessors.fromApplication(composeRule.activity, ImageLoaderEntryPoint::class.java).getImageLoader()
         composeRule.waitUntil(WAIT_TIMEOUT_MS) { ShadowLooper.idleMainLooper(); (loader.memoryCache?.size ?: 0) > 0 }
-
-        composeRule.onNodeWithTag(STORE_LOGO_TAG, useUnmergedTree = true).assertIsDisplayed()
-        composeRule.onNodeWithTag(STORE_LOGO_TAG, useUnmergedTree = true).assertContentDescriptionEquals("Test Store")
-        composeRule.onNode(headerName).assertDoesNotExist()
     }
 
     @Test
-    fun aLogoThatCantBeLoaded_showsTheStoreName() { // #151
+    fun aStoresLogo_isShownInTheBand_inPlaceOfItsInitials() { // #151, #210
+        setScreenWithALogo()
+
+        composeRule.onNodeWithTag(STORE_LOGO_TAG, useUnmergedTree = true).assertIsDisplayed()
+        composeRule.onNode(initialsInTheBand, useUnmergedTree = true).assertDoesNotExist()
+        composeRule.onNode(nameInTheBand, useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun aStoreWithoutALogo_showsItsInitialsInTheBand_notItsName() { // #210
+        setScreen()
+
+        composeRule.onNode(initialsInTheBand, useUnmergedTree = true).assertIsDisplayed()
+        composeRule.onNode(nameInTheBand, useUnmergedTree = true).assertDoesNotExist()
+        composeRule.onNodeWithTag(STORE_LOGO_TAG, useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun aLogoThatCantBeLoaded_showsTheStoresInitials() { // #151, #210
         setScreen(card = card.copy(store = card.store.copy(logo = "broken")), photos = FakeCardPhotos("broken"))
 
         composeRule.waitUntil(WAIT_TIMEOUT_MS) {
             ShadowLooper.idleMainLooper()
-            composeRule.onAllNodes(headerName).fetchSemanticsNodes().isNotEmpty()
+            composeRule.onAllNodes(initialsInTheBand, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
         }
         composeRule.onNodeWithTag(STORE_LOGO_TAG, useUnmergedTree = true).assertDoesNotExist()
+        composeRule.onNode(nameInTheBand, useUnmergedTree = true).assertDoesNotExist()
     }
 
     @Test
-    fun aLogoWhoseFileIsMissing_showsTheStoreName() { // #151
+    fun aLogoWhoseFileIsMissing_showsTheStoresInitials() { // #151, #210
         setScreen(card = card.copy(store = card.store.copy(logo = "lost")), photos = FakeCardPhotos())
 
-        composeRule.waitUntil(WAIT_TIMEOUT_MS) { composeRule.onAllNodes(headerName).fetchSemanticsNodes().isNotEmpty() }
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) {
+            composeRule.onAllNodes(initialsInTheBand, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
+        }
         composeRule.onNodeWithTag(STORE_LOGO_TAG, useUnmergedTree = true).assertDoesNotExist()
+        composeRule.onNode(nameInTheBand, useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun thereIsNoTopBarTitle_theStoresNameIsShownOnlyOnTheSheet() { // #210
+        setScreen()
+
+        composeRule.onAllNodesWithText("Test Store", useUnmergedTree = true).assertCountEquals(1)
+        composeRule.onNode(nameInTheBand, useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun theBand_is140dpTall_underAShortStatusBar_withItsButtonsInTheTopCorners_andTheLogoCentredBelowThem() { // #210
+        assertTheBandsLayout(statusBar = 24.dp)
+    }
+
+    @Test
+    fun theBand_is140dpTall_underATallStatusBar_withItsButtonsInTheTopCorners_andTheLogoCentredBelowThem() { // #210: a camera cut-out
+        assertTheBandsLayout(statusBar = 48.dp)
+    }
+
+    private fun assertTheBandsLayout(statusBar: Dp) {
+        var view: android.view.View? = null
+        setScreenWithALogo(wrap = { content -> view = LocalView.current; content() })
+        composeRule.runOnUiThread {
+            val top = with(composeRule.density) { statusBar.roundToPx() }
+            val insets = WindowInsetsCompat.Builder().setInsets(WindowInsetsCompat.Type.statusBars(), Insets.of(0, top, 0, 0)).build()
+            ViewCompat.dispatchApplyWindowInsets(view!!, insets)
+        }
+        composeRule.waitForIdle()
+        val band = composeRule.onNodeWithTag(STORE_HEADER_TAG).getBoundsInRoot()
+        val back = composeRule.onNodeWithContentDescription("Back").getBoundsInRoot()
+        val edit = composeRule.onNodeWithContentDescription("Edit").getBoundsInRoot()
+        val delete = composeRule.onNodeWithContentDescription("Delete").getBoundsInRoot()
+        val logo = composeRule.onNodeWithTag(STORE_LOGO_TAG, useUnmergedTree = true).getBoundsInRoot()
+
+        // One band from the top of the screen, the status bar's area included.
+        assertThat(band.top.value).isWithin(0.5f).of(0f)
+        assertThat(band.height.value).isWithin(0.5f).of(140f)
+        // The buttons below the status bar, Back in the start corner, Edit and Delete in the end one.
+        listOf(back, edit, delete).forEach { assertThat(it.top.value).isAtLeast(statusBar.value - 0.5f) }
+        assertThat((back.left - band.left).value).isAtMost(8f)
+        assertThat((band.right - delete.right).value).isAtMost(8f)
+        assertThat(edit.right.value).isAtMost(delete.left.value + 0.5f)
+        // The logo below them, centred across the band. It is fitted (ContentScale.Fit) and centred in its bounds,
+        // so bounds centred in the band centre the logo.
+        assertThat(logo.top.value).isAtLeast(maxOf(back.bottom, edit.bottom, delete.bottom).value - 0.5f)
+        assertThat(logo.bottom.value).isAtMost(band.bottom.value + 0.5f)
+        assertThat(((logo.left + logo.right) / 2).value).isWithin(1f).of(((band.left + band.right) / 2).value)
+    }
+
+    @Test
+    fun talkBack_readsTheBand_asAHeadingWithTheStoresName_overItsInitials() { // #210
+        setScreen()
+
+        assertTheBandIsAHeadingNamed("Test Store")
+    }
+
+    @Test
+    fun talkBack_readsTheBand_asAHeadingWithTheStoresName_overItsLogo() { // #210
+        setScreenWithALogo()
+
+        assertTheBandIsAHeadingNamed("Test Store")
+    }
+
+    @Test
+    fun beforeTheCardHasLoaded_theBandIsNoEmptyHeading() { // #210: the name is empty until Room emits
+        setScreen(repository = FakeLoyaltyCardRepository(emptyList()))
+
+        composeRule.onAllNodes(isHeading()).assertCountEquals(0)
+    }
+
+    /** What TalkBack hears: the band's heading says the store's [name], and nothing anywhere spells out "TS". */
+    private fun assertTheBandIsAHeadingNamed(name: String) {
+        val heading = composeRule.onNode(isHeading() and hasAnyAncestor(hasTestTag(STORE_HEADER_TAG)))
+        heading.assertContentDescriptionEquals(name)
+        assertThat(heading.fetchSemanticsNode().config.getOrElse(SemanticsProperties.Text) { emptyList() }).isEmpty()
+        composeRule.onAllNodesWithText("TS", substring = true).assertCountEquals(0)
+    }
+
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE) // real drawing, for the pixels
+    fun onADarkBrandColour_theBandsButtonsAreWhite() { // #210: the top bar drew them in onSurfaceVariant
+        setScreen(color = "#1A1A1A", card = card.copy(store = card.store.copy(color = "#1A1A1A")))
+        composeRule.waitForIdle()
+
+        assertThat(backIconPixels()).contains(0xFFFFFFFF.toInt())
+    }
+
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE) // real drawing, for the pixels
+    fun onALightBrandColour_theBandsButtonsAreBlack() { // #210
+        setScreen(color = "#FFEB3B", card = card.copy(store = card.store.copy(color = "#FFEB3B")))
+        composeRule.waitForIdle()
+
+        assertThat(backIconPixels()).contains(0xFF000000.toInt())
+    }
+
+    private fun backIconPixels(): Set<Int> {
+        val pixels = composeRule.onNodeWithContentDescription("Back").captureToImage().toPixelMap()
+        return buildSet { for (x in 0 until pixels.width) for (y in 0 until pixels.height) add(pixels[x, y].toArgb()) }
     }
 
     @Test
@@ -561,7 +688,8 @@ class DetailScreenTest {
             "Teljes képernyő bezárása", "Törlöd ezt a kártyát?", "Nem sikerült törölni a kártyát. Próbáld újra.",
             "Szám másolása", "Vissza",
         )
-        shown.assertEveryTextIsTranslated("Test Store", "Gold card", card.displayNumber, "PIN hint")
+        // "TS": the store's initials in the band, from its name (the test's unmerged tree keeps them; TalkBack doesn't).
+        shown.assertEveryTextIsTranslated("Test Store", "TS", "Gold card", card.displayNumber, "PIN hint")
     }
 
     @Test
@@ -899,7 +1027,7 @@ class DetailScreenTest {
 
     @Test
     @GraphicsMode(GraphicsMode.Mode.NATIVE) // real drawing, for the pixels
-    fun aStoresNewColour_isShownOnTheOpenCard_inTheHeaderAndTheTopBar() { // #226: the route's colour stayed
+    fun aStoresNewColour_isShownOnTheOpenCard_inTheBand() { // #226: the route's colour stayed
         val repository = FakeLoyaltyCardRepository(listOf(card))
         setScreen(color = "#336699", repository = repository)
         composeRule.waitForIdle()
@@ -908,17 +1036,15 @@ class DetailScreenTest {
         composeRule.waitForIdle()
 
         assertThat(headerPixel()).isEqualTo(0xFFC62828.toInt())
-        assertThat(topBarPixel()).isEqualTo(0xFFC62828.toInt())
     }
 
     @Test
     @GraphicsMode(GraphicsMode.Mode.NATIVE) // real drawing, for the pixels
-    fun beforeTheCardHasLoaded_theHeaderAndTheTopBar_areInTheRoutesColour() { // the transition's first frames
+    fun beforeTheCardHasLoaded_theBand_isInTheRoutesColour() { // the transition's first frames
         setScreen(color = "#336699", repository = FakeLoyaltyCardRepository(emptyList()))
         composeRule.waitForIdle()
 
         assertThat(headerPixel()).isEqualTo(0xFF336699.toInt())
-        assertThat(topBarPixel()).isEqualTo(0xFF336699.toInt())
     }
 
     @Test
@@ -939,14 +1065,11 @@ class DetailScreenTest {
         assertThat(headerPixel()).isEqualTo(BASELINE_LIGHT_SURFACE_VARIANT)
     }
 
-    /** The header's top-left corner, clear of the store's name in its middle. */
+    /** The band's top-left corner, clear of the Back button and of the logo or initials. */
     private fun headerPixel(): Int {
         val header = composeRule.onNodeWithTag(STORE_HEADER_TAG).captureToImage().toPixelMap()
         return header[4, 4].toArgb()
     }
-
-    /** The top bar's top-left corner, above and left of the Back icon; the test activity draws no status bar. */
-    private fun topBarPixel(): Int = composeRule.onRoot().captureToImage().toPixelMap()[2, 2].toArgb()
 
     private companion object {
         val TILE_SIZE = 80.dp
