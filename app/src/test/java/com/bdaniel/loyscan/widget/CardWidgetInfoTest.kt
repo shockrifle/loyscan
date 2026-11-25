@@ -25,7 +25,7 @@ class CardWidgetInfoTest {
         val minWidth = dimensionDp("minResizeWidth")
         val minHeight = dimensionDp("minResizeHeight")
 
-        assertThat(minHeight).isEqualTo(90f)
+        assertThat(minHeight).isEqualTo(110f) // #216: a square 102dp tile and its 4dp edges
         assertThat(minHeight).isAtLeast(widgetHeightForOneTile(minWidth.dp).value)
     }
 

@@ -8,8 +8,8 @@ import com.google.common.truth.Truth.assertWithMessage
 import org.junit.Test
 
 /**
- * The widget's grid (#108): one column below 240dp of width, two from 240dp, card-ratio tiles. Expected sizes are worked
- * out by hand: the edge and the gap between tiles are 4dp (#182), made of 2dp around the grid and 2dp around every tile,
+ * The widget's grid (#108): one column below 240dp of width, two from 240dp, card-ratio tiles, square below 120dp of
+ * tile width (#216). Expected sizes are worked out by hand: the edge and the gap between tiles are 4dp (#182), made of 2dp around the grid and 2dp around every tile,
  * so a cell is (width − 4) / columns and a tile 4dp narrower.
  */
 class WidgetLayoutTest {
@@ -40,6 +40,28 @@ class WidgetLayoutTest {
 
         assertThat(tile.width.value).isWithin(0.01f).of(192f)
         assertThat(tile.height.value).isWithin(0.01f).of(121.08f)
+    }
+
+    @Test
+    fun aTileNarrowerThan120dp_isSquare_inOneColumn() { // #216
+        assertThat(widgetTileShape(110.dp)).isEqualTo(WidgetTileShape.SQUARE)
+        assertThat(widgetTileSize(110.dp)).isEqualTo(DpSize(102.dp, 102.dp)) // one cell of 106dp
+        assertThat(widgetTileShape(127.9.dp)).isEqualTo(WidgetTileShape.SQUARE) // a 119.9dp tile
+    }
+
+    @Test
+    fun aTileNarrowerThan120dp_isSquare_inTwoColumns() { // #216
+        assertThat(widgetTileShape(240.dp)).isEqualTo(WidgetTileShape.SQUARE)
+        assertThat(widgetTileSize(240.dp)).isEqualTo(DpSize(114.dp, 114.dp)) // cells of 118dp
+        assertThat(widgetTileShape(251.9.dp)).isEqualTo(WidgetTileShape.SQUARE) // 119.95dp tiles
+    }
+
+    @Test
+    fun aTileFrom120dp_hasTheCardsRatio() { // #216
+        assertThat(widgetTileShape(128.dp)).isEqualTo(WidgetTileShape.CARD) // one cell of 124dp, a 120dp tile
+        assertThat(widgetTileSize(128.dp).height.value).isWithin(0.01f).of(75.67f) // 120 x 53.98 / 85.60
+        assertThat(widgetTileShape(239.dp)).isEqualTo(WidgetTileShape.CARD)
+        assertThat(widgetTileShape(252.dp)).isEqualTo(WidgetTileShape.CARD) // cells of 124dp, 120dp tiles
     }
 
     @Test
@@ -91,28 +113,31 @@ class WidgetLayoutTest {
     }
 
     @Test
-    fun theLayoutChosenForAnyPhoneWidth_hasItsColumns_andTilesWithin10PercentOfTheCardRatio() {
-        val widths = WIDGET_SIZES.map { it.width }.sorted()
-        for (actual in 110..440) {
-            val chosen = widths.last { it.value <= actual }
-            val tileWidth = widgetTileSize(actual.dp).width.value // a tile fills its cell, whatever layout shows
-            val tileHeight = widgetTileSize(chosen).height.value // its height comes from the layout's width
+    fun theLayoutChosenForAnyWidth_hasThatWidthsColumnsAndTileShape() { // #216
+        // From Android 12 a launcher that picks the layout for the widget's width shows the widest that fits.
+        val layouts = WIDGET_SIZES.map { it.width }.sorted()
+        for (tenths in 1100..4800) {
+            val width = tenths / 10f
+            val layout = layouts.last { it.value <= width }
+            val columns = if (width < 240f) 1 else 2
+            val tileWidth = (width - 4f) / columns - 4f
+            val shape = if (tileWidth < 120f) WidgetTileShape.SQUARE else WidgetTileShape.CARD
 
-            assertWithMessage("columns at ${actual}dp").that(widgetColumns(chosen)).isEqualTo(widgetColumns(actual.dp))
-            assertWithMessage("ratio at ${actual}dp").that(tileWidth / tileHeight).isWithin(0.10f * 85.60f / 53.98f).of(85.60f / 53.98f)
+            assertWithMessage("columns at ${width}dp").that(widgetColumns(layout)).isEqualTo(columns)
+            assertWithMessage("shape at ${width}dp").that(widgetTileShape(layout)).isEqualTo(shape)
         }
     }
 
     @Test
     fun theHeightOfAWidgetHoldingOneTile_isTheTileAndThePadding() {
-        // At 110dp: a 102dp tile, 64.32dp high, and the 4dp edge above and below.
-        assertThat(widgetHeightForOneTile(110.dp).value).isWithin(0.01f).of(72.32f)
+        // At 110dp: a square 102dp tile (#216), and the 4dp edge above and below.
+        assertThat(widgetHeightForOneTile(110.dp).value).isWithin(0.01f).of(110f)
     }
 
     @Test
-    fun theLogoBox_isTheLargestTileLessAn8dpMargin() { // #181
-        // The largest tile is at 224dp, one column: a cell of 220dp, a tile of 216 × 136.21dp (216 / 1.5858); 410dp,
-        // two columns, gives 199dp. Less 8dp on every side: 200 × 120.21dp.
+    fun theLogoBox_isA216dpCardTileLessAn8dpMargin() { // #181
+        // The widest tile of the layouts before #216, one column at 224dp: a cell of 220dp, a tile of 216 × 136.21dp
+        // (216 / 1.5858). Less 8dp on every side: 200 × 120.21dp.
         val box = widgetLogoBox()
 
         assertThat(box.width.value).isWithin(0.01f).of(200f)

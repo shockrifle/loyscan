@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-25 · widget tiles square below 120dp of tile width; 4 layout sizes at the switch points; minResizeHeight 110dp; logo box pinned at a 216dp tile; device check (Nova, Android 14 handheld, Android 11 emulator) recorded · apps/card-widget, decisions/{_index,2026-11-25-widget-tile-height-from-its-real-width,2026-11-12-design-tokens-and-card-shape} · #216
 - 2026-11-25 · widget tile height from its real width (own RemoteViews layout: adjustViewBounds sizer + aligned face); decision page amending the design-tokens one · apps/card-widget, decisions/{_index,2026-11-25-widget-tile-height-from-its-real-width,2026-11-12-design-tokens-and-card-shape}, index · #216
 - 2026-11-25 · JVM render harness for the widget: real RemoteViews for a layout width inflated at any real width, tiles measured, PNGs to build/; new test seam row · workflows/tdd, architecture, apps/card-widget · #216
 - 2026-11-25 · after a device check, the band's logo moves beside the buttons (128dp, top in line with the icons, 16dp below, centred); review of PR #232: brand-color-in-route names the band · features/card-detail, decisions/{_index,2026-11-24-detail-header-band,2025-12-12-brand-color-in-route}, design-system · #210

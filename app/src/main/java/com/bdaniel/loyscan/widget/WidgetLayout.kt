@@ -25,14 +25,30 @@ private val TWO_COLUMNS_FROM = 240.dp
 /** How many columns of tiles a widget [width] wide shows: one below 240dp, two from 240dp. */
 fun widgetColumns(width: Dp): Int = if (width < TWO_COLUMNS_FROM) 1 else 2
 
+/** Below this width a tile is square (#216): at the card's ratio it would be too low for a logo and its label. */
+private val SQUARE_TILES_BELOW = 120.dp
+
+/** A widget tile's shape (#216): square when narrow, else the card's. */
+enum class WidgetTileShape { SQUARE, CARD }
+
+/** The shape of a tile in a widget [width] wide: square when the tile is narrower than 120dp, else the card's. */
+fun widgetTileShape(width: Dp): WidgetTileShape =
+    if (tileWidth(width) < SQUARE_TILES_BELOW) WidgetTileShape.SQUARE else WidgetTileShape.CARD
+
 /**
- * A tile's size in a widget [width] wide: its cell less the padding, at the card's ratio. Glance has no `aspectRatio`, so
- * the height is computed. Zero while the widget's size isn't known yet, never negative.
+ * A tile's size in a widget [width] wide: its cell less the padding, square or at the card's ratio ([widgetTileShape]).
+ * On a home screen the tile's height comes from its real width (`res/layout/widget_tile.xml`, #216); this is the size
+ * a widget exactly [width] wide gives it. Zero while the widget's size isn't known yet, never negative.
  */
 fun widgetTileSize(width: Dp): DpSize {
+    val tileWidth = tileWidth(width)
+    val height = if (widgetTileShape(width) == WidgetTileShape.SQUARE) tileWidth else tileWidth / CARD_ASPECT_RATIO
+    return DpSize(tileWidth, height)
+}
+
+private fun tileWidth(width: Dp): Dp {
     val cell = (width - WIDGET_HALF_SPACING * 2) / widgetColumns(width)
-    val tileWidth = (cell - WIDGET_HALF_SPACING * 2).coerceAtLeast(0.dp)
-    return DpSize(tileWidth, tileWidth / CARD_ASPECT_RATIO)
+    return (cell - WIDGET_HALF_SPACING * 2).coerceAtLeast(0.dp)
 }
 
 /**
@@ -57,13 +73,14 @@ private val LAYOUT_HEIGHT = 40.dp
 
 /**
  * The sizes the widget is laid out for (`SizeMode.Responsive`, #108). From Android 12 the home screen shows the largest
- * one that fits the widget's real size; their height is the smallest a widget can be, so the width alone decides. The
- * widths step so finely that a tile, filling its cell's real width with the height worked out for the layout's width,
- * stays within 10% of the card's ratio up to 440dp (16 sizes, the most a widget may give). On a device, `SizeMode.Exact`
- * showed a landscape layout squeezed into the portrait widget: the launcher's reported sizes didn't fit the real one.
+ * one that fits the widget's real size; their height is the smallest a widget can be, so the width alone decides. A
+ * layout chooses the columns and the tiles' shape; a tile's size comes from its real width (#216), so the widths are
+ * the switch points: one column of square tiles from 110dp, of card tiles from 128dp, two columns of square tiles from
+ * 240dp, of card tiles from 252dp. On a device, `SizeMode.Exact` showed a landscape layout squeezed into the portrait
+ * widget: the launcher's reported sizes didn't fit the real one.
  */
 val WIDGET_SIZES: Set<DpSize> =
-    listOf(110, 120, 131, 143, 156, 171, 187, 205, 224, 240, 262, 286, 313, 342, 374, 410)
+    listOf(110, 128, 240, 252)
         .map { DpSize(it.dp, LAYOUT_HEIGHT) }
         .toSet()
 
@@ -71,13 +88,20 @@ val WIDGET_SIZES: Set<DpSize> =
 val WIDGET_LOGO_MARGIN = Spacing.s
 
 /**
- * The box a logo is decoded to fit (#181): the largest tile of all [WIDGET_SIZES] less [WIDGET_LOGO_MARGIN] on every
- * side, so one bitmap serves every layout without being drawn larger than it is.
+ * The tile a logo's box is worked out from: the widest of the layouts before #216 (one column at 224dp), kept so a
+ * decoded logo keeps its size. A one-column tile can be up to 232dp wide, where a logo is drawn up to 7% larger than
+ * it was decoded.
  */
-fun widgetLogoBox(): DpSize {
-    val tile = WIDGET_SIZES.map { widgetTileSize(it.width) }.maxBy { it.width }
-    return DpSize(tile.width - WIDGET_LOGO_MARGIN * 2, tile.height - WIDGET_LOGO_MARGIN * 2)
-}
+private val LOGO_BOX_TILE_WIDTH = 216.dp
+
+/**
+ * The box a logo is decoded to fit (#181): a 216dp card-ratio tile less [WIDGET_LOGO_MARGIN] on every side, so one
+ * bitmap serves every tile.
+ */
+fun widgetLogoBox(): DpSize = DpSize(
+    LOGO_BOX_TILE_WIDTH - WIDGET_LOGO_MARGIN * 2,
+    LOGO_BOX_TILE_WIDTH / CARD_ASPECT_RATIO - WIDGET_LOGO_MARGIN * 2,
+)
 
 /** [widgetLogoBox] in pixels at [density], rounded down: the size [WidgetLogos] decodes a logo to fit. */
 fun widgetLogoBoxPx(density: Float): IntSize {
