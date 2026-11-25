@@ -108,7 +108,7 @@ class WidgetLayoutTest {
         // Android 12+ shows the largest given layout that fits the widget's real size (#108: on a device the launcher
         // reported sizes that didn't fit, and the landscape layout showed squeezed into the portrait widget).
         assertThat(WIDGET_SIZES.size).isAtMost(16) // RemoteViews takes at most 16 sized layouts
-        assertThat(WIDGET_SIZES.map { it.height.value }.max()).isAtMost(90f) // the widget's minimum resize height
+        assertThat(WIDGET_SIZES.map { it.height.value }.max()).isAtMost(110f) // the widget's minimum resize height (#216)
         assertThat(WIDGET_SIZES.map { it.width.value }.min()).isAtMost(110f) // its minimum resize width
     }
 
