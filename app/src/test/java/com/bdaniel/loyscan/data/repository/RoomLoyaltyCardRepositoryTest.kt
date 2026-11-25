@@ -61,6 +61,21 @@ class RoomLoyaltyCardRepositoryTest {
     }
 
     @Test
+    fun getByIdWithStore_emitsAgain_whenItsCustomStoresColourChanges() = runTest { // #226: an open card redraws
+        db.storeDao().insert(aStoreEntity(id = "custom", name = "My Shop", color = "#1E5AA8", isCustom = true))
+        db.loyaltyCardDao().insert(aLoyaltyCardEntity(id = cardId(4), storeId = "custom"))
+        val stores = RoomStoreRepository(db.storeDao(), photos)
+
+        repository.getByIdWithStore(cardId(4)).test {
+            val shown = awaitItem()!!
+            assertThat(shown.store.color).isEqualTo("#1E5AA8")
+
+            stores.update(shown.store.copy(color = "#EF6C00"))
+            assertThat(awaitItem()!!.store.color).isEqualTo("#EF6C00")
+        }
+    }
+
+    @Test
     fun getAllWithStore_emitsAgain_whenItsStoresLogoIsSetOrRemoved() = runTest { // #181: the widget redraws on it
         val stores = RoomStoreRepository(db.storeDao(), photos)
 

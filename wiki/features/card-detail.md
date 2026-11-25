@@ -11,8 +11,10 @@ UUID string.
 
 ## Behavior
 
-- **Two data sources, on purpose:** the brand `color` comes from the navigation route (available on the first
-  frame); everything else comes from `DetailViewModel.card`, which starts as `LoyaltyCard.EMPTY` and fills in
+- **Two data sources, on purpose:** the brand `color` comes from the navigation route until the card has loaded
+  (the first frames, so the transition starts on the right colour); from then on it is the loaded card's
+  `store.color`, so a store colour edited while the card was on the back stack shows on return (#226, e.g. card →
+  "Add another" → picker → Edit store). Everything else comes from `DetailViewModel.card`, which starts as `LoyaltyCard.EMPTY` and fills in
   when Room emits. Why: [[2025-12-12-brand-color-in-route]].
 - If no card has the route's id (deleted, or a stale route), the screen stays on `LoyaltyCard.EMPTY`, or on the
   last card it showed. It doesn't crash: [[2026-10-09-missing-card-throws-from-room]].
@@ -23,7 +25,12 @@ UUID string.
   `DetailScreenTest.aStoresLogo_isShownInTheHeader_inPlaceOfItsName`, `aLogoThatCantBeLoaded_showsTheStoreName`,
   `aLogoWhoseFileIsMissing_showsTheStoreName`.
 - The brand colour is parsed with `toBrandColorOrNull()`. An empty or malformed colour falls back to `surfaceVariant`
-  instead of crashing ([[empty-brand-color-crash]], resolved).
+  instead of crashing ([[empty-brand-color-crash]], resolved). Tests: `DetailScreenTest.anEmptyStoredColour_fallsBackToSurfaceVariant`,
+  `aMalformedStoredColour_fallsBackToSurfaceVariant` (the stored colour); `emptyStoreColor_doesNotCrash` and
+  `malformedStoreColor_doesNotCrash` (the route's, which is drawn only before the card loads). The colour's source:
+  `beforeTheCardHasLoaded_theHeaderAndTheTopBar_areInTheRoutesColour`,
+  `aStoresNewColour_isShownOnTheOpenCard_inTheHeaderAndTheTopBar`; end to end
+  `AppNavigationTest.aCustomStoresNewColour_isShownOnItsOpenCard_onReturnFromThePicker`.
 - Header text color: black or white, whichever contrasts more with the brand color (`contrastingTextColor()`, the
   tile's rule, [[card-list]]). Until 2026-10-28 it was white below a luminance of 0.5, which put white on mid tones
   where black reads better.

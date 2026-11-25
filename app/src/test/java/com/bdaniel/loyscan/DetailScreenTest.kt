@@ -78,6 +78,9 @@ import org.robolectric.annotation.GraphicsMode
 import com.bdaniel.loyscan.testing.assertTextFitsAndDoesNotOverlap
 import com.bdaniel.loyscan.testing.WithFontScale
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.test.onAllNodesWithText
 
 @OptIn(ExperimentalSharedTransitionApi::class)
@@ -821,8 +824,61 @@ class DetailScreenTest {
         composeRule.onNodeWithText("Gold card").assertIsDisplayed()
     }
 
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE) // real drawing, for the pixels
+    fun aStoresNewColour_isShownOnTheOpenCard_inTheHeaderAndTheTopBar() { // #226: the route's colour stayed
+        val repository = FakeLoyaltyCardRepository(listOf(card))
+        setScreen(color = "#336699", repository = repository)
+        composeRule.waitForIdle()
+
+        repository.cards.value = listOf(card.copy(store = card.store.copy(color = "#C62828")))
+        composeRule.waitForIdle()
+
+        assertThat(headerPixel()).isEqualTo(0xFFC62828.toInt())
+        assertThat(topBarPixel()).isEqualTo(0xFFC62828.toInt())
+    }
+
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE) // real drawing, for the pixels
+    fun beforeTheCardHasLoaded_theHeaderAndTheTopBar_areInTheRoutesColour() { // the transition's first frames
+        setScreen(color = "#336699", repository = FakeLoyaltyCardRepository(emptyList()))
+        composeRule.waitForIdle()
+
+        assertThat(headerPixel()).isEqualTo(0xFF336699.toInt())
+        assertThat(topBarPixel()).isEqualTo(0xFF336699.toInt())
+    }
+
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE) // real drawing, for the pixels
+    fun anEmptyStoredColour_fallsBackToSurfaceVariant() { // #14, #226
+        setScreen(color = "#336699", card = card.copy(store = card.store.copy(color = "")))
+        composeRule.waitForIdle()
+
+        assertThat(headerPixel()).isEqualTo(BASELINE_LIGHT_SURFACE_VARIANT)
+    }
+
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE) // real drawing, for the pixels
+    fun aMalformedStoredColour_fallsBackToSurfaceVariant() { // #14, #226
+        setScreen(color = "#336699", card = card.copy(store = card.store.copy(color = "not a colour")))
+        composeRule.waitForIdle()
+
+        assertThat(headerPixel()).isEqualTo(BASELINE_LIGHT_SURFACE_VARIANT)
+    }
+
+    /** The header's top-left corner, clear of the store's name in its middle. */
+    private fun headerPixel(): Int {
+        val header = composeRule.onNodeWithTag(STORE_HEADER_TAG).captureToImage().toPixelMap()
+        return header[4, 4].toArgb()
+    }
+
+    /** The top bar's top-left corner, above and left of the Back icon; the test activity draws no status bar. */
+    private fun topBarPixel(): Int = composeRule.onRoot().captureToImage().toPixelMap()[2, 2].toArgb()
+
     private companion object {
         val TILE_SIZE = 80.dp
+        /** Material 3's baseline light `surfaceVariant` (the test isn't in the app's theme), written out by hand. */
+        val BASELINE_LIGHT_SURFACE_VARIANT = 0xFFE7E0EC.toInt()
         /** `SnackbarDuration.Long` without accessibility services. */
         const val SNACKBAR_LONG_MS = 10_000L
     }

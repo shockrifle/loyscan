@@ -122,7 +122,10 @@ fun SharedTransitionScope.DetailScreen(
     }
     // At the till the barcode must be readable, whatever the user's brightness setting.
     FullBrightness()
-    val brandColor = color.toBrandColorOrNull() ?: MaterialTheme.colorScheme.surfaceVariant
+    // The route's colour draws the transition's first frames, before Room emits; the stored one from then on, so an
+    // edit of the store made while this card was on the back stack shows on return (#226).
+    val shownColor = if (card.id.isEmpty()) color else card.store.color
+    val brandColor = shownColor.toBrandColorOrNull() ?: MaterialTheme.colorScheme.surfaceVariant
     val barcode = remember(card.barcodeContent, card.barcodeFormat) {
         BarcodeEncoder.encode(card.barcodeContent, card.barcodeFormat)
     }
