@@ -31,7 +31,7 @@ The job itself always runs, so the required `test` check reports green on a skip
 - **A pull request** whose changed files (`git diff --no-renames --name-only HEAD^1 HEAD`: the checkout is GitHub's merge
   commit and its first parent the base) are all under `wiki/` → `run=false`, `wiki=true`: the run sets up Gradle and
   runs only `PublicSafeRepoTest`, which reads every tracked file, so a personal path or email address in a wiki page
-  still fails the PR, and `WikiReferencesTest`, so a page naming a path or a test method that doesn't exist does too
+  still fails the PR, and `WikiReferencesTest`, so a page citing a line number, or naming a path or a test method that doesn't exist, does too
   (#222). Not when one of the files is a page another test reads (`wiki/integrations/google-play.md`, read
   by `StoreListingTest` and `PrivacyPolicyTest`), nor when the list is empty or the base can't be read. A file moved
   into `wiki/` counts by its old path too.

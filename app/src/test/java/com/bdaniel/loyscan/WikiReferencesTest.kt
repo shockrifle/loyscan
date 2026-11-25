@@ -11,9 +11,9 @@ import org.junit.Test
 
 /**
  * The wiki names code that moves on without it (#222). No wiki page cites a line number, every repo path a page names
- * must be a tracked file or folder, and every test method or property it names must be declared by that test class. The rules run on snippets first, then
- * on the wiki pages `git ls-files` lists, except the append-only `_log.md` and the raw `assets/`. A wiki-only PR runs
- * this test on CI too. wiki/CLAUDE.md, "How to write pages"
+ * must be a tracked file or folder, and every test method or property it names must be declared by that test class.
+ * The rules run on snippets first, then on the wiki pages `git ls-files` lists, except the append-only `_log.md` and
+ * the raw `assets/`. A wiki-only PR runs this test on CI too. wiki/CLAUDE.md, "How to write pages"
  */
 class WikiReferencesTest {
 

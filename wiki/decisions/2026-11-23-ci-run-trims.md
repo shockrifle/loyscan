@@ -56,7 +56,7 @@ records nothing, and its push runs in full and saves them.
   `wiki/integrations/google-play.md` runs the full gate, since `StoreListingTest` and `PrivacyPolicyTest` check it
   names the tests behind Play's claims. A new test that reads a wiki page must add it to `tested_wiki` in `ci-gate.sh`.
   **Amended 2026-11-25 (#222):** the wiki-only step also runs `WikiReferencesTest`, which, like `PublicSafeRepoTest`,
-  reads every wiki page (the repo paths and test methods each names must exist), so it joins the step instead of
+  reads every wiki page (no line numbers; the repo paths and test methods each names must exist), so it joins the step instead of
   `tested_wiki`: a wiki-only PR is exactly the change that can bring in a dead reference. The owner chose this over
   folding the checks into `PublicSafeRepoTest`, which would mix them into the public-safe rules.
 - **`master` no longer checks the rebased commits one more time.** A skipped push trusts the PR run: the same tree on

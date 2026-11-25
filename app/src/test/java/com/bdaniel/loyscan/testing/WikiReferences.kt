@@ -39,6 +39,7 @@ fun lineCitations(text: String): List<String> =
 
 /** Not a host's port (`example.com:8080/x`): the number may not run on into a path. */
 private val LINE_CITATION = Regex("""(?<![\w.-])[\w./-]*\w\.[A-Za-z]{1,10}:\d+(?:-\d+)?(?![\w/])""")
-private val REPO_PATH = Regex("""(?<![\w./~@-])(?:app|gradle|play|wiki|\.github|\.claude)/[\w./<>…*{}-]*[\w/>…*}]""")
+private val REPO_PATH =
+    Regex("""(?<![\w./~@-])(?:app|gradle|play|wiki|\.github|\.claude)/[\w./<>…*{}-]*[\w/>…*}]""")
 private val PLACEHOLDER = Regex("""[<>…*{}]|\.\.\.""")
 private val TEST_MEMBER = Regex("""`(\w+Test\.\w+)(?:\(\))?`""")

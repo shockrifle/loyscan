@@ -121,11 +121,11 @@ whether something is wiki-worthy, don't write it** — a smaller true wiki beats
 - **Cross-reference liberally** with `[[page-name]]`. Every link must resolve to an existing page.
 - **Provenance is mandatory for non-obvious claims**: the repo-relative path and the symbol (`AppDatabase.VERSION` in
   `app/src/main/java/com/bdaniel/loyscan/data/local/db/AppDatabase.kt`), and commit SHAs (short, 7 chars). **No line
-  numbers**: they went stale with every edit above them, even in files that rarely change (#222), and nothing checks
-  them. For code as it was, give the SHA ("as of `45a33e1`") and the current name ("now `getByIdWithStore`").
-  `WikiReferencesTest` fails on a line number, on a repo path that isn't tracked and on a test method no test declares. Mark inferences explicitly: *"(inferred from diff; not
-  stated in commit)"*. Commit messages in this repo are terse, so most "why"s are inferences —
-  say so.
+  numbers**: they went stale with every edit above them, even in files that rarely change, and nothing checked them
+  (#222). For code as it was, give the SHA ("as of `45a33e1`") and the current name ("now `getByIdWithStore`").
+  `WikiReferencesTest` fails on a line number, on a repo path that isn't tracked and on a test method no test
+  declares. Mark inferences explicitly: *"(inferred from diff; not stated in commit)"*. Commit messages in this
+  repo are terse, so most "why"s are inferences — say so.
 - **Contradictions**: if a page disagrees with the code or with another page, keep the truer version,
   note the correction on the page, and record it in [[_log]]. Don't silently overwrite.
 - **Dates are absolute** `YYYY-MM-DD`. Never "recently" / "last week".
