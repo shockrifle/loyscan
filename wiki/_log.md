@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-25 · WikiReferencesTest checks every repo path and `SomeTest.member` the wiki names (run by the wiki-only CI step too); stale test names (`…BrandColor…` → `…StoreColor…`) and the brand-era DAO names on the missing-card postmortem corrected; ci-run-trims amended · tech-debt/empty-brand-color-crash, decisions/2026-10-12-tdd-and-coverage, bugs/2026-10-09-missing-card-throws-from-room, workflows/tdd, workflows/ci, decisions/2026-11-23-ci-run-trims · #222
 - 2026-11-25 · share decision: CLEAR_TOP / CLEAR_TASK shares checked on a device after #189 (own task, form kept) (PR #221 review, round 2) · decisions/2026-11-03-share-in-standard-launch-mode · #189
 - 2026-11-25 · share decision: the passages the #189 amendment changes are marked superseded; the onNewIntent forward is still reached by a SINGLE_TOP share (seen on a device) (PR #221 review) · decisions/2026-11-03-share-in-standard-launch-mode · #189
 - 2026-11-25 · shares run in ShareActivity (no task affinity, documentLaunchMode always) so the launcher and the widget never reach a share left open; postmortem with the device walk of every entry path; share decision amended (NEW_TASK-only share no longer stacks on LoyScan's task); store-logo share sheet checked on a device · bugs/2026-11-25-launcher-stacked-on-a-share-task, bugs/_index, decisions/2026-11-03-share-in-standard-launch-mode, features/add-card, features/store-logo, apps/android-app, apps/card-widget · #189

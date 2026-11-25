@@ -12,7 +12,8 @@ import org.junit.Test
 /**
  * The Tests workflow decides first whether this run needs the gate (#199): `.github/scripts/ci-gate.sh` writes
  * `run=true|false`, and every later step runs only when it is true, except the JDK and Gradle setup (`setup`, also for
- * a wiki-only PR) and that PR's one test (`wiki`: `PublicSafeRepoTest`, which reads every tracked file). The `test` job itself always runs, so the required
+ * a wiki-only PR) and that PR's tests (`wiki`: `PublicSafeRepoTest`, which reads every tracked file, and
+ * `WikiReferencesTest`, which checks what every wiki page names). The `test` job itself always runs, so the required
  * check reports green on a skip instead of "skipped". What the script decides is checked by
  * `.github/scripts/check-ci-gate.sh`; this test checks the workflow wires it up. wiki/workflows/ci.md
  */
@@ -114,10 +115,13 @@ class TestsWorkflowTest {
     }
 
     @Test
-    fun aWikiOnlyPullRequest_runsOnlyThePublicSafeCheck() {
+    fun aWikiOnlyPullRequest_runsOnlyTheTestsThatReadEveryWikiPage() {
         val wiki = steps.single { it.label == WIKI_STEP }
 
-        assertThat(wiki.text).contains("\n        run: ./gradlew testDebugUnitTest --tests 'com.bdaniel.loyscan.PublicSafeRepoTest'\n")
+        assertThat(wiki.text).contains(
+            "\n        run: ./gradlew testDebugUnitTest --tests 'com.bdaniel.loyscan.PublicSafeRepoTest'" +
+                " --tests 'com.bdaniel.loyscan.WikiReferencesTest'\n",
+        )
         assertThat(steps.filter { WIKI in it.condition.orEmpty() }.map { it.label }).containsExactly(WIKI_STEP)
     }
 
@@ -176,7 +180,7 @@ class TestsWorkflowTest {
         const val GATE = "steps.gate.outputs.run == 'true'"
         const val SETUP = "steps.gate.outputs.setup == 'true'"
         const val WIKI = "steps.gate.outputs.wiki == 'true'"
-        const val WIKI_STEP = "Public-safe check (wiki-only PR)"
+        const val WIKI_STEP = "Wiki checks (wiki-only PR)"
         val SETUP_STEPS = listOf(
             "actions/setup-java@v6",
             "gradle/actions/setup-gradle@v6",

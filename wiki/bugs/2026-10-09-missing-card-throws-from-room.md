@@ -1,7 +1,8 @@
 # A missing card crashed the detail screen instead of showing nothing
 
 **Fixed in:** `9fc953d` (#30, found while backfilling tests) · **Date:** 2026-10-09 · **Area:** [[card-detail]]
-(`LoyaltyCardDao.getByIdWithBrand`, `LoyaltyCardRepository.getByIdWithBrand`)
+(`LoyaltyCardDao.getByIdWithBrand`, `LoyaltyCardRepository.getByIdWithBrand`; both `getByIdWithStore` since brands became
+stores in #1, and `BrandDao` is `StoreDao`. Names below are as of `9fc953d`.)
 
 ## Symptom
 Never seen on a device; found by a test. `getByIdWithBrand(id)` for an id with no row threw
