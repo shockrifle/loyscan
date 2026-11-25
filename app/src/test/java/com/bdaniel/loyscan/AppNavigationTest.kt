@@ -14,6 +14,10 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.toPixelMap
+import org.robolectric.annotation.GraphicsMode
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -459,6 +463,39 @@ class AppNavigationTest {
         composeRule.onNodeWithText("Gym card").performClick()
         waitForText("Shown as ${BarcodeFormat.CODE_128.displayName}")
         composeRule.onNodeWithText("Shown as ${BarcodeFormat.CODE_128.displayName}").assertIsDisplayed()
+    }
+
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE) // real drawing, for the pixels
+    fun aCustomStoresNewColour_isShownOnItsOpenCard_onReturnFromThePicker() { // #226
+        runBlocking { db.storeDao().insert(aStoreEntity(id = "custom", name = "My Shop", color = "#1E5AA8", isCustom = true)) }
+        composeRule.onNodeWithContentDescription("Add card").performClick()
+        waitForText("Choose store")
+        composeRule.onNodeWithText("My Shop").performClick()
+        waitForText("Enter manually")
+        composeRule.onNodeWithText("Enter manually").performClick()
+        waitForText("Card number")
+        composeRule.onNodeWithTag(CARD_NUMBER_TAG).performTextInput("777")
+        composeRule.onNodeWithText("Save").performClick()
+        waitForTheCardFormToClose()
+
+        // The card's "Add another" leaves it on the back stack under the picker.
+        waitForText("Add another")
+        composeRule.onNodeWithText("Add another").performClick()
+        waitForText("Choose store")
+        composeRule.onNodeWithContentDescription("Edit My Shop").performClick()
+        waitForTheStoreFormToLoad()
+        composeRule.onNodeWithContentDescription("Orange").performScrollTo().performClick() // #EF6C00
+        composeRule.onNodeWithText("Save").performScrollTo().performClick()
+        waitForTheStoreFormToClose()
+        waitForText("Choose store")
+        composeRule.onNodeWithContentDescription("Back").performClick()
+
+        waitForTextToGo("Choose store")
+        waitForText("777")
+        composeRule.waitForIdle()
+        val header = composeRule.onNodeWithTag(STORE_HEADER_TAG).captureToImage().toPixelMap()
+        assertThat(header[4, 4].toArgb()).isEqualTo(0xFFEF6C00.toInt()) // the corner, clear of the store's name
     }
 
     @Test
