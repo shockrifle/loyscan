@@ -16,7 +16,8 @@ in `DetailScreen` (`app/src/main/java/com/bdaniel/loyscan/DetailScreen.kt`).
 - Key format: `card/{id}`, built by `cardTransitionKey(id)` in `ListScreen.kt` for both sides (was `item/{id}`
   until `45a33e1`).
 - The detail screen takes its color and its card id from the route, so the destination is correctly colored and
-  paired with the tile from the first frame, before Room emits ([[2025-12-12-brand-color-in-route]],
+  paired with the tile from the first frame, before Room emits (the colour only until the card loads, then the
+  stored one, #226) ([[2025-12-12-brand-color-in-route]],
   [[2025-12-12-detail-color-flash-on-transition]], [[shared-element-key-from-async-state]], #16).
 - Test: `DetailScreenTest.aTileOpeningTheCard_growsIntoTheScreen_beforeTheCardHasLoaded`. A matched shared element
   is first measured at the other side's bounds, an unmatched one at its own size, so the test checks the detail
