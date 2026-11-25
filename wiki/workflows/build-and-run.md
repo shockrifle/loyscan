@@ -34,7 +34,8 @@ as a Gradle property (in `~/.gradle/gradle.properties`, never in the project) or
 `LOYSCAN_UPLOAD_KEY_ALIAS`. With none set it's unsigned; with some, every Gradle command fails with *"Release signing is
 half set up. Missing: …"*.
 
-On Windows, use `gradlew.bat` or Git Bash. `local.properties` (the SDK path) is git-ignored and must exist
+On Windows, use `gradlew.bat` or Git Bash. In Git Bash, filter Gradle's output with Git Bash's own `grep` or `tail`:
+`./gradlew … 2>&1` piped into a native Windows program hangs ([[gradlew-hangs-in-git-bash]]). `local.properties` (the SDK path) is git-ignored and must exist
 locally.
 
 **Commit email.** The repo is public, and a commit's author email is public with it. A clone sets a GitHub noreply

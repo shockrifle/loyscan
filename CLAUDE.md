@@ -34,6 +34,8 @@ type-safe route/Directions). Use it as the template. Each layer there starts wit
 - Single-module Android app (`:app`), Kotlin 2.4 + Jetpack Compose (Material 3), Hilt + Room via KSP,
   Navigation Compose with `@Serializable` routes, Coil 2 for images, Timber for logging.
 - Build: `./gradlew assembleDebug` · install: `./gradlew installDebug`. Versions live in `gradle/libs.versions.toml`.
+  In Git Bash, filter Gradle's output with Git Bash's own `grep`/`tail`, or run `.\gradlew.bat` from PowerShell:
+  `./gradlew … 2>&1` piped into a native Windows program hangs (`wiki/runbooks/gradlew-hangs-in-git-bash.md`).
   Gradle needs JDK 17+. CI uses JDK 21; Android Studio's JBR (`/c/Program Files/Android/Android Studio/jbr`, JDK 25
   since 2026-11-18) is the safe `JAVA_HOME` for a terminal build — see `wiki/workflows/build-and-run.md`.
 - **Test-first.** Write the failing test before the code, and see it fail. A bug fix starts with a failing
