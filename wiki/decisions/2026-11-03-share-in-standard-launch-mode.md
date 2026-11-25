@@ -60,7 +60,8 @@ LoyScan activity on LoyScan's own task, and Back from its flow returns to the fo
   real grant (the new task reading the picture) has run only in Robolectric, whose `startActivity` doesn't check
   grants. It is not checked on a device: no app seen sends a share with `SINGLE_TOP`.
 - *(Superseded, #189: a share starts `ShareActivity` in a task of its own, so these flags no longer reach LoyScan's
-  task.)* By Android's task rules, a sender using `NEW_TASK | CLEAR_TOP` would finish and recreate the `standard`
+  task. Seen on a device, 2026-11-25, adb: a `NEW_TASK | CLEAR_TOP` and a `NEW_TASK | CLEAR_TASK` share over a
+  half-filled card form each started a task of their own, and the form kept its input.)* By Android's task rules, a sender using `NEW_TASK | CLEAR_TOP` would finish and recreate the `standard`
   `MainActivity` in LoyScan's task, and `CLEAR_TASK` would clear the task. Both lose an open form, and neither goes
   through `onNewIntent`, so the forward can't catch them. No sender seen does this, and `singleTop` had the same
   exposure *(inferred; not seen on a device)*.
