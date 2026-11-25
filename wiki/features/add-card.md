@@ -151,9 +151,10 @@ with the picture's barcode (#77, below). Everything runs offline on the local da
 
 - **Share → LoyScan** (#77). LoyScan is in the system share sheet for one image (`ACTION_SEND`, `image/*`; not
   `SEND_MULTIPLE`). A second entry, "Set as store logo", sets a store's logo instead ([[store-logo]], #151). A share through the chooser, or sent with `NEW_TASK` and/or `SINGLE_TOP`, doesn't replace what
-  LoyScan has open (`CLEAR_TOP` or `CLEAR_TASK` still would): `MainActivity` is `standard`, and a share that
-  reaches it through `onNewIntent` (a sender asking for `SINGLE_TOP`) is passed on to a new LoyScan task
-  ([[2026-11-03-share-in-standard-launch-mode]], #83). On a device, every share through the system chooser started a
+  LoyScan has open: a share starts `ShareActivity` (the same app as `MainActivity`), in a task of its own whatever
+  flags its sender sets (`documentLaunchMode="always"`) and with no task affinity, so the launcher and the widget never
+  reach it either ([[2026-11-25-launcher-stacked-on-a-share-task]], #189); one that still reaches an open activity
+  through `onNewIntent` is passed on to a new task ([[2026-11-03-share-in-standard-launch-mode]], #83). On a device, every share through the system chooser started a
   new LoyScan task, and Back from it returned to the sharing app
   ([[2026-11-03-share-into-the-sharing-apps-task]] → Device check). Only a
   `content://` URI is taken (a `file://` one could name the app's own files), and only the picture granted with the share is read, with the scanner's
@@ -175,7 +176,7 @@ with the picture's barcode (#77, below). Everything runs offline on the local da
     picker doesn't carry it.
   - Rotation and process death: the scan lives in the picker's route, and what the read found is kept in the
     `SharedPicture` entry's `SavedStateHandle`, so the picture isn't read again (a read still running at process death
-    is read again). `MainActivity` opens the flow only on a fresh `onCreate`, and ignores a share reopened from
+    is read again). `ShareActivity` (as `MainActivity`) opens the flow only on a fresh `onCreate`, and ignores a share reopened from
     recents, so a recreated activity doesn't start the flow again.
   - Checked on a device (Android 15, 2026-11-03, #84), with card pictures generated with ZXing core (a mock store
     app layout, not a screenshot of a store's own app): an EAN-13 card shared from Google Photos opened the picker with

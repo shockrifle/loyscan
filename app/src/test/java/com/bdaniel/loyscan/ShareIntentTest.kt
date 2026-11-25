@@ -39,7 +39,7 @@ class ShareIntentTest {
         assertThat(asLogo.sharesAsStoreLogo()).isTrue()
         assertThat(asLogo.sharedPicture()).isEqualTo(Uri.parse(PICTURE))
         assertThat(share().sharesAsStoreLogo()).isFalse()
-        assertThat(share().setComponent(ComponentName(context, MainActivity::class.java)).sharesAsStoreLogo()).isFalse()
+        assertThat(share().setComponent(ComponentName(context, ShareActivity::class.java)).sharesAsStoreLogo()).isFalse()
     }
 
     @Test
@@ -61,10 +61,54 @@ class ShareIntentTest {
     }
 
     @Test
-    fun aShareWithNewTaskOnly_stacksALoyScanOfItsOwn() { // standard: an open screen stays beneath it (#83)
-        val activity = packageManager.getActivityInfo(ComponentName(context, MainActivity::class.java), 0)
+    fun bothActivities_useTheStandardLaunchMode() { // #83: no singleTop, so a share never replaces an open screen
+        for (activity in listOf(MainActivity::class.java, ShareActivity::class.java)) {
+            assertThat(packageManager.getActivityInfo(ComponentName(context, activity), 0).launchMode)
+                .isEqualTo(ActivityInfo.LAUNCH_MULTIPLE)
+        }
+    }
 
-        assertThat(activity.launchMode).isEqualTo(ActivityInfo.LAUNCH_MULTIPLE)
+    @Test
+    fun aPictureShare_startsTheShareActivity_neverTheLaunchersMainActivity() { // #189
+        val shared = Intent(Intent.ACTION_SEND).setType("image/png")
+
+        assertThat(resolves(shared, ShareActivity::class.java.name)).isTrue()
+        assertThat(resolves(shared, MainActivity::class.java.name)).isFalse()
+    }
+
+    @Test
+    fun theLauncher_startsMainActivity_neverTheShareActivity() { // #189
+        // A launcher's filter has no DEFAULT category, so it is queried without MATCH_DEFAULT_ONLY.
+        val launcher = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
+
+        assertThat(resolves(launcher, MainActivity::class.java.name, flags = 0)).isTrue()
+        assertThat(resolves(launcher, ShareActivity::class.java.name, flags = 0)).isFalse()
+    }
+
+    @Test
+    fun theShareActivity_hasNoTaskAffinity_soNeitherTheLauncherNorTheWidgetReachesAShareTask() { // #189
+        // Seen on a device: with LoyScan's affinity, the launcher stacked a second LoyScan on a share left open, and
+        // Back walked through the old share flow; a widget tap opened its card there.
+        val share = packageManager.getActivityInfo(ComponentName(context, ShareActivity::class.java), 0)
+        val main = packageManager.getActivityInfo(ComponentName(context, MainActivity::class.java), 0)
+
+        assertThat(share.taskAffinity.orEmpty()).isEmpty()
+        assertThat(main.taskAffinity).isEqualTo(context.packageName)
+    }
+
+    @Test
+    fun everyShare_startsATaskOfItsOwn_whateverFlagsItsSenderSets() { // #189
+        // Seen on a device: a share sent with NEW_TASK alone stacked on a share left open, and Back walked its flow.
+        val share = packageManager.getActivityInfo(ComponentName(context, ShareActivity::class.java), 0)
+
+        assertThat(share.documentLaunchMode).isEqualTo(ActivityInfo.DOCUMENT_LAUNCH_ALWAYS)
+    }
+
+    @Test
+    fun setAsStoreLogo_isAnAliasOfTheShareActivity() { // #151, #189: a logo share runs in a share task too
+        val alias = packageManager.getActivityInfo(ComponentName(context, SHARE_AS_STORE_LOGO), 0)
+
+        assertThat(alias.targetActivity).isEqualTo(ShareActivity::class.java.name)
     }
 
     @Test
@@ -74,7 +118,7 @@ class ShareIntentTest {
         share().addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP).forwardToATaskOfItsOwn(context, start = started::add)
 
         val forwarded = started.single()
-        assertThat(forwarded.component?.className).isEqualTo(MainActivity::class.java.name)
+        assertThat(forwarded.component?.className).isEqualTo(ShareActivity::class.java.name)
         assertThat(forwarded.sharedPicture()).isEqualTo(Uri.parse(PICTURE))
         assertThat(forwarded.flags).isEqualTo(
             Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK or Intent.FLAG_ACTIVITY_NEW_DOCUMENT or
@@ -117,8 +161,12 @@ class ShareIntentTest {
     private fun share(type: String = "image/png", uri: String = PICTURE) =
         Intent(Intent.ACTION_SEND).setType(type).putExtra(Intent.EXTRA_STREAM, Uri.parse(uri))
 
-    private fun resolves(intent: Intent, activity: String = MainActivity::class.java.name) =
-        packageManager.queryIntentActivities(intent.setPackage(context.packageName), PackageManager.MATCH_DEFAULT_ONLY)
+    private fun resolves(
+        intent: Intent,
+        activity: String = ShareActivity::class.java.name,
+        flags: Int = PackageManager.MATCH_DEFAULT_ONLY,
+    ) =
+        packageManager.queryIntentActivities(intent.setPackage(context.packageName), flags)
             .any { it.activityInfo.name == activity }
 }
 

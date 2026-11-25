@@ -8,6 +8,13 @@
 `SINGLE_TOP`, doesn't replace what LoyScan has open, so a half-filled card form survives it (#83). A sender using
 `CLEAR_TOP` or `CLEAR_TASK` would still reset LoyScan's task (Consequences).
 
+**Amended 2026-11-25 (#189):** shares no longer start `MainActivity`. They start `ShareActivity`, a subclass, with no
+task affinity and `documentLaunchMode="always"`: every share is a task of its own, which the launcher and the widget
+never reach ([[2026-11-25-launcher-stacked-on-a-share-task]]). This reverses one consequence below, chosen by the
+product owner on 2026-11-25: a share sent with `NEW_TASK` alone no longer stacks on LoyScan's task, and Back from it
+leaves to the sender instead of returning to the half-filled form; the form stays untouched in LoyScan's own task.
+The standard launch mode and the `onNewIntent` forward stand.
+
 ## Context
 
 #77 made `MainActivity` `singleTop` so that a share sent while LoyScan was open would reach that activity through

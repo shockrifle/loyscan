@@ -36,8 +36,19 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <!-- Share -> LoyScan: one picture, read for a card's barcode (#77). Standard launch mode: a share with
-                 NEW_TASK stacks a LoyScan of its own, so an open screen (a half-filled card form) stays beneath it (#83). -->
+        </activity>
+        <!-- Share -> LoyScan: one picture, read for a card's barcode (#77). The same app as MainActivity, in a task with no
+             affinity: the launcher and a widget tap (MainActivity's own) never reach a share left open, so they neither
+             stack on its flow nor replace it. Every share is a task of its own, whatever flags its sender sets, so it never
+             stacks on another share's flow either (#189). Standard launch mode, so a share never replaces an open screen
+             (#83). -->
+        <activity
+            android:name=".ShareActivity"
+            android:documentLaunchMode="always"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:taskAffinity=""
+            android:theme="@style/Theme.LoyScan">
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
 
@@ -47,12 +58,12 @@
             </intent-filter>
         </activity>
         <!-- Share -> LoyScan as a store logo (#151): a second share target, so the share sheet lists "Set as store logo"
-             beside LoyScan. An alias of the same activity (its launch mode, #83); the intent names the alias. -->
+             beside LoyScan. An alias of the share activity (its task, #189; its launch mode, #83); the intent names the alias. -->
         <activity-alias
             android:name=".ShareAsStoreLogo"
             android:exported="true"
             android:label="@string/share_as_store_logo"
-            android:targetActivity=".MainActivity">
+            android:targetActivity=".ShareActivity">
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
 

@@ -37,7 +37,7 @@ import timber.log.Timber
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+open class MainActivity : ComponentActivity() {
 
     /** Pictures shared to LoyScan (#77), each opened once by [AppNavigation]. */
     private val sharedPictures = Channel<Uri>(Channel.UNLIMITED)
@@ -86,6 +86,13 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
+/**
+ * LoyScan started by a share (#77, #151): the same app as [MainActivity], in a task the launcher and the widget never
+ * reach (#189).
+ */
+@AndroidEntryPoint
+class ShareActivity : MainActivity()
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -165,7 +172,8 @@ internal const val EXTRA_OPEN_CARD_COLOR = "com.bdaniel.loyscan.extra.OPEN_CARD_
 /**
  * The intent a widget tile fires to open the card [cardId] (its store [color]) in LoyScan (#11). `SINGLE_TOP` so a tap
  * while the app is running reaches the one `MainActivity` through [onCreate]'s `addOnNewIntentListener` instead of
- * stacking a second instance; `MainActivity` is the only activity, so it is always at the top of its task.
+ * stacking a second instance; `MainActivity` is the only activity in its task (shares run in a [ShareActivity] task of
+ * their own, #189), so it is always at the top.
  */
 internal fun openCardIntent(context: Context, cardId: String, color: String): Intent =
     Intent(context, MainActivity::class.java)
@@ -194,7 +202,7 @@ internal fun Intent.sharedPicture(): Uri? {
         ?.takeIf { it.scheme == ContentResolver.SCHEME_CONTENT }
 }
 
-/** The "Set as store logo" share target (#151): an alias of [MainActivity] in the manifest. */
+/** The "Set as store logo" share target (#151): an alias of [ShareActivity] in the manifest. */
 internal const val SHARE_AS_STORE_LOGO = "com.bdaniel.loyscan.ShareAsStoreLogo"
 
 /**
@@ -209,9 +217,9 @@ internal fun Intent.sharesAsStoreLogo(): Boolean = component?.className == SHARE
  * `SecurityException`, so that share is dropped and the open screen stays (seen on a device, #83).
  */
 internal fun Intent.forwardToATaskOfItsOwn(context: Context, start: (Intent) -> Unit = context::startActivity) {
-    // A "Set as store logo" share stays one (#151); any other goes to the activity itself.
+    // A "Set as store logo" share stays one (#151); any other goes to the share activity (#189).
     val target = component?.takeIf { it.className == SHARE_AS_STORE_LOGO }
-        ?: ComponentName(context, MainActivity::class.java)
+        ?: ComponentName(context, ShareActivity::class.java)
     val forwarded = Intent(this)
         .setComponent(target)
         .setFlags(
