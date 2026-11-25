@@ -119,7 +119,8 @@ navigation (the share flow, [[add-card]], #77). The widget follows that pattern 
   route tolerates an empty or malformed one.
 - `MainActivity` sends each `openCard()` into an `openCards` `Channel` — on a cold start in `onCreate`
   (`savedInstanceState == null`, the **dead-process** case the issue asks about) and on a warm tap through
-  `addOnNewIntentListener`. `MainActivity` is the only activity, so `SINGLE_TOP` makes a warm tap reach the running
+  `addOnNewIntentListener`. `MainActivity` is the only activity in its task (shares run in `ShareActivity` tasks of
+  their own, which the tap never reaches, #189), so `SINGLE_TOP` makes a warm tap reach the running
   instance's `onNewIntent` rather than stack a second one. `AppNavigation` collects the channel and calls
   `NavController.openCard(cardId, color)` (`Navigation.kt`), which opens `Detail(cardId, color)` **over the list, in
   place of whatever was open above it** (`popUpTo<CardList>()`), so Back returns to the list (#213). A tap for the card

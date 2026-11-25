@@ -23,8 +23,11 @@ versionName `1.0.0` (versionCode 10000; `loyscan.versionName` in `gradle.propert
   fails on `INTERNET`. A release-only dependency would not be seen there; there is none today. `ACCESS_NETWORK_STATE`,
   `WAKE_LOCK`, `RECEIVE_BOOT_COMPLETED` and `FOREGROUND_SERVICE` come from `androidx.work` (through Glance) and give no
   network access.
-- `MainActivity` has the default `standard` launch mode and takes `ACTION_SEND` for `image/*`: Share → LoyScan
-  ([[add-card]], [[2026-11-03-share-in-standard-launch-mode]], #77, #83).
+- `MainActivity` (the launcher's and the widget's) and `ShareActivity`, a subclass of it, both have the default
+  `standard` launch mode. `ShareActivity` takes `ACTION_SEND` for `image/*` (Share → LoyScan, and the "Set as store
+  logo" alias of it), with no task affinity and `documentLaunchMode="always"`, so every share runs in a task the
+  launcher and the widget never reach ([[add-card]], [[2026-11-03-share-in-standard-launch-mode]],
+  [[2026-11-25-launcher-stacked-on-a-share-task]], #77, #83, #189).
 - `android.permission.CAMERA` for the [[barcode-scanner]], asked for at runtime. Declaring it also makes Android refuse
   `ACTION_IMAGE_CAPTURE` until it is granted, so taking a card photo with the camera app asks for it too ([[card-photos]]).
   A `<queries>` entry for `android.media.action.IMAGE_CAPTURE` lets the app see a camera app on Android 11+ (#10). `android.hardware.camera.any` is

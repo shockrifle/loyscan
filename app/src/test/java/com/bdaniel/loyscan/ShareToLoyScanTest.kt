@@ -48,7 +48,7 @@ import java.io.File
 import javax.inject.Inject
 
 /**
- * A picture shared to LoyScan (#77), end to end: `MainActivity` started (or reached) by the share, with real Hilt,
+ * A picture shared to LoyScan (#77), end to end: `ShareActivity` started (or reached) by the share (#189), with real Hilt,
  * navigation and Room, and a [FakePictureReader] in place of zxing-cpp (`FakePictureReaderModule`).
  */
 @HiltAndroidTest
@@ -71,7 +71,7 @@ class ShareToLoyScanTest {
     @Inject
     lateinit var stores: StoreRepository
 
-    private var scenario: ActivityScenario<MainActivity>? = null
+    private var scenario: ActivityScenario<ShareActivity>? = null
 
     @Before
     fun setUp() {
@@ -139,7 +139,7 @@ class ShareToLoyScanTest {
         composeRule.onNodeWithText("Half-filled").assertExists()
         composeRule.onNodeWithText("Choose store").assertDoesNotExist()
         val forwarded = shadowOf(ApplicationProvider.getApplicationContext<Application>()).nextStartedActivity
-        assertThat(forwarded.component?.className).isEqualTo(MainActivity::class.java.name)
+        assertThat(forwarded.component?.className).isEqualTo(ShareActivity::class.java.name)
         assertThat(forwarded.sharedPicture()).isEqualTo(Uri.parse(PICTURE))
         assertThat(forwarded.flags and SHARE_IN_A_TASK_OF_ITS_OWN).isEqualTo(SHARE_IN_A_TASK_OF_ITS_OWN)
         assertThat(forwarded.flags and Intent.FLAG_ACTIVITY_SINGLE_TOP).isEqualTo(0)
@@ -202,7 +202,7 @@ class ShareToLoyScanTest {
     private fun photoDirectory() =
         File(ApplicationProvider.getApplicationContext<Application>().filesDir, CardPhotosModule.PHOTO_DIRECTORY)
 
-    private fun share() = Intent(ApplicationProvider.getApplicationContext(), MainActivity::class.java)
+    private fun share() = Intent(ApplicationProvider.getApplicationContext(), ShareActivity::class.java)
         .setAction(Intent.ACTION_SEND)
         .setType("image/png")
         .putExtra(Intent.EXTRA_STREAM, Uri.parse(PICTURE))

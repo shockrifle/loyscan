@@ -61,7 +61,7 @@ logo". Done in four slices, 2026-11-13 to 2026-11-16.
   doesn't bring it back. For a store that is gone it is discarded; one whose file is no longer there opens nothing; a
   picture the user picks while its file is checked keeps the crop, and the route's is discarded (PR #165 review).
 - **A picture shared to LoyScan** (#151): the share sheet lists two LoyScan targets for one image, LoyScan itself
-  (adds a card, [[add-card]], unchanged) and **Set as store logo**, an `activity-alias` of `MainActivity` with the
+  (adds a card, [[add-card]], unchanged) and **Set as store logo**, an `activity-alias` of `ShareActivity` (#189) with the
   same `SEND image/*` filter, the owner's choice on 2026-11-16. The alias is the intent's component
   (`sharesAsStoreLogo`); a share forwarded to a LoyScan of its own (#83) keeps it. `SharedLogo(uri)` opens over the
   list ("Copying the picture…") and copies the picture in at once (`CardPhotos.stage`), while the share's read grant
@@ -70,8 +70,10 @@ logo". Done in four slices, 2026-11-13 to 2026-11-16.
   "Logo for which store?", any store, in place of `SharedLogo`; the store tapped opens its logo screen with the crop on
   the copy, in place of the picker, so Back returns to the list. A copy abandoned on the way (Back from the picker or
   the crop) stays in the photos' directory, which backup carries, until the photo orphan sweep deletes it, more than a
-  day later ([[card-photos]]). **Not checked on a device yet:** that the share sheet lists both targets and starts the
-  alias (cold start, reopened from recents); unit tests can't see the share sheet.
+  day later ([[card-photos]]). Checked on an Android 14 device (2026-11-25, #189): the share sheet groups both targets
+  under one "LoyScan" tile, which offers "LoyScan" and "Set as store logo" (a target used before also shows on its own
+  in the direct row); the alias starts in a task of its own, and Back after the crop returns to the list, then to the
+  sender. Reopening from recents is not checked.
 - **Remove logo** clears it; the initials on colour come back and its file is deleted.
 - **A store that is gone** says "This store is no longer available." and offers nothing.
 - **A logo whose file is missing** is no logo, here, on the tiles and in the header (`CardPhotos.withoutMissing`). The

@@ -10,6 +10,8 @@ _(none — suspected issues live in [[tech-debt/_index|tech-debt]] until confirm
 
 ## Resolved
 
+- [[2026-11-25-launcher-stacked-on-a-share-task]] — after a share left open, the launcher stacked a second LoyScan on
+  the share's task and Back walked its flow; shares now run in `ShareActivity`, a task of their own (#189)
 - [[2026-11-24-widget-tap-reused-the-open-card]] — a widget tap over another card's screen showed that card again:
   `launchSingleTop` kept its entry and view model and only updated the arguments (#213)
 - [[2026-11-11-restored-form-saved-a-duplicate]] — a card form restored after its activity was destroyed mid-save
