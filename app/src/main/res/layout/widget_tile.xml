@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A widget tile (#216): as wide as its cell, and as tall as the sizer's transparent picture's ratio at that width
+     (adjustViewBounds). A RemoteViews layout can't be told a ratio, and a height worked out for the layout's width is
+     wrong when the launcher shows the layout at another width. The face, which Glance fills, is aligned to the sizer's
+     top and bottom, so it gets the sizer's height and what it shows (a logo) can't make the tile taller. -->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <ImageView
+        android:id="@+id/widget_tile_sizer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:adjustViewBounds="true"
+        android:importantForAccessibility="no"
+        android:src="@drawable/widget_tile_card" />
+
+    <FrameLayout
+        android:id="@+id/widget_tile_face"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignTop="@id/widget_tile_sizer"
+        android:layout_alignBottom="@id/widget_tile_sizer" />
+</RelativeLayout>

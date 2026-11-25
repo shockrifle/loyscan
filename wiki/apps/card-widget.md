@@ -65,25 +65,31 @@ All paths are under `app/src/main/java/com/bdaniel/loyscan/` unless written in f
   (Glance's `cornerRadius` does nothing on 10–11). **Checked on devices on 2026-11-24:** the 12dp background, 8dp
   tiles and 4dp spacing looked right on an Android 15 phone with Nova and an Android 14 handheld. Until #182 the corners were 6% of the tile's height, like the app's
   `CardShape`, unrelated to the background's. Glance has no `aspectRatio` or grid spacing, so `widget/WidgetLayout.kt`
-  computes the columns and the tile height from `LocalSize`, and 2dp of padding around the grid and around each tile
+  computes the columns from `LocalSize`, and 2dp of padding around the grid and around each tile
   (`WIDGET_HALF_SPACING`) makes the 4dp edge and the 4dp gap between tiles (`WIDGET_SPACING`, #182; both were 8dp).
-  A tile fills its cell's real width. The widget is laid out for 16 sizes (`SizeMode.Responsive(WIDGET_SIZES)`), widths from 110 to 410dp, each
-  40dp high, so from Android 12 the home screen picks the widest that fits the widget's real width; the steps keep a
-  tile within 10% of the card's ratio up to 440dp (`WidgetLayoutTest.theLayoutChosenForAnyPhoneWidth_…`), and a wider
-  widget's tiles are flatter. It was `SizeMode.Exact`, which lays out the sizes the launcher reports: on a device
+  **A tile's height comes from its real width (#216):** each tile is `res/layout/widget_tile.xml`, a `RelativeLayout`
+  embedded with Glance's `AndroidRemoteViews`. Its sizer, an `ImageView` as wide as the cell with `adjustViewBounds`,
+  shows a transparent shape at the card's ratio (`res/drawable/widget_tile_card.xml`, 856 × 539.8dp, larger than any
+  tile so it is only scaled down), so it is as tall as the card's ratio at the cell's real width. The face, which Glance
+  fills (`containerViewId`), is aligned to the sizer's top and bottom, so a logo can't make the tile taller. Until #216
+  the height was worked out for the layout's width (`widgetTileSize`), so a layout shown in a narrower widget gave tiles
+  taller than a card, and taller than wide when much narrower ([[2026-11-25-widget-tile-height-from-its-real-width]]).
+  The widget is laid out for 16 sizes (`SizeMode.Responsive(WIDGET_SIZES)`), widths from 110 to 410dp, each
+  40dp high, so from Android 12 the home screen picks the widest that fits the widget's real width; the layout's width
+  chooses the columns. It was `SizeMode.Exact`, which lays out the sizes the launcher reports: on a device
   (2026-11-12, Nova launcher) it reported 131×432dp and a landscape 263dp-wide size for a widget about 131×386dp, none
   fit, Android showed the smallest, the landscape layout, and its fixed-width tile was cut to half.
   A launcher can still show a layout made for another width: the Android 12L launcher on a tablet kept the 410dp
-  layout after the widget was resized to ~215dp (2026-11-12). Tiles fill their cells, so nothing is cut, but they are
-  taller than a card until the next update. Giving tiles a native ratio instead (a card-ratio image that fills the cell
-  with `ContentScale.Fit`, which turns on `adjustViewBounds`) was tried and failed: in the grid the image kept its
-  intrinsic height. A widget can't measure its real size, so this is as far as the layout goes. Each
+  layout after the widget was resized to ~215dp (2026-11-12). Tiles fill their cells and keep the card's ratio, so
+  nothing is cut or stretched, but such a widget can show two columns where one fits. A card-ratio Glance `Image` that
+  fills the cell was tried for the height before #216 and failed: Glance's `Image` doesn't set `adjustViewBounds`, so it
+  kept its intrinsic height. Each
   tile's `clickable` is `actionStartActivity(openCardIntent(…))`. At its narrowest (110dp) the widget can't be resized
   below one tile's height: `minResizeHeight` is 90dp (`res/xml/card_widget_info.xml`; it was 40dp, a thin strip). A wider
   one-column widget has taller tiles, so resized to 90dp it cuts its tile; the launcher has no per-width minimum.
-  Glance's unit test can't see a node's size or the grid's columns, so the composable's use of `widgetColumns` and
-  `widgetTileSize` is checked on a device (2026-11-12: one column at ~131dp, two at ~278dp, tiles uncut), and only the
-  functions are tested. Nor is the widget checked at a large font
+  Glance's unit test can't see a node's size or the grid's columns; `widget/CardWidgetRenderTest` measures them on the
+  real RemoteViews (#216, Android 12+ only), and a device check on 2026-11-12 saw one column at ~131dp and two at
+  ~278dp, tiles uncut. Nor is the widget checked at a large font
   scale: a small tile's two lines can be cut there.
 
 - `widget/WidgetLogos.kt` — the logos as bitmaps (#181). `WidgetLogos.forTiles(tiles)` reads each logo's size from
@@ -177,7 +183,8 @@ Glance's `@layout/glance_default_loading_layout` as the initial layout). Glance 
 - `widget/CardWidgetRenderTest` — the tiles as a home screen lays them out (#216): the real RemoteViews for a layout
   width, inflated at a real width that may differ from it (`widget/WidgetRender.kt`, [[tdd]]), each tile's size read from
   its view. A layout shown at its own width has card tiles filling their cells, in one and two columns; one shown in a
-  narrower widget fills the real width. Each test draws what it measured into `app/build/outputs/widget-renders/`.
+  narrower widget fills the real width and keeps the card's ratio there; every layout at every width from 110 to 480dp
+  (every 5dp) draws no tile taller than wide. Each test draws what it measured into `app/build/outputs/widget-renders/`.
 - `widget/CardWidgetUpdaterTest` — the live-update trigger: it fires when a card or the sort changes the tiles, not on
   a change a tile doesn't show, never when no widget is placed, starts once a widget is placed mid-session, and a
   refresh that throws is swallowed so observation continues. Since #181 it fires when a store's logo is set, changed or

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A widget tile's shape at the card's ratio, 85.60 × 53.98 (#216): the tile sizer's transparent picture. It is larger
+     than any tile, so the sizer only ever scales it down, and an ImageView with adjustViewBounds scales its height with
+     its width. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@android:color/transparent" />
+    <size android:width="856dp" android:height="539.8dp" />
+</shape>
