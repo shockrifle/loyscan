@@ -68,6 +68,50 @@ class BarcodeEncoderTest {
     }
 
     @Test
+    fun matrixCodes_areQrDataMatrixAndAztec_withTheirGs1Variants() { // #212: the card screen draws these smaller
+        // Content each format holds as itself, except DataBar, drawn as GS1-128: what counts is the format drawn.
+        val expected = mapOf(
+            BarcodeFormat.AZTEC to ("LoyScan 0042" to true),
+            BarcodeFormat.CODABAR to ("123456" to false),
+            BarcodeFormat.CODE_39 to ("LOY-42" to false),
+            BarcodeFormat.CODE_93 to ("LOY-42" to false),
+            BarcodeFormat.CODE_128 to ("Loy42-x" to false),
+            BarcodeFormat.DATA_MATRIX to ("LoyScan 0042" to true),
+            BarcodeFormat.DATABAR to ("0109012345678901" to false),
+            BarcodeFormat.DATABAR_EXPANDED to ("0109012345678901" to false),
+            BarcodeFormat.DATABAR_LIMITED to ("0109012345678901" to false),
+            BarcodeFormat.EAN_8 to ("96385074" to false),
+            BarcodeFormat.EAN_13 to ("5901234123457" to false),
+            BarcodeFormat.GS1_128 to ("9799123456789012" to false),
+            BarcodeFormat.GS1_DATA_MATRIX to ("0109012345678901" to true),
+            BarcodeFormat.GS1_QR_CODE to ("0109012345678901" to true),
+            BarcodeFormat.ITF to ("12345678" to false),
+            // A stacked code, many modules wide and few high: it keeps the full width.
+            BarcodeFormat.PDF_417 to ("LoyScan 0042" to false),
+            BarcodeFormat.QR_CODE to ("LoyScan 0042" to true),
+            BarcodeFormat.UPC_A to ("036000291452" to false),
+            BarcodeFormat.UPC_E to ("01234565" to false),
+        )
+        assertThat(expected.keys).containsExactlyElementsIn(BarcodeFormat.entries)
+
+        expected.forEach { (format, contentAndIsMatrix) ->
+            val (content, isMatrix) = contentAndIsMatrix
+
+            val barcode = BarcodeEncoder.encode(content, format)
+
+            expect.withMessage(format.name).that(barcode!!.isMatrixCode).isEqualTo(isMatrix)
+        }
+    }
+
+    @Test
+    fun aCardFallingBackToQr_isAMatrixCode() { // #212: the format drawn counts, not the card's
+        val barcode = BarcodeEncoder.encode("Café", BarcodeFormat.EAN_13)
+
+        assertThat(barcode!!.format).isEqualTo(BarcodeFormat.QR_CODE)
+        assertThat(barcode.isMatrixCode).isTrue()
+    }
+
+    @Test
     fun everyFormatACustomStoreCanPick_isDrawnAsItself() { // #47: each can draw a number that fits it as itself
         val examples = mapOf(
             BarcodeFormat.CODABAR to "123456",

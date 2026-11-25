@@ -30,6 +30,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.height
 import androidx.compose.ui.unit.width
@@ -153,6 +154,74 @@ class DetailScreenTest {
         assertThat((surface.top - store.bottom) / dp).isWithin(1f).of(24f) // a group gap above it
         assertThat(surface.left / dp).isAtLeast(16f)
         assertThat((screen.right - surface.right) / dp).isAtLeast(16f)
+    }
+
+    /** The card sheet's barcode and its white surface, in dp. */
+    private fun barcodeAndSurface(): Pair<DpRect, DpRect> {
+        val barcode = composeRule.onNode(
+            hasContentDescription("Barcode") and hasAnyAncestor(hasTestTag(BARCODE_SURFACE_TAG)),
+            useUnmergedTree = true,
+        ).getBoundsInRoot()
+        return barcode to composeRule.onNodeWithTag(BARCODE_SURFACE_TAG).getBoundsInRoot()
+    }
+
+    private fun cardIn(format: BarcodeFormat, number: String = "LoyScan 0042") =
+        aLoyaltyCard(store = aStore(defaultBarcodeFormat = format), number = number)
+
+    @Test
+    fun aQrCode_isAtMost160dpWide_centredOnItsWhiteSurface() { // #212: a till's scanner reads it from closer
+        setScreen(card = cardIn(BarcodeFormat.QR_CODE))
+
+        val (barcode, surface) = barcodeAndSurface()
+
+        assertThat(barcode.width.value).isWithin(0.5f).of(160f)
+        assertThat(barcode.height.value).isWithin(0.5f).of(160f)
+        assertThat((barcode.left + barcode.right).value / 2).isWithin(0.5f).of((surface.left + surface.right).value / 2)
+        // The surface stays the sheet's width: far wider than the code.
+        assertThat(surface.width.value).isGreaterThan(300f)
+    }
+
+    @Test
+    fun aDataMatrix_isAtMost160dpWide() { // #212
+        setScreen(card = cardIn(BarcodeFormat.DATA_MATRIX))
+
+        val (barcode, _) = barcodeAndSurface()
+
+        // ZXing picks the smallest symbol, here a rectangular 8x32 one (12x36 modules with the quiet zone): capped by
+        // its width, at its own proportions.
+        assertThat(barcode.width.value).isWithin(0.5f).of(160f)
+        assertThat(barcode.height.value).isWithin(0.5f).of(160f * 12 / 36)
+    }
+
+    @Test
+    @Config(qualifiers = "w180dp-h640dp")
+    fun onAScreenNarrowerThanTheCap_aQrCodeFitsTheWidth() { // #212
+        setScreen(card = cardIn(BarcodeFormat.QR_CODE))
+
+        val (barcode, surface) = barcodeAndSurface()
+
+        // The surface's width inside its 16dp padding, less than 160dp here.
+        assertThat(barcode.width.value).isWithin(0.5f).of(surface.width.value - 32f)
+        assertThat(barcode.width.value).isLessThan(160f)
+        assertThat(barcode.height.value).isWithin(0.5f).of(barcode.width.value)
+    }
+
+    @Test
+    fun aLinearBarcode_keepsTheSurfacesFullWidth() { // #212
+        setScreen(card = cardIn(BarcodeFormat.EAN_13, number = "5901234123457"))
+
+        val (barcode, surface) = barcodeAndSurface()
+
+        assertThat(barcode.width.value).isWithin(0.5f).of(surface.width.value - 32f)
+    }
+
+    @Test
+    fun aPdf417_keepsTheSurfacesFullWidth() { // #212: a stacked code, not a square one
+        setScreen(card = cardIn(BarcodeFormat.PDF_417))
+
+        val (barcode, surface) = barcodeAndSurface()
+
+        assertThat(barcode.width.value).isWithin(0.5f).of(surface.width.value - 32f)
     }
 
     @Test
@@ -533,6 +602,10 @@ class DetailScreenTest {
         // Unmerged: the clickable scan-mode surface merges its children into one node.
         composeRule.onNode(hasText("0042") and hasAnyAncestor(hasTestTag("scanMode")), useUnmergedTree = true)
             .assertIsDisplayed()
+        // As large as the height the number leaves, not the card screen's 160dp (#212).
+        val bounds = scanModeBarcode.getBoundsInRoot()
+        assertThat(bounds.height.value).isGreaterThan(250f)
+        assertThat(bounds.width.value).isWithin(1f).of(bounds.height.value)
     }
 
     private val scanModeBarcode get() = composeRule.onNode(

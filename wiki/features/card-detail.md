@@ -48,7 +48,16 @@ UUID string.
   follows 12dp under it, and the note and photos form the next group; the barcode
   carries its own quiet zone ([[zxing-core]]). `BarcodeEncoder` encodes `barcodeContent` in `barcodeFormat`, falling back to `CODE_128`, then QR (GS1 data: `GS1_128`, then GS1 QR)
   ([[zxing-core]]); nothing is drawn for empty content. 1D barcodes are 120dp high across the card; 2D ones keep
-  their aspect ratio at full width. Its content description is "Barcode".
+  their aspect ratio. A matrix code (`EncodedBarcode.isMatrixCode`: QR, Data Matrix, Aztec and their GS1 forms, of the
+  format drawn, so a fallback to QR counts) is at most 160dp wide (`CARD_MATRIX_CODE_WIDTH`, about 25 mm), centred on
+  the surface, or the available width on a narrower screen; PDF417, a stacked code, keeps the full width (#212). At
+  full width (about 300dp on a phone) a till's scanner had to be held farther off to read a QR code. ZXing picks the
+  smallest Data Matrix symbol, rectangular ones included, so a Data Matrix can be wider than high: the cap is on its
+  width. The 160dp hasn't been tried at a till yet, nor with a long QR code (more modules, so smaller ones): #212.
+  Tests: `DetailScreenTest.aQrCode_isAtMost160dpWide_centredOnItsWhiteSurface`, `aDataMatrix_isAtMost160dpWide`,
+  `onAScreenNarrowerThanTheCap_aQrCodeFitsTheWidth`, `aLinearBarcode_keepsTheSurfacesFullWidth`,
+  `aPdf417_keepsTheSurfacesFullWidth`; `BarcodeEncoderTest.matrixCodes_areQrDataMatrixAndAztec_withTheirGs1Variants`,
+  `aCardFallingBackToQr_isAMatrixCode`. Its content description is "Barcode".
 - **Fallback note:** when the barcode is drawn in a format other than the card's `barcodeFormat`, a `bodySmall` line
   under it names the format drawn, e.g. a DataBar card shows "Shown as GS1-128" (#35, #45). The name is
   `barcodeFormatName(format)` (`ui/BarcodeFormatName.kt`): `BarcodeFormat.displayName`, with the QR names translated (#72). A card drawn in its own format shows no note. Tests:
@@ -81,13 +90,14 @@ UUID string.
   the `NavBackStackEntry`'s lifecycle, so it only brightens once the enter transition has finished. Tests:
   `ScreenEffectsTest`, `DetailScreenTest`, `AppNavigationTest.detailsFullBrightness_isRestoredOnBack`.
 - **Scan mode:** a double-tap on the barcode (or the accessibility action "Show full screen") lays `ScanMode` over
-  the whole screen, status bar included: white, the barcode as large as fits inside 24dp padding with the number
+  the whole screen, status bar included: white, the barcode as large as fits inside 24dp padding (a matrix code too,
+  unlike its 160dp on the card, #212) with the number
   below it in black (no note). 2D: square modules, height-bound in landscape so the number keeps its room. 1D in
   landscape: full width, 200dp high. 1D in portrait (the overlay taller than wide, `BoxWithConstraints`), #34: the full
   width and all the height the number leaves, and `barcodeRects` runs the barcode down that long side, turned a quarter
   with its start at the top, whole-pixel modules and its quiet zone; the number stays horizontal under it. Tests:
   `DetailScreenTest.scanMode_inPortrait_runsA1dBarcodeAlongTheLongSide`, `scanMode_inLandscape_drawsA1dBarcodeAcrossTheWidth`,
-  `scanMode_inPortrait_keepsA2dBarcodeSquare`, `BarcodeLayoutTest.linear_inATallArea_…`. It keeps the screen on (`KeepScreenOn()`, `FLAG_KEEP_SCREEN_ON`, same
+  `scanMode_inPortrait_keepsA2dBarcodeSquare`, `scanMode_inLandscape_keepsTheNumberUnderA2dBarcode`, `BarcodeLayoutTest.linear_inATallArea_…`. It keeps the screen on (`KeepScreenOn()`, `FLAG_KEEP_SCREEN_ON`, same
   resumed-only rule as the brightness). A tap anywhere or back closes it. Its open state survives rotation
   (`rememberSaveable`).
   Its content, and the photo viewer's, keeps inside the system bars (`WindowInsets.safeDrawing`, #108): at a large font

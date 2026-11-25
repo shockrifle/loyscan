@@ -83,7 +83,8 @@ Java, no Android or network code. Only its writers are used, in `BarcodeEncoder`
   `WriterException` when content is too long. `BarcodeEncoder` catches both and moves to the next format.
 - **ZXing's quiet zones are too narrow or missing.** At size 0 the 1D writers split a 9–10-module margin over both
   sides (4–5 each; EAN-13 needs 11 on the left, Code 128 10 a side), QR gets 4, Aztec and Data Matrix none. A fixed
-  screen padding doesn't fix it: a 2D code drawn at full width has modules wider than 16dp. So `BarcodeEncoder` asks
+  screen padding doesn't fix it: a 2D code drawn at full width (scan mode; PDF417 on the card too) has modules wider
+  than 16dp. So `BarcodeEncoder` asks
   for `MARGIN = 0` and `EncodedBarcode` adds each symbology's own minimum in modules (`quietZoneModules`: 11 for 1D,
   4 for QR, 2 for Aztec, Data Matrix and PDF417; the same for their GS1 forms). Test: `BarcodeEncoderTest.everyBarcode_carriesItsSymbologysQuietZone`;
   the read-back test draws barcodes with no extra border, and UPC-E and Data Matrix fail to read without it.

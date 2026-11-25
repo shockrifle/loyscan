@@ -99,6 +99,9 @@ private val HEADER_HEIGHT = 200.dp
 /** A 1D barcode's height in scan mode, when it runs across the screen (landscape). */
 private val SCAN_MODE_LINEAR_HEIGHT = 200.dp
 
+/** A QR, Data Matrix or Aztec code's largest width on the card sheet, about 25 mm; scan mode draws it as large as fits (#212). */
+private val CARD_MATRIX_CODE_WIDTH = 160.dp
+
 /** The barcode's white surface on the card sheet. */
 const val BARCODE_SURFACE_TAG = "barcodeSurface"
 
@@ -244,7 +247,7 @@ fun SharedTransitionScope.DetailScreen(
                                     .padding(Spacing.l),
                                 contentAlignment = Alignment.Center,
                             ) {
-                                Barcode(barcode, Modifier.barcodeSize(barcode))
+                                Barcode(barcode, Modifier.barcodeSize(barcode, matrixMaxWidth = CARD_MATRIX_CODE_WIDTH))
                             }
                             // The card's own format couldn't be drawn (no writer, or content it can't hold).
                             if (barcode.format != card.barcodeFormat) {

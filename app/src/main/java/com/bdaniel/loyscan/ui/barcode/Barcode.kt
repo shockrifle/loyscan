@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
@@ -80,11 +81,17 @@ val LINEAR_BARCODE_HEIGHT = 120.dp
 /**
  * The size [Barcode] should be laid out at: a 1D one the available width and [linearHeight] high; a 2D one as large as
  * fits at its own aspect ratio, so the full width unless the height is shorter (not `fillMaxWidth`, which would pin
- * the width and push it past the height).
+ * the width and push it past the height). A matrix code ([EncodedBarcode.isMatrixCode]) is at most [matrixMaxWidth]
+ * wide, or the available width when that is narrower.
  */
-fun Modifier.barcodeSize(barcode: EncodedBarcode, linearHeight: Dp = LINEAR_BARCODE_HEIGHT): Modifier =
+fun Modifier.barcodeSize(
+    barcode: EncodedBarcode,
+    linearHeight: Dp = LINEAR_BARCODE_HEIGHT,
+    matrixMaxWidth: Dp = Dp.Infinity,
+): Modifier =
     if (barcode.isLinear) fillMaxWidth().height(linearHeight)
-    else aspectRatio(barcode.width.toFloat() / barcode.height)
+    else (if (barcode.isMatrixCode) widthIn(max = matrixMaxWidth) else this)
+        .aspectRatio(barcode.width.toFloat() / barcode.height)
 
 /** Whole pixels when a module gets at least one; otherwise the exact fraction, so the barcode still fits. */
 private fun snap(px: Float): Float = if (px >= 1f) floor(px) else px
