@@ -2,8 +2,9 @@
 
 A Glance app-widget that shows the user's cards as tiles; tapping one opens that card's [[card-detail]]
 screen, even from a dead process (#11). Added 2026-11-04 as the first slice: brand-colour tiles with the
-card's list label, no photo yet; since #181 (2026-11-24) a tile shows its store's logo ([[store-logo]]). One runtime
-surface alongside the [[android-app]] activity.
+card's list label, no photo yet; since #181 (2026-11-24) a tile shows its store's logo ([[store-logo]]), and since #185
+(2026-11-26) the card's front photo when the card says so ([[card-photos]]). One runtime surface alongside the
+[[android-app]] activity.
 
 All paths are under `app/src/main/java/com/bdaniel/loyscan/` unless written in full.
 
@@ -11,9 +12,9 @@ All paths are under `app/src/main/java/com/bdaniel/loyscan/` unless written in f
 
 - `widget/glance/CardWidget.kt` — `CardWidget : GlanceAppWidget`. `provideGlance` reads the cards and the sort
   preference from the repositories through a Hilt `@EntryPoint` (`CardWidgetEntryPoint`, the same trick as
-  `hiltImageLoader()`, [[architecture]] → Composition/DI), maps them to tiles and their logos (`WidgetPictures.forTiles`,
-  below), collects that in `provideContent`, and renders `CardWidgetContent`. The first tiles and logos are read before
-  `provideContent`, so a tile never draws its initials before its logo arrives. This renders the **current** cards whenever Glance asks (e.g. when the widget is added). The
+  `hiltImageLoader()`, [[architecture]] → Composition/DI), maps them to tiles and their pictures (`WidgetPictures.forTiles`,
+  below), collects that in `provideContent`, and renders `CardWidgetContent`. The first tiles and pictures are read before
+  `provideContent`, so a tile never draws its initials before its logo or photo arrives. This renders the **current** cards whenever Glance asks (e.g. when the widget is added). The
   `widget.glance` sub-package holds the Glance runtime glue that runs only on a real home screen; the tested content
   and logic (`widget/CardWidgetContent.kt`, `CardWidgetTiles.kt`, `CardWidgetUpdater.kt`) stay in `widget`.
 - **Staying in step with the cards** is a separate job: a Glance widget renders a snapshot and does not follow a
@@ -35,7 +36,9 @@ All paths are under `app/src/main/java/com/bdaniel/loyscan/` unless written in f
   without reopening the app.
 - `widget/CardWidgetTiles.kt` — the pure logic, unit-tested: `List<LoyaltyCard>.toWidgetTiles(sort)` sorts with
   the list's `sortedBy(sort)` ([[card-list]], #7) and maps each card to a `WidgetTile(cardId, color, initials,
-  storeName, label, logo)`, `logo` being the store's logo file name. The `label` is the card's own label, `null` when it has none: since #181 a tile never shows the
+  storeName, label, logo, photo)`, `logo` being the store's logo file name and `photo` the card's front photo's, set only
+  while the card's "Show photo on widget" is on (`LoyaltyCard.showPhotoOnWidget`, #185; separate from My cards'
+  `showPhotoOnList`). The `label` is the card's own label, `null` when it has none: since #181 a tile never shows the
   store name, the same rule as My cards since #183 (until #181 an unlabelled card's widget tile showed the store name).
   `storeName` is only for TalkBack: `WidgetTile.description()` is "store, label", or the store alone, as the list's tile
   joins them, and the tile carries it as its `semantics { contentDescription }`.
@@ -55,7 +58,12 @@ All paths are under `app/src/main/java/com/bdaniel/loyscan/` unless written in f
   it on an Android 15 phone and an Android 14 handheld on 2026-11-24 and changed it twice: on the brand colour the label
   was hard to read over a logo; a solid band with a fade above it, as on My cards, covered too much of the logo; a fade
   that turned dark at the label's middle was tried and dropped for the plain clear-to-dark one. A store with no logo,
-  or one whose logo is missing or can't be decoded, shows the initials, with the label on the brand colour as before. From Android 12 the widget
+  or one whose logo is missing or can't be decoded, shows the initials, with the label on the brand colour as before.
+  **A tile whose card shows its front photo** (#185) and whose photo decoded shows the photo instead, filling the tile
+  (`ContentScale.Crop`, no margin, `WIDGET_TILE_PHOTO_TAG`), with the label on the same scrim as a logo tile
+  (`LabelOnScrim`). The issue said "the photo scrim as on My cards"; the owner chose the widget's fade over My cards'
+  solid band while planning (2026-11-26), as for the logos. A photo that is missing or can't be decoded falls back to the
+  logo, else the initials. From Android 12 the widget
   rounds its own background with `WIDGET_CORNER_RADIUS` (12dp, `ui/theme/Shapes.kt`), and a tile's corners are that
   less the 4dp between the widget's edge and the tile, 8dp, so they nest concentrically (#182, `widgetBackgroundRadius`,
   `widgetTileCornerRadius`). The widget rounds its background itself because the launcher otherwise rounds it with a
@@ -109,12 +117,19 @@ All paths are under `app/src/main/java/com/bdaniel/loyscan/` unless written in f
   columns of square tiles (240–252dp) and square tiles before Android 12; the render tests cover the first. Nor is the widget checked at a large font
   scale: a small tile's two lines can be cut there.
 
-- `widget/WidgetPictures.kt` — the logos as bitmaps (#181). `WidgetPictures.forTiles(tiles)` reads each logo's size from
-  its header, fits it, scaled down and never up, to the **logo box**: a 216dp card tile, the widest of the layouts
+- `widget/WidgetPictures.kt` — the logos (#181) and the shown front photos (#185) as bitmaps, by file name (named
+  `WidgetLogos` until #185). `WidgetPictures.forTiles(tiles)` reads each picture's size from its header. A **photo** is
+  cut around its middle to the **photo box**'s shape and scaled down, never up, to it: the whole 216dp card tile below,
+  216 × 136.2dp (`widgetPhotoBox`, `widgetPhotoBoxPx`, 594 × 374px at 2.75), so no photo bitmap is larger than its tile
+  (the binder limit below). A photo kept whole ("use whole photo", [[card-photos]]) can have any shape, so fitting it
+  whole could have made a tall photo twice the tile's pixels; the tile crops it anyway, and a square tile crops the
+  cut's sides. A **logo** is fitted, scaled down and never up, to the **logo box**: a 216dp card tile, the widest of the layouts
   before #216 (216 × 136.2dp, at 224dp wide), less the margin, 200 × 120.2dp (`widgetLogoBox`), in pixels at the screen's density
-  (`widgetLogoBoxPx`). When the logos shown together would take more than `WIDGET_LOGO_BUDGET_BYTES` (4 MB, ARGB), all
-  are scaled down alike to fit it (`widgetLogoScale`). Each logo is then decoded straight to that size (`inSampleSize`,
-  then scaled), from a stream it closes (#88). One bitmap serves every layout size. It keeps only the bitmaps it last
+  (`widgetLogoBoxPx`). When the pictures shown together, logos and photos, would take more than
+  `WIDGET_LOGO_BUDGET_BYTES` (4 MB, ARGB), all are scaled down alike to fit it (`widgetLogoScale`). A full photo is
+  about 0.89 MB at 2.75 density, so from about five photos on screen the pictures come out softer; the owner kept the
+  shared 4 MB for safety over sharpness while planning #185 (2026-11-26). Each picture is then decoded straight to that
+  size (`inSampleSize`, then cut and scaled), from a stream it closes (#88). One bitmap serves every layout size. It keeps only the bitmaps it last
   handed out, so it never holds more than the budget, and decodes a logo again only when its size changes (another
   logo came or went past the budget); a logo's name is never reused, so a kept bitmap is never stale. A missing file,
   a file that isn't a picture, or a name that isn't a photo's is left out, so its tiles show the initials; a logo no
@@ -125,7 +140,8 @@ All paths are under `app/src/main/java/com/bdaniel/loyscan/` unless written in f
   responsive sizes and collection items, which is why one object per logo is reused (read in the platform and
   glance-appwidget 1.2.0 sources, 2026-11-24; not measured). **Checked on devices on 2026-11-24:** the owner
   looked at logo tiles on an Android 15 phone and an Android 14 handheld (the label's scrim above came from that).
-  **Not checked on a device yet:** the tile height with a logo measured against one without (a `Fit` image kept its
+  **Not checked on a device yet:** photo tiles (#185): how a photo looks cropped on a square tile, and how soft many
+  photos look under the shared budget; the tile height with a logo measured against one without (a `Fit` image kept its
   intrinsic height in an earlier attempt, below), TalkBack's reading, and a widget with many stores' logos.
 
 ## Opening a card — an intent extra, not a URI deep link
@@ -177,14 +193,19 @@ Glance's `@layout/glance_default_loading_layout` as the initial layout). Glance 
   that, for every width from 110 to 480dp, the layout a launcher picks for it has that width's columns and shape (#216).
   `widget/glance/CardWidgetTest` pins `sizeMode` to `SizeMode.Responsive(WIDGET_SIZES)`, which the render tests assume. Since #181 also the logo
   box, 200 × 120.21dp, and its pixels at a density (550 × 330 at 2.75).
-- `widget/WidgetPicturesTest` — real PNGs in a `TemporaryFolder`, `@GraphicsMode(NATIVE)` (#181): a wide and a square
+- `widget/WidgetPicturesTest` — real PNGs in a `TemporaryFolder`, `@GraphicsMode(NATIVE)` (#181). Photos (#185): a
+  large card-shaped one scaled to the photo box; a tall and a wide one cut around their middle (a banded PNG whose
+  corners come back in the middle band's colour) and scaled to the box; a small one cut but not scaled up; a portrait
+  photo at 2.75 density no larger than its 594 × 374px tile; a missing file, a non-picture, a PNG cut after its header
+  and an invalid name left out while the tile's logo still comes; a photo and a logo over the budget scaled alike to
+  141 × 70 (√½ of 200 × 100, worked out by hand); a photo no longer shown forgotten. Logos: a wide and a square
   logo scaled down to fit the box, a small one not scaled up, a missing file, a non-picture and an invalid name left
   out without throwing, one bitmap for all of a store's cards and for later calls (the file deleted between them, so the
   stream was closed), a logo no longer shown forgotten, and three logos over the budget scaled to 163 × 163 (√(2/3) of
   200, worked out by hand), the same bitmaps on the next call, while two within it keep their size; by default two
   1024 × 1024 logos (8 MiB) come back at 724 × 724, within 4 MiB.
 - `widget/CardWidgetTilesTest` — the sort order, the label (none without one, never the store name), the store name and
-  logo, the initials and the colour helpers (Robolectric, because
+  logo, the front photo only while the card shows it on the widget (not with My cards' switch alone, not a back photo, #185), the initials and the colour helpers (Robolectric, because
   the colour parse goes through `android.graphics.Color`).
 - `widget/CardWidgetContentTest` — `runGlanceAppWidgetUnitTest` (Glance's JVM unit test, `glance-appwidget-testing`):
   one clickable node per card, each showing its initials and label (an unlabelled one only its initials, never the store
@@ -199,7 +220,10 @@ Glance's `@layout/glance_default_loading_layout` as the initial layout). Glance 
   read through `ColorProvider.getColor`); no initials and no store name; its label white on a dark and a light
   brand colour alike, in a box whose only background is the scrim drawable, aligned to the bottom; the drawable runs
   top to bottom from clear to `PHOTO_LABEL_SCRIM`; a labelled tile without a logo has no scrim; a tile
-  whose logo didn't decode shows the initials.
+  whose logo didn't decode shows the initials. Since #185: a tile with a photo shows that bitmap cropped
+  (`ContentScale.Crop`), filling the tile with no padding, and no logo, initials or store name; its label white on the
+  scrim on a dark and a light brand colour; a tile without a photo, or whose photo didn't decode, shows its logo, else its
+  initials.
 - `widget/CardWidgetRenderTest` — the tiles as a home screen lays them out (#216): the real RemoteViews for a layout
   width, inflated at a real width that may differ from it (`widget/WidgetRender.kt`, [[tdd]]), each tile's size read from
   its view. A layout shown at its own width has card tiles filling their cells, in one and two columns; one shown in a
@@ -208,12 +232,16 @@ Glance's `@layout/glance_default_loading_layout` as the initial layout). Glance 
   draws square tiles below 120dp and card tiles from 120dp, at 1x and again at a phone's 2.75 density (a tile's padding
   is whole pixels there, so sizes are checked within a few pixels); the 110dp widget at its 110dp minimum height shows a
   whole square tile, 4dp from the bottom. A layout shown at another width keeps its shape at the real width: the 128dp
-  layout in a 115dp widget has card tiles, the 110dp layout in a 200dp widget square ones. Each test draws what it measured into `app/build/outputs/widget-renders/`.
+  layout in a 115dp widget has card tiles, the 110dp layout in a 200dp widget square ones. Since #185 one of the four
+  tiles is a photo tile with a tall 100 × 400px bitmap, and every check above holds for it too: a photo doesn't make
+  its tile taller. Each test draws what it measured into `app/build/outputs/widget-renders/`.
 - `widget/CardWidgetUpdaterTest` — the live-update trigger: it fires when a card or the sort changes the tiles, not on
   a change a tile doesn't show, never when no widget is placed, starts once a widget is placed mid-session, and a
   refresh that throws is swallowed so observation continues. Since #181 it fires when a store's logo is set, changed or
   removed; `RoomLoyaltyCardRepositoryTest.getAllWithStore_emitsAgain_whenItsStoresLogoIsSetOrRemoved` shows the real
-  card flow emits then (the `@Transaction` query observes the stores table).
+  card flow emits then (the `@Transaction` query observes the stores table). Since #185 it fires when "Show photo on
+  widget" is turned on or off on a card with a front photo (`refresh_runsWhenACardsShowPhotoOnWidgetIsToggled`), and
+  not when it changes on a card without one or only My cards' switch changes.
 - `OpenCardIntentTest` — the intent round-trips, and is `null` for a bare intent or one from recents.
 - `WidgetTapOpensCardTest` — end to end: `MainActivity` launched **cold** by `openCardIntent` opens that card's
   detail (the dead-process case), a **warm** `onNewIntent` opens it while the app runs, and one for card B over card
@@ -230,7 +258,6 @@ the logic it drives is tested above ([[2026-10-09-coverage-gate-kover]]).
 
 ## Not done yet (this slice)
 
-- No front photo on a tile — a tile shows the store's logo or its initials (#185 adds photos).
 - No empty-state message: a widget with no cards shows nothing.
 - The live-update trigger only observes while the app process is alive. Cards change only through the running app,
   so that covers every real change; a widget added while the app is dead renders current cards when it is next shown.

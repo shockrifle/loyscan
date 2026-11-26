@@ -30,7 +30,7 @@ keys) can still be removed. Found while building the crop flow: `cancelCrop` lef
 Timber, with a `DebugTree` planted only in debug builds (`LoyScanApplication.onCreate`). Release builds log
 nothing. Image-load failures are logged at WARN with the message prefix `Image loading failed for:`
 (`ImageLoaderModule.provideImageLoader` in `app/src/main/java/com/bdaniel/loyscan/di/ImageLoaderModule.kt`) — every Coil load goes through it since #10 ([[list-screen-bypasses-image-loader]], resolved); the widget
-decodes its logos itself (`WidgetPictures`).
+decodes its logos and photos itself (`WidgetPictures`).
 
 ### Why don't catalogue stores show the retailer's logo?
 Google Play's IP policy asks for the owner's permission to use a logo, and getting it from each retailer isn't

@@ -130,6 +130,9 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   on a dark scrim; with it off (the default), the tile shows the store's logo, else the initials; a card with only
   a back photo, or a front photo that can't be loaded, shows its store's logo ([[store-logo]]), else the initials
   (`CardTileFace` in `app/src/main/java/com/bdaniel/loyscan/ui/CardTileFace.kt`).
+- **On the widget** ([[card-widget]], #185): with "Show photo on widget" on, the front photo fills the card's widget
+  tile, cut to the tile's shape around its middle, with the label on the widget's scrim; with it off, or a photo that
+  can't be read, the tile shows the store's logo, else the initials (`WidgetPictures`, `CardWidgetContent`).
 - **On the card** ([[card-detail]]): under the note, the photos it has, front first; a tap shows one full screen
   on black (`PhotoViewer`, `PHOTO_VIEWER_TAG`), and a tap or Back closes it.
 - **Store logos live here too** (#151, [[2026-11-13-user-supplied-store-logos]]): `cropLogo` stores a staged picture

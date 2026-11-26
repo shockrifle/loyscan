@@ -13,9 +13,10 @@ import org.robolectric.annotation.GraphicsMode
 import java.io.File
 
 /**
- * The logos the widget draws (#181): each store's logo decoded once, scaled down to fit the logo box and never up,
- * all of them together within a memory budget, and a logo that can't be read left out (its tiles show the initials).
- * Real PNGs on a [TemporaryFolder]; NATIVE graphics, so the pictures are decoded for real.
+ * The pictures the widget draws: each store's logo (#181) decoded once, scaled down to fit the logo box and never up;
+ * each shown front photo (#185) cut to the photo box's shape around its centre and scaled down to it, never up; all of
+ * them together within a memory budget, and a picture that can't be read left out (its tiles show the logo or the
+ * initials). Real PNGs on a [TemporaryFolder]; NATIVE graphics, so the pictures are decoded for real.
  */
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -33,7 +34,10 @@ class WidgetPicturesTest {
     }
 
     private fun logos(box: IntSize = IntSize(200, 120), budget: Long = Long.MAX_VALUE) =
-        WidgetPictures(::file, box, budget)
+        WidgetPictures(::file, logoBox = box, photoBox = PHOTO_BOX, budgetBytes = budget)
+
+    private fun pictures(budget: Long = Long.MAX_VALUE) =
+        WidgetPictures(::file, logoBox = IntSize(200, 120), photoBox = PHOTO_BOX, budgetBytes = budget)
 
     private fun png(name: String, width: Int, height: Int): String {
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).apply { eraseColor(0xFF2266AA.toInt()) }
@@ -41,7 +45,26 @@ class WidgetPicturesTest {
         return name
     }
 
-    private fun tile(id: String, logo: String?) = WidgetTile(id, "#112233", "TE", "Tesco", label = null, logo = logo)
+    private fun tile(id: String, logo: String?, photo: String? = null) =
+        WidgetTile(id, "#112233", "TE", "Tesco", label = null, logo = logo, photo = photo)
+
+    /** A PNG of [middle] rows of [inner] colour between equal bands of [outer], or columns when [across]. */
+    private fun banded(name: String, width: Int, height: Int, middle: Int, across: Boolean = false): String {
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).apply { eraseColor(OUTER) }
+        val canvas = android.graphics.Canvas(bitmap)
+        val paint = android.graphics.Paint().apply { color = INNER }
+        if (across) {
+            val left = (width - middle) / 2f
+            canvas.drawRect(left, 0f, left + middle, height.toFloat(), paint)
+        } else {
+            val top = (height - middle) / 2f
+            canvas.drawRect(0f, top, width.toFloat(), top + middle, paint)
+        }
+        File(directory, name).outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        return name
+    }
+
+    private fun Bitmap.corners() = listOf(getPixel(0, 0), getPixel(width - 1, 0), getPixel(0, height - 1), getPixel(width - 1, height - 1))
 
     private fun Bitmap.size() = IntSize(width, height)
 
@@ -149,8 +172,115 @@ class WidgetPicturesTest {
         // Two 1024 × 1024 logos are 8 MiB (ARGB); 4 MiB scales each side by √½, 0.7071: 724 × 724.
         val names = listOf(png("a", 1024, 1024), png("b", 1024, 1024))
 
-        val shown = WidgetPictures(::file, IntSize(1024, 1024)).forTiles(names.mapIndexed { i, name -> tile("c$i", name) })
+        val shown = WidgetPictures(::file, logoBox = IntSize(1024, 1024), photoBox = PHOTO_BOX)
+            .forTiles(names.mapIndexed { i, name -> tile("c$i", name) })
 
         assertThat(shown.values.map { it.size() }).containsExactly(IntSize(724, 724), IntSize(724, 724))
+    }
+
+    @Test
+    fun aLargeCardShapedPhoto_isScaledDownToThePhotoBox() = runTest { // #185: the binder limit
+        val photo = png("photo", 2000, 1000)
+
+        val shown = pictures().forTiles(listOf(tile("c1", logo = null, photo = photo)))
+
+        assertThat(shown.getValue(photo).size()).isEqualTo(PHOTO_BOX)
+    }
+
+    @Test
+    fun aTallPhoto_isCutAroundItsMiddleToTheBoxsShape_andScaledToIt() = runTest { // #185: "use whole photo" keeps any shape
+        // 300 × 600 cut to the box's 2:1 is its middle 300 × 150, the blue band; scaled down to 200 × 100.
+        val photo = banded("tall", 300, 600, middle = 150)
+
+        val bitmap = pictures().forTiles(listOf(tile("c1", logo = null, photo = photo))).getValue(photo)
+
+        assertThat(bitmap.size()).isEqualTo(IntSize(200, 100))
+        assertThat(bitmap.corners()).containsExactly(INNER, INNER, INNER, INNER)
+    }
+
+    @Test
+    fun aWidePhoto_isCutAroundItsMiddleToTheBoxsShape_andScaledToIt() = runTest { // #185
+        // 2000 × 200 cut to 2:1 is its middle 400 × 200, the blue band; scaled down to 200 × 100.
+        val photo = banded("wide", 2000, 200, middle = 400, across = true)
+
+        val bitmap = pictures().forTiles(listOf(tile("c1", logo = null, photo = photo))).getValue(photo)
+
+        assertThat(bitmap.size()).isEqualTo(IntSize(200, 100))
+        assertThat(bitmap.corners()).containsExactly(INNER, INNER, INNER, INNER)
+    }
+
+    @Test
+    fun aSmallPhoto_isCutToTheBoxsShape_butNotScaledUp() = runTest { // #185
+        val photo = png("small", 100, 80)
+
+        val shown = pictures().forTiles(listOf(tile("c1", logo = null, photo = photo)))
+
+        assertThat(shown.getValue(photo).size()).isEqualTo(IntSize(100, 50))
+    }
+
+    @Test
+    fun aPhotoOnAPhoneScreen_isNoLargerThanItsTile() = runTest { // #185: the binder limit, at 2.75 density
+        val photo = png("portrait", 1200, 1600)
+        val box = widgetPhotoBoxPx(density = 2.75f)
+
+        val bitmap = WidgetPictures(::file, logoBox = IntSize(550, 330), photoBox = box)
+            .forTiles(listOf(tile("c1", logo = null, photo = photo))).getValue(photo)
+
+        assertThat(bitmap.width).isAtMost(box.width)
+        assertThat(bitmap.height).isAtMost(box.height)
+        assertThat(bitmap.width).isAtLeast(box.width - 1) // cut to the box's shape: it fills the box
+    }
+
+    @Test
+    fun aPhotoThatCannotBeRead_isLeftOut_andTheTilesLogoStillComes() = runTest { // #185: the tile falls back to it
+        val logo = png("logo", 10, 10)
+        File(directory, "text").writeText("not a picture")
+        // A PNG cut after its header: its size can be read, its pixels can't.
+        val whole = File(directory, png("whole", 50, 50)).readBytes()
+        File(directory, "cut").writeBytes(whole.copyOf(33))
+
+        val shown = pictures().forTiles(
+            listOf(
+                tile("c1", logo = logo, photo = "missing"),
+                tile("c2", logo = null, photo = "text"),
+                tile("c3", logo = null, photo = "cut"),
+                tile("c4", logo = null, photo = "../escape"),
+            ),
+        )
+
+        assertThat(shown.keys).containsExactly(logo)
+    }
+
+    @Test
+    fun photosAndLogosTogetherOverTheBudget_areAllScaledDownAlike() = runTest { // #185: one budget for both
+        // A 200 × 100 photo and a 200 × 100 logo are 2 × 80,000 bytes; a budget of 80,000 scales each side by √½,
+        // 0.7071: 141 × 70.
+        val photo = png("photo", 400, 200)
+        val logo = png("logo", 400, 200)
+
+        val shown = WidgetPictures(::file, logoBox = IntSize(200, 100), photoBox = PHOTO_BOX, budgetBytes = 80_000)
+            .forTiles(listOf(tile("c1", logo = logo, photo = photo)))
+
+        assertThat(shown.getValue(photo).size()).isEqualTo(IntSize(141, 70))
+        assertThat(shown.getValue(logo).size()).isEqualTo(IntSize(141, 70))
+        assertThat(shown.values.sumOf { it.byteCount.toLong() }).isAtMost(80_000)
+    }
+
+    @Test
+    fun aPhotoNoLongerShown_isForgotten() = runTest { // #185: the switch turned off
+        val photo = png("photo", 400, 200)
+        val pictures = pictures()
+        pictures.forTiles(listOf(tile("c1", logo = null, photo = photo)))
+
+        val shown = pictures.forTiles(listOf(tile("c1", logo = null, photo = null)))
+
+        assertThat(shown).isEmpty()
+    }
+
+    private companion object {
+        /** A 2:1 photo box, so the cuts are easy to work out by hand. */
+        val PHOTO_BOX = IntSize(200, 100)
+        const val OUTER = 0xFFFF0000.toInt()
+        const val INNER = 0xFF0000FF.toInt()
     }
 }

@@ -96,4 +96,15 @@ class CardWidgetTilesTest {
 
         assertThat(tiles.map { it.cardId }).containsExactly(cardId(2), cardId(1), cardId(3)).inOrder()
     }
+
+    @Test
+    fun toWidgetTiles_carryTheFrontPhoto_onlyWhenTheCardShowsItOnTheWidget() { // #185
+        val shown = aLoyaltyCard(id = cardId(1), frontPhotoPath = "front-1", showPhotoOnWidget = true)
+        val off = aLoyaltyCard(id = cardId(2), frontPhotoPath = "front-2", showPhotoOnWidget = false, showPhotoOnList = true)
+        val backOnly = aLoyaltyCard(id = cardId(3), backPhotoPath = "back-3", showPhotoOnWidget = true)
+
+        val photos = listOf(shown, off, backOnly).toWidgetTiles(CardSort.NAME).associate { it.cardId to it.photo }
+
+        assertThat(photos).containsExactly(cardId(1), "front-1", cardId(2), null, cardId(3), null)
+    }
 }

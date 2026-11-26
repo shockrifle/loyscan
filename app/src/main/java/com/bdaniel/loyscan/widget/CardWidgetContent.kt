@@ -40,9 +40,10 @@ import com.bdaniel.loyscan.openCardIntent
 import com.bdaniel.loyscan.ui.theme.Spacing
 
 /**
- * One clickable tile per [tiles] entry, each opening its card (#11), on its brand colour: the store's logo from [logos]
- * fitted whole inside [WIDGET_LOGO_MARGIN], else the store's initials (#108, #181), and the card's label, if any, never
- * the store's name. TalkBack reads a tile as "store, label" (#181). One column in a narrow widget, two from 240dp (#108,
+ * One clickable tile per [tiles] entry, each opening its card (#11), on its brand colour: the card's front photo from
+ * [pictures] cropped to fill the tile, when the card shows it on the widget (#185), else the store's logo from
+ * [pictures] fitted whole inside [WIDGET_LOGO_MARGIN], else the store's initials (#108, #181), and the card's label, if
+ * any, never the store's name. TalkBack reads a tile as "store, label" (#181). One column in a narrow widget, two from 240dp (#108,
  * [widgetColumns]), laid out for each of [WIDGET_SIZES]. A tile is square below 120dp of width and card-shaped from it
  * ([widgetTileShape], #216); it fills its cell, and its height comes from that real width (`res/layout/widget_tile.xml`),
  * so a layout shown wider or narrower than it was made for keeps its tiles' shape.
@@ -50,7 +51,7 @@ import com.bdaniel.loyscan.ui.theme.Spacing
  * before it, the widget and its tiles are square. Empty until the first card is added.
  */
 @Composable
-fun CardWidgetContent(tiles: List<WidgetTile>, logos: Map<String, Bitmap> = emptyMap()) {
+fun CardWidgetContent(tiles: List<WidgetTile>, pictures: Map<String, Bitmap> = emptyMap()) {
     val context = LocalContext.current
     val width = LocalSize.current.width
     val sizer = when (widgetTileShape(width)) {
@@ -84,8 +85,14 @@ fun CardWidgetContent(tiles: List<WidgetTile>, logos: Map<String, Bitmap> = empt
                         .background(ColorProvider(tile.backgroundColor()))
                         .clickable(actionStartActivity(openCardIntent(context, tile.cardId, tile.color)))
                         .semantics { contentDescription = tile.description() }
-                    val logo = tile.logo?.let(logos::get)
-                    if (logo != null) LogoTile(tile, logo, face) else InitialsTile(tile, face)
+                    // A photo or a logo that didn't decode is left out of the pictures: the tile falls back.
+                    val photo = tile.photo?.let(pictures::get)
+                    val logo = tile.logo?.let(pictures::get)
+                    when {
+                        photo != null -> PhotoTile(tile, photo, face)
+                        logo != null -> LogoTile(tile, logo, face)
+                        else -> InitialsTile(tile, face)
+                    }
                 }
             }
         }
@@ -107,18 +114,39 @@ private fun LogoTile(tile: WidgetTile, logo: Bitmap, modifier: GlanceModifier) {
             contentScale = ContentScale.Fit,
             modifier = GlanceModifier.fillMaxSize().padding(WIDGET_LOGO_MARGIN).semantics { testTag = WIDGET_TILE_LOGO_TAG },
         )
-        tile.label?.let { label ->
-            Box(modifier = GlanceModifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
-                // The scrim is the label box's own background, so it ends just above the label: clear at the box's
-                // top, at full strength at the tile's edge.
-                Box(
-                    modifier = GlanceModifier.fillMaxWidth().background(ImageProvider(R.drawable.widget_label_scrim))
-                        .padding(Spacing.xs),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(text = label, style = TextStyle(color = ColorProvider(Color.White)), maxLines = 1)
-                }
-            }
+        tile.label?.let { LabelOnScrim(it) }
+    }
+}
+
+/**
+ * The card's front [photo] cropped to fill the tile (#185), and the card's label, if any, on the same scrim as on a
+ * logo tile: the owner chose the widget's fade over My cards' solid band (2026-11-26).
+ */
+@Composable
+private fun PhotoTile(tile: WidgetTile, photo: Bitmap, modifier: GlanceModifier) {
+    Box(modifier = modifier) {
+        Image(
+            provider = ImageProvider(photo),
+            contentDescription = null, // The tile is described as a whole.
+            contentScale = ContentScale.Crop,
+            modifier = GlanceModifier.fillMaxSize().semantics { testTag = WIDGET_TILE_PHOTO_TAG },
+        )
+        tile.label?.let { LabelOnScrim(it) }
+    }
+}
+
+/** The card's [label] at the tile's bottom edge, in white on the scrim, which sits behind the label alone. */
+@Composable
+private fun LabelOnScrim(label: String) {
+    Box(modifier = GlanceModifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
+        // The scrim is the label box's own background, so it ends just above the label: clear at the box's top, at
+        // full strength at the tile's edge.
+        Box(
+            modifier = GlanceModifier.fillMaxWidth().background(ImageProvider(R.drawable.widget_label_scrim))
+                .padding(Spacing.xs),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(text = label, style = TextStyle(color = ColorProvider(Color.White)), maxLines = 1)
         }
     }
 }
@@ -142,3 +170,6 @@ private val INITIALS_SIZE = 22.sp
 
 /** A tile's store logo (#181). */
 const val WIDGET_TILE_LOGO_TAG = "widgetTileLogo"
+
+/** A tile's front photo (#185). */
+const val WIDGET_TILE_PHOTO_TAG = "widgetTilePhoto"

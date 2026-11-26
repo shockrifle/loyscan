@@ -36,17 +36,17 @@ class CardWidget : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val entryPoint = EntryPointAccessors.fromApplication(context, CardWidgetEntryPoint::class.java)
-        val logos = entryPoint.widgetPictures()
+        val pictures = entryPoint.widgetPictures()
         val cards = entryPoint.loyaltyCardRepository().getAllWithStore()
         val sort = entryPoint.userPreferencesRepository().cardSort
         val content = combine(cards, sort) { cardsNow, sortNow -> cardsNow.toWidgetTiles(sortNow) }
-            .map { tiles -> tiles to logos.forTiles(tiles) }
-        // The first tiles and their logos are read before the first draw, so a tile doesn't show its initials before
-        // its logo (#181).
+            .map { tiles -> tiles to pictures.forTiles(tiles) }
+        // The first tiles and their pictures are read before the first draw, so a tile doesn't show its initials
+        // before its logo or photo (#181, #185).
         val first = content.first()
         provideContent {
             val now by content.collectAsState(initial = first)
-            CardWidgetContent(tiles = now.first, logos = now.second)
+            CardWidgetContent(tiles = now.first, pictures = now.second)
         }
     }
 }

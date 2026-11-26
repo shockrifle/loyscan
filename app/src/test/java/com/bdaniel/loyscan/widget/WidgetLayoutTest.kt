@@ -149,4 +149,19 @@ class WidgetLayoutTest {
         assertThat(widgetLogoBoxPx(density = 2.75f)).isEqualTo(IntSize(550, 330))
         assertThat(widgetLogoBoxPx(density = 1f)).isEqualTo(IntSize(200, 120))
     }
+
+    @Test
+    fun thePhotoBox_isA216dpCardTile() { // #185: a photo fills the tile, no margin
+        // The logo box's tile, 216 × 136.21dp (216 / 1.5858), whole.
+        val box = widgetPhotoBox()
+
+        assertThat(box.width.value).isWithin(0.01f).of(216f)
+        assertThat(box.height.value).isWithin(0.01f).of(136.21f)
+    }
+
+    @Test
+    fun thePhotoBoxInPixels_isItsDpTimesTheDensity_roundedDown() { // #185: 216 × 2.75 = 594, 136.21 × 2.75 = 374.58
+        assertThat(widgetPhotoBoxPx(density = 2.75f)).isEqualTo(IntSize(594, 374))
+        assertThat(widgetPhotoBoxPx(density = 1f)).isEqualTo(IntSize(216, 136))
+    }
 }
