@@ -2,7 +2,7 @@ package com.bdaniel.loyscan.widget.glance
 
 import android.content.Context
 import com.bdaniel.loyscan.data.photos.FileCardPhotos
-import com.bdaniel.loyscan.widget.WidgetLogos
+import com.bdaniel.loyscan.widget.WidgetPictures
 import com.bdaniel.loyscan.widget.widgetLogoBoxPx
 import dagger.Module
 import dagger.Provides
@@ -17,10 +17,10 @@ import javax.inject.Singleton
  */
 @Module
 @InstallIn(SingletonComponent::class)
-object WidgetLogosModule {
+object WidgetPicturesModule {
 
     @Provides
     @Singleton
-    fun provideWidgetLogos(photos: FileCardPhotos, @ApplicationContext context: Context): WidgetLogos =
-        WidgetLogos(photos::file, widgetLogoBoxPx(context.resources.displayMetrics.density))
+    fun provideWidgetPictures(photos: FileCardPhotos, @ApplicationContext context: Context): WidgetPictures =
+        WidgetPictures(photos::file, widgetLogoBoxPx(context.resources.displayMetrics.density))
 }

@@ -103,7 +103,7 @@ fun widgetLogoBox(): DpSize = DpSize(
     LOGO_BOX_TILE_WIDTH / CARD_ASPECT_RATIO - WIDGET_LOGO_MARGIN * 2,
 )
 
-/** [widgetLogoBox] in pixels at [density], rounded down: the size [WidgetLogos] decodes a logo to fit. */
+/** [widgetLogoBox] in pixels at [density], rounded down: the size [WidgetPictures] decodes a logo to fit. */
 fun widgetLogoBoxPx(density: Float): IntSize {
     val box = widgetLogoBox()
     return IntSize((box.width.value * density).toInt(), (box.height.value * density).toInt())

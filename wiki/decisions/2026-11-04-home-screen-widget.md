@@ -27,7 +27,7 @@ intent `MainActivity` reads, not through URI deep links (the share flow, [[add-c
    label, in one or two columns by width ([[2026-11-12-design-tokens-and-card-shape]]). Still no photo.
    *Amended 2026-11-24 (#181):* a tile of a store with a logo shows the logo, the first `Bitmap` in the widget's
    RemoteViews. The risk named above is handled by decoding each logo once, to the largest tile less its margin at the
-   screen's density (a 216dp tile since #216, whose layouts no longer include the largest tile), and keeping all the logos shown within a 4 MB budget (`WidgetLogos`, [[card-widget]]). The label
+   screen's density (a 216dp tile since #216, whose layouts no longer include the largest tile), and keeping all the logos shown within a 4 MB budget (`WidgetLogos`, now `WidgetPictures`, [[card-widget]]). The label
    sits on a fade from clear to the My cards scrim colour behind the label alone, the owner's choice after device
    checks showed it hard to read straight on the brand colour over a logo, and a solid band covering too much of it. Still no front photo (#185).
 

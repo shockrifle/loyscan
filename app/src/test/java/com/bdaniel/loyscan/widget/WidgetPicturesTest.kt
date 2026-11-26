@@ -19,7 +19,7 @@ import java.io.File
  */
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-class WidgetLogosTest {
+class WidgetPicturesTest {
 
     @get:Rule
     val temporaryFolder = TemporaryFolder()
@@ -33,7 +33,7 @@ class WidgetLogosTest {
     }
 
     private fun logos(box: IntSize = IntSize(200, 120), budget: Long = Long.MAX_VALUE) =
-        WidgetLogos(::file, box, budget)
+        WidgetPictures(::file, box, budget)
 
     private fun png(name: String, width: Int, height: Int): String {
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).apply { eraseColor(0xFF2266AA.toInt()) }
@@ -149,7 +149,7 @@ class WidgetLogosTest {
         // Two 1024 × 1024 logos are 8 MiB (ARGB); 4 MiB scales each side by √½, 0.7071: 724 × 724.
         val names = listOf(png("a", 1024, 1024), png("b", 1024, 1024))
 
-        val shown = WidgetLogos(::file, IntSize(1024, 1024)).forTiles(names.mapIndexed { i, name -> tile("c$i", name) })
+        val shown = WidgetPictures(::file, IntSize(1024, 1024)).forTiles(names.mapIndexed { i, name -> tile("c$i", name) })
 
         assertThat(shown.values.map { it.size() }).containsExactly(IntSize(724, 724), IntSize(724, 724))
     }

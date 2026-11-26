@@ -11,7 +11,7 @@ All paths are under `app/src/main/java/com/bdaniel/loyscan/` unless written in f
 
 - `widget/glance/CardWidget.kt` — `CardWidget : GlanceAppWidget`. `provideGlance` reads the cards and the sort
   preference from the repositories through a Hilt `@EntryPoint` (`CardWidgetEntryPoint`, the same trick as
-  `hiltImageLoader()`, [[architecture]] → Composition/DI), maps them to tiles and their logos (`WidgetLogos.forTiles`,
+  `hiltImageLoader()`, [[architecture]] → Composition/DI), maps them to tiles and their logos (`WidgetPictures.forTiles`,
   below), collects that in `provideContent`, and renders `CardWidgetContent`. The first tiles and logos are read before
   `provideContent`, so a tile never draws its initials before its logo arrives. This renders the **current** cards whenever Glance asks (e.g. when the widget is added). The
   `widget.glance` sub-package holds the Glance runtime glue that runs only on a real home screen; the tested content
@@ -109,7 +109,7 @@ All paths are under `app/src/main/java/com/bdaniel/loyscan/` unless written in f
   columns of square tiles (240–252dp) and square tiles before Android 12; the render tests cover the first. Nor is the widget checked at a large font
   scale: a small tile's two lines can be cut there.
 
-- `widget/WidgetLogos.kt` — the logos as bitmaps (#181). `WidgetLogos.forTiles(tiles)` reads each logo's size from
+- `widget/WidgetPictures.kt` — the logos as bitmaps (#181). `WidgetPictures.forTiles(tiles)` reads each logo's size from
   its header, fits it, scaled down and never up, to the **logo box**: a 216dp card tile, the widest of the layouts
   before #216 (216 × 136.2dp, at 224dp wide), less the margin, 200 × 120.2dp (`widgetLogoBox`), in pixels at the screen's density
   (`widgetLogoBoxPx`). When the logos shown together would take more than `WIDGET_LOGO_BUDGET_BYTES` (4 MB, ARGB), all
@@ -118,7 +118,7 @@ All paths are under `app/src/main/java/com/bdaniel/loyscan/` unless written in f
   handed out, so it never holds more than the budget, and decodes a logo again only when its size changes (another
   logo came or went past the budget); a logo's name is never reused, so a kept bitmap is never stale. A missing file,
   a file that isn't a picture, or a name that isn't a photo's is left out, so its tiles show the initials; a logo no
-  longer shown is forgotten. It is an app `@Singleton` (`widget/glance/WidgetLogosModule.kt`), so a redraw doesn't
+  longer shown is forgotten. It is an app `@Singleton` (`widget/glance/WidgetPicturesModule.kt`), so a redraw doesn't
   decode again (review of PR #205: it first kept every full-size decode for the process's life and rescaled on each
   draw). Why a budget: Android refuses a widget update whose bitmaps exceed 1.5 × the screen's pixels × 4 bytes
   (about 15 MB on a 1080 × 2400 phone), and the platform's RemoteViews keeps one copy per `Bitmap` object for all the
@@ -177,7 +177,7 @@ Glance's `@layout/glance_default_loading_layout` as the initial layout). Glance 
   that, for every width from 110 to 480dp, the layout a launcher picks for it has that width's columns and shape (#216).
   `widget/glance/CardWidgetTest` pins `sizeMode` to `SizeMode.Responsive(WIDGET_SIZES)`, which the render tests assume. Since #181 also the logo
   box, 200 × 120.21dp, and its pixels at a density (550 × 330 at 2.75).
-- `widget/WidgetLogosTest` — real PNGs in a `TemporaryFolder`, `@GraphicsMode(NATIVE)` (#181): a wide and a square
+- `widget/WidgetPicturesTest` — real PNGs in a `TemporaryFolder`, `@GraphicsMode(NATIVE)` (#181): a wide and a square
   logo scaled down to fit the box, a small one not scaled up, a missing file, a non-picture and an invalid name left
   out without throwing, one bitmap for all of a store's cards and for later calls (the file deleted between them, so the
   stream was closed), a logo no longer shown forgotten, and three logos over the budget scaled to 163 × 163 (√(2/3) of
@@ -223,7 +223,7 @@ Glance's `@layout/glance_default_loading_layout` as the initial layout). Glance 
   same entry and back stack (#213).
 
 The `com.bdaniel.loyscan.widget.glance` package (`CardWidget`, `CardWidgetReceiver`, `GlanceCardWidgetRefresher`,
-`WidgetLogosModule`) is
+`WidgetPicturesModule`) is
 Glance/AppWidget glue that runs only on a real home screen — the `provideGlance` wiring, the system receiver and the
 `updateAll`/`getGlanceIds` calls — so the package is excluded from the coverage gate, like the theme and the icons;
 the logic it drives is tested above ([[2026-10-09-coverage-gate-kover]]).
