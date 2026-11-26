@@ -361,6 +361,7 @@ private fun StoreBand(store: Store, brandColor: Color, onBack: () -> Unit, onEdi
                     StoreLogoImage( // TalkBack: the heading says the store's name.
                         logo = logo,
                         treatment = store.logoTreatment,
+                        brandColor = store.color, // a logo comes with the stored store, never with the route's colour
                         onError = { logoFailed = true },
                         modifier = Modifier.fillMaxSize().testTag(STORE_LOGO_TAG),
                     )

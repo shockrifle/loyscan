@@ -119,6 +119,7 @@ class StoreLogoScreenTest {
         composeRule.onNodeWithText("How the logo is drawn").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("As is").assertIsSelected()
         composeRule.onNodeWithText("Single colour").assertIsNotSelected()
+        composeRule.onNodeWithText("Recolour").assertIsNotSelected()
         composeRule.onNodeWithContentDescription("White").assertDoesNotExist()
     }
 
@@ -138,6 +139,19 @@ class StoreLogoScreenTest {
         assertThat(swatches).containsExactly("White", "Black", "Blue", "Red", "Green", "Orange", "Purple", "Teal", "Brown", "Grey").inOrder()
         composeRule.onNodeWithContentDescription("White").assertIsSelected()
         composeRule.onNodeWithContentDescription("Black").assertIsNotSelected()
+    }
+
+    @Test
+    fun choosingRecolour_drawsItsBrandColouredPartWhiteOnADarkColour_andOffersTheColours() { // #240
+        givenALogo()
+        setScreen()
+
+        composeRule.onNodeWithText("Recolour").performScrollTo().performClick()
+
+        assertThat(stores.stores.value.single().logoTreatment).isEqualTo(LogoTreatment(style = LogoStyle.RECOLOUR, tint = "#FFFFFF"))
+        composeRule.onNodeWithText("Recolour").assertIsSelected()
+        composeRule.onNodeWithText("Single colour").assertIsNotSelected()
+        composeRule.onNodeWithContentDescription("White").performScrollTo().assertIsSelected()
     }
 
     @Test
@@ -405,6 +419,8 @@ class StoreLogoScreenTest {
 
         composeRule.onNodeWithText("Egyszínű").performScrollTo().performClick() // #240: the colours show
         shown.collect()
+        composeRule.onNodeWithText("Átszínezés").performClick()
+        shown.collect()
         stores.setLogoTreatmentFailure = IllegalStateException("disk full")
         composeRule.onNodeWithText("Eredeti").performClick()
         shown.collect()
@@ -421,7 +437,7 @@ class StoreLogoScreenTest {
             "Bolt logója", "Vissza", "Kép kiválasztása", "Logó keresése az interneten", "Logó eltávolítása",
             "Ez a logó látszik a bolt minden kártyáján.", "Az egész kép", "Kivágás", "Mégse",
             "Nem sikerült felhasználni a képet. Próbáld újra.", "Kártya fotójának használata", "Melyik kártya fotója?",
-            "A logó megjelenése", "Eredeti", "Egyszínű", "A logó színe", "Fehér", "Fekete",
+            "A logó megjelenése", "Eredeti", "Egyszínű", "Átszínezés", "A logó színe", "Fehér", "Fekete",
             "Nem sikerült menteni a logó megjelenését. Próbáld újra.",
         )
         shown.assertEveryTextIsTranslated("Shop", "Mine", "Partner's")

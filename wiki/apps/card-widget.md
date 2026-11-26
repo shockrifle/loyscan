@@ -50,7 +50,8 @@ All paths are under `app/src/main/java/com/bdaniel/loyscan/` unless written in f
   its label. A tile is
   the brand colour with the store's initials over the label, like the list's plain tile. **A tile whose store's logo
   decoded** (#181) shows the logo instead of the initials, drawn the way the user chose for the store (#240,
-  [[store-logo]]: `WidgetTile.logoTreatment`, applied by `WidgetPictures` after decoding), fitted whole (`ContentScale.Fit`) inside an 8dp margin on
+  [[store-logo]]: `WidgetTile.logoTreatment`, applied by `WidgetPictures` after decoding, on the tile's own colour, which
+  Recolour compares with), fitted whole (`ContentScale.Fit`) inside an 8dp margin on
   every side (`WIDGET_LOGO_MARGIN`, `Spacing.s`, the margin chosen while planning #181), and the label, if any, at the
   bottom edge over the logo, in white on a scrim behind the label alone: a fade from clear at the top of the label's
   box (4dp above the text) to the My cards scrim colour (`PHOTO_LABEL_SCRIM`, black at 60%, [[card-list]]) at the
@@ -202,8 +203,9 @@ Glance's `@layout/glance_default_loading_layout` as the initial layout). Glance 
   `widget/glance/CardWidgetTest` pins `sizeMode` to `SizeMode.Responsive(WIDGET_SIZES)`, which the render tests assume. Since #181 also the logo
   box, 200 × 120.21dp, and its pixels at a density (550 × 330 at 2.75).
 - `widget/WidgetPicturesTest` — real PNGs in a `TemporaryFolder`, `@GraphicsMode(NATIVE)` (#181). How a logo is drawn
-  (#240): `aLogoInSingleColour_isDrawnInItsColour`, and `aLogoDrawnAnotherWay_isDrawnAgain_atTheSameSize` (a bitmap is
-  reused only when its size and its treatment are unchanged). Photos (#185): a
+  (#240): `aLogoInSingleColour_isDrawnInItsColour`, `aRecolouredLogo_isDrawnInItsColour`, and
+  `aLogoDrawnAnotherWay_isDrawnAgain_atTheSameSize`, `aRecolouredLogo_isDrawnAgain_whenItsBrandColourChanges` (a bitmap is
+  reused only when its size, its treatment and its brand colour are unchanged). Photos (#185): a
   large card-shaped one scaled to the photo box; a tall and a wide one cut around their middle (a banded PNG whose
   corners come back in the middle band's colour) and scaled to the box; a small one cut but not scaled up; a portrait
   photo at 2.75 density no larger than its 594 × 374px tile; a missing file, a non-picture, a PNG cut after its header

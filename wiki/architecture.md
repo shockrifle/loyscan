@@ -103,7 +103,7 @@ outputs ([[tdd]] → the layer table).
   behind is built from its exported schema (`testing/ExportedSchemas.kt`) and opened through the app's builder
   (`DatabaseMigrationTest`); `FrozenSchemaTest` pins each released schema's hash.
 - **Pixels changed in code** (a store logo's treatment, #240) are a pure function over an ARGB `IntArray`
-  (`inSingleColour`), tested in plain JUnit on pictures written out by hand; the image loader and the widget call it through
+  (`inSingleColour`, `recoloured`), tested in plain JUnit on pictures written out by hand; the image loader and the widget call it through
   a `Bitmap` wrapper ([[tdd]]).
 - **The Glance widget** ([[card-widget]], #11) keeps its logic out of the composable: which tiles, in what order and
   their colour is a pure function (`toWidgetTiles`, `WidgetTile`) tested in plain/Robolectric JUnit, and the composable

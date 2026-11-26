@@ -303,6 +303,21 @@ class DetailScreenTest {
     }
 
     @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE) // real drawing, for the pixels
+    fun aRecolouredLogo_isDrawnInItsColour_inTheBand() { // #240: its brand-coloured logo, recoloured white
+        File(composeRule.activity.filesDir, CardPhotosModule.PHOTO_DIRECTORY).resolve("logo").writeSolidPng(0xFF336699.toInt())
+        val treatment = LogoTreatment(style = LogoStyle.RECOLOUR, tint = "#FFFFFF")
+        setScreen(card = card.copy(store = card.store.copy(color = "#336699", logo = "logo", logoTreatment = treatment)), photos = FakeCardPhotos("logo"))
+        val loader = EntryPointAccessors.fromApplication(composeRule.activity, ImageLoaderEntryPoint::class.java).getImageLoader()
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) { ShadowLooper.idleMainLooper(); (loader.memoryCache?.size ?: 0) > 0 }
+        composeRule.waitForIdle()
+
+        val logo = composeRule.onNodeWithTag(STORE_LOGO_TAG, useUnmergedTree = true).captureToImage().toPixelMap()
+
+        assertThat(logo[logo.width / 2, logo.height / 2]).isEqualTo(Color.White)
+    }
+
+    @Test
     fun aStoresLogo_isShownInTheBand_inPlaceOfItsInitials() { // #151, #210
         setScreenWithALogo()
 

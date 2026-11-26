@@ -10,7 +10,7 @@ import coil.request.ImageRequest
 import com.bdaniel.loyscan.domain.LogoTreatment
 
 /**
- * A store's [logo] drawn with its [treatment] (#240), through the app's image loader: the My cards tile (and the logo
+ * A store's [logo] drawn with its [treatment] (#240) on [brandColor], the colour behind it (Recolour compares with it), through the app's image loader: the My cards tile (and the logo
  * preview, which draws the tile), the card screen's band and the store picker's badge. As is loads the file as it is.
  * TalkBack reads the surface it is on, never the logo itself.
  */
@@ -18,15 +18,16 @@ import com.bdaniel.loyscan.domain.LogoTreatment
 fun StoreLogoImage(
     logo: String,
     treatment: LogoTreatment,
+    brandColor: String,
     onError: () -> Unit,
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Fit,
 ) {
     val context = LocalContext.current
-    val request = remember(context, logo, treatment) {
+    val request = remember(context, logo, treatment, brandColor) {
         ImageRequest.Builder(context)
             .data(CardPhoto(logo))
-            .apply { if (treatment != LogoTreatment.AS_IS) transformations(LogoTreatmentTransformation(treatment)) }
+            .apply { if (treatment != LogoTreatment.AS_IS) transformations(LogoTreatmentTransformation(treatment, brandColor)) }
             .build()
     }
     AsyncImage(

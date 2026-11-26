@@ -291,6 +291,20 @@ class StorePickerScreenTest {
     }
 
     @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE) // real drawing, for the pixels
+    fun aRecolouredLogo_isDrawnInItsColour_inTheBadge() { // #240: its brand-coloured logo, recoloured white
+        File(application.filesDir, CardPhotosModule.PHOTO_DIRECTORY).resolve("logo").writeSolidPng(0xFFAA0000.toInt())
+        val treatment = LogoTreatment(style = LogoStyle.RECOLOUR, tint = "#FFFFFF")
+        setScreen(aStore(id = "first", name = "First Store", color = "#AA0000", logo = "logo", logoTreatment = treatment))
+        waitForAnImageToLoad()
+        composeRule.waitForIdle()
+
+        val logo = composeRule.onNodeWithTag(STORE_BADGE_LOGO_TAG, useUnmergedTree = true).captureToImage().toPixelMap()
+
+        assertThat(logo[logo.width / 2, logo.height / 2]).isEqualTo(Color.White)
+    }
+
+    @Test
     fun aStoreWithALogo_showsItInSearchResults() { // #186
         storedPhoto("logo")
         setScreen(aStore(id = "first", name = "First Store", logo = "logo"), aStore(id = "second", name = "Second Store"))

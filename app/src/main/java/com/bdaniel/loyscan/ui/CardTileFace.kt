@@ -90,6 +90,7 @@ fun CardTileFace(
                 StoreLogoImage( // TalkBack: the tile is described as a whole.
                     logo = shownLogo,
                     treatment = logoTreatment,
+                    brandColor = color,
                     onError = { logoFailed = true },
                     modifier = Modifier.fillMaxSize(TILE_LOGO_FRACTION).testTag(CARD_TILE_LOGO_TAG),
                 )
