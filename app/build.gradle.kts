@@ -208,6 +208,9 @@ dependencies {
     // Coil
     implementation(libs.coil.compose)
 
+    // AndroidSVG: an SVG store logo is drawn once, when it is copied in (#211)
+    implementation(libs.androidsvg)
+
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.turbine)

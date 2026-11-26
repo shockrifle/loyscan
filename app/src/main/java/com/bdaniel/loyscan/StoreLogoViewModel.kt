@@ -126,10 +126,13 @@ class StoreLogoViewModel @Inject constructor(
         }
     }
 
-    /** A picture picked for the logo, `null` when the picker was cancelled: copied in, then the crop screen opens on it. */
+    /**
+     * A picture picked for the logo, `null` when the picker was cancelled: copied in, an SVG drawn as a PNG (#211), then
+     * the crop screen opens on it.
+     */
     fun onPicked(picture: Uri?) {
         if (picture == null) return
-        stageForCrop { photos.stage(picture) }
+        stageForCrop { photos.stageLogo(picture) }
     }
 
     /**

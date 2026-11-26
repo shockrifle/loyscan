@@ -23,9 +23,22 @@ class FakeCardPhotos(vararg stored: String) : CardPhotos {
     /** When set, [stage] suspends until it completes, as a copy in progress does. */
     var importGate: CompletableDeferred<Unit>? = null
 
+    /** As the real one, refuses an SVG (a Uri whose path ends `.svg`): only [stageLogo] takes one (#211). */
     override suspend fun stage(picture: Uri): String {
         importGate?.await()
         importFailure?.let { throw it }
+        if (picture.path.orEmpty().endsWith(".svg")) throw java.io.IOException("Not a picture: $picture")
+        return staging(picture)
+    }
+
+    /** As [stage], but an SVG is taken too, as the real one draws it (#211); listed in [staged] with the rest. */
+    override suspend fun stageLogo(picture: Uri): String {
+        importGate?.await()
+        importFailure?.let { throw it }
+        return staging(picture)
+    }
+
+    private fun staging(picture: Uri): String {
         staged += picture
         return "staged-${staged.size + stagedPhotos.size}".also { stored += it }
     }

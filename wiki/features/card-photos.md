@@ -4,7 +4,8 @@ A card can carry photos of the physical card, front and back (#10). They are cop
 deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private-files]].
 
 **Entry points** (under `app/src/main/java/com/bdaniel/loyscan/`):
-- `data/photos/CardPhotos.kt`: `CardPhotos` (`stage(uri)`, `stagePhoto(name)`, `crop(name, crop)`, `delete(names)`, `newCapture()`),
+- `data/photos/CardPhotos.kt`: `CardPhotos` (`stage(uri)`, `stageLogo(uri)` for a store's logo, which takes an SVG too
+  ([[androidsvg]], #211), `stagePhoto(name)`, `crop(name, crop)`, `delete(names)`, `newCapture()`),
   implemented by `FileCardPhotos` over `files/card_photos/` (`di/CardPhotosModule.kt`, which hands a capture to the
   camera app through the app's `FileProvider`).
 - `data/photos/CardPhotoEncoding.kt`: `encodeCardPhoto` and `PhotoCrop`, how an imported picture is stored, framed to
