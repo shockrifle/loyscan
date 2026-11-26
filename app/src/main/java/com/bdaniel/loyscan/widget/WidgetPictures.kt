@@ -30,7 +30,7 @@ const val WIDGET_LOGO_BUDGET_BYTES: Long = 4L * 1024 * 1024
  * missing, isn't a picture or whose name isn't a photo's is left out, so its tiles show the initials; that is
  * remembered too, until the logo is no longer asked for. [file] is `FileCardPhotos.file`.
  */
-class WidgetLogos(
+class WidgetPictures(
     private val file: (String) -> File,
     private val box: IntSize,
     private val budgetBytes: Long = WIDGET_LOGO_BUDGET_BYTES,

@@ -1,7 +1,7 @@
 # Coil image loading
 
 Images on the app's screens are loaded with **Coil 2.7.0** (`io.coil-kt:coil-compose`; `coil-svg` was dropped in #157) through one app-wide loader; the home-screen widget decodes its store logos itself with `BitmapFactory`
-(`WidgetLogos`, [[card-widget]], #181). Since #151
+(`WidgetPictures`, [[card-widget]], #181). Since #151
 every image the app shows is a private file: a card photo ([[card-photos]]) or the store logo the user gave a store
 ([[2026-11-13-user-supplied-store-logos]]). No shipped store has a logo, and none is fetched
 ([[2026-11-12-no-bundled-store-logos]]); the debug demo stores that pointed at **picsum.photos** placeholders were removed
