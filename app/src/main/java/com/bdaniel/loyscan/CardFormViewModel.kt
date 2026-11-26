@@ -443,8 +443,13 @@ class CardFormViewModel @Inject constructor(
                     val card = drafted.copy(
                         frontPhotoPath = frontPhoto,
                         backPhotoPath = unlessGone(drafted.backPhotoPath, original?.backPhotoPath),
-                        // Only a card with a front photo shows one on My cards (#184).
-                        showPhotoOnList = drafted.showPhotoOnList && frontPhoto != null,
+                        // Only a card with a front photo shows one on My cards (#184). A swept front pick leaves the
+                        // card's own photo, and its own setting: the switch was set for the pick.
+                        showPhotoOnList = if (drafted.frontPhotoPath in gone) {
+                            original?.showPhotoOnList == true && frontPhoto != null
+                        } else {
+                            drafted.showPhotoOnList && frontPhoto != null
+                        },
                     )
                     if (saved == null) cardRepository.add(card) else cardRepository.update(card)
                 }

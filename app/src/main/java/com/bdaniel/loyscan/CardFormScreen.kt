@@ -10,6 +10,7 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -21,6 +22,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -216,6 +218,9 @@ fun CardFormScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        // The Switch has no handler of its own, so it adds no touch-target padding: the row is the
+                        // target, at least Material's 48dp tall (review of #184).
+                        .heightIn(min = LocalMinimumInteractiveComponentSize.current)
                         .toggleable(
                             value = state.showPhotoOnList,
                             enabled = !state.saving && state.savedCardId == null,

@@ -1507,6 +1507,27 @@ class CardFormViewModelTest {
     }
 
     @Test
+    fun anEditWhoseSweptFrontPickFallsBackToTheCardsPhoto_keepsThatPhotosSetting() = runTest { // review of #184
+        // The user replaced the photo and showed the new one; the pick was swept, so the card's own photo stays, and
+        // its setting with it: the user never chose to show that photo.
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, number = "12345674", frontPhotoPath = "front"))
+        photos.stored += "front"
+        val viewModel = viewModel(CardForm("ruled", cardId = cardId(1)))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.pickAndCrop(CardPhotoSide.FRONT)
+            viewModel.onShowPhotoOnListChange(true)
+            photos.stored -= "photo-1"
+            viewModel.save()
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        assertThat(cards.cards.value.single().frontPhotoPath).isEqualTo("front")
+        assertThat(cards.cards.value.single().showPhotoOnList).isFalse()
+    }
+
+    @Test
     fun aPickedPhoto_isRestoredAfterProcessDeath() = runTest { // #10
         val handle = SavedStateHandle(route = CardForm("ruled"))
         val first = viewModel(handle)

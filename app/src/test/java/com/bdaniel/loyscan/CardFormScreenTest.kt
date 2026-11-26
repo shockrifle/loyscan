@@ -16,7 +16,9 @@ import android.net.Uri
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsOff
@@ -401,6 +403,15 @@ class CardFormScreenTest {
 
         composeRule.onNodeWithContentDescription("Remove front photo").performScrollTo().performClick()
         composeRule.onNodeWithText(SHOW_PHOTO_ON_LIST).assertDoesNotExist()
+    }
+
+    @Test
+    fun showPhotoOnMyCards_isAtLeastA48dpTouchTarget() { // review of #184: the row toggles, the Switch has no handler
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, number = "12345674", frontPhotoPath = "front"))
+        photos.stored += "front"
+        setScreen(CardForm("ruled", cardId = cardId(1)))
+
+        composeRule.onNodeWithText(SHOW_PHOTO_ON_LIST).performScrollTo().assertHeightIsAtLeast(48.dp)
     }
 
     @Test
