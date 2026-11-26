@@ -103,10 +103,11 @@ fun CardFormScreen(
         val id = state.savedCardId
         if (id != null && store != null) directions.toCard(id, store.color)
     }
-    // Back with changes asks first (#209); the crop screen's own Back, composed after this one, still cancels the crop.
+    // Back with changes asks first (#209). The crop screen's own Back still cancels the crop: it registers its callback
+    // after this one, whether it opens later or is composed with the form on a restore, and the last one wins.
     var leaving by rememberSaveable { mutableStateOf(false) }
     val onBack = { if (state.hasChanges) leaving = true else directions.toBack() }
-    BackHandler(enabled = state.hasChanges && state.cropping == null) { leaving = true }
+    BackHandler(enabled = state.hasChanges) { leaving = true }
 
     Box(Modifier.fillMaxSize()) {
     Scaffold(

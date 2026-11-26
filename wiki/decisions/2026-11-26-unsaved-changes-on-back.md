@@ -1,6 +1,6 @@
 # Back from a changed form asks first; the opening state is derived, not saved
 
-**Status:** Active · **Date:** 2026-11-26 · **Commits:** see #209's PR
+**Status:** Active · **Date:** 2026-11-26 · **Issue:** #209 · **PR:** #245
 
 ## Context
 
@@ -45,6 +45,8 @@ Trimmed comparison and the switches were confirmed with the project owner when t
 - A form restored after its save stored the card (#99, #141) compares an edit with the stored card, so Back leaves
   without asking when the edit is already saved; a restored add form still asks, and Discard keeps the photos that
   save was handed.
-- The crop screen's own `BackHandler` still takes Back while it is open; the form's is disabled while cropping, so a
-  restore with the crop open (both composed at once, the form's first) can't reverse that.
+- The crop screen's own `BackHandler` still takes Back while it is open: the dispatcher asks the last callback added
+  first, and the crop screen's is added after the form's whether it opens later or is composed with the form on a
+  restore. (Corrected in review of PR #245: the first version also disabled the form's handler while cropping and
+  said that guarded a restore; it guarded nothing, so it was removed.)
 - Tests reach the dialog's window through Robolectric (`testing/SystemBack.kt`, [[tdd]]).
