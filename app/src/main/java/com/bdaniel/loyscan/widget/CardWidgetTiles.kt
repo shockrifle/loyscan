@@ -1,5 +1,6 @@
 package com.bdaniel.loyscan.widget
 
+import com.bdaniel.loyscan.domain.LogoTreatment
 import androidx.compose.ui.graphics.Color
 import com.bdaniel.loyscan.domain.CardSort
 import com.bdaniel.loyscan.domain.LoyaltyCard
@@ -21,6 +22,8 @@ data class WidgetTile(
     val label: String?,
     val logo: String? = null,
     val photo: String? = null,
+    /** How [logo] is drawn (#240). */
+    val logoTreatment: LogoTreatment = LogoTreatment.AS_IS,
 )
 
 /** The widget's tiles, in the list's [sort] order (#7, [sortedBy]); see [CardWidgetTilesTest]. */
@@ -33,6 +36,7 @@ fun List<LoyaltyCard>.toWidgetTiles(sort: CardSort): List<WidgetTile> =
             storeName = card.store.name,
             label = card.label,
             logo = card.store.logo,
+            logoTreatment = card.store.logoTreatment,
             // Only with "Show photo on widget" on (#185), separate from My cards' switch.
             photo = card.frontPhotoPath?.takeIf { card.showPhotoOnWidget },
         )

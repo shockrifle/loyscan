@@ -26,7 +26,8 @@ UUID string.
   the icons' top (12dp into the row) and 16dp of band below it: the band is the status bar plus 156dp, about 180dp on a
   phone. The box holds the store's logo when the user gave it one (#151,
   [[2026-11-13-user-supplied-store-logos]]): a `CardPhoto` file through `hiltImageLoader()` ([[coil-image-loading]]),
-  `STORE_LOGO_TAG`. A store without a logo, or whose logo can't be loaded or whose file is missing
+  `STORE_LOGO_TAG`, drawn the way the user chose for the store (`StoreLogoImage`, #240, [[store-logo]]; test:
+  `DetailScreenTest.aLogoInSingleColour_isDrawnInItsColour_inTheBand`). A store without a logo, or whose logo can't be loaded or whose file is missing
   (`CardPhotos.withoutMissing` in `DetailViewModel`), shows its initials as its tile draws them (`StoreInitials` in
   `ui/CardTileFace.kt`, shared with `CardTileFace`), never its name. The sheet keeps the label and the store's name
   above the barcode. TalkBack reads the logo or initials as one heading with the store's name; the initials are kept

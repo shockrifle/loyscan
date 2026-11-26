@@ -3,6 +3,8 @@ package com.bdaniel.loyscan.widget
 import android.graphics.Bitmap
 import androidx.compose.ui.unit.IntSize
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.bdaniel.loyscan.domain.LogoStyle
+import com.bdaniel.loyscan.domain.LogoTreatment
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
@@ -45,8 +47,8 @@ class WidgetPicturesTest {
         return name
     }
 
-    private fun tile(id: String, logo: String?, photo: String? = null) =
-        WidgetTile(id, "#112233", "TE", "Tesco", label = null, logo = logo, photo = photo)
+    private fun tile(id: String, logo: String?, photo: String? = null, logoTreatment: LogoTreatment = LogoTreatment.AS_IS) =
+        WidgetTile(id, "#112233", "TE", "Tesco", label = null, logo = logo, photo = photo, logoTreatment = logoTreatment)
 
     /** A PNG of [middle] rows of [inner] colour between equal bands of [outer], or columns when [across]. */
     private fun banded(name: String, width: Int, height: Int, middle: Int, across: Boolean = false): String {
@@ -118,6 +120,27 @@ class WidgetPicturesTest {
         val second = logos.forTiles(listOf(tile("c1", logo), tile("c2", logo)))
 
         assertThat(second.getValue(logo)).isSameInstanceAs(first.getValue(logo))
+    }
+
+    @Test
+    fun aLogoInSingleColour_isDrawnInItsColour() = runTest { // #240
+        val logo = png("logo", 100, 100)
+
+        val shown = logos().forTiles(listOf(tile("c1", logo, logoTreatment = SINGLE_WHITE)))
+
+        assertThat(shown.getValue(logo).getPixel(50, 50)).isEqualTo(WHITE)
+    }
+
+    @Test
+    fun aLogoDrawnAnotherWay_isDrawnAgain_atTheSameSize() = runTest { // #240: a changed treatment redraws the widget
+        val logo = png("logo", 100, 100)
+        val logos = logos()
+        val asIs = logos.forTiles(listOf(tile("c1", logo)))
+
+        val single = logos.forTiles(listOf(tile("c1", logo, logoTreatment = SINGLE_WHITE)))
+
+        assertThat(asIs.getValue(logo).getPixel(50, 50)).isEqualTo(0xFF2266AA.toInt())
+        assertThat(single.getValue(logo).getPixel(50, 50)).isEqualTo(WHITE)
     }
 
     @Test
@@ -312,5 +335,7 @@ class WidgetPicturesTest {
         val PHOTO_BOX = IntSize(200, 100)
         const val OUTER = 0xFFFF0000.toInt()
         const val INNER = 0xFF0000FF.toInt()
+        const val WHITE = 0xFFFFFFFF.toInt()
+        val SINGLE_WHITE = LogoTreatment(style = LogoStyle.SINGLE_COLOUR, tint = "#FFFFFF")
     }
 }

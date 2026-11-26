@@ -27,6 +27,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import coil.compose.AsyncImage
+import com.bdaniel.loyscan.domain.LogoTreatment
 import com.bdaniel.loyscan.ui.theme.Spacing
 
 /** A tile's front photo (#10). */
@@ -37,7 +38,7 @@ const val CARD_TILE_LOGO_TAG = "cardTileLogo"
 
 /**
  * What a card's tile draws (#192): the brand [color] at card proportions, and on it the front [photo], else the store's
- * [logo] at [TILE_LOGO_FRACTION], else the store's [initials]; the card's [label], if any, along the bottom edge. The
+ * [logo] at [TILE_LOGO_FRACTION] drawn with its [logoTreatment] (#240), else the store's [initials]; the card's [label], if any, along the bottom edge. The
  * My cards tile ([com.bdaniel.loyscan.CardItem]) and the store's logo preview ([LogoPreview]) both draw this, so they
  * can't drift apart.
  *
@@ -49,6 +50,7 @@ fun CardTileFace(
     initials: String,
     logo: String?,
     modifier: Modifier = Modifier,
+    logoTreatment: LogoTreatment = LogoTreatment.AS_IS,
     photo: String? = null,
     label: String? = null,
 ) {
@@ -85,10 +87,9 @@ fun CardTileFace(
         // The logo, like the photo, is centred in the whole tile, at a size that doesn't depend on the label (#183).
         if (shownPhoto == null && shownLogo != null) {
             Box(Modifier.matchParentSize().padding(horizontal = Spacing.s), contentAlignment = Alignment.Center) {
-                AsyncImage(
-                    model = CardPhoto(shownLogo),
-                    contentDescription = null, // The tile is described as a whole.
-                    imageLoader = hiltImageLoader(),
+                StoreLogoImage( // TalkBack: the tile is described as a whole.
+                    logo = shownLogo,
+                    treatment = logoTreatment,
                     onError = { logoFailed = true },
                     modifier = Modifier.fillMaxSize(TILE_LOGO_FRACTION).testTag(CARD_TILE_LOGO_TAG),
                 )

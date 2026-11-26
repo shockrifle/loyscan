@@ -1,5 +1,9 @@
 package com.bdaniel.loyscan
 
+import androidx.compose.ui.graphics.Color
+import com.bdaniel.loyscan.testing.writeSolidPng
+import com.bdaniel.loyscan.domain.LogoTreatment
+import com.bdaniel.loyscan.domain.LogoStyle
 import java.io.File
 import org.robolectric.shadows.ShadowLooper
 import dagger.hilt.android.EntryPointAccessors
@@ -281,6 +285,21 @@ class DetailScreenTest {
         setScreen(card = card.copy(store = card.store.copy(logo = "logo")), photos = FakeCardPhotos("logo"), wrap = wrap)
         val loader = EntryPointAccessors.fromApplication(composeRule.activity, ImageLoaderEntryPoint::class.java).getImageLoader()
         composeRule.waitUntil(WAIT_TIMEOUT_MS) { ShadowLooper.idleMainLooper(); (loader.memoryCache?.size ?: 0) > 0 }
+    }
+
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE) // real drawing, for the pixels
+    fun aLogoInSingleColour_isDrawnInItsColour_inTheBand() { // #240: a logo in its own brand colour, drawn white
+        File(composeRule.activity.filesDir, CardPhotosModule.PHOTO_DIRECTORY).resolve("logo").writeSolidPng(0xFF336699.toInt())
+        val treatment = LogoTreatment(style = LogoStyle.SINGLE_COLOUR, tint = "#FFFFFF")
+        setScreen(card = card.copy(store = card.store.copy(color = "#336699", logo = "logo", logoTreatment = treatment)), photos = FakeCardPhotos("logo"))
+        val loader = EntryPointAccessors.fromApplication(composeRule.activity, ImageLoaderEntryPoint::class.java).getImageLoader()
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) { ShadowLooper.idleMainLooper(); (loader.memoryCache?.size ?: 0) > 0 }
+        composeRule.waitForIdle()
+
+        val logo = composeRule.onNodeWithTag(STORE_LOGO_TAG, useUnmergedTree = true).captureToImage().toPixelMap()
+
+        assertThat(logo[logo.width / 2, logo.height / 2]).isEqualTo(Color.White)
     }
 
     @Test

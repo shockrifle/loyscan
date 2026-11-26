@@ -82,6 +82,7 @@ import com.bdaniel.loyscan.ui.FullBrightness
 import com.bdaniel.loyscan.ui.KeepScreenOn
 import com.bdaniel.loyscan.ui.StatusBarIcons
 import com.bdaniel.loyscan.ui.StoreInitials
+import com.bdaniel.loyscan.ui.StoreLogoImage
 import com.bdaniel.loyscan.ui.barcode.Barcode
 import com.bdaniel.loyscan.ui.barcode.BarcodeEncoder
 import com.bdaniel.loyscan.ui.barcode.EncodedBarcode
@@ -357,10 +358,9 @@ private fun StoreBand(store: Store, brandColor: Color, onBack: () -> Unit, onEdi
                 contentAlignment = Alignment.Center,
             ) {
                 if (logo != null) {
-                    AsyncImage(
-                        model = CardPhoto(logo),
-                        contentDescription = null, // The heading says the store's name.
-                        imageLoader = hiltImageLoader(),
+                    StoreLogoImage( // TalkBack: the heading says the store's name.
+                        logo = logo,
+                        treatment = store.logoTreatment,
                         onError = { logoFailed = true },
                         modifier = Modifier.fillMaxSize().testTag(STORE_LOGO_TAG),
                     )

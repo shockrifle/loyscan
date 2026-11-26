@@ -4,6 +4,8 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
+import com.bdaniel.loyscan.domain.LogoTreatment
+import com.bdaniel.loyscan.ui.drawnWith
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
@@ -25,7 +27,8 @@ const val WIDGET_LOGO_BUDGET_BYTES: Long = 4L * 1024 * 1024
 
 /**
  * The pictures the widget draws, as bitmaps, by file name: the front photos of the cards that show theirs on the widget
- * (#185), and the stores' logos (#181) of the other tiles and of those whose photo can't be read. A logo is scaled down, never up, to fit [logoBox] whole (the logo box at the
+ * (#185), and the stores' logos (#181) of the other tiles and of those whose photo can't be read, each drawn with its
+ * store's treatment (#240; a changed one is drawn again). A logo is scaled down, never up, to fit [logoBox] whole (the logo box at the
  * screen's density, [widgetLogoBox]). A photo is cut around its middle to [photoBox]'s shape and scaled down, never
  * up, to it ([widgetPhotoBox]): the tile crops it to fill anyway, and a photo kept whole ("use whole photo") may have
  * any shape, so this keeps every photo within its tile's pixels. When the pictures shown together would take more than
@@ -53,8 +56,9 @@ class WidgetPictures(
     /** Each picture's fitted size, or null for one that can't be read. */
     private var fitted: Map<String, Fitted?> = emptyMap()
 
-    /** The bitmaps last handed out. */
+    /** The bitmaps last handed out, and how each was drawn (#240; a photo As is). */
     private var shown: Map<String, Bitmap> = emptyMap()
+    private var shownAs: Map<String, LogoTreatment> = emptyMap()
 
     /**
      * The bitmap of the picture each of [tiles] draws, by its name: its photo, else its store's logo. A tile's logo is
@@ -73,27 +77,33 @@ class WidgetPictures(
         }.also { next[name] = it }
 
         val before = shown
+        val beforeAs = shownAs
         // A picture whose header reads but whose pixels don't is found only when decoded: it is remembered as
         // unreadable and the tiles are worked out again, so its tile falls back to its logo. Each pass marks at least
         // one more picture unreadable, so this ends.
         while (true) {
             val drawn = linkedMapOf<String, Fitted>()
+            val drawnAs = mutableMapOf<String, LogoTreatment>()
             for (tile in tiles) {
                 val photo = tile.photo?.let { name -> fitted(name, photo = true)?.let { name to it } }
-                val picture = photo ?: tile.logo?.let { name -> fitted(name, photo = false)?.let { name to it } }
-                picture?.let { (name, fit) -> drawn[name] = fit }
+                val logo = if (photo == null) tile.logo?.let { name -> fitted(name, photo = false)?.let { name to it } } else null
+                photo?.let { (name, fit) -> drawn[name] = fit; drawnAs[name] = LogoTreatment.AS_IS }
+                // A logo's file is its store's alone (a new logo is a new name), so one name is drawn one way.
+                logo?.let { (name, fit) -> drawn[name] = fit; drawnAs[name] = tile.logoTreatment }
             }
             val scale = widgetLogoScale(drawn.values.map { it.size }, budgetBytes)
             val decoded = drawn.mapValues { (name, fit) ->
                 val target = if (scale >= 1f) fit.size else fit.size.scaledBy(scale)
-                before[name]?.takeIf { it.width == target.width && it.height == target.height }
-                    ?: withContext(ioDispatcher) { decode(name, fit.crop, target) }
+                val treatment = drawnAs.getValue(name)
+                before[name]?.takeIf { it.width == target.width && it.height == target.height && beforeAs[name] == treatment }
+                    ?: withContext(ioDispatcher) { decode(name, fit.crop, target)?.drawnWith(treatment) }
             }
             val failed = decoded.filterValues { it == null }.keys
             failed.forEach { next[it] = null }
             if (failed.isEmpty()) {
                 fitted = next
                 shown = decoded.mapValues { (_, bitmap) -> checkNotNull(bitmap) }
+                shownAs = drawnAs.filterKeys { it in shown }
                 return shown
             }
         }

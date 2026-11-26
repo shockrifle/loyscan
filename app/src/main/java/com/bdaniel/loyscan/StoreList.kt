@@ -30,13 +30,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.text.TextAutoSize
-import coil.compose.AsyncImage
-import com.bdaniel.loyscan.ui.CardPhoto
+import com.bdaniel.loyscan.ui.StoreLogoImage
 import com.bdaniel.loyscan.ui.contrastingTextColor
-import com.bdaniel.loyscan.ui.hiltImageLoader
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -168,11 +165,9 @@ fun StoreBadge(store: Store) {
         contentAlignment = Alignment.Center,
     ) {
         if (logo != null) {
-            AsyncImage(
-                model = CardPhoto(logo),
-                contentDescription = null, // The row is read as the store's name.
-                imageLoader = hiltImageLoader(),
-                contentScale = ContentScale.Fit,
+            StoreLogoImage( // TalkBack: the row is read as the store's name.
+                logo = logo,
+                treatment = store.logoTreatment,
                 onError = { logoFailed = true },
                 modifier = Modifier.fillMaxSize(BADGE_LOGO_FRACTION).testTag(STORE_BADGE_LOGO_TAG),
             )
