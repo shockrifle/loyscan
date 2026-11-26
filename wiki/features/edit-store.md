@@ -52,6 +52,19 @@ Catalogue stores have no Edit button and can't be renamed, recoloured or deleted
   **Change logo**, which opens the store's logo screen over the form (`CustomStoreDirections.toStoreLogo`); Back
   returns to the form with its unsaved edits, and a logo set there shows at once. Save leaves the logo as it is
   (`updateCustom` doesn't write it; `RoomStoreRepositoryTest.update_keepsACustomStoresLogo`). The new-store form has no slot ([[2026-11-13-user-supplied-store-logos]]).
+- **Back with changes asks first** (#209), on the new-store form too: a name (trimmed), colour or format that differs
+  from the store as stored, or from a new store's defaults, makes Back (system, gesture or the arrow) ask "Save
+  changes?" (editing) or "Discard this store?" (creating), with **Discard** and **Save**, which is the form's Save or
+  Create; with no name, **Discard** and **Keep editing**. The logo isn't part of it: the logo screen saves on crop and
+  leaves without asking (`StoreLogoScreenTest.back_goesBack`). Not once a save or delete has started (below). Why:
+  [[2026-11-26-unsaved-changes-on-back]]. Tests: `CustomStoreViewModelTest.anUntouchedForm_hasNoChanges_creatingOrEditing`,
+  `theNameColourOrFormat_isAChange_whenItDiffersFromTheStoreOrTheDefaults`, `aValueChangedAndChangedBack_orOnlyPaddedWithSpaces_isNoChange`,
+  `aChange_isStillAChange_afterProcessDeath`, `onceSavingHasStarted_orTheStoreIsDeleting_theFormHasNoChangesToAskAbout`;
+  `CustomStoreScreenTest.editingAStore_systemBackWithAChange_asksToSaveChanges_andBackInTheDialogKeepsEditing`,
+  `creatingAStore_theBackArrowWithAName_asksToDiscardTheStore_andDiscardLeavesWithoutSaving`,
+  `theDialogsSave_createsTheStore_andOpensTheScannerForIt_asCreateDoes`, `theDialogsSave_onAnEdit_savesIt_andGoesBack_asSaveDoes`,
+  `aStoreThatCantBeSaved_offersDiscardAndKeepEditing`, `aNameTypedAndDeleted_leavesWithoutAsking`,
+  `inHungarian_theDialogOnANewStore_isTranslated`, `atFontScale2_onANarrowScreen_theDialogsTextsFit`.
 - **Back during a save or delete** (#65): the user stays where Back took them, and the store is still created,
   saved or deleted. `customStoreDirections(entry)` navigates (to the scanner, or back) only while the form's own
   back-stack entry is current, and the writes run in `withContext(NonCancellable)`, as the card form's do

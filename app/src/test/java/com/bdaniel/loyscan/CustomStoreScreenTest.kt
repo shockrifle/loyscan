@@ -16,6 +16,10 @@ import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.performTextClearance
+import com.bdaniel.loyscan.testing.SystemBack
+import com.bdaniel.loyscan.ui.LEAVE_FORM_DIALOG_TAG
 import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -400,6 +404,125 @@ class CustomStoreScreenTest {
         composeRule.assertTextFitsAndDoesNotOverlap(fitsByDesign = setOf("CS")) // the slot's initials shrink to fit, as on a tile (#192)
     }
 
+    @Test
+    fun editingAStore_systemBackWithAChange_asksToSaveChanges_andBackInTheDialogKeepsEditing() { // #209
+        stores.stores.value = listOf(aStore(id = "custom", name = "My Shop", isCustom = true))
+        setScreen(CustomStore("custom"))
+        composeRule.onNodeWithTag(CUSTOM_STORE_NAME_TAG).performTextReplacement("My Gym")
+
+        back.onTheScreen()
+
+        composeRule.onNode(hasText("Save changes?") and hasAnyAncestor(isDialog())).assertIsDisplayed()
+        composeRule.onNode(inTheDialog("Discard")).assertIsDisplayed()
+        composeRule.onNode(inTheDialog("Save")).assertIsDisplayed()
+        back.inTheDialog()
+        composeRule.onNode(isDialog()).assertDoesNotExist()
+        composeRule.onNodeWithTag(CUSTOM_STORE_NAME_TAG).assert(hasText("My Gym"))
+        assertThat(backs).isEqualTo(0)
+    }
+
+    @Test
+    fun creatingAStore_theBackArrowWithAName_asksToDiscardTheStore_andDiscardLeavesWithoutSaving() { // #209
+        setScreen()
+        composeRule.onNodeWithTag(CUSTOM_STORE_NAME_TAG).performTextInput("My Shop")
+
+        composeRule.onNodeWithContentDescription("Back").performClick()
+        composeRule.onNode(hasText("Discard this store?") and hasAnyAncestor(isDialog())).assertIsDisplayed()
+        composeRule.onNode(inTheDialog("Discard")).performClick()
+
+        assertThat(backs).isEqualTo(1)
+        assertThat(stores.stores.value).isEmpty()
+    }
+
+    @Test
+    fun theDialogsSave_createsTheStore_andOpensTheScannerForIt_asCreateDoes() { // #209
+        setScreen()
+        composeRule.onNodeWithTag(CUSTOM_STORE_NAME_TAG).performTextInput("My Shop")
+        composeRule.onNodeWithContentDescription("Back").performClick()
+
+        composeRule.onNode(inTheDialog("Save")).performClick()
+
+        composeRule.runOnIdle {
+            val saved = stores.stores.value.single()
+            assertThat(saved.name).isEqualTo("My Shop")
+            assertThat(scanned).containsExactly(saved.id)
+            assertThat(backs).isEqualTo(0)
+        }
+    }
+
+    @Test
+    fun theDialogsSave_onAnEdit_savesIt_andGoesBack_asSaveDoes() { // #209
+        stores.stores.value = listOf(aStore(id = "custom", name = "My Shop", isCustom = true))
+        setScreen(CustomStore("custom"))
+        composeRule.onNodeWithTag(CUSTOM_STORE_NAME_TAG).performTextReplacement("My Gym")
+        back.onTheScreen()
+
+        composeRule.onNode(inTheDialog("Save")).performClick()
+
+        composeRule.runOnIdle {
+            assertThat(stores.stores.value.single().name).isEqualTo("My Gym")
+            assertThat(backs).isEqualTo(1)
+        }
+    }
+
+    @Test
+    fun aStoreThatCantBeSaved_offersDiscardAndKeepEditing() { // #209: a colour chosen, but no name
+        setScreen()
+        composeRule.onNodeWithContentDescription("Orange").performClick()
+
+        back.onTheScreen()
+
+        composeRule.onNode(inTheDialog("Save")).assertDoesNotExist()
+        composeRule.onNode(inTheDialog("Discard")).assertIsDisplayed()
+        composeRule.onNode(inTheDialog("Keep editing")).performClick()
+        composeRule.onNode(isDialog()).assertDoesNotExist()
+        composeRule.onNodeWithContentDescription("Orange").assertIsSelected()
+        assertThat(backs).isEqualTo(0)
+    }
+
+    @Test
+    fun aNameTypedAndDeleted_leavesWithoutAsking() { // #209
+        setScreen()
+        composeRule.onNodeWithTag(CUSTOM_STORE_NAME_TAG).performTextInput("My Shop")
+        composeRule.onNodeWithTag(CUSTOM_STORE_NAME_TAG).performTextClearance()
+
+        composeRule.onNodeWithContentDescription("Back").performClick()
+
+        composeRule.onNode(isDialog()).assertDoesNotExist()
+        assertThat(backs).isEqualTo(1)
+    }
+
+    @Test
+    @Config(qualifiers = "+hu")
+    fun inHungarian_theDialogOnANewStore_isTranslated() { // #209
+        setScreen()
+        composeRule.onNodeWithContentDescription("Narancs").performClick()
+        val shown = ShownTexts(composeRule)
+
+        back.onTheScreen()
+        shown.collect()
+
+        val symbologyNames = CustomStoreViewModel.FORMATS.filter { it != BarcodeFormat.QR_CODE }.map { it.displayName }
+        shown.assertEveryTextIsTranslated(*symbologyNames.toTypedArray())
+        shown.assertSeen("Elveted ezt a boltot?", "Elvetés", "Szerkesztés folytatása")
+    }
+
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE) // real text measuring
+    fun atFontScale2_onANarrowScreen_theDialogsTextsFit() { // #209
+        setScreen(fontScale = 2f)
+        composeRule.onNodeWithContentDescription("Orange").performClick()
+
+        back.onTheScreen()
+
+        composeRule.onNode(inTheDialog("Keep editing")).assertIsDisplayed()
+        composeRule.assertTextFitsAndDoesNotOverlap(under = hasTestTag(LEAVE_FORM_DIALOG_TAG))
+    }
+
+    private fun inTheDialog(text: String) = hasText(text) and hasClickAction() and hasAnyAncestor(isDialog())
+
+    private val back = SystemBack(composeRule)
+
     private fun givenACustomStoreWithALogo() {
         File(context.filesDir, CardPhotosModule.PHOTO_DIRECTORY).resolve("logo").writeOnePixelPng()
         photos.stored += "logo"
@@ -414,6 +537,9 @@ class CustomStoreScreenTest {
     private fun setScreen(route: CustomStore = CustomStore(), fontScale: Float = 1f) {
         val viewModel = CustomStoreViewModel(SavedStateHandle(route = route), stores, cards, photos, Clock.fixed(SOME_INSTANT, ZoneOffset.UTC))
         val directions = CustomStoreDirections(onCreated = { scanned += it }, toBack = { backs++ }, toStoreLogo = { logoScreens += it })
-        composeRule.setContent { WithFontScale(fontScale) { CustomStoreScreen(directions = directions, viewModel = viewModel) } }
+        composeRule.setContent {
+            back.capture()
+            WithFontScale(fontScale) { CustomStoreScreen(directions = directions, viewModel = viewModel) }
+        }
     }
 }

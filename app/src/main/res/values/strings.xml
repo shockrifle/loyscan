@@ -130,6 +130,7 @@
     <string name="save_anyway">Save anyway</string>
     <string name="save_changes_question">Save changes?</string>
     <string name="discard_card_question">Discard this card?</string>
+    <string name="discard_store_question">Discard this store?</string>
     <string name="discard">Discard</string>
     <string name="keep_editing">Keep editing</string>
     <string name="number_does_not_fit_format">This isn\'t a valid %1$s number.</string>

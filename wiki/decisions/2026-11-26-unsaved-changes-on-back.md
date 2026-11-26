@@ -4,8 +4,8 @@
 
 ## Context
 
-The card form dropped an edit without a word on Back (#209). A form with changes now asks "Save changes?"
-(editing) or "Discard this card?" (adding), with **Discard** and the form's own
+The card form and the custom store form dropped an edit without a word on Back (#209). A form with changes now asks
+"Save changes?" (editing) or "Discard this card?" / "Discard this store?" (adding), with **Discard** and the form's own
 **Save** (or **Save anyway**), or **Discard** and **Keep editing** when it can't be saved. "Changed" means a value
 differs from what the form opened with, so typing and then deleting is not a change, and that opening state has to
 survive rotation and process death.
@@ -14,16 +14,18 @@ survive rotation and process death.
 
 1. **Save a snapshot of the opening values** in the `SavedStateHandle` when the form first loads, and compare with it.
 2. **Derive the opening values** from what the form already has: the route (a new card's store, scan or shared
-   barcode) or the repository (the edited card).
+   barcode; a new store's defaults) or the repository (the edited card or store).
 3. **Count any input that was touched** (the inputs are `null` until changed), without comparing values.
 
 ## Decision
 
 Option 2. `CardFormState.hasChanges` compares the values as a save would store them with the opening ones: the store,
 the number and its scanned format, the label and note (trimmed, as save trims them), the photos and the two "Show
-photo on …" switches (they are saved with the card). It is `false` until the form has loaded and once saving has
-started: Back during a save then leaves and the save still ends, as before ([[2026-10-28-save-navigates-after-back]],
-#64).
+photo on …" switches (they are saved with the card). `CustomStoreState.hasChanges` does the same for the name
+(trimmed), colour and format; the logo isn't part of it, since the logo screen saves on crop. Both are `false` until
+the form has loaded and once saving (or deleting a store) has started: Back then leaves and the write still ends, as
+before ([[2026-10-28-save-navigates-after-back]], #64, #65). The dialog's Save is the form's own; on the new-store form
+it is Create, but reads "Save" as the issue names it.
 
 Discard (`CardFormViewModel.discard`) deletes the photos picked in the form, except those a save was handed (#141); the
 edited card's own photos stay. It is the real-close signal [[2026-11-03-card-photos-as-private-files]] said the
@@ -31,7 +33,7 @@ ViewModel lacked; `onCleared` still deletes nothing (#95).
 
 ## Why
 
-The ViewModel already keeps each input in the `SavedStateHandle` as `null` until changed, and reads the rest from the
+Both ViewModels already keep each input in the `SavedStateHandle` as `null` until changed, and read the rest from the
 route and the repository, so the opening values outlast process death with no new keys and nothing to keep in step.
 A snapshot (option 1) would be one more piece of state to restore, and it would have to be taken at the right moment:
 before the edited card loads there is nothing to snapshot. Option 3 fails "typed then reverted is no change".

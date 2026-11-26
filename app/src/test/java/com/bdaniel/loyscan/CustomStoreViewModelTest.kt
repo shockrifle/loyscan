@@ -17,6 +17,7 @@ import com.bdaniel.loyscan.testing.MainDispatcherRule
 import com.bdaniel.loyscan.testing.aStore
 import com.bdaniel.loyscan.testing.keep
 import com.google.common.truth.Truth.assertThat
+import com.google.common.truth.Truth.assertWithMessage
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
@@ -519,6 +520,89 @@ class CustomStoreViewModelTest {
         defaultBarcodeFormat = BarcodeFormat.EAN_13,
         isCustom = true,
     )
+
+    @Test
+    fun anUntouchedForm_hasNoChanges_creatingOrEditing() = runTest { // #209
+        stores.stores.value += custom
+
+        viewModel().state.test { assertThat(expectMostRecentItem().hasChanges).isFalse() }
+        editViewModel().state.test { assertThat(expectMostRecentItem().hasChanges).isFalse() }
+    }
+
+    @Test
+    fun theNameColourOrFormat_isAChange_whenItDiffersFromTheStoreOrTheDefaults() = runTest { // #209
+        stores.stores.value += custom
+        val edits: List<Pair<String, CustomStoreViewModel.() -> Unit>> = listOf(
+            "name" to { onNameChange("My Gym") },
+            "colour" to { onColorChange(CustomStoreViewModel.COLORS[1].hex) },
+            "format" to { onFormatChange(BarcodeFormat.QR_CODE) },
+        )
+
+        for ((what, edit) in edits) {
+            for (form in listOf(viewModel(), editViewModel())) {
+                form.state.test {
+                    skipItems(1)
+                    form.edit()
+                    assertWithMessage(what).that(expectMostRecentItem().hasChanges).isTrue()
+                }
+            }
+        }
+    }
+
+    @Test
+    fun aValueChangedAndChangedBack_orOnlyPaddedWithSpaces_isNoChange() = runTest { // #209
+        stores.stores.value += custom
+        val form = editViewModel()
+
+        form.state.test {
+            skipItems(1)
+            form.onNameChange("My Gym")
+            form.onNameChange(" My Shop ")
+            form.onColorChange(CustomStoreViewModel.COLORS[1].hex)
+            form.onColorChange(CustomStoreViewModel.COLORS[4].hex)
+            form.onFormatChange(BarcodeFormat.QR_CODE)
+            form.onFormatChange(BarcodeFormat.EAN_13)
+
+            assertThat(expectMostRecentItem().hasChanges).isFalse()
+        }
+    }
+
+    @Test
+    fun aChange_isStillAChange_afterProcessDeath() = runTest { // #209
+        stores.stores.value += custom
+        val handle = SavedStateHandle(route = CustomStore(custom.id))
+        viewModel(handle).onNameChange("My Gym")
+
+        viewModel(SavedStateHandle(handle.keys().associateWith { handle.get<Any?>(it) })).state.test {
+            assertThat(expectMostRecentItem().hasChanges).isTrue()
+        }
+    }
+
+    @Test
+    fun onceSavingHasStarted_orTheStoreIsDeleting_theFormHasNoChangesToAskAbout() = runTest { // #209: Back leaves (#65)
+        stores.stores.value += custom
+        stores.updateGate = CompletableDeferred()
+        stores.deleteGate = CompletableDeferred()
+        val saving = editViewModel()
+        val deleting = editViewModel()
+
+        saving.state.test {
+            skipItems(1)
+            saving.onNameChange("My Gym")
+            saving.save()
+            assertThat(expectMostRecentItem().hasChanges).isFalse()
+            cancelAndIgnoreRemainingEvents()
+        }
+        deleting.state.test {
+            skipItems(1)
+            deleting.onNameChange("My Gym")
+            deleting.delete()
+            assertThat(expectMostRecentItem().hasChanges).isFalse()
+            cancelAndIgnoreRemainingEvents()
+        }
+        stores.updateGate!!.complete(Unit)
+        stores.deleteGate!!.complete(Unit)
+    }
 
     private fun editViewModel(storeId: String = custom.id) = viewModel(SavedStateHandle(route = CustomStore(storeId)))
 
