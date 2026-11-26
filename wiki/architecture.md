@@ -48,7 +48,7 @@ terms, with domain→entity mappers. Time comes from an injected `java.time.Cloc
   on every open through the raw database: `CatalogueDatabaseCallback` writes the catalogue rows, and
   `CardPhotoSweepCallback` deletes old photo files no card names ([[card-photos]]). There are no debug-only demo
   cards any more ([[seed-data]], #55); `DatabaseModuleTest` checks a new database holds only the catalogue. It adds
-  `AppDatabase.MIGRATIONS` (Room adds the `@Database` `autoMigrations`, v2 → v3 since #184) and no destructive fallback; schemas from v2 on are frozen
+  `AppDatabase.MIGRATIONS` (Room adds the `@Database` `autoMigrations`, v2 → v3 since #184, v3 → v4 since #185) and no destructive fallback; schemas from v2 on are frozen
   ([[2026-11-05-room-schema-frozen-from-v2]], [[database-schema-changes]]).
 - `PreferencesModule` provides the singleton preferences `DataStore` (file `datastore/user_preferences.preferences_pb`,
   pinned by `PreferencesModuleTest`) behind `UserPreferencesRepository` ([[2026-10-28-datastore-for-user-preferences]]).

@@ -21,7 +21,7 @@ data class LoyaltyCardWithStore(
     val store: StoreEntity
 )
 
-/** The columns an edit of a card writes (#8, the note #9, the photos #10 and whether the list shows one #184); the rest of the row stays as stored. */
+/** The columns an edit of a card writes (#8, the note #9, the photos #10 and whether the list #184 and the widget #185 show one); the rest of the row stays as stored. */
 data class LoyaltyCardEdit(
     val id: String,
     val storeId: String,
@@ -32,6 +32,7 @@ data class LoyaltyCardEdit(
     val frontPhotoPath: String?,
     val backPhotoPath: String?,
     val showPhotoOnList: Boolean,
+    val showPhotoOnWidget: Boolean,
     val updatedAt: Instant,
 )
 

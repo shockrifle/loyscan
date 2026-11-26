@@ -37,6 +37,7 @@ class FrozenSchemaTest {
         val FROZEN_SCHEMAS = mapOf(
             2 to "fe9f0878fb2710f56065c05fbf78cfc3",
             3 to "07e858e8e311b1797f964e04e48c4afa", // loyalty_cards.showPhotoOnList (#184)
+            4 to "116a678dafe0922c3f385ecbc48ff1ad", // loyalty_cards.showPhotoOnWidget (#185)
         )
     }
 }

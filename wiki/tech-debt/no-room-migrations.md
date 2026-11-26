@@ -30,4 +30,4 @@ said to freeze `1.json`, which predates the v2 bump.)
 `AppDatabase.MIGRATIONS` is added to the builder with no destructive fallback, and `DatabaseMigrationTest` opens a v2
 database with a card through the app's builder ([[2026-11-05-room-schema-frozen-from-v2]], procedure:
 [[database-schema-changes]]). The "What" above describes the state before that. The first migration followed on
-2026-11-26: v2 → v3 by `@AutoMigration` (#184).
+2026-11-26: v2 → v3 by `@AutoMigration` (#184); v3 → v4 the same way (#185).

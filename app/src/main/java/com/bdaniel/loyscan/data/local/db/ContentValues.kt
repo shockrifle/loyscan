@@ -37,5 +37,6 @@ fun LoyaltyCardEntity.toContentValues(): ContentValues = contentValuesOf(
     "frontPhotoPath" to frontPhotoPath,
     "backPhotoPath" to backPhotoPath,
     "showPhotoOnList" to if (showPhotoOnList) 1 else 0,
+    "showPhotoOnWidget" to if (showPhotoOnWidget) 1 else 0,
     "updatedAt" to converters.fromInstant(updatedAt),
 )

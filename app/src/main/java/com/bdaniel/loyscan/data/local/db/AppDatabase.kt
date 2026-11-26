@@ -16,6 +16,8 @@ import com.bdaniel.loyscan.data.local.db.entity.StoreEntity
     autoMigrations = [
         // loyalty_cards.showPhotoOnList, off for every existing card (#184).
         AutoMigration(from = 2, to = 3),
+        // loyalty_cards.showPhotoOnWidget, off for every existing card (#185).
+        AutoMigration(from = 3, to = 4),
     ],
 )
 @TypeConverters(Converters::class)
@@ -25,7 +27,7 @@ abstract class AppDatabase : RoomDatabase() {
 
     /** Schemas from version 2 (the first release) on are frozen: wiki/workflows/database-schema-changes.md (#12). */
     companion object {
-        const val VERSION = 3
+        const val VERSION = 4
 
         /**
          * Every hand-written migration from a released version on; `DatabaseModule` adds them to the builder. The
