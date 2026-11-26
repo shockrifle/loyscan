@@ -1,5 +1,7 @@
 package com.bdaniel.loyscan
 
+import com.bdaniel.loyscan.domain.LogoStyle
+import com.bdaniel.loyscan.domain.LogoTreatment
 import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModelStore
@@ -362,6 +364,86 @@ class StoreLogoViewModelTest {
         assertThat(viewModel.state.value.ready).isTrue()
         assertThat(viewModel.state.value.cropping).isNull()
     }
+
+    @Test
+    fun choosingSingleColour_onADarkBrandColour_drawsTheLogoWhite() = runTest { // #240: whichever contrasts more
+        val viewModel = viewModelWithALogo(color = "#336699")
+
+        viewModel.onLogoStyle(LogoStyle.SINGLE_COLOUR)
+
+        assertThat(shop().logoTreatment).isEqualTo(LogoTreatment(style = LogoStyle.SINGLE_COLOUR, tint = "#FFFFFF"))
+        assertThat(viewModel.state.value.store?.logoTreatment).isEqualTo(shop().logoTreatment)
+    }
+
+    @Test
+    fun choosingSingleColour_onALightBrandColour_drawsTheLogoBlack() = runTest { // #240
+        val viewModel = viewModelWithALogo(color = "#FFD500")
+
+        viewModel.onLogoStyle(LogoStyle.SINGLE_COLOUR)
+
+        assertThat(shop().logoTreatment).isEqualTo(LogoTreatment(style = LogoStyle.SINGLE_COLOUR, tint = "#000000"))
+    }
+
+    @Test
+    fun choosingAColour_drawsTheLogoInIt() = runTest { // #240
+        val viewModel = viewModelWithALogo()
+        viewModel.onLogoStyle(LogoStyle.SINGLE_COLOUR)
+
+        viewModel.onLogoTint("#C62828")
+
+        assertThat(shop().logoTreatment).isEqualTo(LogoTreatment(style = LogoStyle.SINGLE_COLOUR, tint = "#C62828"))
+        assertThat(viewModel.state.value.store?.logoTreatment?.tint).isEqualTo("#C62828")
+    }
+
+    @Test
+    fun choosingAsIs_drawsTheLogoAsIs_andKeepsItsOutline() = runTest { // #240: the outline goes with any style
+        val viewModel = viewModelWithALogo()
+        stores.setLogoTreatment("shop", LogoTreatment(style = LogoStyle.SINGLE_COLOUR, tint = "#C62828", outline = true))
+
+        viewModel.onLogoStyle(null)
+
+        assertThat(shop().logoTreatment).isEqualTo(LogoTreatment(outline = true))
+    }
+
+    @Test
+    fun aColour_whileTheLogoIsAsIs_isNotSaved() = runTest { // #240: the swatches show only for another style
+        val viewModel = viewModelWithALogo()
+
+        viewModel.onLogoTint("#C62828")
+
+        assertThat(shop().logoTreatment).isEqualTo(LogoTreatment.AS_IS)
+    }
+
+    @Test
+    fun withoutALogo_aStyleIsNotSaved() = runTest { // #240: the controls show only with a logo
+        val viewModel = viewModel()
+
+        viewModel.onLogoStyle(LogoStyle.SINGLE_COLOUR)
+
+        assertThat(shop().logoTreatment).isEqualTo(LogoTreatment.AS_IS)
+    }
+
+    @Test
+    fun aStyleThatCantBeSaved_saysSo() = runTest { // #240
+        val viewModel = viewModelWithALogo()
+        stores.setLogoTreatmentFailure = IllegalStateException("disk full")
+
+        viewModel.onLogoStyle(LogoStyle.SINGLE_COLOUR)
+
+        assertThat(viewModel.state.value.styleFailed).isTrue()
+        assertThat(viewModel.state.value.failed).isFalse() // not "the picture couldn't be used"
+        assertThat(viewModel.state.value.working).isFalse()
+        assertThat(shop().logoTreatment).isEqualTo(LogoTreatment.AS_IS)
+    }
+
+    private suspend fun viewModelWithALogo(color: String = "#336699"): StoreLogoViewModel {
+        stores.stores.value = stores.stores.value.map { if (it.id == "shop") it.copy(color = color) else it }
+        stores.setLogo("shop", "logo")
+        photos.stored += "logo"
+        return viewModel()
+    }
+
+    private fun shop() = stores.stores.value.single { it.id == "shop" }
 
     @Test
     fun removingTheLogo_clearsIt() = runTest {

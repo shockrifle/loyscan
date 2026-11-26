@@ -24,6 +24,9 @@ logo". Done in four slices, 2026-11-13 to 2026-11-16.
 - `StoreLogoScreen.kt`, `StoreLogoViewModel.kt`: the screen and its state. Its preview, `LogoPreview`, is in
   `ui/LogoPreview.kt` and draws the list tile's face, `ui/CardTileFace.kt` (#192, #162), shared with the custom store form's logo slot.
 - `ui/LogoSearch.kt`: "Find a logo online".
+- How the logo is drawn (#240, [[2026-11-26-logo-treatments]]): `LogoStyleControls` and `LOGO_COLOURS` in
+  `StoreLogoScreen.kt`, `StoreLogoViewModel.onLogoStyle` / `onLogoTint`, `StoreRepository.setLogoTreatment`; drawn by
+  `ui/StoreLogoImage.kt` and `ui/LogoTreatments.kt` (`inSingleColour`), and on the widget by `WidgetPictures`.
 - `data/repository/StoreRepository.kt` (`setLogo`), `data/photos/CardPhotos.kt` (`cropLogo`): storage, see the decision.
 
 ## Behaviour
@@ -79,6 +82,17 @@ logo". Done in four slices, 2026-11-13 to 2026-11-16.
   under one "LoyScan" tile, which offers "LoyScan" and "Set as store logo" (a target used before also shows on its own
   in the direct row); the alias starts in a task of its own, and Back after the crop returns to the list, then to the
   sender. Reopening from recents is not checked.
+- **How the logo is drawn** (#240, slice 1 of 3): under the preview while the store has a logo, "How the logo is drawn"
+  offers **As is** / **Single colour** (segmented buttons), and unless As is, "Logo colour": a row of swatches, white,
+  black, then the custom store palette, each read out by its colour's name as a choice. Every tap is saved at once
+  (`StoreRepository.setLogoTreatment`) and shows in the preview, the tiles, the card screen's band, the picker's badge,
+  the custom store form's logo slot and the widget. Single colour starts in white or black, whichever contrasts more
+  with the brand colour; As is keeps the outline (none can be set yet). Single colour draws every pixel in the colour,
+  its opacity from its brightness, the solid end following the logo (dark parts of a mostly dark logo, light parts of a
+  mostly light one), so the detail inside it stays visible ([[2026-11-26-logo-treatments]]). A change that can't be
+  saved says "Couldn't save how the logo is drawn. Try again.". A new logo, or removing it, draws it As is again;
+  editing a custom store's colour keeps the choice. Recolour, the contrast check with its pre-selection, and Outline are
+  not implemented yet.
 - **Remove logo** clears it; the initials on colour come back and its file is deleted.
 - **A store that is gone** says "This store is no longer available." and offers nothing.
 - **A logo whose file is missing** is no logo, here, on the tiles and in the card screen's band, which show the initials (`CardPhotos.withoutMissing`). The
@@ -128,5 +142,12 @@ logo". Done in four slices, 2026-11-13 to 2026-11-16.
 - `StorePickerScreenTest.aCatalogueStoresLogoButton_…`, `aFrequentlyAddedStore_hasItsLogoButtonInItsSectionToo`;
   `AddCardDirectionsTest.aStoresLogoButton_opensItsLogoScreenOverThePicker_andBackReturnsToIt`;
   end to end `AppNavigationTest.aCatalogueStoresLogoScreen_opensFromThePicker_andBackReturnsToIt`.
+- How the logo is drawn (#240): `StoreLogoViewModelTest` (Single colour white on a dark brand colour, black on a light
+  one; a colour; As is keeping the outline; a colour while As is, and a style without a logo, not saved; a save that
+  fails), `StoreLogoScreenTest` (`withoutALogo_offersNoWayToDrawIt`, `withALogo_drawnAsIs_offersTheStyles_butNoColours`,
+  `choosingSingleColour_drawsTheLogoWhiteOnADarkColour_andOffersTheColours` (the swatches in order, read out as choices),
+  `choosingAColour_drawsTheLogoInIt`, `choosingAsIs_hidesTheColours`, `aStyleThatCantBeSaved_saysSo`,
+  `thePreview_drawsTheLogoAsChosen` (pixels), and the Hungarian test), `ui/LogoTreatmentsTest` (the pixels, worked out by
+  hand), `ui/LogoTreatmentBitmapTest`; storage in `RoomStoreRepositoryTest` and `CatalogueDatabaseCallbackTest`.
 - `ui/LogoSearchTest`; the storage, sync, tile and band tests are listed on [[card-photos]], [[store-catalogue]],
   [[card-list]] and [[card-detail]].

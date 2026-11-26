@@ -168,6 +168,13 @@
     <string name="logo_picture">Logó képe</string>
     <string name="use_whole_image">Az egész kép</string>
     <string name="logo">Logó</string>
+    <string name="logo_style">A logó megjelenése</string>
+    <string name="logo_style_as_is">Eredeti</string>
+    <string name="logo_style_single_colour">Egyszínű</string>
+    <string name="logo_colour">A logó színe</string>
+    <string name="colour_white">Fehér</string>
+    <string name="colour_black">Fekete</string>
+    <string name="logo_style_failed">Nem sikerült menteni a logó megjelenését. Próbáld újra.</string>
     <string name="share_as_store_logo">Beállítás bolt logójaként</string>
     <string name="copying_picture">A kép másolása…</string>
     <string name="shared_logo_failed">A képet nem sikerült használni.</string>

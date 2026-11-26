@@ -45,6 +45,7 @@ inferred whys as inferred.
 - [[2026-11-23-public-repository]] — the repo goes public under GPL-3.0-or-later after a sweep; author email accepted, old Actions runs deleted (#200)
 - [[2026-11-23-ci-run-trims]] — the Tests workflow's first step decides whether the run needs the gate; a wiki-only PR runs only the public-safe test, a merged PR's tested tree isn't re-run on `master`, Dependabot monthly (#199)
 - [[2026-11-25-widget-tile-height-from-its-real-width]] — a widget tile's height comes from its real width (a sizer `ImageView` with `adjustViewBounds` in a layout of our own), not from the width of the layout the launcher picked; square below 120dp of tile width, 4 layout sizes at the switch points (#216)
+- [[2026-11-26-logo-treatments]] — how a store's logo is drawn on its brand colour (As is, Single colour; Recolour and Outline to come), stored on the store, applied to the decoded bitmap on every surface; Single colour's solid end follows the logo (#240)
 - [[2026-11-24-detail-header-band]] — the card screen's top bar and logo header become one brand-colour band, a 128dp logo or the initials between the buttons; no title (#210)
 - [[2026-11-20-other-card-scan-first]] — (proposed) "Other card": scan → new-store form with a logo slot, scan and duplicate-name suggestions → card form, each step replacing the last (#188)
 - [[2026-11-18-launcher-icon]] — launcher icon: two fanned cards, the front card's barcode a heart, on plum; chosen against 154 Play icons, away from Google Wallet's and the Hearts card games' look (#75)

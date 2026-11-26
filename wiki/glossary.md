@@ -32,6 +32,11 @@ Also travels in the `Detail` route — see [[2025-12-12-brand-color-in-route]].
 ([[store-logo]], #151); never a URL, and no shipped store has one. `null` shows the store's name (or initials) on its
 colour. Loaded with Coil — [[coil-image-loading]].
 
+**Logo treatment** — `Store.logoTreatment` (`LogoTreatment` in `app/src/main/java/com/bdaniel/loyscan/domain/LogoTreatment.kt`):
+how a store's logo is drawn on its brand colour, chosen on the logo screen (#240, [[store-logo]],
+[[2026-11-26-logo-treatments]]). **As is** draws the file unchanged (null style, the default); **Single colour** draws
+it in one colour, each pixel's opacity from its brightness. Recolour and Outline are not implemented yet.
+
 **Catalogue store** — A store from the shipped catalogue `app/src/main/assets/catalogue/stores.json`
 (`CatalogueEntry` in `app/src/main/java/com/bdaniel/loyscan/domain/catalogue/StoreCatalogue.kt`): slug id like `hu-ikea-family`, shipped with no logo, `isCustom = false`. Its row is
 rewritten from the catalogue on every DB open, except `logo`: the user may give it one, which the sync never touches

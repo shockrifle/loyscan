@@ -161,7 +161,7 @@ fun CustomStoreScreen(
             val storeId = state.storeId
             if (storeId != null) { // the edit form only: a new store has no id before Create (#151)
                 Text(stringResource(R.string.logo), style = MaterialTheme.typography.titleSmall)
-                LogoPreview(name = state.name, color = state.color, logo = state.logo)
+                LogoPreview(name = state.name, color = state.color, logo = state.logo, logoTreatment = state.logoTreatment)
                 OutlinedButton(onClick = { directions.toStoreLogo(storeId) }, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.change_logo), textAlign = TextAlign.Center)
                 }

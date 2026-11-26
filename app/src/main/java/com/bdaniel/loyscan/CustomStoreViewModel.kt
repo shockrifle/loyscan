@@ -1,5 +1,6 @@
 package com.bdaniel.loyscan
 
+import com.bdaniel.loyscan.domain.LogoTreatment
 import androidx.annotation.StringRes
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -57,6 +58,8 @@ data class CustomStoreState(
     val storeId: String? = null,
     /** The edited store's logo (#151), `null` when it has none, its file is missing, or the store is new. */
     val logo: String? = null,
+    /** How [logo] is drawn (#240). */
+    val logoTreatment: LogoTreatment = LogoTreatment.AS_IS,
 ) {
     val canSave: Boolean get() = ready && name.isNotBlank() && !saving && createdStoreId == null && !saved
 }
@@ -121,6 +124,7 @@ class CustomStoreViewModel @Inject constructor(
                 deletion = deletion,
                 storeId = route.storeId,
                 logo = (edited as? Edited.Found)?.store?.logo,
+                logoTreatment = (edited as? Edited.Found)?.store?.logoTreatment ?: LogoTreatment.AS_IS,
             )
         }.stateIn(
             scope = viewModelScope,

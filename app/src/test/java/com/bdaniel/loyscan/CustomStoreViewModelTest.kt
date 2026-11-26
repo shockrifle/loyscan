@@ -1,5 +1,7 @@
 package com.bdaniel.loyscan
 
+import com.bdaniel.loyscan.domain.LogoStyle
+import com.bdaniel.loyscan.domain.LogoTreatment
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModelStore
 import androidx.navigation.testing.invoke
@@ -201,6 +203,17 @@ class CustomStoreViewModelTest {
             val state = expectMostRecentItem()
             assertThat(state.logo).isEqualTo("logo-1.png")
             assertThat(state.storeId).isEqualTo("custom")
+        }
+    }
+
+    @Test
+    fun editingAStore_showsHowItsLogoIsDrawn() = runTest { // #240: the form's logo slot draws it as its tiles do
+        val treatment = LogoTreatment(style = LogoStyle.SINGLE_COLOUR, tint = "#FFFFFF")
+        photos.stored += "logo-1.png"
+        stores.stores.value += custom.copy(logo = "logo-1.png", logoTreatment = treatment)
+
+        editViewModel().state.test {
+            assertThat(expectMostRecentItem().logoTreatment).isEqualTo(treatment)
         }
     }
 

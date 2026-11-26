@@ -1,5 +1,12 @@
 package com.bdaniel.loyscan
 
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.assertIsNotSelected
+import androidx.compose.ui.test.assertIsSelected
+import com.bdaniel.loyscan.testing.writeSolidPng
+import com.bdaniel.loyscan.domain.LogoTreatment
+import com.bdaniel.loyscan.domain.LogoStyle
 import androidx.navigation.testing.invoke
 import com.bdaniel.loyscan.ui.STORE_LOGO_PREVIEW_TAG
 import android.content.Context
@@ -94,6 +101,95 @@ class StoreLogoScreenTest {
         composeRule.onNode(previewLogo, useUnmergedTree = true).assertIsDisplayed()
         assertThat(textsInThePreview()).isEmpty()
         composeRule.onNodeWithText("Remove logo").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun withoutALogo_offersNoWayToDrawIt() { // #240: the controls are for a logo
+        setScreen()
+
+        composeRule.onNodeWithText("How the logo is drawn").assertDoesNotExist()
+        composeRule.onNodeWithText("As is").assertDoesNotExist()
+    }
+
+    @Test
+    fun withALogo_drawnAsIs_offersTheStyles_butNoColours() { // #240
+        givenALogo()
+        setScreen()
+
+        composeRule.onNodeWithText("How the logo is drawn").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("As is").assertIsSelected()
+        composeRule.onNodeWithText("Single colour").assertIsNotSelected()
+        composeRule.onNodeWithContentDescription("White").assertDoesNotExist()
+    }
+
+    @Test
+    fun choosingSingleColour_drawsTheLogoWhiteOnADarkColour_andOffersTheColours() { // #240
+        givenALogo()
+        setScreen()
+
+        composeRule.onNodeWithText("Single colour").performScrollTo().performClick()
+
+        assertThat(stores.stores.value.single().logoTreatment).isEqualTo(LogoTreatment(style = LogoStyle.SINGLE_COLOUR, tint = "#FFFFFF"))
+        composeRule.onNodeWithText("Single colour").assertIsSelected()
+        composeRule.onNodeWithText("Logo colour").assertExists()
+        // White, black, then the custom store palette, each read out by name and as a choice.
+        val swatches = composeRule.onAllNodes(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton) and hasContentDescription("", substring = true))
+            .fetchSemanticsNodes().map { it.config[SemanticsProperties.ContentDescription].single() }
+        assertThat(swatches).containsExactly("White", "Black", "Blue", "Red", "Green", "Orange", "Purple", "Teal", "Brown", "Grey").inOrder()
+        composeRule.onNodeWithContentDescription("White").assertIsSelected()
+        composeRule.onNodeWithContentDescription("Black").assertIsNotSelected()
+    }
+
+    @Test
+    fun choosingAColour_drawsTheLogoInIt() { // #240
+        givenALogo()
+        setScreen()
+        composeRule.onNodeWithText("Single colour").performScrollTo().performClick()
+
+        composeRule.onNodeWithContentDescription("Red").performScrollTo().performClick()
+
+        assertThat(stores.stores.value.single().logoTreatment.tint).isEqualTo("#C62828")
+        composeRule.onNodeWithContentDescription("Red").assertIsSelected()
+        composeRule.onNodeWithContentDescription("White").assertIsNotSelected()
+    }
+
+    @Test
+    fun choosingAsIs_hidesTheColours() { // #240
+        givenALogo()
+        setScreen()
+        composeRule.onNodeWithText("Single colour").performScrollTo().performClick()
+
+        composeRule.onNodeWithText("As is").performClick()
+
+        assertThat(stores.stores.value.single().logoTreatment).isEqualTo(LogoTreatment.AS_IS)
+        composeRule.onNodeWithContentDescription("White").assertDoesNotExist()
+    }
+
+    @Test
+    fun aStyleThatCantBeSaved_saysSo() { // #240
+        givenALogo()
+        stores.setLogoTreatmentFailure = IllegalStateException("disk full")
+        setScreen()
+
+        composeRule.onNodeWithText("Single colour").performScrollTo().performClick()
+
+        composeRule.onNodeWithText("Couldn't save how the logo is drawn. Try again.").assertExists()
+    }
+
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE) // real drawing, for the pixels
+    fun thePreview_drawsTheLogoAsChosen() { // #240: a logo in its own brand colour, drawn white
+        File(context.filesDir, CardPhotosModule.PHOTO_DIRECTORY).resolve("logo").writeSolidPng(0xFF336699.toInt())
+        runBlocking { stores.setLogo("shop", "logo") }
+        photos.stored += "logo"
+        setScreen()
+
+        composeRule.onNodeWithText("Single colour").performScrollTo().performClick()
+        waitForAnImageToLoad()
+        composeRule.waitForIdle()
+
+        val logo = composeRule.onNode(previewLogo, useUnmergedTree = true).captureToImage().toPixelMap()
+        assertThat(logo[logo.width / 2, logo.height / 2]).isEqualTo(Color.White)
     }
 
     @Test
@@ -307,7 +403,12 @@ class StoreLogoScreenTest {
         val shown = ShownTexts(composeRule)
         shown.collect()
 
-        composeRule.onNodeWithText("Kép kiválasztása").performClick()
+        composeRule.onNodeWithText("Egyszínű").performScrollTo().performClick() // #240: the colours show
+        shown.collect()
+        stores.setLogoTreatmentFailure = IllegalStateException("disk full")
+        composeRule.onNodeWithText("Eredeti").performClick()
+        shown.collect()
+        composeRule.onNodeWithText("Kép kiválasztása").performScrollTo().performClick()
         shown.collect()
         composeRule.onNodeWithText("Mégse").performClick()
         photos.importFailure = IOException("not a picture")
@@ -320,6 +421,8 @@ class StoreLogoScreenTest {
             "Bolt logója", "Vissza", "Kép kiválasztása", "Logó keresése az interneten", "Logó eltávolítása",
             "Ez a logó látszik a bolt minden kártyáján.", "Az egész kép", "Kivágás", "Mégse",
             "Nem sikerült felhasználni a képet. Próbáld újra.", "Kártya fotójának használata", "Melyik kártya fotója?",
+            "A logó megjelenése", "Eredeti", "Egyszínű", "A logó színe", "Fehér", "Fekete",
+            "Nem sikerült menteni a logó megjelenését. Próbáld újra.",
         )
         shown.assertEveryTextIsTranslated("Shop", "Mine", "Partner's")
     }
