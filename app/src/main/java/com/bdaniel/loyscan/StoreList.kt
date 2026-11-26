@@ -168,6 +168,7 @@ fun StoreBadge(store: Store) {
             StoreLogoImage( // TalkBack: the row is read as the store's name.
                 logo = logo,
                 treatment = store.logoTreatment,
+                brandColor = store.color,
                 onError = { logoFailed = true },
                 modifier = Modifier.fillMaxSize(BADGE_LOGO_FRACTION).testTag(STORE_BADGE_LOGO_TAG),
             )

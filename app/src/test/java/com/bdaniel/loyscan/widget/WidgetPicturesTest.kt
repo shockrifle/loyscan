@@ -47,8 +47,13 @@ class WidgetPicturesTest {
         return name
     }
 
-    private fun tile(id: String, logo: String?, photo: String? = null, logoTreatment: LogoTreatment = LogoTreatment.AS_IS) =
-        WidgetTile(id, "#112233", "TE", "Tesco", label = null, logo = logo, photo = photo, logoTreatment = logoTreatment)
+    private fun tile(
+        id: String,
+        logo: String?,
+        photo: String? = null,
+        logoTreatment: LogoTreatment = LogoTreatment.AS_IS,
+        color: String = "#112233",
+    ) = WidgetTile(id, color, "TE", "Tesco", label = null, logo = logo, photo = photo, logoTreatment = logoTreatment)
 
     /** A PNG of [middle] rows of [inner] colour between equal bands of [outer], or columns when [across]. */
     private fun banded(name: String, width: Int, height: Int, middle: Int, across: Boolean = false): String {
@@ -141,6 +146,26 @@ class WidgetPicturesTest {
 
         assertThat(asIs.getValue(logo).getPixel(50, 50)).isEqualTo(0xFF2266AA.toInt())
         assertThat(single.getValue(logo).getPixel(50, 50)).isEqualTo(WHITE)
+    }
+
+    @Test
+    fun aRecolouredLogo_isDrawnInItsColour() = runTest { // #240: the logo is in the tile's brand colour
+        val logo = png("logo", 100, 100)
+
+        val shown = logos().forTiles(listOf(tile("c1", logo, logoTreatment = RECOLOUR_WHITE, color = "#2266AA")))
+
+        assertThat(shown.getValue(logo).getPixel(50, 50)).isEqualTo(WHITE)
+    }
+
+    @Test
+    fun aRecolouredLogo_isDrawnAgain_whenItsBrandColourChanges() = runTest { // #240: Recolour follows the brand colour
+        val logo = png("logo", 100, 100)
+        val logos = logos()
+        logos.forTiles(listOf(tile("c1", logo, logoTreatment = RECOLOUR_WHITE, color = "#2266AA")))
+
+        val onRed = logos.forTiles(listOf(tile("c1", logo, logoTreatment = RECOLOUR_WHITE, color = "#AA0000")))
+
+        assertThat(onRed.getValue(logo).getPixel(50, 50)).isEqualTo(0xFF2266AA.toInt()) // no longer the brand colour
     }
 
     @Test
@@ -337,5 +362,6 @@ class WidgetPicturesTest {
         const val INNER = 0xFF0000FF.toInt()
         const val WHITE = 0xFFFFFFFF.toInt()
         val SINGLE_WHITE = LogoTreatment(style = LogoStyle.SINGLE_COLOUR, tint = "#FFFFFF")
+        val RECOLOUR_WHITE = LogoTreatment(style = LogoStyle.RECOLOUR, tint = "#FFFFFF")
     }
 }

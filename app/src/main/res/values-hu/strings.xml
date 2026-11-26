@@ -176,6 +176,7 @@
     <string name="logo_style">A logó megjelenése</string>
     <string name="logo_style_as_is">Eredeti</string>
     <string name="logo_style_single_colour">Egyszínű</string>
+    <string name="logo_style_recolour">Átszínezés</string>
     <string name="logo_colour">A logó színe</string>
     <string name="colour_white">Fehér</string>
     <string name="colour_black">Fekete</string>

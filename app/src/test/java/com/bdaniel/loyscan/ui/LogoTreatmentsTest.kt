@@ -97,10 +97,36 @@ class LogoTreatmentsTest {
         assertThat(drawn.map { it ushr 24 }).containsExactly(0, 0)
     }
 
+    @Test
+    fun aTwoColourLogo_recoloursItsBrandColouredPart_andLeavesTheOtherAlone() {
+        val logo = intArrayOf(RED, WHITE, 0x80FF0000.toInt(), CLEAR)
+
+        val drawn = recoloured(logo, brand = RED, tint = BLACK)
+
+        // The red, half of it a soft edge, in black at its own opacity; the white and the clear pixel as they were.
+        assertThat(drawn.toList()).containsExactly(BLACK, WHITE, 0x80000000.toInt(), CLEAR).inOrder()
+    }
+
+    /**
+     * Within a CIE76 distance of 25 of the brand colour, in CIELAB (D65), a pixel is the brand colour. The distances come
+     * from the published sRGB → CIELAB formulas (worked out outside the app): `#FF0000` is L* 53.24, a* 80.09, b* 67.20;
+     * `#C00000` is (39.93, 64.71, 54.30), ΔE 24.1; `#B40000` is (37.30, 61.68, 51.72), ΔE 28.9.
+     */
+    @Test
+    fun aShadeOfTheBrandColour_withinTheDistance_isRecoloured_andOneBeyondItIsNot() {
+        val inside = 0xFFC00000.toInt()
+        val beyond = 0xFFB40000.toInt()
+
+        val drawn = recoloured(intArrayOf(inside, beyond), brand = RED, tint = WHITE)
+
+        assertThat(drawn.toList()).containsExactly(WHITE, beyond).inOrder()
+    }
+
     private companion object {
         const val CLEAR = 0x00000000
         val BLACK = 0xFF000000.toInt()
         val WHITE = 0xFFFFFFFF.toInt()
         val GREY = 0xFF808080.toInt()
+        val RED = 0xFFFF0000.toInt()
     }
 }

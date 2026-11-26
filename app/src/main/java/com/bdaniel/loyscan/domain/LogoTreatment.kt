@@ -4,6 +4,9 @@ package com.bdaniel.loyscan.domain
 enum class LogoStyle {
     /** The whole logo in [LogoTreatment.tint], its shape and inner detail kept by each pixel's brightness. */
     SINGLE_COLOUR,
+
+    /** The parts of the logo in (about) the brand colour drawn in [LogoTreatment.tint], the other colours left alone. */
+    RECOLOUR,
 }
 
 /**

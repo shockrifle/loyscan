@@ -227,9 +227,9 @@ class StoreLogoViewModel @Inject constructor(
     }
 
     /**
-     * Draws the store's logo in [style] (#240), `null` for As is, saved at once. Single colour starts in white or black,
-     * whichever contrasts more with the brand colour, unless a colour is already saved; As is clears the colour and
-     * keeps the outline, which goes with any style. Only while the store has a logo.
+     * Draws the store's logo in [style] (#240), `null` for As is, saved at once. Single colour or Recolour starts in white
+     * or black, whichever contrasts more with the brand colour, unless a colour is already saved; As is clears the colour
+     * and keeps the outline, which goes with any style. Only while the store has a logo.
      */
     fun onLogoStyle(style: LogoStyle?) {
         val store = (found.value as? Found.Store)?.store ?: return

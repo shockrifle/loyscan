@@ -450,6 +450,31 @@ class ListScreenTest {
     }
 
     @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE) // real drawing, for the pixels
+    fun aRecolouredLogo_isDrawnInItsColour_onTheTile_andFollowsANewBrandColour() { // #240
+        File(composeRule.activity.filesDir, CardPhotosModule.PHOTO_DIRECTORY).resolve("logo").writeSolidPng(0xFFAA0000.toInt())
+        val store = aStore(color = "#AA0000", logo = "logo", logoTreatment = LogoTreatment(style = LogoStyle.RECOLOUR, tint = "#FFFFFF"))
+        val cards = FakeLoyaltyCardRepository(listOf(aLoyaltyCard(store = store)))
+        val photos = FakeCardPhotos("logo")
+        setScreen(photos = photos, viewModel = ListViewModel(cards, FakeUserPreferencesRepository(), SavedStateHandle(), photos))
+        waitForAnImageToLoad()
+        composeRule.waitForIdle()
+
+        // The logo in the brand colour, recoloured white.
+        assertThat(logoCentre()).isEqualTo(Color.White)
+
+        // A blue store: its red logo is no longer in the brand colour, so it is drawn as it is.
+        cards.cards.value = listOf(aLoyaltyCard(store = store.copy(color = "#0000AA")))
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) { logoCentre() == Color(0xFFAA0000) }
+    }
+
+    private fun logoCentre(): Color {
+        composeRule.waitForIdle()
+        val logo = composeRule.onNodeWithTag(CARD_TILE_LOGO_TAG, useUnmergedTree = true).captureToImage().toPixelMap()
+        return logo[logo.width / 2, logo.height / 2]
+    }
+
+    @Test
     fun aTile_hasBankCardProportions() {
         setScreen(aLoyaltyCard())
 

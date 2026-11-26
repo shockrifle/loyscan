@@ -179,6 +179,7 @@
     <string name="logo_style">How the logo is drawn</string>
     <string name="logo_style_as_is">As is</string>
     <string name="logo_style_single_colour">Single colour</string>
+    <string name="logo_style_recolour">Recolour</string>
     <string name="logo_colour">Logo colour</string>
     <string name="colour_white">White</string>
     <string name="colour_black">Black</string>

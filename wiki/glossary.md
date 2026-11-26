@@ -35,7 +35,8 @@ colour. Loaded with Coil — [[coil-image-loading]].
 **Logo treatment** — `Store.logoTreatment` (`LogoTreatment` in `app/src/main/java/com/bdaniel/loyscan/domain/LogoTreatment.kt`):
 how a store's logo is drawn on its brand colour, chosen on the logo screen (#240, [[store-logo]],
 [[2026-11-26-logo-treatments]]). **As is** draws the file unchanged (null style, the default); **Single colour** draws
-it in one colour, each pixel's opacity from its brightness. Recolour and Outline are not implemented yet.
+it in one colour, each pixel's opacity from its brightness; **Recolour** draws the parts in (about) the brand colour in
+the chosen colour and leaves the others alone. Outline is not implemented yet.
 
 **Catalogue store** — A store from the shipped catalogue `app/src/main/assets/catalogue/stores.json`
 (`CatalogueEntry` in `app/src/main/java/com/bdaniel/loyscan/domain/catalogue/StoreCatalogue.kt`): slug id like `hu-ikea-family`, shipped with no logo, `isCustom = false`. Its row is

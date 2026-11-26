@@ -27,7 +27,8 @@ UUID string.
   phone. The box holds the store's logo when the user gave it one (#151,
   [[2026-11-13-user-supplied-store-logos]]): a `CardPhoto` file through `hiltImageLoader()` ([[coil-image-loading]]),
   `STORE_LOGO_TAG`, drawn the way the user chose for the store (`StoreLogoImage`, #240, [[store-logo]]; test:
-  `DetailScreenTest.aLogoInSingleColour_isDrawnInItsColour_inTheBand`). A store without a logo, or whose logo can't be loaded or whose file is missing
+  `DetailScreenTest.aLogoInSingleColour_isDrawnInItsColour_inTheBand`, `aRecolouredLogo_isDrawnInItsColour_inTheBand`;
+  Recolour compares with the stored store's colour, which the band shows once the card has loaded). A store without a logo, or whose logo can't be loaded or whose file is missing
   (`CardPhotos.withoutMissing` in `DetailViewModel`), shows its initials as its tile draws them (`StoreInitials` in
   `ui/CardTileFace.kt`, shared with `CardTileFace`), never its name. The sheet keeps the label and the store's name
   above the barcode. TalkBack reads the logo or initials as one heading with the store's name; the initials are kept

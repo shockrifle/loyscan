@@ -186,7 +186,7 @@ fun StoreLogoScreen(
 }
 
 /**
- * How the store's logo is drawn (#240), under the preview while it has one: As is or Single colour, and unless As is,
+ * How the store's logo is drawn (#240), under the preview while it has one: As is, Single colour or Recolour, and unless As is,
  * the colour: white, black, then the custom store palette ([LOGO_COLOURS]). Each tap is saved at once; TalkBack reads the
  * styles and the colours by name as choices, the chosen one selected.
  */
@@ -200,7 +200,11 @@ private fun LogoStyleControls(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
         Text(stringResource(R.string.logo_style), style = MaterialTheme.typography.titleSmall)
-        val styles = listOf(null to R.string.logo_style_as_is, LogoStyle.SINGLE_COLOUR to R.string.logo_style_single_colour)
+        val styles = listOf(
+            null to R.string.logo_style_as_is,
+            LogoStyle.SINGLE_COLOUR to R.string.logo_style_single_colour,
+            LogoStyle.RECOLOUR to R.string.logo_style_recolour,
+        )
         SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
             styles.forEachIndexed { index, (style, label) ->
                 SegmentedButton(
