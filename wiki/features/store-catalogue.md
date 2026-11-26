@@ -40,7 +40,11 @@ researched again on 2026-11-12 and the answer kept: [[2026-11-12-no-bundled-stor
 - **Leaves the user's logo alone** (#151): `logo` is neither compared nor written on an update, so a logo the user
   gave a catalogue store survives every open and a changed entry; a new row is inserted with `null`
   ([[2026-11-13-user-supplied-store-logos]]). Tests: `CatalogueDatabaseCallbackTest.reopen_keepsTheLogoTheUserGaveACatalogueStore`,
-  `reopen_changedEntry_keepsTheLogoTheUserGaveIt`.
+  `reopen_changedEntry_keepsTheLogoTheUserGaveIt`. How the user draws that logo (`logoStyle`, `logoTint`, `logoOutline`,
+  #240, [[store-logo]]) is left alone the same way: the four are `CatalogueDatabaseCallback`'s `USER_COLUMNS`, so a
+  store with a saved treatment doesn't count as changed on every open. Tests:
+  `CatalogueDatabaseCallbackTest.reopen_keepsHowTheUserDrawsACatalogueStoresLogo_andItsUpdatedAt`,
+  `reopen_changedEntry_keepsHowTheUserDrawsItsLogo`.
 - **Leaves other stores alone:** custom stores, the former debug demo stores ([[seed-data]]) and entries dropped from the
   catalogue are not touched. A dropped entry's cards keep working with the last version of its row.
 - **A broken catalogue fails loudly:** a parse error is logged with Timber and rethrown, so the first query

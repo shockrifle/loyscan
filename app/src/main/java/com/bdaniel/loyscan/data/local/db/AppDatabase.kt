@@ -18,6 +18,8 @@ import com.bdaniel.loyscan.data.local.db.entity.StoreEntity
         AutoMigration(from = 2, to = 3),
         // loyalty_cards.showPhotoOnWidget, off for every existing card (#185).
         AutoMigration(from = 3, to = 4),
+        // stores.logoStyle, logoTint and logoOutline, null (As is) for every existing store (#240).
+        AutoMigration(from = 4, to = 5),
     ],
 )
 @TypeConverters(Converters::class)
@@ -27,7 +29,7 @@ abstract class AppDatabase : RoomDatabase() {
 
     /** Schemas from version 2 (the first release) on are frozen: wiki/workflows/database-schema-changes.md (#12). */
     companion object {
-        const val VERSION = 4
+        const val VERSION = 5
 
         /**
          * Every hand-written migration from a released version on; `DatabaseModule` adds them to the builder. The

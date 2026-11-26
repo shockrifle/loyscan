@@ -5,7 +5,9 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.bdaniel.loyscan.data.local.db.entity.StoreEntity
+import com.bdaniel.loyscan.data.local.db.dao.StoreDao
 import com.bdaniel.loyscan.domain.BarcodeFormat
+import com.bdaniel.loyscan.domain.LogoStyle
 import com.bdaniel.loyscan.domain.cardnumber.CardNumberRule
 import com.bdaniel.loyscan.testing.aLoyaltyCardEntity
 import com.bdaniel.loyscan.testing.aStoreEntity
@@ -138,6 +140,39 @@ class CatalogueDatabaseCallbackTest {
         assertThat(db.storeDao().getById("hu-one").first()).isEqualTo(
             store("hu-one", name = "Renamed", updatedAt = SECOND).copy(logo = "logo.png")
         )
+    }
+
+    @Test
+    fun reopen_keepsHowTheUserDrawsACatalogueStoresLogo_andItsUpdatedAt() = runTest { // #240
+        open(catalogue(entry("hu-one")), at = FIRST).storeDao().drawLogoInSingleWhiteWithOutline("hu-one")
+        closeAll()
+
+        val db = open(catalogue(entry("hu-one")), at = SECOND)
+
+        assertThat(db.storeDao().getById("hu-one").first()).isEqualTo(
+            store("hu-one", updatedAt = FIRST).copy(
+                logo = "logo.png", logoStyle = LogoStyle.SINGLE_COLOUR, logoTint = "#FFFFFF", logoOutline = true,
+            )
+        )
+    }
+
+    @Test
+    fun reopen_changedEntry_keepsHowTheUserDrawsItsLogo() = runTest { // #240
+        open(catalogue(entry("hu-one")), at = FIRST).storeDao().drawLogoInSingleWhiteWithOutline("hu-one")
+        closeAll()
+
+        val db = open(catalogue(entry("hu-one", name = "Renamed")), at = SECOND)
+
+        assertThat(db.storeDao().getById("hu-one").first()).isEqualTo(
+            store("hu-one", name = "Renamed", updatedAt = SECOND).copy(
+                logo = "logo.png", logoStyle = LogoStyle.SINGLE_COLOUR, logoTint = "#FFFFFF", logoOutline = true,
+            )
+        )
+    }
+
+    private suspend fun StoreDao.drawLogoInSingleWhiteWithOutline(id: String) {
+        setLogoReturningDropped(id, "logo.png")
+        updateLogoTreatment(id, LogoStyle.SINGLE_COLOUR, "#FFFFFF", true)
     }
 
     @Test

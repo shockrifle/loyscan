@@ -7,6 +7,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.bdaniel.loyscan.data.local.db.AppDatabase
 import com.bdaniel.loyscan.data.mapper.toDomainModel
 import com.bdaniel.loyscan.data.photos.FileCardPhotos
+import com.bdaniel.loyscan.domain.LogoStyle
+import com.bdaniel.loyscan.domain.LogoTreatment
 import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.testing.aLoyaltyCardEntity
 import com.bdaniel.loyscan.testing.cardId
@@ -251,5 +253,71 @@ class RoomStoreRepositoryTest {
     }
 
     /** A photo file as [FileCardPhotos] keeps it, named [name]. */
+    @Test
+    fun setLogoTreatment_isHowTheStoresLogoIsDrawn() = runTest { // #240
+        repository.setLogo("first", "logo")
+
+        repository.setLogoTreatment("first", SINGLE_BLACK_OUTLINED)
+
+        assertThat(repository.getAll().first().single { it.id == "first" }.logoTreatment).isEqualTo(SINGLE_BLACK_OUTLINED)
+        assertThat(repository.getAll().first().single { it.id == "second" }.logoTreatment).isEqualTo(LogoTreatment.AS_IS)
+    }
+
+    @Test
+    fun setLogoTreatment_ofAStoreThatIsGone_addsNothing() = runTest { // #240
+        val before = repository.getAll().first()
+
+        repository.setLogoTreatment("gone", SINGLE_BLACK_OUTLINED)
+
+        assertThat(repository.getAll().first()).isEqualTo(before)
+    }
+
+    @Test
+    fun setLogo_aNewLogo_drawsItAsIs() = runTest { // #240: the treatment was for the old logo
+        repository.setLogo("first", "old")
+        repository.setLogoTreatment("first", SINGLE_BLACK_OUTLINED)
+
+        repository.setLogo("first", "new")
+
+        assertThat(repository.getAll().first().single { it.id == "first" }.logoTreatment).isEqualTo(LogoTreatment.AS_IS)
+    }
+
+    @Test
+    fun setLogo_null_resetsHowTheLogoIsDrawn() = runTest { // #240
+        repository.setLogo("first", "logo")
+        repository.setLogoTreatment("first", SINGLE_BLACK_OUTLINED)
+
+        repository.setLogo("first", null)
+
+        assertThat(repository.getAll().first().single { it.id == "first" }.logoTreatment).isEqualTo(LogoTreatment.AS_IS)
+    }
+
+    @Test
+    fun setLogo_theSameLogoAgain_keepsHowItIsDrawn() = runTest { // #240: not a new logo
+        repository.setLogo("first", "logo")
+        repository.setLogoTreatment("first", SINGLE_BLACK_OUTLINED)
+
+        repository.setLogo("first", "logo")
+
+        assertThat(repository.getAll().first().single { it.id == "first" }.logoTreatment).isEqualTo(SINGLE_BLACK_OUTLINED)
+    }
+
+    @Test
+    fun update_aCustomStoresNewColour_keepsHowItsLogoIsDrawn() = runTest { // #240
+        repository.add(aStore(id = "custom", color = "#112233", countryCodes = emptyList(), isCustom = true))
+        repository.setLogo("custom", "logo")
+        repository.setLogoTreatment("custom", SINGLE_BLACK_OUTLINED)
+
+        repository.update(aStore(id = "custom", color = "#C62828", countryCodes = emptyList(), isCustom = true))
+
+        val saved = repository.getAll().first().single { it.id == "custom" }
+        assertThat(saved.color).isEqualTo("#C62828")
+        assertThat(saved.logoTreatment).isEqualTo(SINGLE_BLACK_OUTLINED)
+    }
+
     private fun storedPhoto(name: String): File = photos.file(name).apply { writeBytes(byteArrayOf(1)) }
+
+    private companion object {
+        val SINGLE_BLACK_OUTLINED = LogoTreatment(style = LogoStyle.SINGLE_COLOUR, tint = "#000000", outline = true)
+    }
 }

@@ -29,6 +29,8 @@ data class Store(
     val frequentlyAdded: Boolean,
     val isCustom: Boolean,
     val updatedAt: Instant,
+    /** How [logo] is drawn on [color] (#240); As is until the user picks another. */
+    val logoTreatment: LogoTreatment = LogoTreatment.AS_IS,
 ) {
     /** What an initials tile shows: the first letter or digit of the name's first two words, in upper case. */
     val initials: String

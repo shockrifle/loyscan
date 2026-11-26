@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-26 · schema v5, stores.logoStyle/logoTint/logoOutline by AutoMigration 4 → 5; the catalogue sync leaves them alone; a new or removed logo resets them · database-schema-changes, store-catalogue, architecture · #240
 - 2026-11-26 · review of PR #241, round 2: the wide-widget known limit moved out of the middle of the not-checked list · apps/card-widget · #185
 - 2026-11-26 · review of PR #241: the widget reads a tile's logo only when its photo can't be, so hidden logos take no budget; wide-widget softness recorded as a known limit · apps/card-widget · #185
 - 2026-11-26 · a widget tile shows the card's front photo, cropped to fill, with "Show photo on widget" on; photos cut to the tile's shape and sharing the 4 MB budget with the logos · apps/card-widget, features/card-photos, decisions/2026-11-04-home-screen-widget, faq, integrations/coil-image-loading, architecture, workflows/tdd · #185

@@ -1,6 +1,7 @@
 package com.bdaniel.loyscan.testing
 
 import com.bdaniel.loyscan.data.repository.StoreRepository
+import com.bdaniel.loyscan.domain.LogoTreatment
 import com.bdaniel.loyscan.domain.Store
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
@@ -49,11 +50,26 @@ class FakeStoreRepository(stores: List<Store> = emptyList()) : StoreRepository {
     /** When set, [setLogo] suspends until it completes. */
     var setLogoGate: CompletableDeferred<Unit>? = null
 
-    /** Like the Room repository: any store's logo; the files are the photos fake's. */
+    /** Like the Room repository: any store's logo, a new one or none drawn As is (#240); the files are the photos fake's. */
     override suspend fun setLogo(storeId: String, logo: String?) {
         setLogoGate?.await()
         setLogoFailure?.let { throw it }
-        stores.value = stores.value.map { if (it.id == storeId) it.copy(logo = logo) else it }
+        stores.value = stores.value.map {
+            when {
+                it.id != storeId -> it
+                it.logo == logo -> it
+                else -> it.copy(logo = logo, logoTreatment = LogoTreatment.AS_IS)
+            }
+        }
+    }
+
+    /** When set, [setLogoTreatment] throws it instead of saving. */
+    var setLogoTreatmentFailure: Exception? = null
+
+    /** Like the Room repository: any store's; nothing for an unknown id. */
+    override suspend fun setLogoTreatment(storeId: String, treatment: LogoTreatment) {
+        setLogoTreatmentFailure?.let { throw it }
+        stores.value = stores.value.map { if (it.id == storeId) it.copy(logoTreatment = treatment) else it }
     }
 
     /** When set, [update] throws it instead of saving. */
