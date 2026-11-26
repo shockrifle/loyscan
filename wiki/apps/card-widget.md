@@ -145,10 +145,11 @@ All paths are under `app/src/main/java/com/bdaniel/loyscan/` unless written in f
   glance-appwidget 1.2.0 sources, 2026-11-24; not measured). **Checked on devices on 2026-11-24:** the owner
   looked at logo tiles on an Android 15 phone and an Android 14 handheld (the label's scrim above came from that).
   **Not checked on a device yet:** photo tiles (#185): how a photo looks cropped on a square tile, and how soft many
-  photos look under the shared budget. **A known limit:** a photo and a logo are decoded for a 216dp tile, but a tile
-  fills its cell since #216, so in a two-column widget wider than about 445dp (a tablet) a tile is wider and its picture is drawn
-  larger than decoded, softer (review of PR #241); the tile height with a logo measured against one without (a `Fit` image kept its
+  photos look under the shared budget; the tile height with a logo measured against one without (a `Fit` image kept its
   intrinsic height in an earlier attempt, below), TalkBack's reading, and a widget with many stores' logos.
+  **A known limit:** a photo and a logo are decoded for a 216dp tile, but a tile fills its cell since #216, so in a
+  two-column widget wider than about 445dp (a tablet) a tile is wider and its picture is drawn larger than decoded,
+  softer (review of PR #241).
 
 ## Opening a card — an intent extra, not a URI deep link
 

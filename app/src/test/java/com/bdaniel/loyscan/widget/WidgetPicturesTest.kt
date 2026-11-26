@@ -281,6 +281,22 @@ class WidgetPicturesTest {
     }
 
     @Test
+    fun aPhotoThatDidNotDecode_isNotDecodedAgain_onTheNextRedraw() = runTest { // review of #185
+        val logo = png("logo", 10, 10)
+        val whole = File(directory, png("whole", 50, 50)).readBytes()
+        File(directory, "cut").writeBytes(whole.copyOf(33))
+        val pictures = pictures()
+        val tiles = listOf(tile("c1", logo = logo, photo = "cut"))
+        pictures.forTiles(tiles)
+
+        // Now a picture that would decode: had the failure been forgotten, the photo would come back.
+        File(directory, "cut").writeBytes(whole)
+        val shown = pictures.forTiles(tiles)
+
+        assertThat(shown.keys).containsExactly(logo)
+    }
+
+    @Test
     fun aPhotoNoLongerShown_isForgotten() = runTest { // #185: the switch turned off
         val photo = png("photo", 400, 200)
         val pictures = pictures()
