@@ -1,5 +1,7 @@
 package com.bdaniel.loyscan.widget
 
+import com.bdaniel.loyscan.domain.LogoStyle
+import com.bdaniel.loyscan.domain.LogoTreatment
 import androidx.compose.ui.graphics.Color
 import com.bdaniel.loyscan.domain.CardSort
 import com.bdaniel.loyscan.testing.aLoyaltyCard
@@ -51,6 +53,14 @@ class CardWidgetTilesTest {
         val card = aLoyaltyCard(label = "Gold", store = aStore(name = "Tesco"))
 
         assertThat(listOf(card).toWidgetTiles(CardSort.NAME).single().storeName).isEqualTo("Tesco")
+    }
+
+    @Test
+    fun toWidgetTiles_carryHowTheStoresLogoIsDrawn() { // #240
+        val treatment = LogoTreatment(style = LogoStyle.SINGLE_COLOUR, tint = "#FFFFFF")
+        val card = aLoyaltyCard(id = cardId(1), store = aStore(id = "a", logo = "logo-1", logoTreatment = treatment))
+
+        assertThat(listOf(card).toWidgetTiles(CardSort.NAME).single().logoTreatment).isEqualTo(treatment)
     }
 
     @Test

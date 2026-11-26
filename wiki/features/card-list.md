@@ -49,7 +49,8 @@ tiles, one per row in `loyalty_cards`, live-updating from Room. Sort, search and
   initials, large (`Store.initials`: the first letter or digit of the name's first two words, upper case;
   `StoreTest`), or the store's logo when the user gave the store one (#151, [[2026-11-13-user-supplied-store-logos]]):
   a `CardPhoto` file through the app's loader, tagged `CARD_TILE_LOGO_TAG`, 60% of the tile's height
-  (`TILE_LOGO_FRACTION`); a logo that can't be loaded, or whose file is missing (`CardPhotos.withoutMissing`), falls back
+  (`TILE_LOGO_FRACTION`), drawn the way the user chose for the store (`StoreLogoImage`, #240, [[store-logo]]; test:
+  `ListScreenTest.aLogoInSingleColour_isDrawnInItsColour_onTheTile`); a logo that can't be loaded, or whose file is missing (`CardPhotos.withoutMissing`), falls back
   to the initials. **Only the card's own label is drawn** (#183), one line at the bottom left over the tile, as on a
   photo; a card without a label shows no text at all, since the logo, the photo or the initials say which store it is.
   The cost: two unlabelled cards of stores with the same initials and a similar colour look alike (the store is still

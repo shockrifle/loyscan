@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-26 · a store's logo drawn in Single colour on the tile, the card screen's band, the picker's badge and the widget; the pixel-function test kind and writeSolidPng · features/card-list, features/card-detail, features/add-card, apps/card-widget, workflows/tdd, architecture · #240
 - 2026-11-26 · schema v5, stores.logoStyle/logoTint/logoOutline by AutoMigration 4 → 5; the catalogue sync leaves them alone; a new or removed logo resets them · database-schema-changes, store-catalogue, architecture · #240
 - 2026-11-26 · review of PR #241, round 2: the wide-widget known limit moved out of the middle of the not-checked list · apps/card-widget · #185
 - 2026-11-26 · review of PR #241: the widget reads a tile's logo only when its photo can't be, so hidden logos take no budget; wide-widget softness recorded as a known limit · apps/card-widget · #185

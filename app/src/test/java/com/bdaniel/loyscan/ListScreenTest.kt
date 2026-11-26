@@ -1,5 +1,8 @@
 package com.bdaniel.loyscan
 
+import com.bdaniel.loyscan.testing.writeSolidPng
+import com.bdaniel.loyscan.domain.LogoTreatment
+import com.bdaniel.loyscan.domain.LogoStyle
 import com.bdaniel.loyscan.ui.CARD_TILE_LOGO_TAG
 import com.bdaniel.loyscan.ui.CARD_TILE_PHOTO_TAG
 import androidx.activity.ComponentActivity
@@ -430,6 +433,20 @@ class ListScreenTest {
 
         // Left of the initials and above the label, clear of the rounded corner.
         assertThat(tile[tile.width / 8, tile.height / 3]).isEqualTo(Color(0xFFAA0000))
+    }
+
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE) // real drawing, for the pixels
+    fun aLogoInSingleColour_isDrawnInItsColour_onTheTile() { // #240: a logo in its own brand colour, drawn white
+        File(composeRule.activity.filesDir, CardPhotosModule.PHOTO_DIRECTORY).resolve("logo").writeSolidPng(0xFFAA0000.toInt())
+        val store = aStore(color = "#AA0000", logo = "logo", logoTreatment = LogoTreatment(style = LogoStyle.SINGLE_COLOUR, tint = "#FFFFFF"))
+        setScreen(aLoyaltyCard(store = store), photos = FakeCardPhotos("logo"))
+        waitForAnImageToLoad()
+        composeRule.waitForIdle()
+
+        val logo = composeRule.onNodeWithTag(CARD_TILE_LOGO_TAG, useUnmergedTree = true).captureToImage().toPixelMap()
+
+        assertThat(logo[logo.width / 2, logo.height / 2]).isEqualTo(Color.White)
     }
 
     @Test
