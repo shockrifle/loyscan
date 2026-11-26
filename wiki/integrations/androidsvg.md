@@ -17,7 +17,9 @@ Code: `drawSvgLogo` in `app/src/main/java/com/bdaniel/loyscan/data/photos/SvgLog
   own units when it has none, and the PNG's pixels as its width and height.
 - **Failure.** A file over `MAX_SVG_BYTES` (5 MiB), one that isn't an SVG, and any failure to draw (a
   `StackOverflowError` from deep nesting too) is an `IOException`, so the logo screen says the picture couldn't be used.
-  The cap is checked on the copy before parsing; the copy itself isn't capped, as for any pick.
+  The cap is checked on the copy before parsing; the copy itself isn't capped, as for any pick. A gzipped SVG (an
+  `.svgz`, gzip's `1f 8b` first) is unpacked by `drawSvgLogo` itself, up to the same cap, and the checks below read the
+  unpacked text: AndroidSVG would unpack it too, after them (PR #242 review).
 - **Nothing outside the file is read.** No `SVGExternalFileResolver` is registered (it is process-wide and static), so
   AndroidSVG skips an `<image>` or a font that isn't embedded as a `data:` URI. Its SAX parser, used once a DOCTYPE
   declares entities, turns external entities off.
@@ -33,6 +35,9 @@ Code: `drawSvgLogo` in `app/src/main/java/com/bdaniel/loyscan/data/photos/SvgLog
 - Under Robolectric's `NATIVE` graphics AndroidSVG draws real pixels, so `FileCardPhotosTest` checks the drawn PNG. On
   the JVM, the SAX parser refuses a billion-laughs file by itself; Android's own parser's limit on API 29–31 wasn't
   checked, which is why `checkEntities` doesn't rely on it.
+- Drawing can't be stopped midway. A small file that is slow to draw (long `<use>` or `<pattern>` chains) holds the IO
+  thread, and the logo screen shows its progress bar, until it ends. Accepted (PR #242 review): the user picks or shares
+  the file, and nothing bounds the drawing's time or element count.
 - The release (R8) build with an SVG pick hasn't been run on a device. AndroidSVG uses no reflection that its consumer
   rules would need to keep (not checked).
 

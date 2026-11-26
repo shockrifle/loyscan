@@ -9,6 +9,7 @@ Append-only, newest first, one self-contained line per entry. Format:
 - 2026-11-26 · WidgetLogos renamed WidgetPictures (it will decode photos too) · apps/card-widget, architecture, workflows/tdd, faq, integrations/coil-image-loading, decisions/2026-11-04-home-screen-widget · #185
 - 2026-11-26 · "Show photo on widget" switch on the card form, separate from the My Cards one · features/card-photos, features/edit-card · #185
 - 2026-11-26 · schema v4, loyalty_cards.showPhotoOnWidget by AutoMigration 3 → 4 · database-schema-changes, architecture, tech-debt/no-room-migrations · #185
+- 2026-11-26 · a gzipped SVG logo is unpacked before the entity check and the size cap; slow drawing recorded as accepted · integrations/androidsvg · PR #242 review (#211)
 - 2026-11-26 · an SVG store logo is drawn into a PNG on import with AndroidSVG; entity guard, size cap, no external reads · integrations/androidsvg (new), integrations/_index, index, integrations/coil-image-loading, features/store-logo, features/card-photos, workflows/tdd · #211
 - 2026-11-26 · grilling skill asks its questions through AskUserQuestion (selectable options, recommended first, yes/no for simple ones) · workflows/agent-skills · user request
 - 2026-11-26 · review of PR #238: a swept front pick that falls back to the card's own photo keeps that photo's setting; the switch row is a 48dp touch target · features/card-photos · #184

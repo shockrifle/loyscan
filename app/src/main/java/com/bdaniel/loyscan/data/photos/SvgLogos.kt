@@ -3,8 +3,10 @@ package com.bdaniel.loyscan.data.photos
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import com.caverock.androidsvg.SVG
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
+import java.util.zip.GZIPInputStream
 import kotlin.math.max
 import kotlin.math.roundToInt
 
@@ -25,8 +27,10 @@ private const val DEFAULT_SVG_HEIGHT = 150f
  */
 internal fun drawSvgLogo(source: File, target: File) {
     if (source.length() > MAX_SVG_BYTES) throw IOException("The SVG is too large: ${source.length()} bytes")
-    val text = source.readBytes()
+    val text = source.readBytes().unpacked()
     checkEntities(text)
+    // A logo is drawn in one go: AndroidSVG can't be stopped midway, so a hostile file that is slow to draw (deep <use>
+    // chains, say) holds the IO thread until it ends. Accepted: the user picks or shares the file (PR #242 review).
     try {
         val svg = text.inputStream().use(SVG::getFromInputStream)
         val (width, height) = svg.shape()
@@ -51,6 +55,28 @@ internal fun drawSvgLogo(source: File, target: File) {
         throw IOException("Couldn't draw the SVG", e)
     }
 }
+
+/**
+ * The SVG's text: a gzipped one (an `.svgz`) unpacked here, at most [MAX_SVG_BYTES], so [checkEntities] reads what
+ * AndroidSVG parses. AndroidSVG would unpack it itself, past that check (PR #242 review).
+ */
+private fun ByteArray.unpacked(): ByteArray {
+    if (size < 2 || this[0] != GZIP_MAGIC_0 || this[1] != GZIP_MAGIC_1) return this
+    val unpacked = ByteArrayOutputStream()
+    GZIPInputStream(inputStream()).use { gzip ->
+        val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+        while (true) {
+            val read = gzip.read(buffer)
+            if (read < 0) break
+            unpacked.write(buffer, 0, read)
+            if (unpacked.size() > MAX_SVG_BYTES) throw IOException("The SVG is too large unpacked")
+        }
+    }
+    return unpacked.toByteArray()
+}
+
+private const val GZIP_MAGIC_0 = 0x1f.toByte()
+private const val GZIP_MAGIC_1 = 0x8b.toByte()
 
 /**
  * Refuses an SVG whose entities AndroidSVG shouldn't expand (#211). AndroidSVG expands entities a DOCTYPE declares, and

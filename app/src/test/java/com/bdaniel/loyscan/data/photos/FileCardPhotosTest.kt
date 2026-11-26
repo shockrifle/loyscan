@@ -34,6 +34,7 @@ import java.time.Instant
 import java.util.Base64
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
+import java.util.zip.GZIPOutputStream
 
 /**
  * Card photos as files (#10): a picked picture is stored in the photo directory, and deleted from there. Native
@@ -557,7 +558,39 @@ class FileCardPhotosTest {
     }
 
     @Test
-    fun stageLogo_drawsTheSvgOnTheIoDispatcher()= runBlocking { // #211: never on the caller's (main) thread
+    fun stageLogo_ofAGzippedSvg_drawsIt() = runTest { // #211 review: an .svgz is an image/svg+xml too
+        val svg = gzipped("""<svg xmlns="$SVG_NS" width="200" height="100"><rect width="100" height="100" fill="red"/></svg>""")
+
+        val drawn = BitmapFactory.decodeFile(photos.file(photos.stageLogo(Uri.fromFile(svg))).path)
+
+        assertThat(drawn.getPixel(128, 128)).isEqualTo(Color.RED)
+    }
+
+    @Test
+    fun stageLogo_ofAGzippedSvgWithEntitiesInsideEntities_throws_andLeavesNoFile() = runTest { // #211 review: not missed for its packing
+        val svg = gzipped(
+            """<?xml version="1.0"?><!DOCTYPE svg [<!ENTITY a "aaaa"><!ENTITY b "&a;&a;&a;&a;">]>""" +
+                """<svg xmlns="$SVG_NS" width="200" height="100"><title>&b;</title><rect width="100" height="100" fill="red"/></svg>""",
+        )
+
+        assertThrows(IOException::class.java) { runBlocking { photos.stageLogo(Uri.fromFile(svg)) } }
+
+        assertThat(directory.listFiles().orEmpty()).isEmpty()
+    }
+
+    @Test
+    fun stageLogo_ofAGzippedSvgOverTheSizeLimitUnpacked_throws_andLeavesNoFile() = runTest { // #211 review: the limit is on the SVG
+        val svg = """<svg xmlns="$SVG_NS" width="200" height="100"><rect width="100" height="100" fill="red"/></svg>"""
+        val packed = gzipped(svg + "<!--" + "x".repeat(5 * 1024 * 1024) + "-->")
+        assertThat(packed.length()).isLessThan(1024L * 1024)
+
+        assertThrows(IOException::class.java) { runBlocking { photos.stageLogo(Uri.fromFile(packed)) } }
+
+        assertThat(directory.listFiles().orEmpty()).isEmpty()
+    }
+
+    @Test
+    fun stageLogo_drawsTheSvgOnTheIoDispatcher() = runBlocking { // #211: never on the caller's (main) thread
         var ioThread: Thread? = null
         val io = Executors.newSingleThreadExecutor { Thread(it).also { thread -> ioThread = thread } }
         var drawnOn: Thread? = null
@@ -720,6 +753,10 @@ class FileCardPhotosTest {
 
     /** An SVG file holding [text], as a picker or a share hands one over. */
     private fun anSvg(text: String, name: String = "logo.svg"): File = temporaryFolder.newFile(name).apply { writeText(text) }
+
+    /** An `.svgz`: [text] gzipped. */
+    private fun gzipped(text: String): File =
+        temporaryFolder.newFile("logo.svgz").apply { GZIPOutputStream(outputStream()).use { it.write(text.toByteArray()) } }
 
     /** Writes EXIF [tags] into this JPEG, PNG or WebP, through androidx's ExifInterface: the platform's can't on API 29. */
     private fun File.withExif(vararg tags: Pair<String, String>): File = apply {
