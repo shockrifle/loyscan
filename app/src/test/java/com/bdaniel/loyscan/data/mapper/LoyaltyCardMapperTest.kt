@@ -30,6 +30,7 @@ class LoyaltyCardMapperTest {
             note = "Expires in May",
             frontPhotoPath = "photos/front.jpg",
             backPhotoPath = "photos/back.jpg",
+            showPhotoOnList = true,
             updatedAt = Instant.ofEpochMilli(3),
         ),
         store = aStoreEntity(
@@ -74,6 +75,7 @@ class LoyaltyCardMapperTest {
                 note = "Expires in May",
                 frontPhotoPath = "photos/front.jpg",
                 backPhotoPath = "photos/back.jpg",
+                showPhotoOnList = true,
                 updatedAt = Instant.ofEpochMilli(3),
             )
         )
@@ -92,7 +94,7 @@ class LoyaltyCardMapperTest {
     }
 
     @Test
-    fun toEdit_copiesTheFieldsAnEditChanges() { // #8, photos: #10
+    fun toEdit_copiesTheFieldsAnEditChanges() { // #8, photos: #10, photo on the list: #184
         val card = withStore.toDomainModel()
 
         assertThat(card.toEdit()).isEqualTo(
@@ -105,6 +107,7 @@ class LoyaltyCardMapperTest {
                 note = card.note,
                 frontPhotoPath = card.frontPhotoPath,
                 backPhotoPath = card.backPhotoPath,
+                showPhotoOnList = card.showPhotoOnList,
                 updatedAt = card.updatedAt,
             )
         )

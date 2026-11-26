@@ -64,6 +64,7 @@ class ContentValuesTest {
             note = "a note",
             frontPhotoPath = "front.jpg",
             backPhotoPath = "back.jpg",
+            showPhotoOnList = true,
             updatedAt = Instant.parse("2026-03-01T00:00:00Z"),
         )
 

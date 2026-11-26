@@ -29,4 +29,5 @@ said to freeze `1.json`, which predates the v2 bump.)
 2026-11-05 (`e1065d9`, review fixes after it, #12): v2 is frozen as the first released schema. `FrozenSchemaTest` pins every version's `identityHash`,
 `AppDatabase.MIGRATIONS` is added to the builder with no destructive fallback, and `DatabaseMigrationTest` opens a v2
 database with a card through the app's builder ([[2026-11-05-room-schema-frozen-from-v2]], procedure:
-[[database-schema-changes]]). The "What" above describes the state before that.
+[[database-schema-changes]]). The "What" above describes the state before that. The first migration followed on
+2026-11-26: v2 → v3 by `@AutoMigration` (#184).
