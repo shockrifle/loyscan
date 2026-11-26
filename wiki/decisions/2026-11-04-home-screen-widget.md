@@ -29,7 +29,10 @@ intent `MainActivity` reads, not through URI deep links (the share flow, [[add-c
    RemoteViews. The risk named above is handled by decoding each logo once, to the largest tile less its margin at the
    screen's density (a 216dp tile since #216, whose layouts no longer include the largest tile), and keeping all the logos shown within a 4 MB budget (`WidgetLogos`, now `WidgetPictures`, [[card-widget]]). The label
    sits on a fade from clear to the My cards scrim colour behind the label alone, the owner's choice after device
-   checks showed it hard to read straight on the brand colour over a logo, and a solid band covering too much of it. Still no front photo (#185).
+   checks showed it hard to read straight on the brand colour over a logo, and a solid band covering too much of it.
+   *Amended 2026-11-26 (#185):* a card can show its front photo on its tile, with a switch of its own, separate from
+   My cards'; the photo is cut to the tile's shape at the same 216dp tile and shares the 4 MB budget with the logos,
+   and its label sits on the same fade (the owner's choice over My cards' band) ([[card-widget]]).
 
 ## Why
 
@@ -58,4 +61,4 @@ intent `MainActivity` reads, not through URI deep links (the share flow, [[add-c
 - `glance-testing`'s unit API matches a tile's click by component, not by intent extras, so the "right card is
   opened" guarantee rests on `CardWidgetTilesTest` (cardId↔tile) plus the intent/navigation tests, not on the
   content test — another on-device check.
-- **Follow-ups (not built):** front-photo tiles (#185), and an empty-state message when there are no cards.
+- **Follow-ups (not built):** an empty-state message when there are no cards. Front-photo tiles came in #185.

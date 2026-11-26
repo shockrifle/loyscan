@@ -10,7 +10,8 @@ import com.bdaniel.loyscan.ui.toBrandColorOrNull
 /**
  * One card as the home-screen widget shows it (#11): the brand [color] tile with the store's [initials] (#108) and the
  * card's own [label], if any, and the [cardId] a tap opens. Never the store's name on the tile, as on My cards (#183,
- * #181): [storeName] is for TalkBack ([description]). No photo; the widget mirrors the list's non-photo tile.
+ * #181): [storeName] is for TalkBack ([description]). The store's [logo] (#181), and the card's front [photo] when the
+ * card shows it on the widget (#185), are file names; `null` for none.
  */
 data class WidgetTile(
     val cardId: String,
@@ -19,6 +20,7 @@ data class WidgetTile(
     val storeName: String,
     val label: String?,
     val logo: String? = null,
+    val photo: String? = null,
 )
 
 /** The widget's tiles, in the list's [sort] order (#7, [sortedBy]); see [CardWidgetTilesTest]. */
@@ -31,6 +33,8 @@ fun List<LoyaltyCard>.toWidgetTiles(sort: CardSort): List<WidgetTile> =
             storeName = card.store.name,
             label = card.label,
             logo = card.store.logo,
+            // Only with "Show photo on widget" on (#185), separate from My cards' switch.
+            photo = card.frontPhotoPath?.takeIf { card.showPhotoOnWidget },
         )
     }
 

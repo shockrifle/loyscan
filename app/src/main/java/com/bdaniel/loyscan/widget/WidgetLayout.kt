@@ -104,7 +104,15 @@ fun widgetLogoBox(): DpSize = DpSize(
 )
 
 /** [widgetLogoBox] in pixels at [density], rounded down: the size [WidgetPictures] decodes a logo to fit. */
-fun widgetLogoBoxPx(density: Float): IntSize {
-    val box = widgetLogoBox()
-    return IntSize((box.width.value * density).toInt(), (box.height.value * density).toInt())
-}
+fun widgetLogoBoxPx(density: Float): IntSize = widgetLogoBox().toPx(density)
+
+/**
+ * The box a front photo is decoded to (#185): the logo box's 216dp card-ratio tile, whole, since a photo fills its
+ * tile. One bitmap serves every tile; a square tile crops its sides.
+ */
+fun widgetPhotoBox(): DpSize = DpSize(LOGO_BOX_TILE_WIDTH, LOGO_BOX_TILE_WIDTH / CARD_ASPECT_RATIO)
+
+/** [widgetPhotoBox] in pixels at [density], rounded down: the most [WidgetPictures] decodes a photo to. */
+fun widgetPhotoBoxPx(density: Float): IntSize = widgetPhotoBox().toPx(density)
+
+private fun DpSize.toPx(density: Float) = IntSize((width.value * density).toInt(), (height.value * density).toInt())

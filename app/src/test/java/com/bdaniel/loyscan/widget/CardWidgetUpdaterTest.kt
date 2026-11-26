@@ -139,4 +139,37 @@ class CardWidgetUpdaterTest {
             assertThat(refresher.refreshes).isGreaterThan(0)
         }
     }
+
+    @Test
+    fun refresh_runsWhenACardsShowPhotoOnWidgetIsToggled() = runTest { // #185: the tile shows the photo
+        val card = aLoyaltyCard(id = cardId(1), label = "Tesco", frontPhotoPath = "front")
+        val cards = FakeLoyaltyCardRepository(listOf(card))
+        val refresher = FakeRefresher(hasWidget = true)
+        CardWidgetUpdater(cards, FakeUserPreferencesRepository(), refresher, backgroundScope).ensureObserving()
+        runCurrent()
+
+        for (show in listOf(true, false)) {
+            val before = refresher.refreshes
+            cards.cards.value = listOf(card.copy(showPhotoOnWidget = show))
+            runCurrent()
+
+            assertThat(refresher.refreshes).isGreaterThan(before)
+        }
+    }
+
+    @Test
+    fun refresh_doesNotRun_whenTheSwitchChangesOnACardWithNoFrontPhoto_orOnlyMyCardsChanges() = runTest { // #185
+        val noPhoto = aLoyaltyCard(id = cardId(1), label = "Tesco")
+        val withPhoto = aLoyaltyCard(id = cardId(2), label = "Aldi", frontPhotoPath = "front")
+        val cards = FakeLoyaltyCardRepository(listOf(noPhoto, withPhoto))
+        val refresher = FakeRefresher(hasWidget = true)
+        CardWidgetUpdater(cards, FakeUserPreferencesRepository(), refresher, backgroundScope).ensureObserving()
+        runCurrent()
+        val before = refresher.refreshes
+
+        cards.cards.value = listOf(noPhoto.copy(showPhotoOnWidget = true), withPhoto.copy(showPhotoOnList = true))
+        runCurrent()
+
+        assertThat(refresher.refreshes).isEqualTo(before)
+    }
 }

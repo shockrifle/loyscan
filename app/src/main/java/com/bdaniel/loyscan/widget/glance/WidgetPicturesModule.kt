@@ -4,6 +4,7 @@ import android.content.Context
 import com.bdaniel.loyscan.data.photos.FileCardPhotos
 import com.bdaniel.loyscan.widget.WidgetPictures
 import com.bdaniel.loyscan.widget.widgetLogoBoxPx
+import com.bdaniel.loyscan.widget.widgetPhotoBoxPx
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -22,5 +23,7 @@ object WidgetPicturesModule {
     @Provides
     @Singleton
     fun provideWidgetPictures(photos: FileCardPhotos, @ApplicationContext context: Context): WidgetPictures =
-        WidgetPictures(photos::file, widgetLogoBoxPx(context.resources.displayMetrics.density))
+        context.resources.displayMetrics.density.let { density ->
+            WidgetPictures(photos::file, logoBox = widgetLogoBoxPx(density), photoBox = widgetPhotoBoxPx(density))
+        }
 }

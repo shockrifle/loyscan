@@ -21,6 +21,8 @@ import com.google.common.truth.Truth.assertThat
 import androidx.glance.text.EmittableText
 import androidx.glance.appwidget.testing.unit.runGlanceAppWidgetUnitTest
 import androidx.glance.layout.PaddingModifier
+import androidx.glance.layout.HeightModifier
+import androidx.glance.layout.WidthModifier
 import androidx.glance.testing.GlanceNodeMatcher
 import androidx.glance.testing.unit.MappedNode
 import androidx.glance.unit.Dimension
@@ -84,12 +86,78 @@ class CardWidgetContentTest {
     }
 
     private val aLogo = Bitmap.createBitmap(20, 10, Bitmap.Config.ARGB_8888)
+    private val aPhoto = Bitmap.createBitmap(40, 25, Bitmap.Config.ARGB_8888)
+
+    @Test
+    fun aTileWithAPhoto_showsItCroppedToFillTheTile_withNoMargin() = runGlanceAppWidgetUnitTest { // #185
+        setAppWidgetSize(DpSize(300.dp, 200.dp))
+        setContext(context)
+        provideComposable {
+            CardWidgetContent(listOf(tiles.first().copy(logo = "l1", photo = "p1")), pictures = mapOf("l1" to aLogo, "p1" to aPhoto))
+        }
+
+        onNode(hasTestTag(WIDGET_TILE_PHOTO_TAG) and showsBitmap(aPhoto) and isCropped() and fillsItsParentWithNoPadding()).assertExists()
+        onAllNodes(hasTestTag(WIDGET_TILE_LOGO_TAG)).assertCountEquals(0)
+        onAllNodes(hasText("TE")).assertCountEquals(0)
+        onAllNodes(hasText("Tesco")).assertCountEquals(0)
+    }
+
+    @Test
+    fun aLabelOnAPhotoTile_isWhite_onTheWidgetsScrimBehindItAlone() = runGlanceAppWidgetUnitTest { // #185
+        setAppWidgetSize(DpSize(300.dp, 200.dp))
+        setContext(context)
+        provideComposable {
+            CardWidgetContent(
+                listOf(
+                    WidgetTile("c1", "#000000", "DA", "Dark", "Gold", photo = "p1"),
+                    WidgetTile("c2", "#FFFFFF", "LI", "Light", "Silver", photo = "p1"),
+                ),
+                pictures = mapOf("p1" to aPhoto),
+            )
+        }
+
+        onNode(hasText("Gold") and hasTextColour(Color.White)).assertExists()
+        onNode(hasText("Silver") and hasTextColour(Color.White)).assertExists()
+        onAllNodes(holdsOnTheScrimAtTheBottom("Gold") or holdsOnTheScrimAtTheBottom("Silver")).assertCountEquals(2)
+    }
+
+    @Test
+    fun aTileWithoutAPhoto_showsItsLogo_orItsInitials() = runGlanceAppWidgetUnitTest { // #185: the switch off
+        setAppWidgetSize(DpSize(300.dp, 200.dp))
+        setContext(context)
+        provideComposable {
+            CardWidgetContent(
+                listOf(tiles[0].copy(logo = "l1", photo = null), tiles[1].copy(photo = null)),
+                pictures = mapOf("l1" to aLogo, "p1" to aPhoto),
+            )
+        }
+
+        onAllNodes(hasTestTag(WIDGET_TILE_PHOTO_TAG)).assertCountEquals(0)
+        onNode(hasTestTag(WIDGET_TILE_LOGO_TAG) and showsBitmap(aLogo)).assertExists()
+        onNode(hasText(tiles[1].initials)).assertExists()
+    }
+
+    @Test
+    fun aTileWhosePhotoDidNotDecode_showsItsLogo_orItsInitials() = runGlanceAppWidgetUnitTest { // #185
+        setAppWidgetSize(DpSize(300.dp, 200.dp))
+        setContext(context)
+        provideComposable {
+            CardWidgetContent(
+                listOf(tiles[0].copy(logo = "l1", photo = "p1"), tiles[1].copy(photo = "p2")),
+                pictures = mapOf("l1" to aLogo),
+            )
+        }
+
+        onAllNodes(hasTestTag(WIDGET_TILE_PHOTO_TAG)).assertCountEquals(0)
+        onNode(hasTestTag(WIDGET_TILE_LOGO_TAG) and showsBitmap(aLogo)).assertExists()
+        onNode(hasText(tiles[1].initials)).assertExists()
+    }
 
     @Test
     fun aTileWithALogo_showsItFitted_insideAn8dpMargin_onItsBrandColour() = runGlanceAppWidgetUnitTest { // #181
         setAppWidgetSize(DpSize(300.dp, 200.dp))
         setContext(context)
-        provideComposable { CardWidgetContent(listOf(tiles.first().copy(logo = "l1")), logos = mapOf("l1" to aLogo)) }
+        provideComposable { CardWidgetContent(listOf(tiles.first().copy(logo = "l1")), pictures = mapOf("l1" to aLogo)) }
 
         onNode(hasTestTag(WIDGET_TILE_LOGO_TAG) and showsBitmap(aLogo) and isFitted() and hasPaddingOnEverySide(8.dp)).assertExists()
         onNode(hasClickAction() and hasBackground(Color(0xFF112233))).assertExists()
@@ -100,7 +168,7 @@ class CardWidgetContentTest {
         setAppWidgetSize(DpSize(300.dp, 200.dp))
         setContext(context)
         provideComposable {
-            CardWidgetContent(listOf(tiles.first().copy(label = null, logo = "l1")), logos = mapOf("l1" to aLogo))
+            CardWidgetContent(listOf(tiles.first().copy(label = null, logo = "l1")), pictures = mapOf("l1" to aLogo))
         }
 
         onAllNodes(hasText("TE")).assertCountEquals(0)
@@ -120,7 +188,7 @@ class CardWidgetContentTest {
                     WidgetTile("c1", "#000000", "DA", "Dark", "Gold", logo = "l1"),
                     WidgetTile("c2", "#FFFFFF", "LI", "Light", "Silver", logo = "l1"),
                 ),
-                logos = mapOf("l1" to aLogo),
+                pictures = mapOf("l1" to aLogo),
             )
         }
 
@@ -152,7 +220,7 @@ class CardWidgetContentTest {
     fun aTileWhoseLogoDidNotDecode_showsTheInitials() = runGlanceAppWidgetUnitTest { // #181: missing or broken file
         setAppWidgetSize(DpSize(300.dp, 200.dp))
         setContext(context)
-        provideComposable { CardWidgetContent(listOf(tiles.first().copy(logo = "l1")), logos = emptyMap()) }
+        provideComposable { CardWidgetContent(listOf(tiles.first().copy(logo = "l1")), pictures = emptyMap()) }
 
         onNode(hasText("TE")).assertExists()
         onAllNodes(hasTestTag(WIDGET_TILE_LOGO_TAG)).assertCountEquals(0)
@@ -214,6 +282,17 @@ class CardWidgetContentTest {
 
     private fun isFitted() = GlanceNodeMatcher<MappedNode>("is fitted whole") { node ->
         (node.value.emittable as? EmittableImage)?.contentScale == ContentScale.Fit
+    }
+
+    private fun isCropped() = GlanceNodeMatcher<MappedNode>("is cropped to fill") { node ->
+        (node.value.emittable as? EmittableImage)?.contentScale == ContentScale.Crop
+    }
+
+    private fun fillsItsParentWithNoPadding() = GlanceNodeMatcher<MappedNode>("fills its parent, no padding") { node ->
+        val elements = node.value.emittable.modifier.elements()
+        elements.none { it is PaddingModifier } &&
+            elements.any { it is WidthModifier && it.width == Dimension.Fill } &&
+            elements.any { it is HeightModifier && it.height == Dimension.Fill }
     }
 
     private fun hasBackground(colour: Color) = GlanceNodeMatcher<MappedNode>("has background $colour") { node ->

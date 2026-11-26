@@ -30,18 +30,23 @@ class CardWidgetRenderTest {
         WidgetTile("c1", "#1E5AA8", "TE", "Tesco", "Gold", logo = "tesco.png"),
         WidgetTile("c2", "#D32F2F", "AL", "Aldi", "Family"),
         WidgetTile("c3", "#2E7D32", "SP", "Spar", label = null),
+        // #185: a photo of another shape than the tile (a tall one) must not make its tile taller.
+        WidgetTile("c4", "#6A1B9A", "LI", "Lidl", "Plus", photo = "lidl-front.png"),
     )
 
-    private val logos = mapOf("tesco.png" to Bitmap.createBitmap(300, 100, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.WHITE) })
+    private val pictures = mapOf(
+        "tesco.png" to Bitmap.createBitmap(300, 100, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.WHITE) },
+        "lidl-front.png" to Bitmap.createBitmap(100, 400, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.YELLOW) },
+    )
 
-    private val widget = WidgetRender(context) { CardWidgetContent(tiles, logos) }
+    private val widget = WidgetRender(context) { CardWidgetContent(tiles, pictures) }
 
     @Test
     fun aLayoutShownInAWidgetOfItsOwnWidth_hasCardTilesFillingTheirCells_inOneColumn() {
         val rendered = widget.show(layoutWidth = 205.dp, realWidth = 205.dp).also { it.savePng("layout-205-at-205") }
 
         // A 205dp widget: one column, a 201dp cell, a 197dp tile at the card's ratio.
-        assertThat(rendered.tiles).hasSize(3)
+        assertThat(rendered.tiles).hasSize(4)
         for (tile in rendered.tiles) {
             assertWithMessage(tile.description).that(tile.width).isWithin(rendered.pixel).of(197f)
             assertWithMessage(tile.description).that(tile.height).isWithin(rendered.pixel).of(197f / CARD_ASPECT_RATIO)
@@ -54,7 +59,7 @@ class CardWidgetRenderTest {
 
         // A 286dp widget: two columns of 141dp cells, 137dp tiles at the card's ratio, side by side.
         val (first, second) = rendered.tiles
-        assertThat(rendered.tiles).hasSize(3)
+        assertThat(rendered.tiles).hasSize(4)
         assertThat(second.top).isWithin(rendered.pixel).of(first.top)
         for (tile in rendered.tiles) {
             assertWithMessage(tile.description).that(tile.width).isWithin(rendered.pixel).of(137f)
@@ -120,8 +125,9 @@ class CardWidgetRenderTest {
     fun anyLayoutShownAtAnyWidth_neverDrawsATileTallerThanItIsWide() { // #216, whatever layout a launcher picks
         for (layout in WIDGET_SIZES.map { it.width }) {
             for (realWidth in 110..480 step 5) {
-                val rendered = widget.show(layout, realWidth.dp)
-                assertThat(rendered.tiles).hasSize(3)
+                // Tall enough for all four tiles even as 332dp squares (the 110dp layout at 340dp).
+                val rendered = widget.show(layout, realWidth.dp, realHeight = 1500.dp)
+                assertThat(rendered.tiles).hasSize(4)
                 for (tile in rendered.tiles) {
                     assertWithMessage("${tile.description}, layout $layout at ${realWidth}dp")
                         .that(tile.height).isAtMost(tile.width + rendered.pixel)
@@ -143,7 +149,7 @@ class CardWidgetRenderTest {
             if (realWidth in PNG_WIDTHS) rendered.savePng("layout-${layout.value.toInt()}-at-$realWidth")
             val columns = if (realWidth < 240) 1 else 2
             val tileWidth = (realWidth - 4f) / columns - 4f
-            assertThat(rendered.tiles).hasSize(3)
+            assertThat(rendered.tiles).hasSize(4)
             for (tile in rendered.tiles) {
                 val where = "${tile.description}, layout $layout at ${realWidth}dp"
                 // Each 2dp padding is a whole number of pixels (5px of 5.5 at 2.75) and the grid splits whole pixels
