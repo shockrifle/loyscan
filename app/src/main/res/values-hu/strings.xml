@@ -128,6 +128,7 @@
     <string name="save_anyway">Mentés így is</string>
     <string name="save_changes_question">Mented a módosításokat?</string>
     <string name="discard_card_question">Elveted ezt a kártyát?</string>
+    <string name="discard_store_question">Elveted ezt a boltot?</string>
     <string name="discard">Elvetés</string>
     <string name="keep_editing">Szerkesztés folytatása</string>
     <string name="number_does_not_fit_format">Ez a szám nem érvényes ebben a formátumban: %1$s.</string>

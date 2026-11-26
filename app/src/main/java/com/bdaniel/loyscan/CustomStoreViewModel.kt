@@ -60,6 +60,11 @@ data class CustomStoreState(
     val logo: String? = null,
     /** How [logo] is drawn (#240). */
     val logoTreatment: LogoTreatment = LogoTreatment.AS_IS,
+    /**
+     * The name, colour or format differs from what the form opened with (#209), so Back asks first. False until the
+     * form is ready, and once saving or deleting has started: Back then leaves and the write still ends (#65).
+     */
+    val hasChanges: Boolean = false,
 ) {
     val canSave: Boolean get() = ready && name.isNotBlank() && !saving && createdStoreId == null && !saved
 }
@@ -125,6 +130,8 @@ class CustomStoreViewModel @Inject constructor(
                 storeId = route.storeId,
                 logo = (edited as? Edited.Found)?.store?.logo,
                 logoTreatment = (edited as? Edited.Found)?.store?.logoTreatment ?: LogoTreatment.AS_IS,
+                hasChanges = (edited is Edited.New || edited is Edited.Found) && inputs.differFrom(inputs(edited, null, null, null)) &&
+                    !progress.saving && progress.createdStoreId == null && !progress.saved && deletion == Deletion.NONE,
             )
         }.stateIn(
             scope = viewModelScope,
@@ -210,7 +217,10 @@ class CustomStoreViewModel @Inject constructor(
         )
     }
 
-    private data class Inputs(val name: String, val color: String, val format: BarcodeFormat)
+    private data class Inputs(val name: String, val color: String, val format: BarcodeFormat) {
+        /** As save would store them (#209): the name trimmed, so spaces alone aren't a change. */
+        fun differFrom(opening: Inputs) = name.trim() != opening.name.trim() || color != opening.color || format != opening.format
+    }
 
     private sealed interface Edited {
         data object New : Edited

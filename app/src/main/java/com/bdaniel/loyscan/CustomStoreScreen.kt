@@ -1,5 +1,6 @@
 package com.bdaniel.loyscan
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -46,6 +47,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.bdaniel.loyscan.ui.LeaveFormDialog
 import com.bdaniel.loyscan.ui.LogoPreview
 import com.bdaniel.loyscan.ui.theme.Spacing
 import com.bdaniel.loyscan.ui.barcodeFormatName
@@ -74,13 +76,31 @@ fun CustomStoreScreen(
     LaunchedEffect(state.saved, state.deletion) {
         if (state.saved || state.deletion == Deletion.DELETED) directions.toBack()
     }
+    // Back with changes asks first (#209).
+    var leaving by rememberSaveable { mutableStateOf(false) }
+    BackHandler(enabled = state.hasChanges) { leaving = true }
+    if (leaving && state.hasChanges) {
+        LeaveFormDialog(
+            title = stringResource(if (state.editing) R.string.save_changes_question else R.string.discard_store_question),
+            saveText = if (state.canSave) stringResource(R.string.save) else null, // "Save" even for Create, as #209 names it
+            onSave = {
+                leaving = false
+                viewModel.save()
+            },
+            onDiscard = {
+                leaving = false
+                directions.toBack()
+            },
+            onKeepEditing = { leaving = false },
+        )
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(if (state.editing) R.string.edit_store else R.string.new_store)) },
                 navigationIcon = {
-                    IconButton(onClick = directions.toBack) {
+                    IconButton(onClick = { if (state.hasChanges) leaving = true else directions.toBack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
