@@ -234,6 +234,7 @@ class WidgetPicturesTest {
     @Test
     fun aPhotoThatCannotBeRead_isLeftOut_andTheTilesLogoStillComes() = runTest { // #185: the tile falls back to it
         val logo = png("logo", 10, 10)
+        val otherLogo = png("other-logo", 10, 10)
         File(directory, "text").writeText("not a picture")
         // A PNG cut after its header: its size can be read, its pixels can't.
         val whole = File(directory, png("whole", 50, 50)).readBytes()
@@ -243,12 +244,12 @@ class WidgetPicturesTest {
             listOf(
                 tile("c1", logo = logo, photo = "missing"),
                 tile("c2", logo = null, photo = "text"),
-                tile("c3", logo = null, photo = "cut"),
+                tile("c3", logo = otherLogo, photo = "cut"), // readable header, so only its decode fails
                 tile("c4", logo = null, photo = "../escape"),
             ),
         )
 
-        assertThat(shown.keys).containsExactly(logo)
+        assertThat(shown.keys).containsExactly(logo, otherLogo)
     }
 
     @Test
@@ -259,11 +260,24 @@ class WidgetPicturesTest {
         val logo = png("logo", 400, 200)
 
         val shown = WidgetPictures(::file, logoBox = IntSize(200, 100), photoBox = PHOTO_BOX, budgetBytes = 80_000)
-            .forTiles(listOf(tile("c1", logo = logo, photo = photo)))
+            .forTiles(listOf(tile("c1", logo = null, photo = photo), tile("c2", logo = logo)))
 
         assertThat(shown.getValue(photo).size()).isEqualTo(IntSize(141, 70))
         assertThat(shown.getValue(logo).size()).isEqualTo(IntSize(141, 70))
         assertThat(shown.values.sumOf { it.byteCount.toLong() }).isAtMost(80_000)
+    }
+
+    @Test
+    fun theLogoOfATileShowingItsPhoto_isNotDecoded_andTakesNoBudget() = runTest { // review of #185
+        // Only the photo is drawn, so it alone counts: a 200 × 100 photo is 80,000 bytes, within the budget.
+        val photo = png("photo", 400, 200)
+        val logo = png("logo", 400, 200)
+
+        val shown = WidgetPictures(::file, logoBox = IntSize(200, 100), photoBox = PHOTO_BOX, budgetBytes = 80_000)
+            .forTiles(listOf(tile("c1", logo = logo, photo = photo)))
+
+        assertThat(shown.keys).containsExactly(photo)
+        assertThat(shown.getValue(photo).size()).isEqualTo(IntSize(200, 100))
     }
 
     @Test
