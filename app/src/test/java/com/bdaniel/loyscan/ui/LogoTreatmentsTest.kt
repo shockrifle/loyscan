@@ -79,6 +79,18 @@ class LogoTreatmentsTest {
     }
 
     @Test
+    fun aLogoInOneColour_withAFaintStrayPixel_isStillSolid() { // review of PR #244: an edge pixel nearly clear
+        val red = 0xFFC62828.toInt()
+        val faintBlack = 0x04000000 // alpha 4: its colour is noise after decoding
+        val logo = intArrayOf(red, red, red, faintBlack)
+
+        val drawn = inSingleColour(logo, tint = 0xFFFFFFFF.toInt())
+
+        assertThat(drawn.take(3)).containsExactly(0xFFFFFFFF.toInt(), 0xFFFFFFFF.toInt(), 0xFFFFFFFF.toInt())
+        assertThat(drawn[3] ushr 24).isAtMost(4)
+    }
+
+    @Test
     fun aLogoWithNothingDrawn_staysClear() {
         val drawn = inSingleColour(intArrayOf(CLEAR, 0x00FFFFFF), tint = 0xFFFFFFFF.toInt())
 

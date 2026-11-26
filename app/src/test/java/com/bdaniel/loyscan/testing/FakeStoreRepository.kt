@@ -66,8 +66,12 @@ class FakeStoreRepository(stores: List<Store> = emptyList()) : StoreRepository {
     /** When set, [setLogoTreatment] throws it instead of saving. */
     var setLogoTreatmentFailure: Exception? = null
 
+    /** When set, [setLogoTreatment] suspends until it completes. */
+    var setLogoTreatmentGate: CompletableDeferred<Unit>? = null
+
     /** Like the Room repository: any store's; nothing for an unknown id. */
     override suspend fun setLogoTreatment(storeId: String, treatment: LogoTreatment) {
+        setLogoTreatmentGate?.await()
         setLogoTreatmentFailure?.let { throw it }
         stores.value = stores.value.map { if (it.id == storeId) it.copy(logoTreatment = treatment) else it }
     }

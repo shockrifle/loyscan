@@ -436,6 +436,21 @@ class StoreLogoViewModelTest {
         assertThat(shop().logoTreatment).isEqualTo(LogoTreatment.AS_IS)
     }
 
+    @Test
+    fun aStyleSavedWhileAPictureIsCopiedIn_keepsTheScreenWorking() = runTest { // review of PR #244
+        val viewModel = viewModelWithALogo()
+        val styleSaved = CompletableDeferred<Unit>()
+        stores.setLogoTreatmentGate = styleSaved
+        photos.importGate = CompletableDeferred()
+        viewModel.onLogoStyle(LogoStyle.SINGLE_COLOUR)
+        viewModel.onPicked(picked)
+
+        styleSaved.complete(Unit)
+
+        assertThat(viewModel.state.value.working).isTrue()
+        assertThat(shop().logoTreatment.style).isEqualTo(LogoStyle.SINGLE_COLOUR)
+    }
+
     private suspend fun viewModelWithALogo(color: String = "#336699"): StoreLogoViewModel {
         stores.stores.value = stores.stores.value.map { if (it.id == "shop") it.copy(color = color) else it }
         stores.setLogo("shop", "logo")

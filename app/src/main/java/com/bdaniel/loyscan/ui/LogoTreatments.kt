@@ -15,7 +15,7 @@ import kotlin.math.roundToInt
  * choice, 2026-11-26): on a mostly dark one its darkest pixel is solid and white clear; on a mostly light one its
  * lightest pixel solid and black clear. "Mostly" is by area: the mean CIE lightness L* of its pixels, each weighed by its
  * opacity, against mid-grey; linear luminance would call a logo a third white light. Scaling to the logo's own darkest
- * or lightest pixel makes a logo in one colour solid. A pixel's own transparency is kept (soft edges). Brightness is
+ * or lightest pixel (among those at least half opaque) makes a logo in one colour solid. A pixel's own transparency is kept (soft edges). Brightness is
  * the WCAG relative luminance, as [contrastingTextColor] uses.
  */
 fun inSingleColour(pixels: IntArray, tint: Int): IntArray {
@@ -24,11 +24,16 @@ fun inSingleColour(pixels: IntArray, tint: Int): IntArray {
     var weightedLightness = 0.0
     var darkest = 1.0
     var lightest = 0.0
+    // The extremes come from the logo's solid pixels: a nearly clear edge pixel's colour is noise once decoded, and would
+    // keep a one-colour logo from coming out solid (review of PR #244). Only a logo with none at all uses every pixel.
+    val extremesFrom = if (pixels.any { (it ushr 24) >= HALF_OPAQUE }) HALF_OPAQUE else 1
     pixels.forEachIndexed { i, pixel ->
         val alpha = pixel ushr 24
         if (alpha > 0) {
             weight += alpha
             weightedLightness += alpha * lightness(luminance[i])
+        }
+        if (alpha >= extremesFrom) {
             darkest = minOf(darkest, luminance[i])
             lightest = maxOf(lightest, luminance[i])
         }
@@ -45,6 +50,9 @@ fun inSingleColour(pixels: IntArray, tint: Int): IntArray {
         (alpha shl 24) or colour
     }
 }
+
+/** At least half opaque: a pixel of the logo itself, not of its soft edge. */
+private const val HALF_OPAQUE = 128
 
 /** CIE L* of mid-grey: a logo lighter than it on average, by area, is mostly light. */
 private const val MID_GREY_LIGHTNESS = 50.0
