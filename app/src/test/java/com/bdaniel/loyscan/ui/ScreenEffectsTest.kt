@@ -179,26 +179,26 @@ class ScreenEffectsTest {
 
     @Test
     fun statusBarIcons_nested_theInnerRestoresTheOuters_andTheOuterTheWindowsOwn() { // #233: scan mode over the card
+        // Three states told apart: the window light, the outer dark, the inner light again.
         setDarkStatusBarIcons(false)
         var inner by mutableStateOf(true)
         composeRule.setContent {
             if (shown) {
-                StatusBarIcons(dark = false)
-                if (inner) StatusBarIcons(dark = true)
+                StatusBarIcons(dark = true)
+                if (inner) StatusBarIcons(dark = false)
             }
         }
-        assertThat(darkStatusBarIcons).isTrue()
+        assertThat(darkStatusBarIcons).isFalse()
 
         composeRule.activityRule.scenario.moveToState(Lifecycle.State.STARTED)
         assertThat(darkStatusBarIcons).isFalse()
         composeRule.activityRule.scenario.moveToState(Lifecycle.State.RESUMED)
-        assertThat(darkStatusBarIcons).isTrue()
+        assertThat(darkStatusBarIcons).isFalse()
 
         inner = false
         composeRule.waitForIdle()
-        assertThat(darkStatusBarIcons).isFalse()
+        assertThat(darkStatusBarIcons).isTrue() // the outer's, not the window's own
 
-        setDarkStatusBarIcons(true) // the outer's undo must put back the window's own value, light icons here
         shown = false
         composeRule.waitForIdle()
         assertThat(darkStatusBarIcons).isFalse()
