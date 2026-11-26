@@ -181,6 +181,7 @@
     <string name="logo_style_single_colour">Single colour</string>
     <string name="logo_style_recolour">Recolour</string>
     <string name="logo_colour">Logo colour</string>
+    <string name="logo_outline">Outline</string>
     <string name="colour_white">White</string>
     <string name="colour_black">Black</string>
     <string name="logo_style_failed">Couldn\'t save how the logo is drawn. Try again.</string>

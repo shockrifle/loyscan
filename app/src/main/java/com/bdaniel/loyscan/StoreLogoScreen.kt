@@ -9,6 +9,7 @@ import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -38,6 +39,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -122,6 +124,7 @@ fun StoreLogoScreen(
                         enabled = state.canChange,
                         onStyle = viewModel::onLogoStyle,
                         onTint = viewModel::onLogoTint,
+                        onOutline = viewModel::onLogoOutline,
                     )
                 }
                 if (state.styleFailed) {
@@ -187,8 +190,9 @@ fun StoreLogoScreen(
 
 /**
  * How the store's logo is drawn (#240), under the preview while it has one: As is, Single colour or Recolour, and unless As is,
- * the colour: white, black, then the custom store palette ([LOGO_COLOURS]). Each tap is saved at once; TalkBack reads the
- * styles and the colours by name as choices, the chosen one selected.
+ * the colour: white, black, then the custom store palette ([LOGO_COLOURS]); then the Outline switch, with any style.
+ * Each tap is saved at once; TalkBack reads the styles and the colours by name as choices, the chosen one selected, and
+ * the Outline as a switch, on or off.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -197,6 +201,7 @@ private fun LogoStyleControls(
     enabled: Boolean,
     onStyle: (LogoStyle?) -> Unit,
     onTint: (String) -> Unit,
+    onOutline: (Boolean) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
         Text(stringResource(R.string.logo_style), style = MaterialTheme.typography.titleSmall)
@@ -239,6 +244,17 @@ private fun LogoStyleControls(
                     )
                 }
             }
+        }
+        // The whole row is the switch, so its label is what TalkBack reads, with on or off.
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .toggleable(value = treatment.outline, enabled = enabled, role = Role.Switch, onValueChange = onOutline)
+                .padding(vertical = Spacing.s),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(stringResource(R.string.logo_outline), style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+            Switch(checked = treatment.outline, onCheckedChange = null, enabled = enabled)
         }
     }
 }

@@ -1,10 +1,10 @@
 # How a store's logo is drawn on its brand colour
 
-**Status:** Active (slices 1 and 2 of 3) · **Date:** 2026-11-26 · **Issue:** [#240](https://github.com/shockrifle/loyscan/issues/240)
+**Status:** Active · **Date:** 2026-11-26 · **Issue:** [#240](https://github.com/shockrifle/loyscan/issues/240)
 
 A logo found online is often in the store's own brand colour, so on a tile of that colour it disappears. The user
 picks, per store, how its logo is drawn: **As is**, **Single colour** or **Recolour** (slice 2), plus an **Outline**
-(slice 3). This page records the choices made in slices 1 to 3; [[store-logo]] describes the behaviour.
+(slice 3), a switch on the logo screen. This page records the choices made in slices 1 to 3; [[store-logo]] describes the behaviour.
 
 ## Context
 
@@ -88,4 +88,3 @@ dark backgrounds) visible without asking the user a question they can't easily a
   colour when outlined, so a change draws again; the widget's bitmap is reused only when the size it was drawn for and
   the same key are unchanged (an outlined bitmap is larger than that size by its ring).
 - A treated bitmap is a new ARGB_8888 copy: the image loader's cached input is never changed.
-- Outline (slice 3) is not implemented yet.

@@ -459,6 +459,45 @@ class StoreLogoViewModelTest {
     }
 
     @Test
+    fun turningOnTheOutline_savesIt_keepingTheStyleAndColour() = runTest { // #240: the outline goes with any style
+        val viewModel = viewModelWithALogo()
+        viewModel.onLogoStyle(LogoStyle.RECOLOUR)
+
+        viewModel.onLogoOutline(true)
+
+        assertThat(shop().logoTreatment).isEqualTo(LogoTreatment(style = LogoStyle.RECOLOUR, tint = "#FFFFFF", outline = true))
+        assertThat(viewModel.state.value.store?.logoTreatment?.outline).isTrue()
+    }
+
+    @Test
+    fun turningOnTheOutline_ofALogoAsIs_savesIt() = runTest { // #240
+        val viewModel = viewModelWithALogo()
+
+        viewModel.onLogoOutline(true)
+
+        assertThat(shop().logoTreatment).isEqualTo(LogoTreatment(outline = true))
+    }
+
+    @Test
+    fun turningOffTheOutline_savesIt() = runTest { // #240
+        val viewModel = viewModelWithALogo()
+        viewModel.onLogoOutline(true)
+
+        viewModel.onLogoOutline(false)
+
+        assertThat(shop().logoTreatment).isEqualTo(LogoTreatment.AS_IS)
+    }
+
+    @Test
+    fun withoutALogo_theOutlineIsNotSaved() = runTest { // #240: the switch shows only with a logo
+        val viewModel = viewModel()
+
+        viewModel.onLogoOutline(true)
+
+        assertThat(shop().logoTreatment).isEqualTo(LogoTreatment.AS_IS)
+    }
+
+    @Test
     fun aColour_whileTheLogoIsAsIs_isNotSaved() = runTest { // #240: the swatches show only for another style
         val viewModel = viewModelWithALogo()
 
