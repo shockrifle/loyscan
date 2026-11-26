@@ -4,6 +4,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.test.captureToImage
 import com.bdaniel.loyscan.testing.writeSolidPng
+import com.bdaniel.loyscan.testing.writeSquareOnClearPng
+import com.bdaniel.loyscan.testing.ringPixel
 import com.bdaniel.loyscan.domain.LogoTreatment
 import com.bdaniel.loyscan.domain.LogoStyle
 import org.robolectric.annotation.GraphicsMode
@@ -302,6 +304,20 @@ class StorePickerScreenTest {
         val logo = composeRule.onNodeWithTag(STORE_BADGE_LOGO_TAG, useUnmergedTree = true).captureToImage().toPixelMap()
 
         assertThat(logo[logo.width / 2, logo.height / 2]).isEqualTo(Color.White)
+    }
+
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE) // real drawing, for the pixels
+    @Config(qualifiers = "xxhdpi") // a ring a few pixels wide, not one blended by scaling
+    fun anOutlinedLogo_isDrawnInARing_inTheBadge() { // #240: black on a yellow badge
+        File(application.filesDir, CardPhotosModule.PHOTO_DIRECTORY).resolve("logo").writeSquareOnClearPng(0xFF0000AA.toInt())
+        setScreen(aStore(id = "first", name = "First Store", color = "#FFFF00", logo = "logo", logoTreatment = LogoTreatment(outline = true)))
+        waitForAnImageToLoad()
+        composeRule.waitForIdle()
+
+        val logo = composeRule.onNodeWithTag(STORE_BADGE_LOGO_TAG, useUnmergedTree = true).captureToImage().toPixelMap()
+
+        assertThat(logo.ringPixel()).isEqualTo(Color.Black)
     }
 
     @Test

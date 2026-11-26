@@ -4,7 +4,7 @@
 
 A logo found online is often in the store's own brand colour, so on a tile of that colour it disappears. The user
 picks, per store, how its logo is drawn: **As is**, **Single colour** or **Recolour** (slice 2), plus an **Outline**
-(slice 3). This page records the choices made in slices 1 and 2; [[store-logo]] describes the behaviour.
+(slice 3). This page records the choices made in slices 1 to 3; [[store-logo]] describes the behaviour.
 
 ## Context
 
@@ -56,8 +56,23 @@ draws the tile), the card screen's band, the store picker's badge and the home-s
   the solid mark. Then Recolour in the default colour, or Single colour when the recoloured logo still blends in (a
   logo in another colour as dark as the brand's, which Recolour leaves alone). 3:1 is WCAG's least for graphics.
   Pixels that can't be read save the logo As is: the check must never cost the user their logo.
+- Outline (slice 3): a ring around the logo's shape (its pixels at least half opaque), the logo drawn over it, with any
+  style, after the style (`outlined`, by `drawnWith`). Its **width is 4% of the logo's longer side** (`OUTLINE_SHARE`,
+  at least a pixel; the owner's choice on 2026-11-26): the issue's "fixed width" is fixed relative to the logo, since
+  the same transform draws the 40dp badge, the tile, the band and the widget, each decoded at its own size, and a dp
+  width isn't known to a bitmap transform the widget shares. The ring's opacity at a distance d from the shape is
+  r + 0.5 − d, clamped (a soft edge a pixel wide), d from an exact Euclidean distance transform (Felzenszwalb and
+  Huttenlocher, linear in the pixels; a disc stamped at every pixel would be r² times slower on a large logo). **The
+  bitmap is grown by the ring on every side** (the owner's choice on 2026-11-26), so a logo cropped tight to its edge
+  keeps its whole ring; fitted into the same box, an outlined logo draws about 8% smaller. A hole in the logo narrower
+  than the ring fills with it. Its colour is white or black, whichever contrasts more with the brand colour it is drawn
+  on, worked out at draw time, so it follows a new brand colour; on a brand colour that can't be read it is left out.
+  With Single colour or Recolour in the default colour the ring is the logo's own colour, so it only thickens it: the
+  Outline shows with As is or another colour. The widget decodes an outlined logo at its size ÷ 1.08 so that with its
+  ring it fits its box and its share of the memory budget. A new logo, the contrast check's choice, has no Outline.
 - The check uses the brand colour at save time, and the colour it picks stays when the brand colour changes later, as
-  every saved treatment does; Recolour still follows the new colour in which pixels it changes. Logos saved before
+  every saved treatment does; Recolour still follows the new colour in which pixels it changes, and the Outline in its
+  colour. Logos saved before
   slice 2 are not checked (the issue asks it).
 
 ## Why
@@ -69,7 +84,8 @@ dark backgrounds) visible without asking the user a question they can't easily a
 
 ## Consequences
 
-- Coil caches a treated logo under a key with its style and tint, so a change draws again; the widget's bitmap is
-  reused only when its size and its treatment are unchanged.
+- Coil caches a treated logo under a key with its style and tint, the brand colour for Recolour and the Outline's
+  colour when outlined, so a change draws again; the widget's bitmap is reused only when the size it was drawn for and
+  the same key are unchanged (an outlined bitmap is larger than that size by its ring).
 - A treated bitmap is a new ARGB_8888 copy: the image loader's cached input is never changed.
 - Outline (slice 3) is not implemented yet.

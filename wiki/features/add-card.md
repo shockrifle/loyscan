@@ -30,7 +30,7 @@ with the picture's barcode (#77, below). Everything runs offline on the local da
   the list and shown whatever the search, opens the custom-store form. Each store's row starts with its **badge**
   (`StoreBadge` in `StoreList.kt`, #186): a 40dp circle in the brand colour with the store's logo fitted inside
   ([[store-logo]]), drawn the way the user chose for the store (#240; test:
-  `StorePickerScreenTest.aLogoInSingleColour_isDrawnInItsColour_inTheBadge`, `aRecolouredLogo_isDrawnInItsColour_inTheBadge`), else its initials, as the My cards tile shows a store; the owner's choice on 2026-11-24, in place
+  `StorePickerScreenTest.aLogoInSingleColour_isDrawnInItsColour_inTheBadge`, `aRecolouredLogo_isDrawnInItsColour_inTheBadge`, `anOutlinedLogo_isDrawnInARing_inTheBadge`), else its initials, as the My cards tile shows a store; the owner's choice on 2026-11-24, in place
   of the colour dot. A logo that can't be loaded or whose file is missing shows the initials (the image loader's error,
   not `CardPhotos.withoutMissing`); while it loads, only the colour. Every row has the badge, so names line up. The
   initials are kept out of the row's merged semantics (`clearAndSetSemantics`), so TalkBack still reads the row as

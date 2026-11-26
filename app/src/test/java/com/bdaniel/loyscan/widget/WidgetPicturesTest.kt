@@ -196,6 +196,62 @@ class WidgetPicturesTest {
         assertThat(shown).isEmpty()
     }
 
+    // An outlined logo (#240) keeps its box: it is decoded at its size ÷ 1.08 (4% of ring each side), rounded down, and
+    // grown by the ring. A 100 × 100 logo is decoded at 92 × 92 with a 4 px ring (3.68): 100 × 100, the logo at (4, 4),
+    // so the pixel at (3, 50) is 1 px from it, on the ring, opaque; on red the ring is black, on #112233 white.
+
+    @Test
+    fun anOutlinedLogo_isDrawnInARing_withinItsSize() = runTest {
+        val logo = png("logo", 100, 100)
+
+        val shown = logos().forTiles(listOf(tile("c1", logo, logoTreatment = OUTLINED, color = "#FF0000"))).getValue(logo)
+
+        assertThat(shown.size()).isEqualTo(IntSize(100, 100))
+        assertThat(shown.getPixel(50, 50)).isEqualTo(0xFF2266AA.toInt())
+        assertThat(shown.getPixel(3, 50)).isEqualTo(BLACK)
+        assertThat(shown.getPixel(0, 0) ushr 24).isEqualTo(0) // 5.66 px from the logo
+    }
+
+    @Test
+    fun anOutlinedLogo_isReused_andDrawnAgainOnlyWhenItsOutlineColourChanges() = runTest { // Outline follows the brand colour
+        val logo = png("logo", 100, 100)
+        val logos = logos()
+        val onRed = logos.forTiles(listOf(tile("c1", logo, logoTreatment = OUTLINED, color = "#FF0000"))).getValue(logo)
+
+        val again = logos.forTiles(listOf(tile("c1", logo, logoTreatment = OUTLINED, color = "#FF0000"))).getValue(logo)
+        val onYellow = logos.forTiles(listOf(tile("c1", logo, logoTreatment = OUTLINED, color = "#FFFF00"))).getValue(logo)
+        val onDark = logos.forTiles(listOf(tile("c1", logo, logoTreatment = OUTLINED, color = "#112233"))).getValue(logo)
+
+        assertThat(again).isSameInstanceAs(onRed)
+        assertThat(onYellow).isSameInstanceAs(onRed) // black on yellow too
+        assertThat(onDark.getPixel(3, 50)).isEqualTo(WHITE)
+    }
+
+    @Test
+    fun aRecolouredOutlinedLogo_followsANewBrandColour_whoseOutlineColourIsTheSame() = runTest {
+        val logo = png("logo", 100, 100)
+        val treatment = RECOLOUR_WHITE.copy(outline = true)
+        val logos = logos()
+        logos.forTiles(listOf(tile("c1", logo, logoTreatment = treatment, color = "#2266AA")))
+
+        // Both dark, so both outlines are white; the logo is no longer in the brand colour.
+        val onDark = logos.forTiles(listOf(tile("c1", logo, logoTreatment = treatment, color = "#112233"))).getValue(logo)
+
+        assertThat(onDark.getPixel(50, 50)).isEqualTo(0xFF2266AA.toInt())
+    }
+
+    @Test
+    fun outlinedLogosOverTheBudget_stayWithinIt() = runTest {
+        // As below, each is 163 × 163; decoded at 150 × 150 (163 ÷ 1.08) with a 6 px ring: 162 × 162.
+        val names = listOf(png("a", 1000, 1000), png("b", 1000, 1000), png("c", 1000, 1000))
+
+        val shown = logos(box = IntSize(200, 200), budget = 320_000)
+            .forTiles(names.mapIndexed { i, name -> tile("c$i", name, logoTreatment = OUTLINED, color = "#FF0000") })
+
+        assertThat(shown.values.map { it.size() }).containsExactly(IntSize(162, 162), IntSize(162, 162), IntSize(162, 162))
+        assertThat(shown.values.sumOf { it.byteCount.toLong() }).isAtMost(320_000)
+    }
+
     @Test
     fun logosOverTheBudget_areAllScaledDown_toFitIt() = runTest {
         // Three 200 × 200 logos are 3 × 160,000 bytes (ARGB); a budget of two, 320,000, scales each side by √(2/3),
@@ -376,6 +432,8 @@ class WidgetPicturesTest {
         const val OUTER = 0xFFFF0000.toInt()
         const val INNER = 0xFF0000FF.toInt()
         const val WHITE = 0xFFFFFFFF.toInt()
+        const val BLACK = 0xFF000000.toInt()
+        val OUTLINED = LogoTreatment(outline = true)
         val SINGLE_WHITE = LogoTreatment(style = LogoStyle.SINGLE_COLOUR, tint = "#FFFFFF")
         val RECOLOUR_WHITE = LogoTreatment(style = LogoStyle.RECOLOUR, tint = "#FFFFFF")
     }
