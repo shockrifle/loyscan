@@ -1,6 +1,7 @@
 package com.bdaniel.loyscan
 
 import androidx.compose.ui.res.stringResource
+import androidx.activity.compose.BackHandler
 import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -60,6 +61,7 @@ import com.bdaniel.loyscan.domain.cardnumber.Validation
 import com.bdaniel.loyscan.ui.CARD_ASPECT_RATIO
 import com.bdaniel.loyscan.ui.CardPhoto
 import com.bdaniel.loyscan.ui.PhotoCamera
+import com.bdaniel.loyscan.ui.LeaveFormDialog
 import com.bdaniel.loyscan.ui.PhotoCropScreen
 import com.bdaniel.loyscan.ui.rememberPhotoCamera
 import com.bdaniel.loyscan.ui.hiltImageLoader
@@ -101,6 +103,10 @@ fun CardFormScreen(
         val id = state.savedCardId
         if (id != null && store != null) directions.toCard(id, store.color)
     }
+    // Back with changes asks first (#209); the crop screen's own Back, composed after this one, still cancels the crop.
+    var leaving by rememberSaveable { mutableStateOf(false) }
+    val onBack = { if (state.hasChanges) leaving = true else directions.toBack() }
+    BackHandler(enabled = state.hasChanges && state.cropping == null) { leaving = true }
 
     Box(Modifier.fillMaxSize()) {
     Scaffold(
@@ -108,7 +114,7 @@ fun CardFormScreen(
             TopAppBar(
                 title = { Text(stringResource(if (state.editing) R.string.edit_card else R.string.add_card)) },
                 navigationIcon = {
-                    IconButton(onClick = directions.toBack) {
+                    IconButton(onClick = onBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
@@ -122,6 +128,7 @@ fun CardFormScreen(
             }
             return@Scaffold
         }
+        val problem = problemText(state.check, store.name)
         Column(
             Modifier.padding(innerPadding).verticalScroll(rememberScrollState()).padding(Spacing.l),
             verticalArrangement = Arrangement.spacedBy(Spacing.l),
@@ -133,7 +140,6 @@ fun CardFormScreen(
                     TextButton(onClick = { choosingStore = true }) { Text(stringResource(R.string.change_store)) }
                 }
             }
-            val problem = problemText(state.check, store.name)
             val shownAs = state.shownAs?.let { stringResource(R.string.barcode_shown_as, it) }
             OutlinedTextField(
                 value = state.number,
@@ -261,6 +267,23 @@ fun CardFormScreen(
             Button(onClick = viewModel::save, enabled = state.canSave, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(if (problem != null) R.string.save_anyway else R.string.save))
             }
+        }
+        if (leaving && state.hasChanges) {
+            LeaveFormDialog(
+                title = stringResource(if (state.editing) R.string.save_changes_question else R.string.discard_card_question),
+                // The form's own Save: "Save anyway" for a number that fails its check, as the button below says.
+                saveText = if (state.canSave) stringResource(if (problem != null) R.string.save_anyway else R.string.save) else null,
+                onSave = {
+                    leaving = false
+                    viewModel.save()
+                },
+                onDiscard = {
+                    leaving = false
+                    viewModel.discard()
+                    directions.toBack()
+                },
+                onKeepEditing = { leaving = false },
+            )
         }
         if (choosingStore) {
             StoreChooser(

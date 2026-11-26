@@ -94,6 +94,11 @@ data class CardFormState(
     val photoFailed: Boolean = false,
     /** The photo being framed in the crop screen (#10), or `null` when no crop screen is open. */
     val cropping: Cropping? = null,
+    /**
+     * A value the card would be saved with differs from what the form opened with (#209), so Back asks first. False
+     * until the form has loaded, and once saving has started: Back then leaves and the save still ends (#64).
+     */
+    val hasChanges: Boolean = false,
 ) {
     /** A photo staged for a side, waiting to be framed in the crop screen (#10). */
     data class Cropping(val photo: String, val side: CardPhotoSide)
@@ -411,6 +416,14 @@ class CardFormViewModel @Inject constructor(
 
     private fun pickedNames(): List<String> = CardPhotoSide.entries.mapNotNull(::picked)
 
+    /**
+     * The form is left without saving (#209): the photos picked in it are deleted, unless a save was handed them (#141),
+     * as a card may name them then. The edited card's own photos stay. Unlike [onCleared], this is a real close.
+     */
+    fun discard() {
+        photos.discard(pickedNames().filterNot { it in handedToSaves() })
+    }
+
     /** Drops the scan, for a number typed from the card instead. */
     fun typeNumberInstead() {
         savedStateHandle[TYPED_NUMBER] = ""
@@ -548,6 +561,18 @@ class CardFormViewModel @Inject constructor(
         }
         val number = if (scannedFormat != null) draft.displayNumber else typed.orEmpty()
         val frontPhoto = inputs.photos.front.photo(original?.frontPhotoPath)
+        val backPhoto = inputs.photos.back.photo(original?.backPhotoPath)
+        val showPhotoOnList = frontPhoto != null && (inputs.photos.showOnList ?: original?.showPhotoOnList ?: false)
+        val showPhotoOnWidget = frontPhoto != null && (inputs.photos.showOnWidget ?: original?.showPhotoOnWidget ?: false)
+        // What the form opened with (#209): the edited card, or the routed store and scan. Both come from the route and
+        // the repository, so they outlast process death with nothing saved for them. Text is compared as save trims it.
+        val opening = draft(store, original, typed = null) // its number and scan; the store is compared by id
+        val changed = store.id != (original?.store?.id ?: route.storeId) ||
+            draft.number != opening.number || draft.scannedFormat != opening.scannedFormat ||
+            label.trim() != original?.label.orEmpty().trim() || note.trim() != original?.note.orEmpty().trim() ||
+            frontPhoto != original?.frontPhotoPath || backPhoto != original?.backPhotoPath ||
+            showPhotoOnList != (original?.frontPhotoPath != null && original.showPhotoOnList) ||
+            showPhotoOnWidget != (original?.frontPhotoPath != null && original.showPhotoOnWidget)
         return CardFormState(
             store = store,
             label = label,
@@ -567,12 +592,13 @@ class CardFormViewModel @Inject constructor(
             // Adding a card offers none: back returns to the picker.
             otherStores = if (editing) stores.filter { it.id != store.id }.search("") else emptyList(),
             frontPhoto = frontPhoto,
-            backPhoto = inputs.photos.back.photo(original?.backPhotoPath),
-            showPhotoOnList = frontPhoto != null && (inputs.photos.showOnList ?: original?.showPhotoOnList ?: false),
-            showPhotoOnWidget = frontPhoto != null && (inputs.photos.showOnWidget ?: original?.showPhotoOnWidget ?: false),
+            backPhoto = backPhoto,
+            showPhotoOnList = showPhotoOnList,
+            showPhotoOnWidget = showPhotoOnWidget,
             importingPhoto = progress.importing,
             photoFailed = progress.photoFailed,
             cropping = inputs.cropping,
+            hasChanges = changed && !progress.saving && progress.savedCardId == null,
         )
     }
 

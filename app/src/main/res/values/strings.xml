@@ -128,6 +128,10 @@
     <string name="open_settings">Open settings</string>
     <string name="card_save_failed">The card couldn\'t be saved. Try again.</string>
     <string name="save_anyway">Save anyway</string>
+    <string name="save_changes_question">Save changes?</string>
+    <string name="discard_card_question">Discard this card?</string>
+    <string name="discard">Discard</string>
+    <string name="keep_editing">Keep editing</string>
     <string name="number_does_not_fit_format">This isn\'t a valid %1$s number.</string>
     <string name="scan_does_not_match_store">This barcode doesn\'t look like a %1$s card.</string>
     <string name="number_has_invalid_characters">It has characters %1$s card numbers don\'t use.</string>

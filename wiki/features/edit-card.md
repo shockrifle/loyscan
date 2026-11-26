@@ -48,6 +48,15 @@ number and store of one card. Deleting a card is on [[card-detail]].
   the store's current colour, which matters when the store was switched. Back returns to the list.
 - A failed save keeps the form open with "The card couldn't be saved. Try again.", as when adding (#49).
 - Back during the save leaves the user on the card, and the edit is still saved, as when adding ([[add-card]], #64).
+- Back with changes asks "Save changes?" (#209), as when adding ([[add-card]]): a change is a value that differs from
+  the card as stored (label and note trimmed; the "Show photo on …" switches count), so an edit typed and undone isn't
+  one. Its Save is the form's Save. Tests: `CardFormViewModelTest.everyValueTheFormSaves_isAChange_whenItDiffersFromTheEditedCard`,
+  `aValueChangedAndChangedBack_orOnlyPaddedWithSpaces_isNoChange`, `onceSavingHasStarted_theFormHasNoChangesToAskAbout`,
+  `discarding_deletesThePhotosPickedInTheForm_butNotTheCardsOwn`;
+  `CardFormScreenTest.editingACard_systemBackWithAChange_asksToSaveChanges_andBackInTheDialogKeepsEditing`,
+  `theDialogsSave_savesTheEdit_andOpensTheCard_asTheFormsSaveDoes`, `inHungarian_theDialogOnAnEditedCard_isTranslated`,
+  `atFontScale2_onANarrowScreen_theDialogsTextsFit`;
+  `AppNavigationTest.backFromAnEditedCardForm_asksToSaveChanges_andDiscardReturnsToTheCardAsItWas`.
 - A card that no longer exists (deleted, or a stale route) leaves the form empty and it can't be saved.
 
 ## Tests

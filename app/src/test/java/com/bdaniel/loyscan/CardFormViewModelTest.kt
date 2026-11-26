@@ -25,6 +25,7 @@ import com.bdaniel.loyscan.testing.aStore
 import com.bdaniel.loyscan.testing.cardId
 import com.bdaniel.loyscan.testing.keep
 import com.google.common.truth.Truth.assertThat
+import com.google.common.truth.Truth.assertWithMessage
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.emitAll
@@ -1852,6 +1853,169 @@ class CardFormViewModelTest {
     fun addingACard_isNotEditing() = runTest {
         viewModel(CardForm("ruled")).state.test {
             assertThat(awaitLoaded().editing).isFalse()
+        }
+    }
+
+    @Test
+    fun anUntouchedForm_hasNoChanges() = runTest { // #209
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, number = "12345674", frontPhotoPath = "front"))
+        photos.stored += "front"
+
+        for (route in listOf(
+            CardForm("ruled"),
+            CardForm("ruled", scannedContent = "12345674", scannedFormat = BarcodeFormat.QR_CODE),
+            CardForm("ruled", cardId = cardId(1)),
+        )) {
+            viewModel(route).state.test { assertThat(awaitLoaded().hasChanges).isFalse() }
+        }
+    }
+
+    @Test
+    fun everyValueTheFormSaves_isAChange_whenItDiffersFromTheEditedCard() = runTest { // #209
+        cards.cards.value = listOf(
+            aLoyaltyCard(id = cardId(1), store = store, number = "12345674", label = "Gold", note = "PIN", frontPhotoPath = "front"),
+            aLoyaltyCard(id = cardId(2), store = store, number = "12345674", scannedFormat = BarcodeFormat.QR_CODE),
+        )
+        photos.stored += "front"
+        val edits: List<Pair<String, CardFormViewModel.() -> Unit>> = listOf(
+            "label" to { onLabelChange("Silver") },
+            "note" to { onNoteChange("No PIN") },
+            "number" to { onNumberChange("12345682") },
+            "store" to { switchStore("plain") },
+            "front photo replaced" to { pickAndCrop(CardPhotoSide.FRONT) },
+            "front photo removed" to { removePhoto(CardPhotoSide.FRONT) },
+            "back photo added" to { pickAndCrop(CardPhotoSide.BACK) },
+            "shown on My cards" to { onShowPhotoOnListChange(true) },
+            "shown on the widget" to { onShowPhotoOnWidgetChange(true) },
+        )
+
+        for ((what, edit) in edits) {
+            viewModel(CardForm("ruled", cardId = cardId(1))).run {
+                state.test {
+                    awaitLoaded()
+                    edit()
+                    assertWithMessage(what).that(state.value.hasChanges).isTrue()
+                    cancelAndIgnoreRemainingEvents()
+                }
+            }
+        }
+        viewModel(CardForm("ruled", cardId = cardId(2))).run { // the barcode type: the scan's goes with it
+            state.test {
+                awaitLoaded()
+                typeNumberInstead()
+                onNumberChange("12345674")
+                assertWithMessage("scan typed instead").that(state.value.hasChanges).isTrue()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+    }
+
+    @Test
+    fun aValueChangedAndChangedBack_orOnlyPaddedWithSpaces_isNoChange() = runTest { // #209
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, number = "12345674", label = "Gold"))
+        val form = viewModel(CardForm("ruled", cardId = cardId(1)))
+
+        form.state.test {
+            awaitLoaded()
+            form.onLabelChange("Silver")
+            form.onLabelChange("Gold ")
+            form.onNumberChange("1234567")
+            form.onNumberChange("12345674")
+            form.switchStore("plain")
+            form.switchStore("ruled")
+            form.onNoteChange("  ")
+            form.pickAndCrop(CardPhotoSide.BACK)
+            form.removePhoto(CardPhotoSide.BACK)
+
+            assertThat(form.state.value.hasChanges).isFalse()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun addingACard_anythingTypedIsAChange_butTheRoutedScanIsNot() = runTest { // #209
+        val scanned = viewModel(CardForm("ruled", scannedContent = "12345674", scannedFormat = BarcodeFormat.QR_CODE))
+        val typed = viewModel(CardForm("ruled"))
+
+        scanned.state.test {
+            awaitLoaded()
+            assertThat(scanned.state.value.hasChanges).isFalse()
+            scanned.onLabelChange("Gold")
+            assertThat(scanned.state.value.hasChanges).isTrue()
+            cancelAndIgnoreRemainingEvents()
+        }
+        typed.state.test {
+            awaitLoaded()
+            typed.onNumberChange("1")
+            assertThat(typed.state.value.hasChanges).isTrue()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun aChange_isStillAChange_afterProcessDeath_andARevertedOneIsNot() = runTest { // #209
+        val changed = SavedStateHandle(route = CardForm("ruled", scannedContent = "12345674", scannedFormat = BarcodeFormat.QR_CODE))
+        val reverted = SavedStateHandle(route = CardForm("ruled", scannedContent = "12345674", scannedFormat = BarcodeFormat.QR_CODE))
+        viewModel(changed).onLabelChange("Gold")
+        viewModel(reverted).run {
+            onLabelChange("Gold")
+            onLabelChange("")
+        }
+
+        viewModel(changed.snapshot()).state.test { assertThat(awaitLoaded().hasChanges).isTrue() }
+        viewModel(reverted.snapshot()).state.test { assertThat(awaitLoaded().hasChanges).isFalse() }
+    }
+
+    @Test
+    fun onceSavingHasStarted_theFormHasNoChangesToAskAbout() = runTest { // #209: Back during a save leaves (#64)
+        cards.addGate = CompletableDeferred()
+        val form = viewModel(CardForm("ruled"))
+
+        form.state.test {
+            awaitLoaded()
+            form.onNumberChange("12345674")
+            form.save()
+
+            assertThat(form.state.value.saving).isTrue()
+            assertThat(form.state.value.hasChanges).isFalse()
+            cards.addGate!!.complete(Unit)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun discarding_deletesThePhotosPickedInTheForm_butNotTheCardsOwn() = runTest { // #209
+        cards.cards.value = listOf(
+            aLoyaltyCard(id = cardId(1), store = store, number = "12345674", frontPhotoPath = "front", backPhotoPath = "back")
+        )
+        photos.stored += setOf("front", "back")
+        val form = viewModel(CardForm("ruled", cardId = cardId(1)))
+
+        form.state.test {
+            awaitLoaded()
+            form.pickAndCrop(CardPhotoSide.FRONT)
+            form.removePhoto(CardPhotoSide.BACK)
+            assertThat(photos.stored).contains("photo-1")
+
+            form.discard()
+
+            assertThat(photos.stored).containsExactly("front", "back")
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun discarding_aFormRestoredWhileItsSaveRan_keepsThePhotoThatSaveWasHanded() = runTest { // #209, as #141
+        cards.addGate = CompletableDeferred()
+        val saved = snapshotWhileTheSaveRuns(CardForm("ruled"), cards.addGate!!)
+        val restored = viewModel(saved)
+
+        restored.state.test {
+            awaitLoaded()
+            restored.discard()
+
+            assertThat(photos.stored).contains("photo-1")
+            cancelAndIgnoreRemainingEvents()
         }
     }
 

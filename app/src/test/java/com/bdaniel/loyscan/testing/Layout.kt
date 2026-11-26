@@ -20,19 +20,21 @@ import androidx.compose.ui.text.TextLayoutResult
  * text. Horizontal only: a text scrolled below the screen is not clipped. Text fields' input is skipped (a field's
  * label floats over its border by design). [fitsByDesign] lists texts that are meant to end in "…" when they don't fit,
  * and auto-sized ones: their semantics report the layout at the largest size, not the size they are drawn at.
- * With [under], only the texts under that node count: an overlay over a screen still holding its own texts.
+ * With [under], only the texts under that node count: an overlay over a screen still holding its own texts, or a
+ * dialog, measured against its own window (#209).
  * The test class needs `@GraphicsMode(NATIVE)`: in Robolectric's default mode every text measures a few pixels wide.
  */
 fun SemanticsNodeInteractionsProvider.assertTextFitsAndDoesNotOverlap(
     fitsByDesign: Set<String> = emptySet(),
     under: SemanticsMatcher? = null,
 ) {
-    val root = onRoot().fetchSemanticsNode().boundsInRoot
-    val candidates = if (under == null) {
+    val anchor = under?.let { onNode(it, useUnmergedTree = true).fetchSemanticsNode() }
+    // The window [under] is in: a dialog is a root of its own (#209), and its texts' bounds are in its coordinates.
+    val root = (anchor?.let { generateSequence(it) { node -> node.parent }.last() } ?: onRoot().fetchSemanticsNode()).boundsInRoot
+    val candidates = if (anchor == null) {
         onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsProperties.Text), useUnmergedTree = true).fetchSemanticsNodes()
     } else {
-        onNode(under, useUnmergedTree = true).fetchSemanticsNode().descendants()
-            .filter { SemanticsProperties.Text in it.config }
+        anchor.descendants().filter { SemanticsProperties.Text in it.config }
     }
     val texts = candidates
         .filter { it.config.getOrNull(SemanticsProperties.EditableText) == null }

@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-26 · Back from a changed card form asks "Save changes?" / "Discard this card?"; Discard deletes the form's own picks, correcting the card-photos decision's "no UI signal"; SystemBack test fixture · decisions/2026-11-26-unsaved-changes-on-back (new), decisions/_index, decisions/2026-11-03-card-photos-as-private-files, features/add-card, features/edit-card, features/card-photos, workflows/tdd, architecture · #209
 - 2026-11-26 · review of PR #244: Single colour's extremes come from pixels at least half opaque · decisions/2026-11-26-logo-treatments · #240
 - 2026-11-26 · the logo screen's As is / Single colour choice and colour swatches; decision page for logo treatments · features/store-logo, features/edit-store, glossary, decisions/2026-11-26-logo-treatments, decisions/_index · #240
 - 2026-11-26 · a store's logo drawn in Single colour on the tile, the card screen's band, the picker's badge and the widget; the pixel-function test kind and writeSolidPng · features/card-list, features/card-detail, features/add-card, apps/card-widget, workflows/tdd, architecture · #240
