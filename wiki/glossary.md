@@ -37,7 +37,9 @@ how a store's logo is drawn on its brand colour, chosen on the logo screen (#240
 [[2026-11-26-logo-treatments]]). **As is** draws the file unchanged (null style, the default); **Single colour** draws
 it in one colour, each pixel's opacity from its brightness; **Recolour** draws the parts in (about) the brand colour in
 the chosen colour and leaves the others alone. A new logo that blends into its brand colour is saved Recoloured, or
-in Single colour, by the contrast check. Outline is not implemented yet.
+in Single colour, by the contrast check. **Outline** draws a ring around the logo's shape, in white or black, whichever contrasts
+more with the brand colour, with any style (drawn on every surface; the logo screen's switch comes with the rest of
+slice 3).
 
 **Catalogue store** — A store from the shipped catalogue `app/src/main/assets/catalogue/stores.json`
 (`CatalogueEntry` in `app/src/main/java/com/bdaniel/loyscan/domain/catalogue/StoreCatalogue.kt`): slug id like `hu-ikea-family`, shipped with no logo, `isCustom = false`. Its row is

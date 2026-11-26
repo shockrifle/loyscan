@@ -6,7 +6,9 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import com.bdaniel.loyscan.domain.LogoStyle
 import com.bdaniel.loyscan.domain.LogoTreatment
+import com.bdaniel.loyscan.ui.OUTLINE_SHARE
 import com.bdaniel.loyscan.ui.drawnWith
+import com.bdaniel.loyscan.ui.outlineColour
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
@@ -51,14 +53,16 @@ class WidgetPictures(
     private data class Fitted(val crop: Crop?, val size: IntSize)
 
     /**
-     * How a picture is drawn: a photo As is, a logo with its treatment (#240), and only for Recolour, which compares with
-     * it, on its store's [brandColor]: a new colour redraws only a Recoloured logo (review of PR #247).
+     * How a picture is drawn: a photo As is, a logo with its treatment (#240) on its store's [brandColor]. Two are drawn
+     * alike when their [key]s are equal: the brand colour counts only for Recolour, which compares with it, and through
+     * the Outline's colour, which follows it, so a new colour redraws only a logo it changes (review of PR #247).
      */
-    private data class DrawnAs(val treatment: LogoTreatment, val brandColor: String? = null) {
-        companion object {
-            fun logo(treatment: LogoTreatment, brandColor: String) =
-                DrawnAs(treatment, brandColor.takeIf { treatment.style == LogoStyle.RECOLOUR })
-        }
+    private data class DrawnAs(val treatment: LogoTreatment, val brandColor: String = "") {
+        val key: Any = Triple(
+            treatment,
+            brandColor.takeIf { treatment.style == LogoStyle.RECOLOUR },
+            outlineColour(treatment, brandColor),
+        )
     }
 
     private data class Crop(val offset: IntOffset, val size: IntSize)
@@ -70,7 +74,10 @@ class WidgetPictures(
 
     /** The bitmaps last handed out, and how each was drawn (#240; a photo As is). */
     private var shown: Map<String, Bitmap> = emptyMap()
-    private var shownAs: Map<String, DrawnAs> = emptyMap()
+    private var shownAs: Map<String, Any> = emptyMap()
+
+    /** The size each bitmap last handed out was drawn for: an outlined one's ring makes its own size differ (#240). */
+    private var shownFor: Map<String, IntSize> = emptyMap()
 
     /**
      * The bitmap of the picture each of [tiles] draws, by its name: its photo, else its store's logo. A tile's logo is
@@ -90,6 +97,7 @@ class WidgetPictures(
 
         val before = shown
         val beforeAs = shownAs
+        val beforeFor = shownFor
         // A picture whose header reads but whose pixels don't is found only when decoded: it is remembered as
         // unreadable and the tiles are worked out again, so its tile falls back to its logo. Each pass marks at least
         // one more picture unreadable, so this ends.
@@ -102,24 +110,34 @@ class WidgetPictures(
                 photo?.let { (name, fit) -> drawn[name] = fit; drawnAs[name] = DrawnAs(LogoTreatment.AS_IS) }
                 // A logo's file is its store's alone (a new logo is a new name), so one name is drawn one way, on its
                 // store's colour, which Recolour compares with (#240).
-                logo?.let { (name, fit) -> drawn[name] = fit; drawnAs[name] = DrawnAs.logo(tile.logoTreatment, tile.color) }
+                logo?.let { (name, fit) -> drawn[name] = fit; drawnAs[name] = DrawnAs(tile.logoTreatment, tile.color) }
             }
             val scale = widgetLogoScale(drawn.values.map { it.size }, budgetBytes)
             val decoded = drawn.mapValues { (name, fit) ->
                 val target = if (scale >= 1f) fit.size else fit.size.scaledBy(scale)
                 val drawnWith = drawnAs.getValue(name)
-                before[name]?.takeIf { it.width == target.width && it.height == target.height && beforeAs[name] == drawnWith }
-                    ?: withContext(ioDispatcher) { decode(name, fit.crop, target)?.drawnWith(drawnWith.treatment, drawnWith.brandColor.orEmpty()) }
+                before[name]?.takeIf { beforeFor[name] == target && beforeAs[name] == drawnWith.key }
+                    ?: withContext(ioDispatcher) { drawn(name, fit.crop, target, drawnWith) }
             }
             val failed = decoded.filterValues { it == null }.keys
             failed.forEach { next[it] = null }
             if (failed.isEmpty()) {
                 fitted = next
                 shown = decoded.mapValues { (_, bitmap) -> checkNotNull(bitmap) }
-                shownAs = drawnAs.filterKeys { it in shown }
+                shownAs = drawnAs.filterKeys { it in shown }.mapValues { (_, drawnWith) -> drawnWith.key }
+                shownFor = drawn.filterKeys { it in shown }.mapValues { (_, fit) -> if (scale >= 1f) fit.size else fit.size.scaledBy(scale) }
                 return shown
             }
         }
+    }
+
+    /**
+     * The picture drawn as [drawnWith] at [target]: an outlined logo is decoded smaller, at [target] ÷ (1 + 2 ×
+     * [OUTLINE_SHARE]), so with its ring (#240) it still fits its box and the budget.
+     */
+    private fun drawn(name: String, crop: Crop?, target: IntSize, drawnWith: DrawnAs): Bitmap? {
+        val size = if (outlineColour(drawnWith.treatment, drawnWith.brandColor) == null) target else target.insideOutline()
+        return decode(name, crop, size)?.drawnWith(drawnWith.treatment, drawnWith.brandColor)
     }
 
     /** What part of the picture is shown and its size in its box, read from its header only. */
@@ -199,5 +217,9 @@ private fun sampleSize(width: Int, target: Int): Int {
 
 private fun Bitmap.resizedTo(size: IntSize): Bitmap =
     if (width == size.width && height == size.height) this else Bitmap.createScaledBitmap(this, size.width, size.height, true)
+
+/** The size a logo is decoded at so that with its Outline's ring it is about this size, at most a pixel off (#240). */
+private fun IntSize.insideOutline(): IntSize =
+    IntSize(max(1, (width / (1 + 2 * OUTLINE_SHARE)).toInt()), max(1, (height / (1 + 2 * OUTLINE_SHARE)).toInt()))
 
 private fun IntSize.scaledBy(scale: Float): IntSize = IntSize(max(1, (width * scale).toInt()), max(1, (height * scale).toInt()))

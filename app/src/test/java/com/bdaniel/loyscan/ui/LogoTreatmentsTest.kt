@@ -183,6 +183,69 @@ class LogoTreatmentsTest {
         assertThat(defaultLogoTint(0xFF1E5AA8.toInt())).isEqualTo("#FFFFFF") // luminance 0.104: white 6.8:1, black 3.1:1
     }
 
+    /**
+     * Outline (#240): a ring in the outline colour around the logo's shape, the logo on top, on a square grown by the
+     * radius on every side. The ring's opacity is r + 0.5 − d (clamped to 0..1), d the distance to the nearest pixel of
+     * the logo: with r = 2, opaque at d = 1 and √2 (1.5, 1.09), 128 at d = 2 (0.5), 67 at d = √5 (0.264), clear at
+     * d = 2√2 (−0.33).
+     */
+    @Test
+    fun anOutline_isARingAroundTheLogo_fadingAtItsEdge() {
+        val drawn = outlined(intArrayOf(RED), width = 1, height = 1, radius = 2, colour = BLACK)
+
+        val clear = 0x00000000
+        val edge = 0x80000000.toInt()
+        val faint = 0x43000000
+        assertThat(drawn.toList()).containsExactly(
+            clear, faint, edge, faint, clear,
+            faint, BLACK, BLACK, BLACK, faint,
+            edge, BLACK, RED, BLACK, edge,
+            faint, BLACK, BLACK, BLACK, faint,
+            clear, faint, edge, faint, clear,
+        ).inOrder()
+    }
+
+    @Test
+    fun aSoftLogoPixel_showsTheOutlineThroughIt() { // half red over the opaque black ring: (128, 0, 0)
+        val drawn = outlined(intArrayOf(0x80FF0000.toInt()), width = 1, height = 1, radius = 1, colour = BLACK)
+
+        assertThat(drawn[4]).isEqualTo(0xFF800000.toInt())
+    }
+
+    @Test
+    fun anOutline_goesInsideAHoleToo() { // a 3×3 frame, r = 1: its clear middle is 1 from the frame, so 128 of 255
+        val logo = intArrayOf(RED, RED, RED, RED, CLEAR, RED, RED, RED, RED)
+
+        val drawn = outlined(logo, width = 3, height = 3, radius = 1, colour = WHITE)
+
+        assertThat(drawn[2 * 5 + 2]).isEqualTo(0x80FFFFFF.toInt())
+    }
+
+    @Test
+    fun aLogoWithNothingDrawn_hasNoOutline() {
+        val drawn = outlined(intArrayOf(CLEAR, 0x40FF0000), width = 2, height = 1, radius = 1, colour = BLACK)
+
+        assertThat(drawn.size).isEqualTo(4 * 3)
+        assertThat(drawn.filter { it != CLEAR && it != 0x40FF0000 }).isEmpty()
+    }
+
+    @Test
+    fun anOutlinedLogo_growsByTheRadiusOnEverySide() {
+        val drawn = outlined(IntArray(4 * 2) { RED }, width = 4, height = 2, radius = 3, colour = BLACK)
+
+        assertThat(drawn.size).isEqualTo(10 * 8)
+        assertThat(drawn[3 * 10 + 3]).isEqualTo(RED) // the logo's first pixel
+        assertThat(drawn[3 * 10 + 1]).isEqualTo(BLACK) // 2 left of it, on the ring
+        assertThat(drawn[3 * 10]).isEqualTo(0x80000000.toInt()) // 3 left of it, the ring's soft edge
+    }
+
+    @Test
+    fun theOutlinesRadius_is4PercentOfTheLogosLongerSide_atLeastAPixel() {
+        assertThat(outlineRadius(100, 50)).isEqualTo(4)
+        assertThat(outlineRadius(20, 40)).isEqualTo(2) // 1.6
+        assertThat(outlineRadius(8, 8)).isEqualTo(1) // 0.32
+    }
+
     private companion object {
         const val CLEAR = 0x00000000
         val BLACK = 0xFF000000.toInt()

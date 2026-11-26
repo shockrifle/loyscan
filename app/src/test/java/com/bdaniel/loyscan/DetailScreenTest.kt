@@ -2,6 +2,8 @@ package com.bdaniel.loyscan
 
 import androidx.compose.ui.graphics.Color
 import com.bdaniel.loyscan.testing.writeSolidPng
+import com.bdaniel.loyscan.testing.writeSquareOnClearPng
+import com.bdaniel.loyscan.testing.ringPixel
 import com.bdaniel.loyscan.domain.LogoTreatment
 import com.bdaniel.loyscan.domain.LogoStyle
 import java.io.File
@@ -315,6 +317,23 @@ class DetailScreenTest {
         val logo = composeRule.onNodeWithTag(STORE_LOGO_TAG, useUnmergedTree = true).captureToImage().toPixelMap()
 
         assertThat(logo[logo.width / 2, logo.height / 2]).isEqualTo(Color.White)
+    }
+
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE) // real drawing, for the pixels
+    @Config(qualifiers = "xxhdpi") // a ring a few pixels wide, not one blended by scaling
+    fun anOutlinedLogo_isDrawnInARing_inTheBand() { // #240: white on a dark blue band
+        File(composeRule.activity.filesDir, CardPhotosModule.PHOTO_DIRECTORY).resolve("logo").writeSquareOnClearPng(0xFFAA0000.toInt())
+        val treatment = LogoTreatment(outline = true)
+        setScreen(card = card.copy(store = card.store.copy(color = "#112233", logo = "logo", logoTreatment = treatment)), photos = FakeCardPhotos("logo"))
+        val loader = EntryPointAccessors.fromApplication(composeRule.activity, ImageLoaderEntryPoint::class.java).getImageLoader()
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) { ShadowLooper.idleMainLooper(); (loader.memoryCache?.size ?: 0) > 0 }
+        composeRule.waitForIdle()
+
+        val logo = composeRule.onNodeWithTag(STORE_LOGO_TAG, useUnmergedTree = true).captureToImage().toPixelMap()
+
+        assertThat(logo.ringPixel()).isEqualTo(Color.White)
+        assertThat(logo[logo.width / 2, logo.height / 2]).isEqualTo(Color(0xFFAA0000))
     }
 
     @Test

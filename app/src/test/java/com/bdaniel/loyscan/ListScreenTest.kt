@@ -1,6 +1,8 @@
 package com.bdaniel.loyscan
 
 import com.bdaniel.loyscan.testing.writeSolidPng
+import com.bdaniel.loyscan.testing.writeSquareOnClearPng
+import com.bdaniel.loyscan.testing.ringPixel
 import com.bdaniel.loyscan.domain.LogoTreatment
 import com.bdaniel.loyscan.domain.LogoStyle
 import com.bdaniel.loyscan.ui.CARD_TILE_LOGO_TAG
@@ -466,6 +468,29 @@ class ListScreenTest {
         // A blue store: its red logo is no longer in the brand colour, so it is drawn as it is.
         cards.cards.value = listOf(aLoyaltyCard(store = store.copy(color = "#0000AA")))
         composeRule.waitUntil(WAIT_TIMEOUT_MS) { logoCentre() == Color(0xFFAA0000) }
+    }
+
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE) // real drawing, for the pixels
+    @Config(qualifiers = "xxhdpi") // a ring a few pixels wide, not one blended by scaling
+    fun anOutlinedLogo_isDrawnInARing_onTheTile_andFollowsANewBrandColour() { // #240: black on red, white on dark blue
+        File(composeRule.activity.filesDir, CardPhotosModule.PHOTO_DIRECTORY).resolve("logo").writeSquareOnClearPng(0xFF0000AA.toInt())
+        val store = aStore(color = "#FF0000", logo = "logo", logoTreatment = LogoTreatment(outline = true))
+        val cards = FakeLoyaltyCardRepository(listOf(aLoyaltyCard(store = store)))
+        val photos = FakeCardPhotos("logo")
+        setScreen(photos = photos, viewModel = ListViewModel(cards, FakeUserPreferencesRepository(), SavedStateHandle(), photos))
+        waitForAnImageToLoad()
+
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) { logoRing() == Color.Black }
+        assertThat(logoCentre()).isEqualTo(Color(0xFF0000AA))
+
+        cards.cards.value = listOf(aLoyaltyCard(store = store.copy(color = "#112233")))
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) { logoRing() == Color.White }
+    }
+
+    private fun logoRing(): Color {
+        composeRule.waitForIdle()
+        return composeRule.onNodeWithTag(CARD_TILE_LOGO_TAG, useUnmergedTree = true).captureToImage().toPixelMap().ringPixel()
     }
 
     private fun logoCentre(): Color {

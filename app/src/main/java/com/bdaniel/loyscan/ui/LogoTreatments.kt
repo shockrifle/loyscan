@@ -111,31 +111,55 @@ private val LINEAR = DoubleArray(256) { channel ->
 }
 
 /**
- * This logo drawn with [treatment] (#240) on [brandColor], the colour behind it, which Recolour compares with: a new
- * ARGB_8888 bitmap, so a bitmap the image loader holds in its cache, or one that can't be changed, is never altered. As
- * is, or a tint or brand colour that isn't a colour, is the logo itself.
+ * This logo drawn with [treatment] (#240) on [brandColor], the colour behind it, which Recolour compares with and the
+ * Outline's colour follows: a new ARGB_8888 bitmap, so a bitmap the image loader holds in its cache, or one that can't
+ * be changed, is never altered. A style whose tint isn't a colour is left out, and so is an Outline, or Recolour, on a
+ * brand colour that isn't one; with nothing left to draw, the logo itself. An Outline grows the bitmap by
+ * [outlineRadius] on every side.
  */
 fun Bitmap.drawnWith(treatment: LogoTreatment, brandColor: String): Bitmap {
-    val style = treatment.style ?: return this
-    val tint = treatment.tint?.toBrandColorOrNull()?.toArgb() ?: return this
-    val brand = if (style == LogoStyle.RECOLOUR) brandColor.toBrandColorOrNull()?.toArgb() ?: return this else 0
-    val pixels = IntArray(width * height)
+    val brand = brandColor.toBrandColorOrNull()?.toArgb()
+    val tint = treatment.tint?.toBrandColorOrNull()?.toArgb()
+    val style = treatment.style?.takeIf { tint != null && (it != LogoStyle.RECOLOUR || brand != null) }
+    val outline = outlineColour(treatment, brandColor)
+    if (style == null && outline == null) return this
+    var pixels = IntArray(width * height)
     val argb = if (config == Bitmap.Config.ARGB_8888) this else copy(Bitmap.Config.ARGB_8888, false)
     argb.getPixels(pixels, 0, width, 0, 0, width, height)
-    val drawn = when (style) {
-        LogoStyle.SINGLE_COLOUR -> inSingleColour(pixels, tint)
-        LogoStyle.RECOLOUR -> recoloured(pixels, brand, tint)
+    pixels = when (style) {
+        LogoStyle.SINGLE_COLOUR -> inSingleColour(pixels, checkNotNull(tint))
+        LogoStyle.RECOLOUR -> recoloured(pixels, checkNotNull(brand), checkNotNull(tint))
+        null -> pixels
     }
-    return Bitmap.createBitmap(drawn, width, height, Bitmap.Config.ARGB_8888)
+    if (outline == null) return Bitmap.createBitmap(pixels, width, height, Bitmap.Config.ARGB_8888)
+    val radius = outlineRadius(width, height)
+    return Bitmap.createBitmap(
+        outlined(pixels, width, height, radius, outline),
+        width + 2 * radius,
+        height + 2 * radius,
+        Bitmap.Config.ARGB_8888,
+    )
+}
+
+/**
+ * The colour of the logo's Outline (#240), ARGB: white or black, whichever contrasts more with [brandColor]; null without
+ * an Outline, or on a brand colour that isn't one.
+ */
+fun outlineColour(treatment: LogoTreatment, brandColor: String): Int? {
+    if (!treatment.outline) return null
+    val brand = brandColor.toBrandColorOrNull()?.toArgb() ?: return null
+    return if (defaultLogoTint(brand) == BLACK_HEX) BLACK_ARGB else WHITE_ARGB
 }
 
 /**
  * [drawnWith] for the image loader: the logo on a tile, in the card screen's band and in a store's badge (#240). Coil
- * caches the drawn logo under [cacheKey]: a Recoloured one's names the brand colour, so a new colour draws it again.
+ * caches the drawn logo under [cacheKey]: a Recoloured one's names the brand colour and an outlined one's its Outline's
+ * colour, so a new brand colour draws it again only when that changes how it looks.
  */
 class LogoTreatmentTransformation(private val treatment: LogoTreatment, private val brandColor: String) : Transformation {
     override val cacheKey: String = "logoTreatment(${treatment.style},${treatment.tint}" +
-        (if (treatment.style == LogoStyle.RECOLOUR) ",$brandColor)" else ")")
+        (if (treatment.style == LogoStyle.RECOLOUR) ",$brandColor" else "") +
+        (outlineColour(treatment, brandColor)?.let { ",outline=${Integer.toHexString(it)}" } ?: "") + ")"
 
     override suspend fun transform(input: Bitmap, size: Size): Bitmap = input.drawnWith(treatment, brandColor)
 }
@@ -176,12 +200,18 @@ private const val LEGIBLE_CONTRAST = 3.0
 /** The WCAG contrast ratio of two relative luminances, 1 to 21. */
 private fun contrast(a: Double, b: Double): Double = (maxOf(a, b) + 0.05) / (minOf(a, b) + 0.05)
 
-/** This ARGB pixel blended onto the opaque [background], as the screen shows it: an opaque colour. */
+/**
+ * This ARGB pixel drawn over [background], source-over: as the screen shows it on an opaque background (an opaque
+ * colour), or a logo over its Outline. Clear over clear is clear.
+ */
 private fun Int.over(background: Int): Int {
     val alpha = (this ushr 24) / 255.0
+    val behind = (background ushr 24) / 255.0 * (1 - alpha)
+    val total = alpha + behind
+    if (total == 0.0) return 0
     fun channel(shift: Int) =
-        ((this shr shift and 0xFF) * alpha + (background shr shift and 0xFF) * (1 - alpha)).roundToInt()
-    return ALPHA or (channel(16) shl 16) or (channel(8) shl 8) or channel(0)
+        (((this shr shift and 0xFF) * alpha + (background shr shift and 0xFF) * behind) / total).roundToInt()
+    return ((total * 255).roundToInt() shl 24) or (channel(16) shl 16) or (channel(8) shl 8) or channel(0)
 }
 
 /**
@@ -194,3 +224,91 @@ private const val BLACK_HEX = "#000000"
 private const val WHITE_HEX = "#FFFFFF"
 private const val BLACK_ARGB = 0xFF000000.toInt()
 private const val WHITE_ARGB = 0xFFFFFFFF.toInt()
+
+/**
+ * A logo's ARGB [pixels], [width] × [height], with an Outline (#240): a ring in [colour] [radius] pixels wide around its
+ * shape (the pixels at least half opaque), the logo drawn over it, on a square grown by [radius] on every side so a logo
+ * touching its crop's edge keeps its whole ring. The ring's opacity at a distance d from the shape is r + 0.5 − d,
+ * clamped to 0..1: a soft edge one pixel wide. A hole in the logo narrower than the ring fills with it.
+ */
+fun outlined(pixels: IntArray, width: Int, height: Int, radius: Int, colour: Int): IntArray {
+    val outWidth = width + 2 * radius
+    val outHeight = height + 2 * radius
+    val distances = DoubleArray(outWidth * outHeight) { i ->
+        val x = i % outWidth - radius
+        val y = i / outWidth - radius
+        val inside = x in 0 until width && y in 0 until height && (pixels[y * width + x] ushr 24) >= HALF_OPAQUE
+        if (inside) 0.0 else Double.POSITIVE_INFINITY
+    }
+    squaredDistances(distances, outWidth, outHeight)
+    val rgb = colour and 0xFFFFFF
+    return IntArray(outWidth * outHeight) { i ->
+        val ring = ((radius + 0.5 - sqrt(distances[i])).coerceIn(0.0, 1.0) * 255).roundToInt()
+        val x = i % outWidth - radius
+        val y = i / outWidth - radius
+        val logo = if (x in 0 until width && y in 0 until height) pixels[y * width + x] else 0
+        logo.over((ring shl 24) or rgb)
+    }
+}
+
+/** How wide a logo's Outline is (#240): [OUTLINE_SHARE] of its longer side, so it looks alike at every size; a pixel at least. */
+fun outlineRadius(width: Int, height: Int): Int = maxOf(1, (OUTLINE_SHARE * maxOf(width, height)).roundToInt())
+
+/** An Outline's width as a share of the logo's longer side (the owner's choice, 2026-11-26). */
+const val OUTLINE_SHARE = 0.04
+
+/**
+ * Replaces each value of [grid], 0 inside the shape and infinite outside it, with the squared Euclidean distance to the
+ * nearest 0: Felzenszwalb and Huttenlocher's distance transform, along the rows and then the columns, in linear time.
+ */
+private fun squaredDistances(grid: DoubleArray, width: Int, height: Int) {
+    val line = DoubleArray(maxOf(width, height))
+    val result = DoubleArray(line.size)
+    val hull = IntArray(line.size)
+    val bounds = DoubleArray(line.size + 1)
+    for (y in 0 until height) {
+        for (x in 0 until width) line[x] = grid[y * width + x]
+        squaredDistances1d(line, width, result, hull, bounds)
+        for (x in 0 until width) grid[y * width + x] = result[x]
+    }
+    for (x in 0 until width) {
+        for (y in 0 until height) line[y] = grid[y * width + x]
+        squaredDistances1d(line, height, result, hull, bounds)
+        for (y in 0 until height) grid[y * width + x] = result[y]
+    }
+}
+
+/** The one-dimensional pass of [squaredDistances] over the first [n] values of [f], into [result]: the lower envelope of parabolas. */
+private fun squaredDistances1d(f: DoubleArray, n: Int, result: DoubleArray, hull: IntArray, bounds: DoubleArray) {
+    var k = -1
+    for (q in 0 until n) {
+        if (f[q] == Double.POSITIVE_INFINITY) continue
+        while (k >= 0) {
+            val p = hull[k]
+            val s = ((f[q] + q * q) - (f[p] + p * p)) / (2.0 * (q - p))
+            if (s > bounds[k]) {
+                k++
+                hull[k] = q
+                bounds[k] = s
+                break
+            }
+            k--
+        }
+        if (k < 0) {
+            k = 0
+            hull[0] = q
+            bounds[0] = Double.NEGATIVE_INFINITY
+        }
+        bounds[k + 1] = Double.POSITIVE_INFINITY
+    }
+    if (k < 0) {
+        result.fill(Double.POSITIVE_INFINITY, 0, n)
+        return
+    }
+    var j = 0
+    for (q in 0 until n) {
+        while (bounds[j + 1] < q) j++
+        val p = hull[j]
+        result[q] = (q - p).toDouble() * (q - p) + f[p]
+    }
+}
