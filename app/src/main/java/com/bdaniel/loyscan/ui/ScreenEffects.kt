@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -28,6 +29,19 @@ fun KeepScreenOn() = WhileResumed {
     if (attributes.flags and FLAG_KEEP_SCREEN_ON != 0) return@WhileResumed {}
     addFlags(FLAG_KEEP_SCREEN_ON)
     return@WhileResumed { clearFlags(FLAG_KEEP_SCREEN_ON) }
+}
+
+/**
+ * Draws the status bar's icons [dark] (for a light colour behind them) or light, see [WhileResumed]; the undo puts back
+ * the window's own appearance, the one the rest of the app uses (#233). A [StatusBarIcons] composed inside another one
+ * (scan mode over the card) applies after it and is undone before it, so each restores what it found.
+ */
+@Composable
+fun StatusBarIcons(dark: Boolean) = WhileResumed(key = dark) {
+    val controller = WindowCompat.getInsetsController(this, decorView)
+    val original = controller.isAppearanceLightStatusBars
+    controller.isAppearanceLightStatusBars = dark
+    return@WhileResumed { controller.isAppearanceLightStatusBars = original }
 }
 
 /**
@@ -51,13 +65,13 @@ private const val LARGE_SCREEN_MIN_WIDTH_DP = 600
 /**
  * Applies [effect] to the activity's window while the caller is in composition and its lifecycle (the navigation
  * destination, inside a NavHost) is resumed, and runs the undo it returns on pause (home, another app, the next
- * destination) and when the caller leaves composition (back).
+ * destination) and when the caller leaves composition (back). A changed [key] undoes the effect and applies it again.
  */
 @Composable
-private fun WhileResumed(effect: Window.() -> (Window.() -> Unit)) {
+private fun WhileResumed(key: Any? = null, effect: Window.() -> (Window.() -> Unit)) {
     val window = LocalActivity.current?.window ?: return
     val lifecycle = LocalLifecycleOwner.current.lifecycle
-    DisposableEffect(window, lifecycle) {
+    DisposableEffect(window, lifecycle, key) {
         var undo: (Window.() -> Unit)? = null
         fun restore() {
             undo?.invoke(window)

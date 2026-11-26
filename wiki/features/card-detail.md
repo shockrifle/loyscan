@@ -51,6 +51,19 @@ UUID string.
   a luminance of 0.5, which put white on mid tones where black reads better; until #210 the top bar drew its icons in
   `onSurfaceVariant`. Tests: `DetailScreenTest.onADarkBrandColour_theBandsButtonsAreWhite`,
   `onALightBrandColour_theBandsButtonsAreBlack`.
+- **Status bar icons** (#233): the band runs behind the status bar, so its clock and battery icons follow the same rule:
+  dark on a light brand colour, light on a dark one, in light and dark mode alike (`StatusBarIcons(dark)` in
+  `app/src/main/java/com/bdaniel/loyscan/ui/ScreenEffects.kt`, through `WindowCompat.getInsetsController`). It follows
+  the colour the band shows (the route's, then the stored one). Scan mode draws them dark on its white, the photo
+  viewer light on its black; closing either gives the card's back. Like full brightness it holds while the destination
+  is resumed: the icons change once the enter transition has finished, and the window's own appearance (the theme's,
+  from `enableEdgeToEdge()` in `MainActivity`) comes back as soon as the card is paused (Back, Edit, home), while the
+  band is still sliding away. Until #233 they followed the app theme, so a yellow band in dark mode had light icons.
+  Tests: `DetailScreenTest.onALightBrandColour_theStatusBarIconsAreDark`, `onADarkBrandColour_theStatusBarIconsAreLight`,
+  `aStoresNewColour_setsTheStatusBarIcons`, `scanMode_drawsDarkStatusBarIconsOnItsWhite_andClosingGivesTheCardsBack`,
+  `thePhotoViewer_drawsLightStatusBarIconsOnItsBlack_andClosingGivesTheCardsBack`; `ScreenEffectsTest.statusBarIcons_…`;
+  end to end `AppNavigationTest.inDarkMode_aLightCard_drawsDarkStatusBarIcons_andBackGivesTheAppsLightOnesBack`,
+  `inLightMode_aDarkCard_drawsLightStatusBarIcons_andBackGivesTheAppsDarkOnesBack`.
 - The number shown is `LoyaltyCard.displayNumber`: the number formatted by the store's card-number rule (for a
   scanned card, the core the rule recovers from the scan), or the raw number when there is no rule or no match
   ([[2026-10-12-data-model-v2]]). A GS1 scan (`BarcodeFormat.isGs1`: the `GS1_` formats, DataBar) with no matching rule is shown as printed under

@@ -11,6 +11,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.Lifecycle
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.common.truth.Truth.assertThat
@@ -113,6 +114,94 @@ class ScreenEffectsTest {
 
         composeRule.activityRule.scenario.moveToState(Lifecycle.State.RESUMED)
         assertThat(keepsScreenOn).isTrue()
+    }
+
+    /** Whether the window draws dark status bar icons, as the system reads it. */
+    private val darkStatusBarIcons get() = composeRule.activity.window.let {
+        WindowCompat.getInsetsController(it, it.decorView).isAppearanceLightStatusBars
+    }
+
+    private fun setDarkStatusBarIcons(dark: Boolean) = composeRule.runOnUiThread {
+        composeRule.activity.window.let { WindowCompat.getInsetsController(it, it.decorView).isAppearanceLightStatusBars = dark }
+    }
+
+    @Test
+    fun statusBarIcons_whileInComposition_areAsAsked() { // #233
+        setDarkStatusBarIcons(false)
+        composeRule.setContent { StatusBarIcons(dark = true) }
+        assertThat(darkStatusBarIcons).isTrue()
+    }
+
+    @Test
+    fun statusBarIcons_light_whileInComposition() { // #233
+        setDarkStatusBarIcons(true)
+        composeRule.setContent { StatusBarIcons(dark = false) }
+        assertThat(darkStatusBarIcons).isFalse()
+    }
+
+    @Test
+    fun statusBarIcons_leavingComposition_restoresTheWindowsOwnAppearance() { // #233
+        setDarkStatusBarIcons(false)
+        composeRule.setContent { if (shown) StatusBarIcons(dark = true) }
+
+        shown = false
+        composeRule.waitForIdle()
+
+        assertThat(darkStatusBarIcons).isFalse()
+    }
+
+    @Test
+    fun statusBarIcons_areRestoredWhileTheScreenIsPaused_andComeBackOnResume() { // #233
+        setDarkStatusBarIcons(false)
+        composeRule.setContent { StatusBarIcons(dark = true) }
+
+        composeRule.activityRule.scenario.moveToState(Lifecycle.State.STARTED)
+        assertThat(darkStatusBarIcons).isFalse()
+
+        composeRule.activityRule.scenario.moveToState(Lifecycle.State.RESUMED)
+        assertThat(darkStatusBarIcons).isTrue()
+    }
+
+    @Test
+    fun statusBarIcons_aChangedValue_isApplied_andLeavingRestoresTheWindowsOwn() { // #233
+        setDarkStatusBarIcons(true)
+        var dark by mutableStateOf(true)
+        composeRule.setContent { if (shown) StatusBarIcons(dark = dark) }
+
+        dark = false
+        composeRule.waitForIdle()
+        assertThat(darkStatusBarIcons).isFalse()
+
+        shown = false
+        composeRule.waitForIdle()
+        assertThat(darkStatusBarIcons).isTrue()
+    }
+
+    @Test
+    fun statusBarIcons_nested_theInnerRestoresTheOuters_andTheOuterTheWindowsOwn() { // #233: scan mode over the card
+        setDarkStatusBarIcons(false)
+        var inner by mutableStateOf(true)
+        composeRule.setContent {
+            if (shown) {
+                StatusBarIcons(dark = false)
+                if (inner) StatusBarIcons(dark = true)
+            }
+        }
+        assertThat(darkStatusBarIcons).isTrue()
+
+        composeRule.activityRule.scenario.moveToState(Lifecycle.State.STARTED)
+        assertThat(darkStatusBarIcons).isFalse()
+        composeRule.activityRule.scenario.moveToState(Lifecycle.State.RESUMED)
+        assertThat(darkStatusBarIcons).isTrue()
+
+        inner = false
+        composeRule.waitForIdle()
+        assertThat(darkStatusBarIcons).isFalse()
+
+        setDarkStatusBarIcons(true) // the outer's undo must put back the window's own value, light icons here
+        shown = false
+        composeRule.waitForIdle()
+        assertThat(darkStatusBarIcons).isFalse()
     }
 
     private val requestedOrientation get() = composeRule.activity.requestedOrientation
