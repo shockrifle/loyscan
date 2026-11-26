@@ -7,7 +7,9 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.bdaniel.loyscan.data.local.db.FrozenSchemaTest.Companion.FIRST_RELEASED_VERSION
 import com.bdaniel.loyscan.data.local.db.FrozenSchemaTest.Companion.FROZEN_SCHEMAS
+import com.bdaniel.loyscan.data.mapper.toDomainModel
 import com.bdaniel.loyscan.di.CardPhotosModule
+import com.bdaniel.loyscan.domain.LogoTreatment
 import com.bdaniel.loyscan.di.DatabaseModule
 import com.bdaniel.loyscan.testing.createDatabaseFromExportedSchema
 import com.google.common.truth.Truth.assertThat
@@ -90,6 +92,19 @@ class DatabaseMigrationTest {
     }
 
     @Test
+    fun aStoreWithALogo_atVersion4_drawsItAsIs_afterTheMigration() = runTest { // #240
+        createDatabaseFromExportedSchema(context, DATABASE, 4).use { it.insertACardAsTheFirstReleaseStoredIt(logo = "logo-1") }
+
+        val store = openAsTheAppDoes().storeDao().getById("custom-1").first()!!
+
+        assertThat(store.logo).isEqualTo("logo-1")
+        assertThat(store.logoStyle).isNull()
+        assertThat(store.logoTint).isNull()
+        assertThat(store.logoOutline).isNull()
+        assertThat(store.toDomainModel().logoTreatment).isEqualTo(LogoTreatment.AS_IS)
+    }
+
+    @Test
     fun anEmptyDatabaseAtEveryFrozenVersion_opensInTheCurrentApp() = runTest {
         for (version in FROZEN_SCHEMAS.keys.sorted()) {
             createDatabaseFromExportedSchema(context, DATABASE, version).close()
@@ -127,11 +142,15 @@ class DatabaseMigrationTest {
 
     // The first release's columns, written out: the entities and their ContentValues mappers follow the current schema.
     // [showPhotoOnList] is v3's column (#184): only for a database built at version 3.
-    private fun SQLiteDatabase.insertACardAsTheFirstReleaseStoredIt(frontPhotoPath: String? = null, showPhotoOnList: Boolean? = null) {
+    private fun SQLiteDatabase.insertACardAsTheFirstReleaseStoredIt(
+        frontPhotoPath: String? = null,
+        showPhotoOnList: Boolean? = null,
+        logo: String? = null,
+    ) {
         insertOrThrow(
             "stores", null,
             contentValuesOf(
-                "id" to "custom-1", "name" to "Corner Shop", "color" to "#336699", "logo" to null,
+                "id" to "custom-1", "name" to "Corner Shop", "color" to "#336699", "logo" to logo,
                 "aliases" to "[]", "countryCodes" to "[]", "defaultBarcodeFormat" to "EAN_13",
                 "cardNumberRule" to null, "frequentlyAdded" to 0, "isCustom" to 1, "updatedAt" to 1_700_000_000_000L,
             ),

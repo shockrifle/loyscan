@@ -5,6 +5,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.bdaniel.loyscan.data.local.db.AppDatabase
 import com.bdaniel.loyscan.domain.BarcodeFormat
+import com.bdaniel.loyscan.domain.LogoStyle
 import com.bdaniel.loyscan.domain.cardnumber.CardNumberRule
 import com.bdaniel.loyscan.testing.aStoreEntity
 import com.google.common.truth.Truth.assertThat
@@ -48,6 +49,9 @@ class StoreDaoTest {
             frequentlyAdded = true,
             isCustom = true,
             updatedAt = Instant.parse("2026-05-06T07:08:09.123Z"),
+            logoStyle = LogoStyle.SINGLE_COLOUR,
+            logoTint = "#FFFFFF",
+            logoOutline = true,
         )
         dao.insert(store)
 

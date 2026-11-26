@@ -32,7 +32,7 @@ DAO's `@Transaction` methods (`LoyaltyCardDao.deleteReturningPhotos` / `updateRe
 [[2026-11-03-card-photos-as-private-files]]).
 `StoreRepository` reads every store (`getAll`), adds one (`add(store)`, a custom store, #6; mapped with
 `Store.toEntity()`), sets any store's logo (`setLogo(storeId, logo)`, #151: `StoreDao.setLogoReturningDropped`, which
-names the file to delete, [[2026-11-13-user-supplied-store-logos]]) and edits or deletes a custom store (`update(store)`, `delete(id)`, #53: `StoreDao.updateCustom` / `deleteCustom`,
+names the file to delete, [[2026-11-13-user-supplied-store-logos]]; a new logo or none resets how it is drawn) and how it is drawn (`setLogoTreatment`, #240) and edits or deletes a custom store (`update(store)`, `delete(id)`, #53: `StoreDao.updateCustom` / `deleteCustom`,
 `… AND isCustom = 1`, so a catalogue row is never touched; the cards go by `ON DELETE CASCADE`, [[edit-store]]), an
 interface with `RoomStoreRepository` behind it since #6; its
 unused entity-taking `insert` was dropped then, and `getById` once the card form needed every store (2026-10-22). `StoreDao.getById` stays: no production code
@@ -48,7 +48,7 @@ terms, with domain→entity mappers. Time comes from an injected `java.time.Cloc
   on every open through the raw database: `CatalogueDatabaseCallback` writes the catalogue rows, and
   `CardPhotoSweepCallback` deletes old photo files no card names ([[card-photos]]). There are no debug-only demo
   cards any more ([[seed-data]], #55); `DatabaseModuleTest` checks a new database holds only the catalogue. It adds
-  `AppDatabase.MIGRATIONS` (Room adds the `@Database` `autoMigrations`, v2 → v3 since #184, v3 → v4 since #185) and no destructive fallback; schemas from v2 on are frozen
+  `AppDatabase.MIGRATIONS` (Room adds the `@Database` `autoMigrations`, v2 → v3 since #184, v3 → v4 since #185, v4 → v5 since #240) and no destructive fallback; schemas from v2 on are frozen
   ([[2026-11-05-room-schema-frozen-from-v2]], [[database-schema-changes]]).
 - `PreferencesModule` provides the singleton preferences `DataStore` (file `datastore/user_preferences.preferences_pb`,
   pinned by `PreferencesModuleTest`) behind `UserPreferencesRepository` ([[2026-10-28-datastore-for-user-preferences]]).

@@ -4,6 +4,7 @@ import com.bdaniel.loyscan.data.local.db.dao.LoyaltyCardEdit
 import com.bdaniel.loyscan.data.local.db.dao.LoyaltyCardWithStore
 import com.bdaniel.loyscan.data.local.db.entity.LoyaltyCardEntity
 import com.bdaniel.loyscan.data.local.db.entity.StoreEntity
+import com.bdaniel.loyscan.domain.LogoTreatment
 import com.bdaniel.loyscan.domain.LoyaltyCard
 import com.bdaniel.loyscan.domain.Store
 
@@ -79,7 +80,8 @@ fun StoreEntity.toDomainModel(): Store {
         cardNumberRule = cardNumberRule,
         frequentlyAdded = frequentlyAdded,
         isCustom = isCustom,
-        updatedAt = updatedAt
+        updatedAt = updatedAt,
+        logoTreatment = LogoTreatment(style = logoStyle, tint = logoTint, outline = logoOutline == true),
     )
 }
 
@@ -96,6 +98,10 @@ fun Store.toEntity(): StoreEntity {
         cardNumberRule = cardNumberRule,
         frequentlyAdded = frequentlyAdded,
         isCustom = isCustom,
-        updatedAt = updatedAt
+        updatedAt = updatedAt,
+        logoStyle = logoTreatment.style,
+        logoTint = logoTreatment.tint,
+        // Null, not false, without an outline: null throughout is As is (#240).
+        logoOutline = logoTreatment.outline.takeIf { it },
     )
 }

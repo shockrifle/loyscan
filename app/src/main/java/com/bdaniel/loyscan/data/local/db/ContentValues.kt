@@ -22,6 +22,9 @@ fun StoreEntity.toContentValues(): ContentValues = contentValuesOf(
     "frequentlyAdded" to if (frequentlyAdded) 1 else 0,
     "isCustom" to if (isCustom) 1 else 0,
     "updatedAt" to converters.fromInstant(updatedAt),
+    "logoStyle" to logoStyle?.name,
+    "logoTint" to logoTint,
+    "logoOutline" to logoOutline?.let { if (it) 1 else 0 },
 )
 
 fun LoyaltyCardEntity.toContentValues(): ContentValues = contentValuesOf(

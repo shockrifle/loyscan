@@ -1,6 +1,6 @@
 # Changing the database schema
 
-The Room DB `AppDatabase` is at **`AppDatabase.VERSION = 4`**, and **every version from 2 on is frozen**
+The Room DB `AppDatabase` is at **`AppDatabase.VERSION = 5`**, and **every version from 2 on is frozen**
 ([[2026-11-05-room-schema-frozen-from-v2]], #12): a schema change is always a version bump with a migration. There is
 no destructive fallback, so a missing migration crashes on open rather than deleting the user's cards
 (`app/src/main/java/com/bdaniel/loyscan/data/local/db/AppDatabase.kt`, `companion object`;
@@ -62,3 +62,7 @@ migration is owed either way.
   a v2 database migrates through v3 to v4. Tests:
   `DatabaseMigrationTest.aCardFromTheFirstRelease_withAFrontPhoto_doesNotShowItOnTheWidget_afterTheMigration` and
   `aCardShowingItsPhotoOnTheList_atVersion3_keepsIt_andDoesNotShowItOnTheWidget_afterTheMigration` (built from `3.json`).
+- 2026-11-26 (#240): v5, `stores.logoStyle`, `logoTint` and `logoOutline`, all nullable (null = As is, so no default is
+  needed), by `@AutoMigration(from = 4, to = 5)`; how a logo is drawn ([[store-logo]]). The catalogue sync leaves them alone
+  ([[store-catalogue]]). The trap in step 3 bit again: a build before the bump rewrote `4.json` and the new test passed
+  with no migration. Test: `DatabaseMigrationTest.aStoreWithALogo_atVersion4_drawsItAsIs_afterTheMigration` (built from `4.json`).

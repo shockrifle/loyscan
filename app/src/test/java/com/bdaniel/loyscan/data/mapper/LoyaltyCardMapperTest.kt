@@ -3,6 +3,8 @@ package com.bdaniel.loyscan.data.mapper
 import com.bdaniel.loyscan.data.local.db.dao.LoyaltyCardEdit
 import com.bdaniel.loyscan.data.local.db.dao.LoyaltyCardWithStore
 import com.bdaniel.loyscan.domain.BarcodeFormat
+import com.bdaniel.loyscan.domain.LogoStyle
+import com.bdaniel.loyscan.domain.LogoTreatment
 import com.bdaniel.loyscan.domain.LoyaltyCard
 import com.bdaniel.loyscan.domain.Store
 import com.bdaniel.loyscan.domain.cardnumber.CardNumberRule
@@ -46,6 +48,9 @@ class LoyaltyCardMapperTest {
             frequentlyAdded = true,
             isCustom = true,
             updatedAt = Instant.ofEpochMilli(4),
+            logoStyle = LogoStyle.SINGLE_COLOUR,
+            logoTint = "#FFFFFF",
+            logoOutline = true,
         ),
     )
 
@@ -66,6 +71,7 @@ class LoyaltyCardMapperTest {
                     frequentlyAdded = true,
                     isCustom = true,
                     updatedAt = Instant.ofEpochMilli(4),
+                    logoTreatment = LogoTreatment(style = LogoStyle.SINGLE_COLOUR, tint = "#FFFFFF", outline = true),
                 ),
                 label = "Gold card",
                 number = "0042",
@@ -114,6 +120,14 @@ class LoyaltyCardMapperTest {
                 updatedAt = card.updatedAt,
             )
         )
+    }
+
+    @Test
+    fun aStoreDrawnAsIs_readsAsIs_andIsStoredAsNulls() { // #240: null = As is
+        val asIs = aStoreEntity()
+
+        assertThat(asIs.toDomainModel().logoTreatment).isEqualTo(LogoTreatment.AS_IS)
+        assertThat(asIs.toDomainModel().toEntity()).isEqualTo(asIs)
     }
 
     @Test

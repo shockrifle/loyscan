@@ -3,6 +3,8 @@ package com.bdaniel.loyscan.testing
 import com.bdaniel.loyscan.data.local.db.entity.LoyaltyCardEntity
 import com.bdaniel.loyscan.data.local.db.entity.StoreEntity
 import com.bdaniel.loyscan.domain.BarcodeFormat
+import com.bdaniel.loyscan.domain.LogoStyle
+import com.bdaniel.loyscan.domain.LogoTreatment
 import com.bdaniel.loyscan.domain.LoyaltyCard
 import com.bdaniel.loyscan.domain.Store
 import com.bdaniel.loyscan.domain.cardnumber.CardNumberRule
@@ -31,6 +33,7 @@ fun aStore(
     frequentlyAdded: Boolean = false,
     isCustom: Boolean = false,
     updatedAt: Instant = SOME_INSTANT,
+    logoTreatment: LogoTreatment = LogoTreatment.AS_IS,
 ) = Store(
     id = id,
     name = name,
@@ -43,6 +46,7 @@ fun aStore(
     frequentlyAdded = frequentlyAdded,
     isCustom = isCustom,
     updatedAt = updatedAt,
+    logoTreatment = logoTreatment,
 )
 
 fun aLoyaltyCard(
@@ -89,6 +93,9 @@ fun aStoreEntity(
     frequentlyAdded: Boolean = false,
     isCustom: Boolean = false,
     updatedAt: Instant = SOME_INSTANT,
+    logoStyle: LogoStyle? = null,
+    logoTint: String? = null,
+    logoOutline: Boolean? = null,
 ) = StoreEntity(
     id = id,
     name = name,
@@ -101,6 +108,9 @@ fun aStoreEntity(
     frequentlyAdded = frequentlyAdded,
     isCustom = isCustom,
     updatedAt = updatedAt,
+    logoStyle = logoStyle,
+    logoTint = logoTint,
+    logoOutline = logoOutline,
 )
 
 fun aLoyaltyCardEntity(

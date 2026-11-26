@@ -4,6 +4,7 @@ import com.bdaniel.loyscan.data.local.db.dao.StoreDao
 import com.bdaniel.loyscan.data.mapper.toDomainModel
 import com.bdaniel.loyscan.data.mapper.toEntity
 import com.bdaniel.loyscan.data.photos.CardPhotos
+import com.bdaniel.loyscan.domain.LogoTreatment
 import com.bdaniel.loyscan.domain.Store
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -28,6 +29,11 @@ class RoomStoreRepository @Inject constructor(
     /** Deletes the file of a replaced or removed logo, or the new one if the store is gone (#151). */
     override suspend fun setLogo(storeId: String, logo: String?) {
         photos.delete(storeDao.setLogoReturningDropped(storeId, logo))
+    }
+
+    override suspend fun setLogoTreatment(storeId: String, treatment: LogoTreatment) {
+        // Null, not false, without an outline: null throughout is As is (as the mapper writes it).
+        storeDao.updateLogoTreatment(storeId, treatment.style, treatment.tint, treatment.outline.takeIf { it })
     }
 
     override suspend fun delete(id: String) {

@@ -8,6 +8,7 @@ import androidx.room.Transaction
 import androidx.room.Update
 import com.bdaniel.loyscan.data.local.db.entity.StoreEntity
 import com.bdaniel.loyscan.domain.BarcodeFormat
+import com.bdaniel.loyscan.domain.LogoStyle
 import kotlinx.coroutines.flow.Flow
 import java.time.Instant
 
@@ -51,15 +52,25 @@ interface StoreDao {
     )
     suspend fun cardPhotosOfCustomStore(id: String): List<CardPhotoNames>
 
-    /** Sets the store's logo (#151) and returns the logo files nothing names any more. */
+    /**
+     * Sets the store's logo (#151) and returns the logo files nothing names any more. A new logo, or none, is drawn As is
+     * (#240): how the old one was drawn was chosen for it.
+     */
     @Transaction
     suspend fun setLogoReturningDropped(id: String, logo: String?): List<String> {
         val old = logoOf(id)
-        return if (updateLogo(id, logo) == 0) listOfNotNull(logo) else listOfNotNull(old).filter { it != logo }
+        if (updateLogo(id, logo) == 0) return listOfNotNull(logo)
+        if (old == logo) return emptyList()
+        updateLogoTreatment(id, style = null, tint = null, outline = null)
+        return listOfNotNull(old)
     }
 
     @Query("UPDATE stores SET logo = :logo WHERE id = :id")
     suspend fun updateLogo(id: String, logo: String?): Int
+
+    /** How the store's logo is drawn (#240); returns the rows changed, 0 for an unknown id. */
+    @Query("UPDATE stores SET logoStyle = :style, logoTint = :tint, logoOutline = :outline WHERE id = :id")
+    suspend fun updateLogoTreatment(id: String, style: LogoStyle?, tint: String?, outline: Boolean?): Int
 
     @Query("SELECT logo FROM stores WHERE id = :id")
     suspend fun logoOf(id: String): String?
