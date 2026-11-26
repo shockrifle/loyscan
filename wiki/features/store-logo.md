@@ -99,7 +99,7 @@ logo". Done in four slices, 2026-11-13 to 2026-11-16.
   (`aPickedSvg_opensTheCrop_andTheCropBecomesTheStoresLogo`, #211).
 - The SVG drawing (#211): the `stageLogo_` tests in `FileCardPhotosTest` (the size, a viewBox only, no size at all, a very thin one,
   unreadable files, the size limit, a linked image not drawn beside an embedded one that is, entities drawn, an entity
-  from another file, nested entities and the same in UTF-16 refused, the IO dispatcher's thread),
+  from another file, nested entities and the same in UTF-16 refused, a gzipped one drawn and checked unpacked, the IO dispatcher's thread),
   `cropLogo_ofAStagedSvg_storesTheUsualPng`, `stage_ofAnSvg_throws_andLeavesNoFile`;
   `SharedLogoViewModelTest.aSharedSvg_isCopiedIn_asALogo`, `CardFormViewModelTest.aPickedSvg_isNotACardPhoto_andSaysSo`;
   end to end `ShareToLoyScanTest.sharingAnSvgAsAStoreLogo_theCropMakesItItsLogo`.
