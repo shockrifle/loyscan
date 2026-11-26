@@ -80,6 +80,7 @@ import com.bdaniel.loyscan.ui.CARD_ASPECT_RATIO
 import com.bdaniel.loyscan.ui.CardPhoto
 import com.bdaniel.loyscan.ui.FullBrightness
 import com.bdaniel.loyscan.ui.KeepScreenOn
+import com.bdaniel.loyscan.ui.StatusBarIcons
 import com.bdaniel.loyscan.ui.StoreInitials
 import com.bdaniel.loyscan.ui.barcode.Barcode
 import com.bdaniel.loyscan.ui.barcode.BarcodeEncoder
@@ -148,6 +149,8 @@ fun SharedTransitionScope.DetailScreen(
     // edit of the store made while this card was on the back stack shows on return (#226).
     val shownColor = if (card.id.isEmpty()) color else card.store.color
     val brandColor = shownColor.toBrandColorOrNull() ?: MaterialTheme.colorScheme.surfaceVariant
+    // The band runs behind the status bar: its icons follow the band's own (#233).
+    StatusBarIcons(dark = brandColor.contrastingTextColor() == Color.Black)
     val barcode = remember(card.barcodeContent, card.barcodeFormat) {
         BarcodeEncoder.encode(card.barcodeContent, card.barcodeFormat)
     }
@@ -399,6 +402,8 @@ private fun ConfirmDelete(failed: Boolean, deleting: Boolean, onConfirm: () -> U
 @Composable
 private fun ScanMode(barcode: EncodedBarcode, number: String, onExit: () -> Unit) {
     KeepScreenOn()
+    // White behind the status bar too, whatever the band's colour (#233).
+    StatusBarIcons(dark = true)
     BackHandler(onBack = onExit)
     BoxWithConstraints(
         modifier = Modifier
@@ -439,6 +444,8 @@ private fun LoyaltyCard.photo(side: CardPhotoSide): String? =
 @Composable
 private fun PhotoViewer(photo: String, description: String, onExit: () -> Unit) {
     BackHandler(onBack = onExit)
+    // Black behind the status bar too, whatever the band's colour (#233).
+    StatusBarIcons(dark = false)
     Box(
         modifier = Modifier
             .fillMaxSize()

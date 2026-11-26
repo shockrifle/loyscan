@@ -1,5 +1,6 @@
 package com.bdaniel.loyscan
 
+import androidx.core.view.WindowCompat
 import com.bdaniel.loyscan.ui.CARD_TILE_PHOTO_TAG
 import android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 import android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
@@ -113,6 +114,46 @@ class AppNavigationTest {
         composeRule.waitForIdle()
 
         assertThat(brightness).isEqualTo(BRIGHTNESS_OVERRIDE_NONE)
+    }
+
+    /** Whether the window draws dark status bar icons, as the system reads it (#233). */
+    private val darkStatusBarIcons get() = composeRule.activity.window.let {
+        WindowCompat.getInsetsController(it, it.decorView).isAppearanceLightStatusBars
+    }
+
+    @Test
+    @Config(qualifiers = "+night")
+    fun inDarkMode_aLightCard_drawsDarkStatusBarIcons_andBackGivesTheAppsLightOnesBack() { // #233
+        runBlocking {
+            db.storeDao().insert(aStoreEntity(id = "00000000-0000-0000-0000-0000000000a2", name = "Sun Store", color = "#FFEB3B"))
+            db.loyaltyCardDao().insert(
+                aLoyaltyCardEntity(id = "00000000-0000-0000-0000-0000000000b2", storeId = "00000000-0000-0000-0000-0000000000a2", label = "Sun card"),
+            )
+        }
+        waitForText("Sun card")
+        assertThat(darkStatusBarIcons).isFalse()
+
+        composeRule.onNodeWithText("Sun card").performClick()
+        // The destination is resumed, and sets the icons, only once the enter transition has finished.
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) { darkStatusBarIcons }
+
+        composeRule.onNodeWithContentDescription("Back").performClick()
+        composeRule.waitForIdle()
+        assertThat(darkStatusBarIcons).isFalse()
+    }
+
+    @Test
+    @Config(qualifiers = "+notnight")
+    fun inLightMode_aDarkCard_drawsLightStatusBarIcons_andBackGivesTheAppsDarkOnesBack() { // #233
+        waitForText("Gold card") // its store is #336699
+        assertThat(darkStatusBarIcons).isTrue()
+
+        composeRule.onNodeWithText("Gold card").performClick()
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) { !darkStatusBarIcons }
+
+        composeRule.onNodeWithContentDescription("Back").performClick()
+        composeRule.waitForIdle()
+        assertThat(darkStatusBarIcons).isTrue()
     }
 
     @Test

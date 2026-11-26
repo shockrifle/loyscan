@@ -9,6 +9,7 @@ import com.bdaniel.loyscan.testing.writeOnePixelPng
 import androidx.compose.ui.platform.LocalView
 import androidx.core.graphics.Insets
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import android.content.ClipboardManager
 import android.content.Context
@@ -428,6 +429,75 @@ class DetailScreenTest {
     private fun backIconPixels(): Set<Int> {
         val pixels = composeRule.onNodeWithContentDescription("Back").captureToImage().toPixelMap()
         return buildSet { for (x in 0 until pixels.width) for (y in 0 until pixels.height) add(pixels[x, y].toArgb()) }
+    }
+
+    /** Whether the window draws dark status bar icons, as the system reads it (#233). */
+    private val darkStatusBarIcons get() = composeRule.activity.window.let {
+        WindowCompat.getInsetsController(it, it.decorView).isAppearanceLightStatusBars
+    }
+
+    /** The window's appearance before the screen opens, set opposite to what a test expects so it can fail. */
+    private fun startWithDarkStatusBarIcons(dark: Boolean) = composeRule.runOnUiThread {
+        composeRule.activity.window.let { WindowCompat.getInsetsController(it, it.decorView).isAppearanceLightStatusBars = dark }
+    }
+
+    @Test
+    fun onALightBrandColour_theStatusBarIconsAreDark() { // #233: light icons on yellow were hard to read
+        startWithDarkStatusBarIcons(false)
+        setScreen(color = "#FFEB3B", card = card.copy(store = card.store.copy(color = "#FFEB3B")))
+        composeRule.waitForIdle()
+
+        assertThat(darkStatusBarIcons).isTrue()
+    }
+
+    @Test
+    fun onADarkBrandColour_theStatusBarIconsAreLight() { // #233
+        startWithDarkStatusBarIcons(true)
+        setScreen(color = "#1A237E", card = card.copy(store = card.store.copy(color = "#1A237E")))
+        composeRule.waitForIdle()
+
+        assertThat(darkStatusBarIcons).isFalse()
+    }
+
+    @Test
+    fun aStoresNewColour_setsTheStatusBarIcons() { // #233, #226: the stored colour, not the route's
+        startWithDarkStatusBarIcons(false)
+        val repository = FakeLoyaltyCardRepository(listOf(card.copy(store = card.store.copy(color = "#1A237E"))))
+        setScreen(color = "#1A237E", repository = repository)
+        composeRule.waitForIdle()
+
+        repository.cards.value = listOf(card.copy(store = card.store.copy(color = "#FFEB3B")))
+        composeRule.waitForIdle()
+
+        assertThat(darkStatusBarIcons).isTrue()
+    }
+
+    @Test
+    fun scanMode_drawsDarkStatusBarIconsOnItsWhite_andClosingGivesTheCardsBack() { // #233
+        startWithDarkStatusBarIcons(true)
+        setScreen(color = "#1A237E", card = card.copy(store = card.store.copy(color = "#1A237E")))
+
+        composeRule.onNodeWithContentDescription("Barcode").performTouchInput { doubleClick() }
+        composeRule.waitForIdle()
+        assertThat(darkStatusBarIcons).isTrue()
+
+        composeRule.onNodeWithTag("scanMode").performClick()
+        composeRule.waitForIdle()
+        assertThat(darkStatusBarIcons).isFalse()
+    }
+
+    @Test
+    fun thePhotoViewer_drawsLightStatusBarIconsOnItsBlack_andClosingGivesTheCardsBack() { // #233
+        startWithDarkStatusBarIcons(false)
+        setScreen(color = "#FFEB3B", card = card.copy(frontPhotoPath = "front", store = card.store.copy(color = "#FFEB3B")))
+
+        composeRule.onNodeWithContentDescription("Front photo").performScrollTo().performClick()
+        composeRule.waitForIdle()
+        assertThat(darkStatusBarIcons).isFalse()
+
+        composeRule.onNodeWithTag(PHOTO_VIEWER_TAG).performClick()
+        composeRule.waitForIdle()
+        assertThat(darkStatusBarIcons).isTrue()
     }
 
     @Test
