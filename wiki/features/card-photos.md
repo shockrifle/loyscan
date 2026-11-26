@@ -104,13 +104,16 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   `showPhotoOnList`, `null` until changed), so it survives process death. Removing the front photo turns it off, so a
   photo added after that starts off (the user's call); replacing the photo or removing the back one keeps it. The save
   stores it only with a front photo: a pick swept while the form waited is saved without its photo and with the setting
-  off. Tests: `CardFormViewModelTest.turningOnShowPhotoOnMyCards_savesItWithTheNewCard`,
+  off, and an edit whose swept pick falls back to the card's own photo keeps that photo's own setting, since the switch
+  was set for the pick (review of #184). The whole row toggles, at least 48dp tall
+  (`LocalMinimumInteractiveComponentSize`), since the `Switch` has no handler of its own. Tests: `CardFormViewModelTest.turningOnShowPhotoOnMyCards_savesItWithTheNewCard`,
   `aNewCardWithAFrontPhoto_startsNotShowingItOnTheList_andIsSavedSo`,
   `editingACard_startsWithItsShowPhotoSetting_andTurningItOffSavesThat`, `showPhotoOnMyCards_isRestoredAfterProcessDeath`,
-  `removingTheFrontPhoto_turnsShowPhotoOnMyCardsOff_soANewPhotoStartsOff`, `aSweptFrontPick_isSavedNotShowingAPhotoOnTheList`;
+  `removingTheFrontPhoto_turnsShowPhotoOnMyCardsOff_soANewPhotoStartsOff`, `aSweptFrontPick_isSavedNotShowingAPhotoOnTheList`,
+  `anEditWhoseSweptFrontPickFallsBackToTheCardsPhoto_keepsThatPhotosSetting`;
   `CardFormScreenTest.addingAFrontPhoto_offersShowPhotoOnMyCards_off_andTurningItOnSavesIt`,
   `editingACardShowingItsPhoto_showsTheSwitchOn_andRemovingThePhotoHidesIt`, `aCardWithOnlyABackPhoto_offersNoShowPhotoOnMyCards`,
-  `atFontScale2_onANarrowScreen_showPhotoOnMyCards_isNotClippedAndDoesNotOverlap`.
+  `atFontScale2_onANarrowScreen_showPhotoOnMyCards_isNotClippedAndDoesNotOverlap`, `showPhotoOnMyCards_isAtLeastA48dpTouchTarget`.
 - **On the list** ([[card-list]]): with "Show photo on My Cards" on, the front photo is the card's tile, with the label
   on a dark scrim; with it off (the default), the tile shows the store's logo, else the initials; a card with only
   a back photo, or a front photo that can't be loaded, shows its store's logo ([[store-logo]]), else the initials
