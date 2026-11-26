@@ -54,6 +54,18 @@ class DatabaseMigrationTest {
     }
 
     @Test
+    fun aCardFromTheFirstRelease_withAFrontPhoto_doesNotShowItOnTheList_afterTheMigration() = runTest { // #184
+        createDatabaseFromExportedSchema(context, DATABASE, FIRST_RELEASED_VERSION).use {
+            it.insertACardAsTheFirstReleaseStoredIt(frontPhotoPath = "front")
+        }
+
+        val card = openAsTheAppDoes().loyaltyCardDao().getAllWithStore().first().single().loyaltyCard
+
+        assertThat(card.frontPhotoPath).isEqualTo("front")
+        assertThat(card.showPhotoOnList).isFalse()
+    }
+
+    @Test
     fun anEmptyDatabaseAtEveryFrozenVersion_opensInTheCurrentApp() = runTest {
         for (version in FROZEN_SCHEMAS.keys.sorted()) {
             createDatabaseFromExportedSchema(context, DATABASE, version).close()
@@ -90,7 +102,7 @@ class DatabaseMigrationTest {
         DatabaseModule.provideAppDatabase(context, CardPhotosModule.provideFileCardPhotos(context)).also { opened = it }
 
     // The first release's columns, written out: the entities and their ContentValues mappers follow the current schema.
-    private fun SQLiteDatabase.insertACardAsTheFirstReleaseStoredIt() {
+    private fun SQLiteDatabase.insertACardAsTheFirstReleaseStoredIt(frontPhotoPath: String? = null) {
         insertOrThrow(
             "stores", null,
             contentValuesOf(
@@ -104,7 +116,7 @@ class DatabaseMigrationTest {
             contentValuesOf(
                 "id" to "card-1", "storeId" to "custom-1", "label" to "Everyday", "number" to "1234567890128",
                 "scannedFormat" to null, "createdAt" to 1_700_000_000_000L, "lastUsedAt" to 1_700_000_100_000L,
-                "useCount" to 3, "note" to "Behind the counter", "frontPhotoPath" to null, "backPhotoPath" to null,
+                "useCount" to 3, "note" to "Behind the counter", "frontPhotoPath" to frontPhotoPath, "backPhotoPath" to null,
                 "updatedAt" to 1_700_000_000_000L,
             ),
         )

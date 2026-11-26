@@ -1,5 +1,6 @@
 package com.bdaniel.loyscan.data.local.db.entity
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
@@ -32,5 +33,8 @@ data class LoyaltyCardEntity(
         val note: String?,
         val frontPhotoPath: String?,
         val backPhotoPath: String?,
+        /** Whether the front photo is the card's tile on My cards (#184); off for a card from before it (schema v3). */
+        @ColumnInfo(defaultValue = "0")
+        val showPhotoOnList: Boolean,
         val updatedAt: Instant,
 )

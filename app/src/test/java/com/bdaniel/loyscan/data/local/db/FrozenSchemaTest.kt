@@ -36,6 +36,7 @@ class FrozenSchemaTest {
         /** Version → its exported `identityHash`. Add the new version's hash when you bump it; never edit one. */
         val FROZEN_SCHEMAS = mapOf(
             2 to "fe9f0878fb2710f56065c05fbf78cfc3",
+            3 to "07e858e8e311b1797f964e04e48c4afa", // loyalty_cards.showPhotoOnList (#184)
         )
     }
 }

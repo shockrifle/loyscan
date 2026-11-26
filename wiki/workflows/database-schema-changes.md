@@ -1,13 +1,13 @@
 # Changing the database schema
 
-The Room DB `AppDatabase` is at **`AppDatabase.VERSION = 2`**, and **every version from 2 on is frozen**
+The Room DB `AppDatabase` is at **`AppDatabase.VERSION = 3`**, and **every version from 2 on is frozen**
 ([[2026-11-05-room-schema-frozen-from-v2]], #12): a schema change is always a version bump with a migration. There is
 no destructive fallback, so a missing migration crashes on open rather than deleting the user's cards
 (`app/src/main/java/com/bdaniel/loyscan/data/local/db/AppDatabase.kt`, `companion object`;
 `app/src/main/java/com/bdaniel/loyscan/di/DatabaseModule.kt`, `provideAppDatabase`).
 
 Two tests enforce it. `FrozenSchemaTest` fails when a pinned schema JSON changes (KSP rewrites it from the entities on
-every build) or a version has no pin. `DatabaseMigrationTest` opens a v2 database with a card through the app's builder
+every build) or a version has no pin. `DatabaseMigrationTest` opens a v2 database (the first release) with a card through the app's builder
 and fails on a missing, unwired or wrong migration, or a lost card; a database with no migration path must fail to
 open with its cards kept, so a destructive fallback fails too. Both read `app/schemas/`, which is declared an input of
 the unit-test task (`app/build.gradle.kts`, `testOptions`), so editing a schema JSON reruns them.
@@ -25,9 +25,14 @@ the unit-test task (`app/build.gradle.kts`, `testOptions`), so editing a schema 
 3. Bump `AppDatabase.VERSION`, then build. KSP writes
    `app/schemas/com.bdaniel.loyscan.data.local.db.AppDatabase/<version>.json`. **Commit the new schema JSON** with
    the change, and pin its `identityHash` in `FrozenSchemaTest.FROZEN_SCHEMAS`. Never edit an existing pin: if
-   `FrozenSchemaTest` says a schema "changed in place", the entity change needs a bump, not a new hash.
+   `FrozenSchemaTest` says a schema "changed in place", the entity change needs a bump, not a new hash. A build with
+   the entity changed but the version not yet bumped rewrites the old version's JSON in place, and the migration test
+   then builds its "old" database from that rewritten file and passes with no migration at all: `git checkout
+   app/schemas/` before bumping (seen on #184; only `FrozenSchemaTest` was red).
 4. Write the migration: a `Migration(old, new)` in `AppDatabase.MIGRATIONS`, or an `@AutoMigration(from, to)` in
-   `@Database` when Room can work it out (it needs the exported schemas, which are committed). Room checks the
+   `@Database` when Room can work it out (it needs the exported schemas, which are committed). An added `NOT NULL`
+   column needs `@ColumnInfo(defaultValue = …)` on the entity for an auto-migration to fill the existing rows. Room
+   wires `autoMigrations` itself; `DatabaseModule` adds only `MIGRATIONS`. Room checks the
    migrated tables against the entities when the database opens, so the test from step 1 fails on a wrong
    migration ("Migration didn't properly handle …").
 5. Update the raw-row mappers in `data/local/db/ContentValues.kt` (`ContentValuesTest` fails until you do), and the
@@ -50,3 +55,6 @@ migration is owed either way.
   fails Room's identity check on open until its data is cleared, which deletes its cards ([[reset-local-database]]); the previous `2.json` is in git history only.
 - 2026-11-05 (#12): v2 frozen as the first released schema; migrations wired into `DatabaseModule`, no destructive
   fallback; `FrozenSchemaTest` and `DatabaseMigrationTest` added ([[2026-11-05-room-schema-frozen-from-v2]]).
+- 2026-11-26 (#184): v3, the first migration: `loyalty_cards.showPhotoOnList` (`NOT NULL DEFAULT 0`, so every existing
+  card is off), by `@AutoMigration(from = 2, to = 3)`. Test:
+  `DatabaseMigrationTest.aCardFromTheFirstRelease_withAFrontPhoto_doesNotShowItOnTheList_afterTheMigration`.
