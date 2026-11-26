@@ -1,6 +1,6 @@
 # Changing the database schema
 
-The Room DB `AppDatabase` is at **`AppDatabase.VERSION = 3`**, and **every version from 2 on is frozen**
+The Room DB `AppDatabase` is at **`AppDatabase.VERSION = 4`**, and **every version from 2 on is frozen**
 ([[2026-11-05-room-schema-frozen-from-v2]], #12): a schema change is always a version bump with a migration. There is
 no destructive fallback, so a missing migration crashes on open rather than deleting the user's cards
 (`app/src/main/java/com/bdaniel/loyscan/data/local/db/AppDatabase.kt`, `companion object`;
@@ -58,3 +58,7 @@ migration is owed either way.
 - 2026-11-26 (#184): v3, the first migration: `loyalty_cards.showPhotoOnList` (`NOT NULL DEFAULT 0`, so every existing
   card is off), by `@AutoMigration(from = 2, to = 3)`. Test:
   `DatabaseMigrationTest.aCardFromTheFirstRelease_withAFrontPhoto_doesNotShowItOnTheList_afterTheMigration`.
+- 2026-11-26 (#185): v4, `loyalty_cards.showPhotoOnWidget` (`NOT NULL DEFAULT 0`), by `@AutoMigration(from = 3, to = 4)`;
+  a v2 database migrates through v3 to v4. Tests:
+  `DatabaseMigrationTest.aCardFromTheFirstRelease_withAFrontPhoto_doesNotShowItOnTheWidget_afterTheMigration` and
+  `aCardShowingItsPhotoOnTheList_atVersion3_keepsIt_andDoesNotShowItOnTheWidget_afterTheMigration` (built from `3.json`).

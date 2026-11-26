@@ -21,6 +21,8 @@ data class LoyaltyCard(
     val backPhotoPath: String?,
     /** The user chose to show [frontPhotoPath] as the card's tile on My cards (#184); off by default. */
     val showPhotoOnList: Boolean,
+    /** The user chose to show [frontPhotoPath] as the card's tile on the home-screen widget (#185); off by default. */
+    val showPhotoOnWidget: Boolean,
     val updatedAt: Instant,
 ) {
     /**
@@ -71,6 +73,7 @@ data class LoyaltyCard(
             frontPhotoPath = null,
             backPhotoPath = null,
             showPhotoOnList = false,
+            showPhotoOnWidget = false,
             updatedAt = Instant.EPOCH,
         )
     }

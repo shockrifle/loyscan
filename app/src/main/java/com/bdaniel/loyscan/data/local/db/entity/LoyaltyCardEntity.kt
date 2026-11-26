@@ -36,5 +36,8 @@ data class LoyaltyCardEntity(
         /** Whether the front photo is the card's tile on My cards (#184); off for a card from before it (schema v3). */
         @ColumnInfo(defaultValue = "0")
         val showPhotoOnList: Boolean,
+        /** Whether the front photo is the card's tile on the home-screen widget (#185); off for a card from before it (schema v4). */
+        @ColumnInfo(defaultValue = "0")
+        val showPhotoOnWidget: Boolean,
         val updatedAt: Instant,
 )

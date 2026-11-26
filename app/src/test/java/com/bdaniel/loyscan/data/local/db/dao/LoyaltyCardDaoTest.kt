@@ -159,6 +159,7 @@ class LoyaltyCardDaoTest {
                 frontPhotoPath = "new-front",
                 backPhotoPath = null,
                 showPhotoOnList = true,
+                showPhotoOnWidget = true,
                 updatedAt = Instant.parse("2026-04-04T00:00:00Z"),
             )
         )
@@ -173,6 +174,7 @@ class LoyaltyCardDaoTest {
                 frontPhotoPath = "new-front",
                 backPhotoPath = null,
                 showPhotoOnList = true,
+                showPhotoOnWidget = true,
                 updatedAt = Instant.parse("2026-04-04T00:00:00Z"),
             )
         )
@@ -184,7 +186,7 @@ class LoyaltyCardDaoTest {
         db.storeDao().insert(aStoreEntity())
         dao.insert(aLoyaltyCardEntity(id = cardId(1), frontPhotoPath = "front", backPhotoPath = "back"))
         val edit = aLoyaltyCardEntity(id = cardId(1)).let {
-            LoyaltyCardEdit(it.id, it.storeId, it.label, it.number, it.scannedFormat, it.note, "new-front", "back", it.showPhotoOnList, it.updatedAt)
+            LoyaltyCardEdit(it.id, it.storeId, it.label, it.number, it.scannedFormat, it.note, "new-front", "back", it.showPhotoOnList, it.showPhotoOnWidget, it.updatedAt)
         }
 
         val dropped = dao.updateReturningDroppedPhotos(edit)

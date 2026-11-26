@@ -25,6 +25,7 @@ fun LoyaltyCardWithStore.toDomainModel(): LoyaltyCard {
         frontPhotoPath = loyaltyCard.frontPhotoPath,
         backPhotoPath = loyaltyCard.backPhotoPath,
         showPhotoOnList = loyaltyCard.showPhotoOnList,
+        showPhotoOnWidget = loyaltyCard.showPhotoOnWidget,
         updatedAt = loyaltyCard.updatedAt
     )
 }
@@ -44,6 +45,7 @@ fun LoyaltyCard.toEntity(): LoyaltyCardEntity {
         frontPhotoPath = frontPhotoPath,
         backPhotoPath = backPhotoPath,
         showPhotoOnList = showPhotoOnList,
+        showPhotoOnWidget = showPhotoOnWidget,
         updatedAt = updatedAt
     )
 }
@@ -60,6 +62,7 @@ fun LoyaltyCard.toEdit(): LoyaltyCardEdit {
         frontPhotoPath = frontPhotoPath,
         backPhotoPath = backPhotoPath,
         showPhotoOnList = showPhotoOnList,
+        showPhotoOnWidget = showPhotoOnWidget,
         updatedAt = updatedAt
     )
 }

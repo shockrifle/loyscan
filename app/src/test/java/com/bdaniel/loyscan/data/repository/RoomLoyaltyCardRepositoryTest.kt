@@ -104,7 +104,7 @@ class RoomLoyaltyCardRepositoryTest {
 
     @Test
     fun add_storesTheCard_andItReadsBackWithItsStore() = runTest {
-        val added = aLoyaltyCard(id = cardId(4), store = store, label = null, number = "5901234123457", scannedFormat = BarcodeFormat.EAN_13, showPhotoOnList = true)
+        val added = aLoyaltyCard(id = cardId(4), store = store, label = null, number = "5901234123457", scannedFormat = BarcodeFormat.EAN_13, showPhotoOnList = true, showPhotoOnWidget = true)
 
         repository.add(added)
 
@@ -112,7 +112,7 @@ class RoomLoyaltyCardRepositoryTest {
     }
 
     @Test
-    fun update_savesTheEdit_butKeepsTheStoredUseAndCreation() = runTest { // #8, note: #9, photos: #10, photo on the list: #184
+    fun update_savesTheEdit_butKeepsTheStoredUseAndCreation() = runTest { // #8, note: #9, photos: #10, photo on the list: #184, on the widget: #185
         repository.recordUse(cardId(3))
         val edited = card.copy(
             label = null,
@@ -122,6 +122,7 @@ class RoomLoyaltyCardRepositoryTest {
             frontPhotoPath = "front",
             backPhotoPath = "back",
             showPhotoOnList = true,
+            showPhotoOnWidget = true,
             updatedAt = NOW,
             // An edit doesn't change these, whatever the card passed in says.
             createdAt = NOW,
@@ -140,6 +141,7 @@ class RoomLoyaltyCardRepositoryTest {
                 frontPhotoPath = "front",
                 backPhotoPath = "back",
                 showPhotoOnList = true,
+                showPhotoOnWidget = true,
                 updatedAt = NOW,
                 useCount = 1,
                 lastUsedAt = NOW,

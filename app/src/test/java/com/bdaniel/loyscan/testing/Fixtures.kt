@@ -58,6 +58,7 @@ fun aLoyaltyCard(
     frontPhotoPath: String? = null,
     backPhotoPath: String? = null,
     showPhotoOnList: Boolean = false,
+    showPhotoOnWidget: Boolean = false,
     updatedAt: Instant = SOME_INSTANT,
 ) = LoyaltyCard(
     id = id,
@@ -72,6 +73,7 @@ fun aLoyaltyCard(
     frontPhotoPath = frontPhotoPath,
     backPhotoPath = backPhotoPath,
     showPhotoOnList = showPhotoOnList,
+    showPhotoOnWidget = showPhotoOnWidget,
     updatedAt = updatedAt,
 )
 
@@ -114,6 +116,7 @@ fun aLoyaltyCardEntity(
     frontPhotoPath: String? = null,
     backPhotoPath: String? = null,
     showPhotoOnList: Boolean = false,
+    showPhotoOnWidget: Boolean = false,
     updatedAt: Instant = SOME_INSTANT,
 ) = LoyaltyCardEntity(
     id = id,
@@ -128,5 +131,6 @@ fun aLoyaltyCardEntity(
     frontPhotoPath = frontPhotoPath,
     backPhotoPath = backPhotoPath,
     showPhotoOnList = showPhotoOnList,
+    showPhotoOnWidget = showPhotoOnWidget,
     updatedAt = updatedAt,
 )

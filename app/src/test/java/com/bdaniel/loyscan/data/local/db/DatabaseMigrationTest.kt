@@ -66,6 +66,30 @@ class DatabaseMigrationTest {
     }
 
     @Test
+    fun aCardFromTheFirstRelease_withAFrontPhoto_doesNotShowItOnTheWidget_afterTheMigration() = runTest { // #185
+        createDatabaseFromExportedSchema(context, DATABASE, FIRST_RELEASED_VERSION).use {
+            it.insertACardAsTheFirstReleaseStoredIt(frontPhotoPath = "front")
+        }
+
+        val card = openAsTheAppDoes().loyaltyCardDao().getAllWithStore().first().single().loyaltyCard
+
+        assertThat(card.showPhotoOnWidget).isFalse()
+    }
+
+    @Test
+    fun aCardShowingItsPhotoOnTheList_atVersion3_keepsIt_andDoesNotShowItOnTheWidget_afterTheMigration() = runTest { // #185
+        createDatabaseFromExportedSchema(context, DATABASE, 3).use {
+            it.insertACardAsTheFirstReleaseStoredIt(frontPhotoPath = "front", showPhotoOnList = true)
+        }
+
+        val card = openAsTheAppDoes().loyaltyCardDao().getAllWithStore().first().single().loyaltyCard
+
+        assertThat(card.frontPhotoPath).isEqualTo("front")
+        assertThat(card.showPhotoOnList).isTrue()
+        assertThat(card.showPhotoOnWidget).isFalse()
+    }
+
+    @Test
     fun anEmptyDatabaseAtEveryFrozenVersion_opensInTheCurrentApp() = runTest {
         for (version in FROZEN_SCHEMAS.keys.sorted()) {
             createDatabaseFromExportedSchema(context, DATABASE, version).close()
@@ -102,7 +126,8 @@ class DatabaseMigrationTest {
         DatabaseModule.provideAppDatabase(context, CardPhotosModule.provideFileCardPhotos(context)).also { opened = it }
 
     // The first release's columns, written out: the entities and their ContentValues mappers follow the current schema.
-    private fun SQLiteDatabase.insertACardAsTheFirstReleaseStoredIt(frontPhotoPath: String? = null) {
+    // [showPhotoOnList] is v3's column (#184): only for a database built at version 3.
+    private fun SQLiteDatabase.insertACardAsTheFirstReleaseStoredIt(frontPhotoPath: String? = null, showPhotoOnList: Boolean? = null) {
         insertOrThrow(
             "stores", null,
             contentValuesOf(
@@ -118,7 +143,7 @@ class DatabaseMigrationTest {
                 "scannedFormat" to null, "createdAt" to 1_700_000_000_000L, "lastUsedAt" to 1_700_000_100_000L,
                 "useCount" to 3, "note" to "Behind the counter", "frontPhotoPath" to frontPhotoPath, "backPhotoPath" to null,
                 "updatedAt" to 1_700_000_000_000L,
-            ),
+            ).apply { showPhotoOnList?.let { put("showPhotoOnList", if (it) 1 else 0) } },
         )
     }
 
