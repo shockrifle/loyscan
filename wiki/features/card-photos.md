@@ -98,6 +98,19 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   form then opens the crop screen on it (`aPhotoTaken_opensTheCropScreen_whenTheFormWasClearedBehindTheCameraApp`). One
   never answered is swept (Orphans). The `.jpg` name gives the camera app an `image/jpeg` target. No capture starts
   while a photo is copied in or framed, or once saving has started (`startCapture` returns `null`).
+- **"Show photo on My Cards"** (#184): a switch under the photo slots of the card form, new and edit, shown only while
+  the card has a front photo (`CardFormScreen`, `CardFormState.showPhotoOnList`). Off for a new card, and for every card
+  stored before schema v3 ([[database-schema-changes]]). The form keeps the choice in the `SavedStateHandle` (key
+  `showPhotoOnList`, `null` until changed), so it survives process death. Removing the front photo turns it off, so a
+  photo added after that starts off (the user's call); replacing the photo or removing the back one keeps it. The save
+  stores it only with a front photo: a pick swept while the form waited is saved without its photo and with the setting
+  off. Tests: `CardFormViewModelTest.turningOnShowPhotoOnMyCards_savesItWithTheNewCard`,
+  `aNewCardWithAFrontPhoto_startsNotShowingItOnTheList_andIsSavedSo`,
+  `editingACard_startsWithItsShowPhotoSetting_andTurningItOffSavesThat`, `showPhotoOnMyCards_isRestoredAfterProcessDeath`,
+  `removingTheFrontPhoto_turnsShowPhotoOnMyCardsOff_soANewPhotoStartsOff`, `aSweptFrontPick_isSavedNotShowingAPhotoOnTheList`;
+  `CardFormScreenTest.addingAFrontPhoto_offersShowPhotoOnMyCards_off_andTurningItOnSavesIt`,
+  `editingACardShowingItsPhoto_showsTheSwitchOn_andRemovingThePhotoHidesIt`, `aCardWithOnlyABackPhoto_offersNoShowPhotoOnMyCards`,
+  `atFontScale2_onANarrowScreen_showPhotoOnMyCards_isNotClippedAndDoesNotOverlap`.
 - **On the list** ([[card-list]]): the front photo is the card's tile, with the label on a dark scrim; a card with only
   a back photo, or a front photo that can't be loaded, shows its store's logo ([[store-logo]]), else the initials
   (`CardTileFace` in `app/src/main/java/com/bdaniel/loyscan/ui/CardTileFace.kt`).

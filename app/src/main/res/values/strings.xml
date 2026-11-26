@@ -121,6 +121,7 @@
     <string name="take_photo">Take photo</string>
     <string name="choose_from_gallery">Choose from gallery</string>
     <string name="photo_add_failed">The photo couldn\'t be added. Try again.</string>
+    <string name="show_photo_on_list">Show photo on My Cards</string>
     <string name="camera_needed_for_photo">LoyScan needs the camera to take a photo of your card.</string>
     <string name="camera_turned_off">Camera access is turned off for LoyScan. You can allow it in the app\'s settings.</string>
     <string name="open_settings">Open settings</string>

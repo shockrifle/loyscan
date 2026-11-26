@@ -81,6 +81,11 @@ data class CardFormState(
     /** The front photo's name (#10): the edited card's, or one picked in this form; `null` for none. */
     val frontPhoto: String? = null,
     val backPhoto: String? = null,
+    /**
+     * The front photo is the card's tile on My cards (#184). Off for a new card, and while there is no front photo:
+     * removing it turns the setting off, so a photo added after it starts off too.
+     */
+    val showPhotoOnList: Boolean = false,
     /** The side whose picked picture is being copied in or cropped; the card can't be saved until it is. */
     val importingPhoto: CardPhotoSide? = null,
     /** The last picked or taken picture couldn't be copied in or cropped. */
@@ -158,6 +163,7 @@ class CardFormViewModel @Inject constructor(
     private val pickedPhotos = combine(
         savedStateHandle.getStateFlow<String?>(FRONT_PHOTO, null),
         savedStateHandle.getStateFlow<String?>(BACK_PHOTO, null),
+        savedStateHandle.getStateFlow<Boolean?>(SHOW_PHOTO_ON_LIST, null),
         ::PickedPhotos,
     )
 
@@ -209,6 +215,11 @@ class CardFormViewModel @Inject constructor(
 
     fun onNoteChange(note: String) {
         savedStateHandle[NOTE] = note
+    }
+
+    /** Whether the front photo is the card's tile on My cards (#184). */
+    fun onShowPhotoOnListChange(show: Boolean) {
+        savedStateHandle[SHOW_PHOTO_ON_LIST] = show
     }
 
     fun onNumberChange(number: String) {
@@ -357,6 +368,8 @@ class CardFormViewModel @Inject constructor(
         if (!canChangePhotos()) return
         val replaced = picked(side)
         savedStateHandle[side.key] = REMOVED
+        // Without a front photo there's nothing to show on My cards; a photo added after it starts off (#184).
+        if (side == CardPhotoSide.FRONT) savedStateHandle[SHOW_PHOTO_ON_LIST] = false
         discardUnlessSaved(replaced)
     }
 
@@ -408,6 +421,7 @@ class CardFormViewModel @Inject constructor(
             note = current.note.trim().ifEmpty { null },
             frontPhotoPath = current.frontPhoto,
             backPhotoPath = current.backPhoto,
+            showPhotoOnList = current.showPhotoOnList,
             updatedAt = now,
         )
         val drafted = original?.let { draft } ?: draft.copy(id = checkNotNull(newCardId), createdAt = now)
@@ -425,9 +439,12 @@ class CardFormViewModel @Inject constructor(
                     // stays as the card had it, so the edit doesn't delete the card's own photo.
                     val gone = picked.filterNot { photos.exists(it) }.toSet()
                     fun unlessGone(photo: String?, cards: String?) = if (photo in gone) cards else photo
+                    val frontPhoto = unlessGone(drafted.frontPhotoPath, original?.frontPhotoPath)
                     val card = drafted.copy(
-                        frontPhotoPath = unlessGone(drafted.frontPhotoPath, original?.frontPhotoPath),
+                        frontPhotoPath = frontPhoto,
                         backPhotoPath = unlessGone(drafted.backPhotoPath, original?.backPhotoPath),
+                        // Only a card with a front photo shows one on My cards (#184).
+                        showPhotoOnList = drafted.showPhotoOnList && frontPhoto != null,
                     )
                     if (saved == null) cardRepository.add(card) else cardRepository.update(card)
                 }
@@ -507,6 +524,7 @@ class CardFormViewModel @Inject constructor(
             }
         }
         val number = if (scannedFormat != null) draft.displayNumber else typed.orEmpty()
+        val frontPhoto = inputs.photos.front.photo(original?.frontPhotoPath)
         return CardFormState(
             store = store,
             label = label,
@@ -525,8 +543,9 @@ class CardFormViewModel @Inject constructor(
             editing = editing,
             // Adding a card offers none: back returns to the picker.
             otherStores = if (editing) stores.filter { it.id != store.id }.search("") else emptyList(),
-            frontPhoto = inputs.photos.front.photo(original?.frontPhotoPath),
+            frontPhoto = frontPhoto,
             backPhoto = inputs.photos.back.photo(original?.backPhotoPath),
+            showPhotoOnList = frontPhoto != null && (inputs.photos.showOnList ?: original?.showPhotoOnList ?: false),
             importingPhoto = progress.importing,
             photoFailed = progress.photoFailed,
             cropping = inputs.cropping,
@@ -576,7 +595,8 @@ class CardFormViewModel @Inject constructor(
         val cropping: CardFormState.Cropping?,
     )
 
-    private data class PickedPhotos(val front: String?, val back: String?)
+    /** Per side, as [pickedPhotos] says; [showOnList] is `null` until the switch is changed (#184). */
+    private data class PickedPhotos(val front: String?, val back: String?, val showOnList: Boolean?)
 
     private val CardPhotoSide.key get() = if (this == CardPhotoSide.FRONT) FRONT_PHOTO else BACK_PHOTO
 
@@ -587,6 +607,7 @@ class CardFormViewModel @Inject constructor(
         const val TYPED_NUMBER = "typedNumber"
         const val FRONT_PHOTO = "frontPhoto"
         const val BACK_PHOTO = "backPhoto"
+        const val SHOW_PHOTO_ON_LIST = "showPhotoOnList"
 
         /** The photos picked in this form that a save was handed (#141): a card may name them, so they aren't discarded. */
         const val SAVED_PHOTOS = "savedPhotos"

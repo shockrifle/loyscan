@@ -1371,6 +1371,142 @@ class CardFormViewModelTest {
     }
 
     @Test
+    fun aNewCardWithAFrontPhoto_startsNotShowingItOnTheList_andIsSavedSo() = runTest { // #184; a guard, paired with the next
+        val viewModel = viewModel(CardForm("ruled"))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.onNumberChange("12345674")
+            viewModel.pickAndCrop(CardPhotoSide.FRONT)
+            assertThat(viewModel.state.value.showPhotoOnList).isFalse()
+            viewModel.save()
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        assertThat(cards.cards.value.single().showPhotoOnList).isFalse()
+    }
+
+    @Test
+    fun turningOnShowPhotoOnMyCards_savesItWithTheNewCard() = runTest { // #184
+        val viewModel = viewModel(CardForm("ruled"))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.onNumberChange("12345674")
+            viewModel.pickAndCrop(CardPhotoSide.FRONT)
+            viewModel.onShowPhotoOnListChange(true)
+            assertThat(viewModel.state.value.showPhotoOnList).isTrue()
+            viewModel.save()
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        assertThat(cards.cards.value.single().showPhotoOnList).isTrue()
+    }
+
+    @Test
+    fun editingACard_startsWithItsShowPhotoSetting_andTurningItOffSavesThat() = runTest { // #184
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, number = "12345674", frontPhotoPath = "front", showPhotoOnList = true))
+        photos.stored += "front"
+        val viewModel = viewModel(CardForm("ruled", cardId = cardId(1)))
+
+        viewModel.state.test {
+            assertThat(awaitLoaded().showPhotoOnList).isTrue()
+            viewModel.onShowPhotoOnListChange(false)
+            viewModel.save()
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        assertThat(cards.cards.value.single().showPhotoOnList).isFalse()
+    }
+
+    @Test
+    fun editingACard_keepsItsShowPhotoSetting_whenOtherFieldsChange() = runTest { // #184
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, number = "12345674", frontPhotoPath = "front", showPhotoOnList = true))
+        photos.stored += "front"
+        val viewModel = viewModel(CardForm("ruled", cardId = cardId(1)))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.onLabelChange("Gold")
+            viewModel.save()
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        assertThat(cards.cards.value.single().showPhotoOnList).isTrue()
+    }
+
+    @Test
+    fun showPhotoOnMyCards_isRestoredAfterProcessDeath() = runTest { // #184
+        val handle = SavedStateHandle(route = CardForm("ruled"))
+        val first = viewModel(handle)
+        first.state.test {
+            awaitLoaded()
+            first.pickAndCrop(CardPhotoSide.FRONT)
+            first.onShowPhotoOnListChange(true)
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        val restored = SavedStateHandle(handle.keys().associateWith { handle.get<Any?>(it) })
+        viewModel(restored).state.test {
+            assertThat(awaitLoaded().showPhotoOnList).isTrue()
+        }
+    }
+
+    @Test
+    fun removingTheFrontPhoto_turnsShowPhotoOnMyCardsOff_soANewPhotoStartsOff() = runTest { // #184, the user's call
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, number = "12345674", frontPhotoPath = "front", showPhotoOnList = true))
+        photos.stored += "front"
+        val viewModel = viewModel(CardForm("ruled", cardId = cardId(1)))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.removePhoto(CardPhotoSide.FRONT)
+            assertThat(expectMostRecentItem().showPhotoOnList).isFalse()
+            viewModel.pickAndCrop(CardPhotoSide.FRONT)
+            assertThat(viewModel.state.value.frontPhoto).isEqualTo("photo-1")
+            assertThat(viewModel.state.value.showPhotoOnList).isFalse()
+            viewModel.save()
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        assertThat(cards.cards.value.single().showPhotoOnList).isFalse()
+    }
+
+    @Test
+    fun removingTheBackPhoto_keepsShowPhotoOnMyCards() = runTest { // #184: only the front photo is the tile
+        cards.cards.value = listOf(
+            aLoyaltyCard(id = cardId(1), store = store, number = "12345674", frontPhotoPath = "front", backPhotoPath = "back", showPhotoOnList = true),
+        )
+        photos.stored += setOf("front", "back")
+        val viewModel = viewModel(CardForm("ruled", cardId = cardId(1)))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.removePhoto(CardPhotoSide.BACK)
+            assertThat(expectMostRecentItem().showPhotoOnList).isTrue()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun aSweptFrontPick_isSavedNotShowingAPhotoOnTheList() = runTest { // #184: no photo, so the setting is off
+        val viewModel = viewModel(CardForm("ruled"))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.onNumberChange("12345674")
+            viewModel.pickAndCrop(CardPhotoSide.FRONT)
+            viewModel.onShowPhotoOnListChange(true)
+            photos.stored -= "photo-1"
+            viewModel.save()
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        assertThat(cards.cards.value.single().frontPhotoPath).isNull()
+        assertThat(cards.cards.value.single().showPhotoOnList).isFalse()
+    }
+
+    @Test
     fun aPickedPhoto_isRestoredAfterProcessDeath() = runTest { // #10
         val handle = SavedStateHandle(route = CardForm("ruled"))
         val first = viewModel(handle)

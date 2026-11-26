@@ -88,6 +88,7 @@ class FakeLoyaltyCardRepository(
                 note = card.note,
                 frontPhotoPath = card.frontPhotoPath,
                 backPhotoPath = card.backPhotoPath,
+                showPhotoOnList = card.showPhotoOnList,
                 updatedAt = card.updatedAt,
             )
         }
