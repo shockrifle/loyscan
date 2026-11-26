@@ -65,7 +65,9 @@ draws the tile), the card screen's band, the store picker's badge and the home-s
   Huttenlocher, linear in the pixels; a disc stamped at every pixel would be r² times slower on a large logo). **The
   bitmap is grown by the ring on every side** (the owner's choice on 2026-11-26), so a logo cropped tight to its edge
   keeps its whole ring; fitted into the same box, an outlined logo draws about 8% smaller. A hole in the logo narrower
-  than the ring fills with it. Its colour is white or black, whichever contrasts more with the brand colour it is drawn
+  than the ring fills with it, and so does a gap: a logo is always square (the crop's, `StoreLogoScreen`), so a wordmark
+  across its width has letters short next to its side, and a ring 4% of the side closes the gaps between them and their
+  small counters (review of PR #248); the ring is the logo's whole silhouette, not a stroke around each letter. Its colour is white or black, whichever contrasts more with the brand colour it is drawn
   on, worked out at draw time, so it follows a new brand colour; on a brand colour that can't be read it is left out.
   With Single colour or Recolour in the default colour the ring is the logo's own colour, so it only thickens it: the
   Outline shows with As is or another colour. The widget decodes an outlined logo at its size ÷ 1.08 so that with its
