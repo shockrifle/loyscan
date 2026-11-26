@@ -118,7 +118,10 @@ All paths are under `app/src/main/java/com/bdaniel/loyscan/` unless written in f
   scale: a small tile's two lines can be cut there.
 
 - `widget/WidgetPictures.kt` — the logos (#181) and the shown front photos (#185) as bitmaps, by file name (named
-  `WidgetLogos` until #185). `WidgetPictures.forTiles(tiles)` reads each picture's size from its header. A **photo** is
+  `WidgetLogos` until #185). `WidgetPictures.forTiles(tiles)` takes the one picture each tile draws: its photo, else
+  its store's logo. The logo of a tile showing its photo is not read, so it takes no budget (review of PR #241: it
+  first took budget from the photos without being drawn); a photo whose header reads but whose pixels don't is found
+  when decoded, remembered as unreadable, and its tile's logo is read instead. It reads each picture's size from its header. A **photo** is
   cut around its middle to the **photo box**'s shape and scaled down, never up, to it: the whole 216dp card tile below,
   216 × 136.2dp (`widgetPhotoBox`, `widgetPhotoBoxPx`, 594 × 374px at 2.75), so no photo bitmap is larger than its tile
   (the binder limit below). A photo kept whole ("use whole photo", [[card-photos]]) can have any shape, so fitting it
@@ -127,7 +130,8 @@ All paths are under `app/src/main/java/com/bdaniel/loyscan/` unless written in f
   before #216 (216 × 136.2dp, at 224dp wide), less the margin, 200 × 120.2dp (`widgetLogoBox`), in pixels at the screen's density
   (`widgetLogoBoxPx`). When the pictures shown together, logos and photos, would take more than
   `WIDGET_LOGO_BUDGET_BYTES` (4 MB, ARGB), all are scaled down alike to fit it (`widgetLogoScale`). A full photo is
-  about 0.89 MB at 2.75 density, so from about five photos on screen the pictures come out softer; the owner kept the
+  about 0.89 MB at 2.75 density and a full logo up to about 0.73 MB, so from about five photo tiles (fewer alongside
+  logo tiles) the pictures come out softer; the owner kept the
   shared 4 MB for safety over sharpness while planning #185 (2026-11-26). Each picture is then decoded straight to that
   size (`inSampleSize`, then cut and scaled), from a stream it closes (#88). One bitmap serves every layout size. It keeps only the bitmaps it last
   handed out, so it never holds more than the budget, and decodes a logo again only when its size changes (another
@@ -141,7 +145,9 @@ All paths are under `app/src/main/java/com/bdaniel/loyscan/` unless written in f
   glance-appwidget 1.2.0 sources, 2026-11-24; not measured). **Checked on devices on 2026-11-24:** the owner
   looked at logo tiles on an Android 15 phone and an Android 14 handheld (the label's scrim above came from that).
   **Not checked on a device yet:** photo tiles (#185): how a photo looks cropped on a square tile, and how soft many
-  photos look under the shared budget; the tile height with a logo measured against one without (a `Fit` image kept its
+  photos look under the shared budget. **A known limit:** a photo and a logo are decoded for a 216dp tile, but a tile
+  fills its cell since #216, so in a two-column widget wider than about 445dp (a tablet) a tile is wider and its picture is drawn
+  larger than decoded, softer (review of PR #241); the tile height with a logo measured against one without (a `Fit` image kept its
   intrinsic height in an earlier attempt, below), TalkBack's reading, and a widget with many stores' logos.
 
 ## Opening a card — an intent extra, not a URI deep link
@@ -198,7 +204,8 @@ Glance's `@layout/glance_default_loading_layout` as the initial layout). Glance 
   corners come back in the middle band's colour) and scaled to the box; a small one cut but not scaled up; a portrait
   photo at 2.75 density no larger than its 594 × 374px tile; a missing file, a non-picture, a PNG cut after its header
   and an invalid name left out while the tile's logo still comes; a photo and a logo over the budget scaled alike to
-  141 × 70 (√½ of 200 × 100, worked out by hand); a photo no longer shown forgotten. Logos: a wide and a square
+  141 × 70 (√½ of 200 × 100, worked out by hand); the logo of a tile showing its photo not decoded and taking no budget,
+  and read when the tile's photo is cut after its header (review of PR #241); a photo no longer shown forgotten. Logos: a wide and a square
   logo scaled down to fit the box, a small one not scaled up, a missing file, a non-picture and an invalid name left
   out without throwing, one bitmap for all of a store's cards and for later calls (the file deleted between them, so the
   stream was closed), a logo no longer shown forgotten, and three logos over the budget scaled to 163 × 163 (√(2/3) of

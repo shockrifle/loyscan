@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-26 · review of PR #241: the widget reads a tile's logo only when its photo can't be, so hidden logos take no budget; wide-widget softness recorded as a known limit · apps/card-widget · #185
 - 2026-11-26 · a widget tile shows the card's front photo, cropped to fill, with "Show photo on widget" on; photos cut to the tile's shape and sharing the 4 MB budget with the logos · apps/card-widget, features/card-photos, decisions/2026-11-04-home-screen-widget, faq, integrations/coil-image-loading, architecture, workflows/tdd · #185
 - 2026-11-26 · WidgetLogos renamed WidgetPictures (it will decode photos too) · apps/card-widget, architecture, workflows/tdd, faq, integrations/coil-image-loading, decisions/2026-11-04-home-screen-widget · #185
 - 2026-11-26 · "Show photo on widget" switch on the card form, separate from the My Cards one · features/card-photos, features/edit-card · #185
