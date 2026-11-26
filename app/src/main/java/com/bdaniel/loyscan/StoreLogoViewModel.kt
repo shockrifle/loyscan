@@ -10,6 +10,11 @@ import com.bdaniel.loyscan.data.photos.PhotoCrop
 import com.bdaniel.loyscan.data.photos.withoutMissing
 import com.bdaniel.loyscan.data.repository.LoyaltyCardRepository
 import com.bdaniel.loyscan.data.repository.StoreRepository
+import androidx.compose.ui.graphics.Color
+import com.bdaniel.loyscan.domain.LogoStyle
+import com.bdaniel.loyscan.domain.LogoTreatment
+import com.bdaniel.loyscan.ui.contrastingTextColor
+import com.bdaniel.loyscan.ui.toBrandColorOrNull
 import com.bdaniel.loyscan.domain.Store
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
@@ -40,6 +45,8 @@ data class StoreLogoState(
     val working: Boolean = false,
     /** The last picture couldn't be used, or the logo couldn't be saved or removed. */
     val failed: Boolean = false,
+    /** How the logo is drawn couldn't be saved (#240). */
+    val styleFailed: Boolean = false,
     /** The front photos of the store's cards, a source for the logo; only those whose file is there. */
     val cardPhotos: List<CardPhotoChoice> = emptyList(),
     /** [cardPhotos] has loaded: an empty list before then says nothing about the store's cards. */
@@ -97,6 +104,7 @@ class StoreLogoViewModel @Inject constructor(
             cropping = cropping,
             working = progress.working,
             failed = progress.failed,
+            styleFailed = progress.styleFailed,
             cardPhotos = cardPhotos.orEmpty(),
             cardPhotosLoaded = cardPhotos != null,
         )
@@ -217,11 +225,53 @@ class StoreLogoViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Draws the store's logo in [style] (#240), `null` for As is, saved at once. Single colour starts in white or black,
+     * whichever contrasts more with the brand colour, unless a colour is already saved; As is clears the colour and
+     * keeps the outline, which goes with any style. Only while the store has a logo.
+     */
+    fun onLogoStyle(style: LogoStyle?) {
+        val store = (found.value as? Found.Store)?.store ?: return
+        val current = store.logoTreatment
+        saveLogoTreatment(
+            if (style == null) current.copy(style = null, tint = null)
+            else current.copy(style = style, tint = current.tint ?: defaultTint(store.color)),
+        )
+    }
+
+    /** Draws the store's logo in [tint] (`#RRGGBB`, #240), saved at once; only while a style other than As is is chosen. */
+    fun onLogoTint(tint: String) {
+        val current = (found.value as? Found.Store)?.store?.logoTreatment ?: return
+        if (current.style == null) return
+        saveLogoTreatment(current.copy(tint = tint))
+    }
+
+    private fun saveLogoTreatment(treatment: LogoTreatment) {
+        if (!canChange() || (found.value as? Found.Store)?.store?.logo == null) return
+        // One quick write per tap: no progress bar flashing on every swatch, only an earlier failure cleared.
+        progress.value = Progress()
+        viewModelScope.launch {
+            progress.value = try {
+                withContext(NonCancellable) { storeRepository.setLogoTreatment(storeId, treatment) }
+                Progress()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.e(e, "Couldn't save how the logo is drawn")
+                Progress(styleFailed = true)
+            }
+        }
+    }
+
+    /** White or black, whichever contrasts more with the brand [color] (#240); white on a colour that can't be read. */
+    private fun defaultTint(color: String): String =
+        if (color.toBrandColorOrNull()?.contrastingTextColor() == Color.Black) BLACK else WHITE
+
     // Reads the inputs, not `state`, so a guard holds whatever the screen observes.
     private fun canChange() =
         found.value is Found.Store && !progress.value.working && savedStateHandle.get<String>(CROP_LOGO) == null
 
-    private data class Progress(val working: Boolean = false, val failed: Boolean = false)
+    private data class Progress(val working: Boolean = false, val failed: Boolean = false, val styleFailed: Boolean = false)
 
     private sealed interface Found {
         data object Loading : Found
@@ -232,5 +282,7 @@ class StoreLogoViewModel @Inject constructor(
     private companion object {
         const val CROP_LOGO = "cropLogo"
         const val ROUTE_PICTURE_TAKEN = "routePictureTaken"
+        const val WHITE = "#FFFFFF"
+        const val BLACK = "#000000"
     }
 }

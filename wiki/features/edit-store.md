@@ -46,7 +46,9 @@ Catalogue stores have no Edit button and can't be renamed, recoloured or deleted
 - **Logo** (#151, [[store-logo]]): the edit form, once the store has loaded, has a "Logo" section: the store's tile
   preview (`LogoPreview` in `ui/LogoPreview.kt`, shared with the logo screen, #162) drawn with the form's name and
   colour as typed (the initials of the name, as a tile, `storeInitials`, #192), the store's
-  logo on it (`CustomStoreState.logo`; a logo whose file is missing is none, checked once per store-list update), and
+  logo on it (`CustomStoreState.logo`; a logo whose file is missing is none, checked once per store-list update) drawn
+  as the user chose (`CustomStoreState.logoTreatment`, #240, test
+  `CustomStoreViewModelTest.editingAStore_showsHowItsLogoIsDrawn`), and
   **Change logo**, which opens the store's logo screen over the form (`CustomStoreDirections.toStoreLogo`); Back
   returns to the form with its unsaved edits, and a logo set there shows at once. Save leaves the logo as it is
   (`updateCustom` doesn't write it; `RoomStoreRepositoryTest.update_keepsACustomStoresLogo`). The new-store form has no slot ([[2026-11-13-user-supplied-store-logos]]).

@@ -1,5 +1,19 @@
 package com.bdaniel.loyscan
 
+import com.bdaniel.loyscan.ui.toBrandColorOrNull
+import com.bdaniel.loyscan.domain.LogoTreatment
+import com.bdaniel.loyscan.domain.LogoStyle
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.border
+import androidx.compose.foundation.background
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
@@ -101,7 +115,22 @@ fun StoreLogoScreen(
                 Modifier.padding(innerPadding).verticalScroll(rememberScrollState()).padding(Spacing.l),
                 verticalArrangement = Arrangement.spacedBy(Spacing.l),
             ) {
-                LogoPreview(name = store.name, color = store.color, logo = store.logo)
+                LogoPreview(name = store.name, color = store.color, logo = store.logo, logoTreatment = store.logoTreatment)
+                if (store.logo != null) {
+                    LogoStyleControls(
+                        treatment = store.logoTreatment,
+                        enabled = state.canChange,
+                        onStyle = viewModel::onLogoStyle,
+                        onTint = viewModel::onLogoTint,
+                    )
+                }
+                if (state.styleFailed) {
+                    Text(
+                        stringResource(R.string.logo_style_failed),
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
                 Text(stringResource(R.string.store_logo_hint), style = MaterialTheme.typography.bodyMedium)
                 if (state.working) LinearProgressIndicator(Modifier.fillMaxWidth())
                 if (state.failed) {
@@ -155,6 +184,71 @@ fun StoreLogoScreen(
         }
     }
 }
+
+/**
+ * How the store's logo is drawn (#240), under the preview while it has one: As is or Single colour, and unless As is,
+ * the colour: white, black, then the custom store palette ([LOGO_COLOURS]). Each tap is saved at once; TalkBack reads the
+ * styles and the colours by name as choices, the chosen one selected.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun LogoStyleControls(
+    treatment: LogoTreatment,
+    enabled: Boolean,
+    onStyle: (LogoStyle?) -> Unit,
+    onTint: (String) -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
+        Text(stringResource(R.string.logo_style), style = MaterialTheme.typography.titleSmall)
+        val styles = listOf(null to R.string.logo_style_as_is, LogoStyle.SINGLE_COLOUR to R.string.logo_style_single_colour)
+        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+            styles.forEachIndexed { index, (style, label) ->
+                SegmentedButton(
+                    selected = treatment.style == style,
+                    onClick = { onStyle(style) },
+                    shape = SegmentedButtonDefaults.itemShape(index, styles.size),
+                    enabled = enabled,
+                ) {
+                    Text(stringResource(label), textAlign = TextAlign.Center)
+                }
+            }
+        }
+        if (treatment.style != null) {
+            Text(stringResource(R.string.logo_colour), style = MaterialTheme.typography.titleSmall)
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.m), verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
+                LOGO_COLOURS.forEach { swatch ->
+                    val selected = swatch.hex.equals(treatment.tint, ignoreCase = true)
+                    val swatchName = stringResource(swatch.name)
+                    Box(
+                        Modifier
+                            .size(SWATCH_SIZE)
+                            .clip(CircleShape)
+                            .background(swatch.hex.toBrandColorOrNull() ?: MaterialTheme.colorScheme.surfaceVariant)
+                            // Every swatch is outlined, so white shows on a light screen; the chosen one more boldly.
+                            .border(
+                                if (selected) SWATCH_SELECTED_BORDER else SWATCH_BORDER,
+                                if (selected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.outlineVariant,
+                                CircleShape,
+                            )
+                            .selectable(selected = selected, enabled = enabled, role = Role.RadioButton) { onTint(swatch.hex) }
+                            .semantics { contentDescription = swatchName },
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** The colours a logo can be drawn in (#240): white, black, then the custom store palette. */
+val LOGO_COLOURS: List<CustomStoreViewModel.Swatch> = listOf(
+    CustomStoreViewModel.Swatch(R.string.colour_white, "#FFFFFF"),
+    CustomStoreViewModel.Swatch(R.string.colour_black, "#000000"),
+) + CustomStoreViewModel.COLORS
+
+/** A colour swatch, large enough to tap; as the custom store form's. */
+private val SWATCH_SIZE = 40.dp
+private val SWATCH_BORDER = 1.dp
+private val SWATCH_SELECTED_BORDER = 3.dp
 
 /** "Which card's photo?": the front photos of the store's cards, each with its label or number; the one tapped is chosen. */
 @Composable
