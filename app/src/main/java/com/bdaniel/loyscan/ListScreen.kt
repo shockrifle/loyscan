@@ -347,7 +347,8 @@ fun SharedTransitionScope.CardItem(
                 color = card.store.color,
                 initials = card.store.initials,
                 logo = card.store.logo,
-                photo = card.frontPhotoPath,
+                // The front photo is the tile only when the user chose so on the card form (#184).
+                photo = card.frontPhotoPath?.takeIf { card.showPhotoOnList },
                 label = card.label,
                 modifier = Modifier
                     .testTag(CARD_TILE_TAG)

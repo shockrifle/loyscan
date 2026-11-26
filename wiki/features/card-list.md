@@ -71,7 +71,11 @@ tiles, one per row in `loyalty_cards`, live-updating from Room. Sort, search and
   (`ListScreenTest.aTile_isReadOutAsTheStoreName_andTheLabel`, on the merged tiles). Tests find an unlabelled card's
   tile by that description (`tile(store)`). Text is black or white, whichever has the higher WCAG contrast ratio with the
   box (`contrastingTextColor()`, `ui/BrandColor.kt`; `BrandColorTest`). Tests: `ListScreenTest.aTile_…`.
-- **A card with a front photo** ([[card-photos]], #10) shows it as its tile, cropped to fill the box (`CARD_TILE_PHOTO_TAG`),
+- **A card with a front photo** ([[card-photos]], #10) shows it as its tile only when the card's "Show photo on My
+  Cards" switch is on (`LoyaltyCard.showPhotoOnList`, #184; off by default and for every card from before it). Off, the
+  tile shows the store's logo or the initials as for a card without a photo (`CardItem` passes no photo to
+  `CardTileFace`; `ListScreenTest.aCardWithAFrontPhoto_notShownOnMyCards_showsTheInitials`,
+  `aCardWithAFrontPhoto_notShownOnMyCards_showsItsStoresLogo`, `aCardSetToShowItsPhoto_withoutAFrontPhoto_showsTheInitials`). On, it is the tile, cropped to fill the box (`CARD_TILE_PHOTO_TAG`),
   in place of the initials or logo; a label stays at the bottom left in white, on a 60% black band
   (`PHOTO_LABEL_SCRIM`, `ui/CardPhoto.kt`) that a 16dp gradient fades into above it. The band and the fade are drawn
   only with a label: an unlabelled photo is shown whole (#183, `ListScreenTest.aPhotoTile_hasTheDarkLabelBand_onlyWithALabel`,

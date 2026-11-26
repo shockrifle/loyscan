@@ -159,7 +159,7 @@ class ListScreenTest {
     @Test
     fun aCardWithAFrontPhoto_showsItOnItsTile_inPlaceOfTheInitials() { // #10
         storedPhoto("front")
-        setScreen(aLoyaltyCard(store = aStore(name = "Shell ClubSmart"), label = "Work car", frontPhotoPath = "front"), photos = FakeCardPhotos("front"))
+        setScreen(aLoyaltyCard(store = aStore(name = "Shell ClubSmart"), label = "Work car", frontPhotoPath = "front", showPhotoOnList = true), photos = FakeCardPhotos("front"))
         // Loaded, so a failed load (which shows the initials) would have shown by now.
         val loader = EntryPointAccessors.fromApplication(composeRule.activity, ImageLoaderEntryPoint::class.java).getImageLoader()
         composeRule.waitUntil(WAIT_TIMEOUT_MS) { ShadowLooper.idleMainLooper(); (loader.memoryCache?.size ?: 0) > 0 }
@@ -173,7 +173,7 @@ class ListScreenTest {
     @Test
     fun aFrontPhotoThatCantBeLoaded_showsTheInitials() { // review of #10: not a brand-colour box with no initials
         // The fake says the photo exists, but the app's loader finds no file to decode.
-        setScreen(aLoyaltyCard(store = aStore(name = "Shell ClubSmart"), frontPhotoPath = "broken"), photos = FakeCardPhotos("broken"))
+        setScreen(aLoyaltyCard(store = aStore(name = "Shell ClubSmart"), frontPhotoPath = "broken", showPhotoOnList = true), photos = FakeCardPhotos("broken"))
 
         composeRule.waitUntil(WAIT_TIMEOUT_MS) {
             ShadowLooper.idleMainLooper() // the loader's result comes on the main looper
@@ -198,7 +198,7 @@ class ListScreenTest {
         storedPhoto("front")
         storedPhoto("logo")
         setScreen(
-            aLoyaltyCard(store = aStore(name = "Shell ClubSmart", logo = "logo"), frontPhotoPath = "front"),
+            aLoyaltyCard(store = aStore(name = "Shell ClubSmart", logo = "logo"), frontPhotoPath = "front", showPhotoOnList = true),
             photos = FakeCardPhotos("front", "logo"),
         )
         waitForAnImageToLoad()
@@ -228,6 +228,37 @@ class ListScreenTest {
     }
 
     @Test
+    fun aCardWithAFrontPhoto_notShownOnMyCards_showsTheInitials() { // #184: the user's choice, off by default
+        storedPhoto("front")
+        setScreen(aLoyaltyCard(store = aStore(name = "Shell ClubSmart"), frontPhotoPath = "front"), photos = FakeCardPhotos("front"))
+
+        composeRule.onNodeWithTag(CARD_TILE_PHOTO_TAG, useUnmergedTree = true).assertDoesNotExist()
+        composeRule.onNodeWithText("SC").assertIsDisplayed()
+    }
+
+    @Test
+    fun aCardWithAFrontPhoto_notShownOnMyCards_showsItsStoresLogo() { // #184
+        storedPhoto("front")
+        storedPhoto("logo")
+        setScreen(
+            aLoyaltyCard(store = aStore(name = "Shell ClubSmart", logo = "logo"), frontPhotoPath = "front"),
+            photos = FakeCardPhotos("front", "logo"),
+        )
+        waitForAnImageToLoad()
+
+        composeRule.onNodeWithTag(CARD_TILE_LOGO_TAG, useUnmergedTree = true).assertIsDisplayed()
+        composeRule.onNodeWithTag(CARD_TILE_PHOTO_TAG, useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun aCardSetToShowItsPhoto_withoutAFrontPhoto_showsTheInitials() { // #184
+        setScreen(aLoyaltyCard(store = aStore(name = "Shell ClubSmart"), showPhotoOnList = true), photos = FakeCardPhotos())
+
+        composeRule.onNodeWithTag(CARD_TILE_PHOTO_TAG, useUnmergedTree = true).assertDoesNotExist()
+        composeRule.onNodeWithText("SC").assertIsDisplayed()
+    }
+
+    @Test
     fun aCardWithOnlyABackPhoto_showsTheInitialsOnItsTile() { // #10: the back is the card screen's
         setScreen(aLoyaltyCard(store = aStore(name = "Shell ClubSmart"), backPhotoPath = "back"), photos = FakeCardPhotos("back"))
 
@@ -237,7 +268,7 @@ class ListScreenTest {
 
     @Test
     fun aTileWhoseFrontPhotoFileIsMissing_showsTheInitials() { // #89: not an empty image
-        setScreen(aLoyaltyCard(store = aStore(name = "Shell ClubSmart"), frontPhotoPath = "lost"), photos = FakeCardPhotos())
+        setScreen(aLoyaltyCard(store = aStore(name = "Shell ClubSmart"), frontPhotoPath = "lost", showPhotoOnList = true), photos = FakeCardPhotos())
 
         composeRule.onNodeWithTag(CARD_TILE_PHOTO_TAG, useUnmergedTree = true).assertDoesNotExist()
         composeRule.onNodeWithText("SC").assertIsDisplayed()
@@ -263,7 +294,7 @@ class ListScreenTest {
     @Test
     fun aPhotoTileWithoutALabel_showsNoText() { // #183: the photo says which store it is
         storedPhoto("front")
-        setScreen(aLoyaltyCard(store = aStore(name = "Shell ClubSmart"), label = null, frontPhotoPath = "front"), photos = FakeCardPhotos("front"))
+        setScreen(aLoyaltyCard(store = aStore(name = "Shell ClubSmart"), label = null, frontPhotoPath = "front", showPhotoOnList = true), photos = FakeCardPhotos("front"))
         waitForAnImageToLoad() // a photo that failed to load would show the initials by now
 
         composeRule.onNodeWithTag(CARD_TILE_PHOTO_TAG, useUnmergedTree = true).assertIsDisplayed()
@@ -275,8 +306,8 @@ class ListScreenTest {
     fun aPhotoTile_hasTheDarkLabelBand_onlyWithALabel() { // #183: no empty band over an unlabelled photo
         storedPhoto("front")
         setScreen(
-            aLoyaltyCard(id = cardId(1), store = aStore(name = "Apple"), label = "Work", frontPhotoPath = "front"),
-            aLoyaltyCard(id = cardId(2), store = aStore(name = "Berry"), label = null, frontPhotoPath = "front"),
+            aLoyaltyCard(id = cardId(1), store = aStore(name = "Apple"), label = "Work", frontPhotoPath = "front", showPhotoOnList = true),
+            aLoyaltyCard(id = cardId(2), store = aStore(name = "Berry"), label = null, frontPhotoPath = "front", showPhotoOnList = true),
             photos = FakeCardPhotos("front"),
         )
         waitForAnImageToLoad()
@@ -365,7 +396,7 @@ class ListScreenTest {
     fun aPhotoTile_andAPlainTile_haveTheSameSize() { // #108
         storedPhoto("front")
         setScreen(
-            aLoyaltyCard(id = cardId(1), store = aStore(name = "Apple"), frontPhotoPath = "front"),
+            aLoyaltyCard(id = cardId(1), store = aStore(name = "Apple"), frontPhotoPath = "front", showPhotoOnList = true),
             aLoyaltyCard(id = cardId(2), store = aStore(name = "Berry")),
             photos = FakeCardPhotos("front"),
         )
