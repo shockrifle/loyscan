@@ -13,24 +13,20 @@ question would contradict one, name the decision page in the question.
 
 Work the tree in **rounds**. The **frontier** is every decision whose prerequisites are already settled: the
 questions you can ask _now_ without guessing at answers you haven't heard yet. Ask the whole frontier in one
-round: number each question and give your recommended answer. Then wait for the user's answers before the next
-round.
+round, then wait for the user's answers before the next round.
 
-Format a round like so:
+Ask every question through the `AskUserQuestion` tool, so the user picks an answer instead of typing one:
 
-```
-❓ **Q1** - **<question title>**: <question body, might be multiple paragraphs, including multiple choices>
-
-➡️ <your recommended answer>
-
----
-
-❓ **Q2** - **<question title>**: <question body, might be multiple paragraphs, including multiple choices>
-
-➡️ <your recommended answer>
-```
-
-Word each question so "yes" accepts your recommended answer.
+- **Options are the real alternatives**: 2–4 distinct, mutually exclusive choices, each with a description
+  stating its trade-off. Your recommended answer is the first option, its label ending in `(Recommended)`. A
+  simple binary question gets two options, `Yes` and `No`, the recommended one first. The tool adds "Other" for a
+  free-text answer, so leave it out.
+- **Self-contained**: the dialog may hide everything you wrote before it, so each question names what it is
+  about and the fact or recorded decision it rests on, in its own text.
+- **Previews** carry concrete artefacts to compare (a code shape, a layout mock-up, a diagram); `multiSelect`
+  for choices that combine (which of these cases are in scope?).
+- **Batches of four**: one call takes at most four questions; a larger frontier goes out in consecutive calls,
+  all in the same round.
 
 Each round the user answers reshapes the tree: settled decisions push the frontier outward and unblock questions
 that depended on them. Recompute the frontier and ask the next round. A question whose answer depends on another
