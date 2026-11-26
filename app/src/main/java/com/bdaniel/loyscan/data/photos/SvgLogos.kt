@@ -61,7 +61,7 @@ internal fun drawSvgLogo(source: File, target: File) {
  * AndroidSVG parses. AndroidSVG would unpack it itself, past that check (PR #242 review).
  */
 private fun ByteArray.unpacked(): ByteArray {
-    if (size < 2 || this[0] != GZIP_MAGIC_0 || this[1] != GZIP_MAGIC_1) return this
+    if (!isGzip()) return this
     val unpacked = ByteArrayOutputStream()
     GZIPInputStream(inputStream()).use { gzip ->
         val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
@@ -72,8 +72,11 @@ private fun ByteArray.unpacked(): ByteArray {
             if (unpacked.size() > MAX_SVG_BYTES) throw IOException("The SVG is too large unpacked")
         }
     }
-    return unpacked.toByteArray()
+    // Packed twice, AndroidSVG would unpack the inner layer past the checks; no real logo is.
+    return unpacked.toByteArray().also { if (it.isGzip()) throw IOException("The SVG is packed twice") }
 }
+
+private fun ByteArray.isGzip() = size >= 2 && this[0] == GZIP_MAGIC_0 && this[1] == GZIP_MAGIC_1
 
 private const val GZIP_MAGIC_0 = 0x1f.toByte()
 private const val GZIP_MAGIC_1 = 0x8b.toByte()

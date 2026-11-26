@@ -25,6 +25,7 @@ import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
@@ -574,6 +575,17 @@ class FileCardPhotosTest {
         )
 
         assertThrows(IOException::class.java) { runBlocking { photos.stageLogo(Uri.fromFile(svg)) } }
+
+        assertThat(directory.listFiles().orEmpty()).isEmpty()
+    }
+
+    @Test
+    fun stageLogo_ofAnSvgGzippedTwice_throws_andLeavesNoFile() = runTest { // #211 review: AndroidSVG would unpack the inner one
+        val svg = """<svg xmlns="$SVG_NS" width="200" height="100"><rect width="100" height="100" fill="red"/></svg>"""
+        val inner = ByteArrayOutputStream().also { bytes -> GZIPOutputStream(bytes).use { it.write(svg.toByteArray()) } }.toByteArray()
+        val twice = temporaryFolder.newFile("twice.svgz").apply { GZIPOutputStream(outputStream()).use { it.write(inner) } }
+
+        assertThrows(IOException::class.java) { runBlocking { photos.stageLogo(Uri.fromFile(twice)) } }
 
         assertThat(directory.listFiles().orEmpty()).isEmpty()
     }
