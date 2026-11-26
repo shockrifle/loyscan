@@ -111,7 +111,8 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   `CardFormScreenTest.addingAFrontPhoto_offersShowPhotoOnMyCards_off_andTurningItOnSavesIt`,
   `editingACardShowingItsPhoto_showsTheSwitchOn_andRemovingThePhotoHidesIt`, `aCardWithOnlyABackPhoto_offersNoShowPhotoOnMyCards`,
   `atFontScale2_onANarrowScreen_showPhotoOnMyCards_isNotClippedAndDoesNotOverlap`.
-- **On the list** ([[card-list]]): the front photo is the card's tile, with the label on a dark scrim; a card with only
+- **On the list** ([[card-list]]): with "Show photo on My Cards" on, the front photo is the card's tile, with the label
+  on a dark scrim; with it off (the default), the tile shows the store's logo, else the initials; a card with only
   a back photo, or a front photo that can't be loaded, shows its store's logo ([[store-logo]]), else the initials
   (`CardTileFace` in `app/src/main/java/com/bdaniel/loyscan/ui/CardTileFace.kt`).
 - **On the card** ([[card-detail]]): under the note, the photos it has, front first; a tap shows one full screen

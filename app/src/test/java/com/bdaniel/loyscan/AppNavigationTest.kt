@@ -347,7 +347,7 @@ class AppNavigationTest {
     @Test
     fun aCardsPhoto_isShownOnTheCard() { // #10
         storedPhoto("front")
-        runBlocking { db.loyaltyCardDao().insert(aLoyaltyCardEntity(id = cardId(2), label = "Photo card", frontPhotoPath = "front")) }
+        runBlocking { db.loyaltyCardDao().insert(aLoyaltyCardEntity(id = cardId(2), label = "Photo card", frontPhotoPath = "front", showPhotoOnList = true)) }
         waitForText("Photo card")
 
         composeRule.onNodeWithText("Photo card").performClick()
@@ -360,7 +360,7 @@ class AppNavigationTest {
     @Test
     fun aCardsFrontPhoto_isLoadedOntoItsTile_byTheAppsImageLoader() { // #10
         storedPhoto("front")
-        runBlocking { db.loyaltyCardDao().insert(aLoyaltyCardEntity(id = cardId(2), label = "Photo card", frontPhotoPath = "front")) }
+        runBlocking { db.loyaltyCardDao().insert(aLoyaltyCardEntity(id = cardId(2), label = "Photo card", frontPhotoPath = "front", showPhotoOnList = true)) }
 
         // Only the app's loader can map a card photo to its file; Coil's default one would fail it and cache nothing.
         waitForThePhotoToLoad()
@@ -370,7 +370,7 @@ class AppNavigationTest {
     @Test
     fun deletingACardFromTheList_deletesItsPhotoFiles() { // #10
         val photo = storedPhoto("front")
-        runBlocking { db.loyaltyCardDao().insert(aLoyaltyCardEntity(id = cardId(2), label = "Photo card", frontPhotoPath = "front")) }
+        runBlocking { db.loyaltyCardDao().insert(aLoyaltyCardEntity(id = cardId(2), label = "Photo card", frontPhotoPath = "front", showPhotoOnList = true)) }
         waitForText("Photo card")
         // Windows can't delete a file the loader is still reading: the tile's load has to be done first.
         waitForThePhotoToLoad()

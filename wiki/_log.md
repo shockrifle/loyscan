@@ -4,6 +4,7 @@ Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
 - 2026-11-26 · grilling skill asks its questions through AskUserQuestion (selectable options, recommended first, yes/no for simple ones) · workflows/agent-skills · user request
+- 2026-11-26 · a front photo is a card's tile on My Cards only with its "Show photo on My Cards" switch on; otherwise the logo or the initials · features/card-list, features/card-photos, features/store-logo · #184
 - 2026-11-26 · card form gets a "Show photo on My Cards" switch (shown with a front photo, off by default, off again when the front photo is removed, kept across process death) · features/card-photos, features/edit-card · #184
 - 2026-11-26 · schema v3, the first migration (`loyalty_cards.showPhotoOnList` by `@AutoMigration`); trap: an unbumped build rewrites the old schema JSON and the migration test passes vacuously · workflows/database-schema-changes, architecture, tech-debt/no-room-migrations · #184
 - 2026-11-26 · card screen's status bar icons follow the brand colour (scan mode dark, photo viewer light), restored on pause; tdd row for window effects · features/card-detail, workflows/tdd · #233

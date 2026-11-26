@@ -1,7 +1,7 @@
 # Store logo
 
 The user gives a store a logo of their own, and every card of that store shows it on the brand colour: on its tile
-(unless the card has a front photo) and in the card screen's band (#210); the store's row in the store picker and the
+(unless the card shows its front photo there, a per-card choice since #184, [[card-photos]]) and in the card screen's band (#210); the store's row in the store picker and the
 card form's "Change store" dialog shows it too, in a round badge ([[add-card]], #186). A home-screen widget tile of the store shows it as well
 ([[card-widget]], #181). The app ships no logos and holds no links to
 logo files ([[2026-11-12-no-bundled-store-logos]]); why it is stored the way it is:
