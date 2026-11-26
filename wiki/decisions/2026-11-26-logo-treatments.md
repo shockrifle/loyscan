@@ -35,7 +35,9 @@ draws the tile), the card screen's band, the store picker's badge and the home-s
   logo** (the owner's choice, 2026-11-26): on a mostly dark logo the dark parts, on a mostly light one the light parts.
   "Mostly" is by area, the mean CIE lightness L* (weighed by each pixel's opacity) against mid-grey: linear luminance
   called a logo a third white "light" (seen while writing `LogoTreatmentsTest`). Opacity is scaled to the logo's own
-  darkest (or lightest) pixel, so a logo in one colour, the blending case, comes out solid.
+  darkest (or lightest) pixel, so a logo in one colour, the blending case, comes out solid. Those extremes are taken from
+  pixels at least half opaque: a nearly clear edge pixel's colour is noise once decoded, and one black fringe pixel left
+  a red logo 87% opaque (review of PR #244, `LogoTreatmentsTest.aLogoInOneColour_withAFaintStrayPixel_isStillSolid`).
 - Choosing Single colour saves white or black, whichever contrasts more with the brand colour (`contrastingTextColor`),
   unless a colour is already saved; the swatch row offers white, black, then the custom store palette.
 

@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -248,18 +249,20 @@ class StoreLogoViewModel @Inject constructor(
 
     private fun saveLogoTreatment(treatment: LogoTreatment) {
         if (!canChange() || (found.value as? Found.Store)?.store?.logo == null) return
-        // One quick write per tap: no progress bar flashing on every swatch, only an earlier failure cleared.
-        progress.value = Progress()
+        // One quick write per tap: no progress bar flashing on every swatch, only an earlier failure cleared. Only
+        // styleFailed is touched: a picture copied in meanwhile keeps the screen working (review of PR #244).
+        progress.update { it.copy(styleFailed = false) }
         viewModelScope.launch {
-            progress.value = try {
+            val failed = try {
                 withContext(NonCancellable) { storeRepository.setLogoTreatment(storeId, treatment) }
-                Progress()
+                false
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 Timber.e(e, "Couldn't save how the logo is drawn")
-                Progress(styleFailed = true)
+                true
             }
+            progress.update { it.copy(styleFailed = failed) }
         }
     }
 

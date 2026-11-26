@@ -252,7 +252,6 @@ class RoomStoreRepositoryTest {
         assertThat(logo.exists()).isTrue()
     }
 
-    /** A photo file as [FileCardPhotos] keeps it, named [name]. */
     @Test
     fun setLogoTreatment_isHowTheStoresLogoIsDrawn() = runTest { // #240
         repository.setLogo("first", "logo")
@@ -315,6 +314,7 @@ class RoomStoreRepositoryTest {
         assertThat(saved.logoTreatment).isEqualTo(SINGLE_BLACK_OUTLINED)
     }
 
+    /** A photo file as [FileCardPhotos] keeps it, named [name]. */
     private fun storedPhoto(name: String): File = photos.file(name).apply { writeBytes(byteArrayOf(1)) }
 
     private companion object {
