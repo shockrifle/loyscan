@@ -7,6 +7,8 @@ import androidx.compose.ui.test.hasTestTag
 import android.app.Application
 import android.content.ComponentName
 import android.content.Intent
+import android.graphics.BitmapFactory
+import android.graphics.Color
 import android.net.Uri
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
@@ -179,6 +181,23 @@ class ShareToLoyScanTest {
     }
 
     @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE) // the SVG is really drawn, cropped and encoded
+    fun sharingAnSvgAsAStoreLogo_theCropMakesItItsLogo() { // #211
+        val svg = """<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="red"/></svg>"""
+        scenario = ActivityScenario.launch(logoShare(svg.toByteArray(), "image/svg+xml"))
+        waitForText("Logo for which store?")
+        composeRule.onNodeWithText("Test Store").performClick()
+
+        waitForText("Crop")
+        composeRule.onNodeWithText("Crop").performClick()
+
+        waitForText("Remove logo")
+        val logo = runBlocking { stores.getAll().first().single { it.name == "Test Store" }.logo }
+        val drawn = BitmapFactory.decodeFile(File(photoDirectory(), logo!!).path)
+        assertThat(drawn.getPixel(drawn.width / 2, drawn.height / 2)).isEqualTo(Color.RED)
+    }
+
+    @Test
     @GraphicsMode(GraphicsMode.Mode.NATIVE)
     fun recreatingTheActivity_keepsTheStoreQuestion_withoutCopyingThePictureAgain() { // #151
         scenario = ActivityScenario.launch(logoShare())
@@ -191,12 +210,15 @@ class ShareToLoyScanTest {
         assertThat(pictureReader.reads).isEmpty() // not read for a barcode
     }
 
-    /** A share through "Set as store logo" (#151), its picture a real PNG served by the content resolver. */
-    private fun logoShare(): Intent {
+    /**
+     * A share through "Set as store logo" (#151), its picture served by the content resolver: [picture] of [type], a real
+     * PNG by default.
+     */
+    private fun logoShare(picture: ByteArray? = null, type: String = "image/png"): Intent {
         val context = ApplicationProvider.getApplicationContext<Application>()
-        val png = File(context.cacheDir, "shared.png").writeOnePixelPng().readBytes()
-        shadowOf(context.contentResolver).registerInputStream(Uri.parse(PICTURE), ByteArrayInputStream(png))
-        return share().setComponent(ComponentName(context, SHARE_AS_STORE_LOGO))
+        val bytes = picture ?: File(context.cacheDir, "shared.png").writeOnePixelPng().readBytes()
+        shadowOf(context.contentResolver).registerInputStream(Uri.parse(PICTURE), ByteArrayInputStream(bytes))
+        return share().setType(type).setComponent(ComponentName(context, SHARE_AS_STORE_LOGO))
     }
 
     private fun photoDirectory() =

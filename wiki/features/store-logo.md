@@ -41,6 +41,11 @@ logo". Done in four slices, 2026-11-13 to 2026-11-16.
   whole, so a wide wordmark is kept whole and the rest of the square is transparent; **Use whole image** keeps it
   uncropped; **Cancel** drops it. **Crop** stores the logo (`cropLogo`, a PNG) and sets it in one non-cancellable step,
   so leaving the screen meanwhile still sets it; the logo it replaces is deleted.
+- **An SVG** (#211), where the picker offers one or shared through "Set as store logo", is drawn once as it is copied
+  in (`CardPhotos.stageLogo`): a transparent PNG, 512 px on its long side, which the crop then frames like any picture.
+  One that can't be drawn, or one over 5 MiB, says the picture couldn't be used. Nothing outside the file is read.
+  How: [[androidsvg]]. No picker is pushed to list SVGs (the photo picker usually doesn't), and a card photo still
+  can't be one.
 - While a picture is copied in or stored, or the logo saved or removed, a progress bar shows and the buttons wait. A
   picture that can't be copied in or stored, or a logo that can't be saved or removed, says "The picture couldn't be
   used. Try again."; a logo stored but not saved is deleted. The staged picture's name is in the `SavedStateHandle`
@@ -90,7 +95,14 @@ logo". Done in four slices, 2026-11-13 to 2026-11-16.
   missing file left out, a card's number for one without a label); a card's photo → a copy → crop → logo; a photo
   not on the list refused; a copy that fails; working while copying it; a picture in the route → the crop → the logo,
   cancelled and not offered again, still in the crop after process death, not offered again once cropped, discarded
-  for a store that is gone, nothing for a missing file, a pick made meanwhile kept.
+  for a store that is gone, nothing for a missing file, a pick made meanwhile kept; a picked SVG
+  (`aPickedSvg_opensTheCrop_andTheCropBecomesTheStoresLogo`, #211).
+- The SVG drawing (#211): the `stageLogo_` tests in `FileCardPhotosTest` (the size, a viewBox only, no size at all, a very thin one,
+  unreadable files, the size limit, a linked image not drawn beside an embedded one that is, entities drawn, an entity
+  from another file, nested entities and the same in UTF-16 refused, the IO dispatcher's thread),
+  `cropLogo_ofAStagedSvg_storesTheUsualPng`, `stage_ofAnSvg_throws_andLeavesNoFile`;
+  `SharedLogoViewModelTest.aSharedSvg_isCopiedIn_asALogo`, `CardFormViewModelTest.aPickedSvg_isNotACardPhoto_andSaysSo`;
+  end to end `ShareToLoyScanTest.sharingAnSvgAsAStoreLogo_theCropMakesItItsLogo`.
 - `StoreLogoScreenTest`: the preview with and without a logo (initials, not the name; no text with a logo; a logo that
   can't load shows the initials; the logo centred at 3/5 of its height; read out as the store's name; rounded corners,
   pixels, #192); Choose image → a square frame → Crop sets it; a wide

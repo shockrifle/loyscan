@@ -12,6 +12,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -30,7 +31,9 @@ import java.io.IOException
 import java.io.InputStream
 import java.time.Duration
 import java.time.Instant
+import java.util.Base64
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
 
 /**
  * Card photos as files (#10): a picked picture is stored in the photo directory, and deleted from there. Native
@@ -399,6 +402,209 @@ class FileCardPhotosTest {
     }
 
     @Test
+    fun stageLogo_ofAPicture_stagesItAsItIs() = runTest { // #211: as stage does
+        val picked = aPicture(40, 20, "picked.png", Bitmap.CompressFormat.PNG)
+
+        val staged = photos.stageLogo(Uri.fromFile(picked))
+
+        assertThat(photos.file(staged).readBytes()).isEqualTo(picked.readBytes())
+    }
+
+    @Test
+    fun stageLogo_ofAnSvg_drawsItOnTransparency_atTheLogosLongSide() = runTest { // #211
+        val svg = anSvg("""<svg xmlns="$SVG_NS" width="200" height="100"><rect width="100" height="100" fill="red"/></svg>""")
+
+        val staged = photos.file(photos.stageLogo(Uri.fromFile(svg)))
+
+        val drawn = BitmapFactory.decodeFile(staged.path)
+        assertThat(staged.mimeType()).isEqualTo("image/png")
+        assertThat(drawn.width to drawn.height).isEqualTo(512 to 256)
+        assertThat(drawn.getPixel(128, 128)).isEqualTo(Color.RED)
+        assertThat(Color.alpha(drawn.getPixel(384, 128))).isEqualTo(0)
+        assertThat(directory.list()).asList().containsExactly(staged.name) // the copied SVG is gone
+    }
+
+    @Test
+    fun stageLogo_ofAnSvgWithOnlyAViewBox_takesItsShapeFromTheViewBox() = runTest { // #211
+        val svg = anSvg("""<svg xmlns="$SVG_NS" viewBox="0 0 300 100"><rect width="150" height="100" fill="red"/></svg>""")
+
+        val drawn = BitmapFactory.decodeFile(photos.file(photos.stageLogo(Uri.fromFile(svg))).path)
+
+        assertThat(drawn.width to drawn.height).isEqualTo(512 to 171) // 512 × 100 / 300 = 170.7
+        assertThat(drawn.getPixel(64, 85)).isEqualTo(Color.RED)
+        assertThat(Color.alpha(drawn.getPixel(448, 85))).isEqualTo(0)
+    }
+
+    @Test
+    fun stageLogo_ofAnSvgWithNoSizeAtAll_drawsItAsABrowserDoes_300By150() = runTest { // #211
+        val svg = anSvg("""<svg xmlns="$SVG_NS"><rect width="150" height="150" fill="red"/></svg>""")
+
+        val drawn = BitmapFactory.decodeFile(photos.file(photos.stageLogo(Uri.fromFile(svg))).path)
+
+        assertThat(drawn.width to drawn.height).isEqualTo(512 to 256)
+        assertThat(drawn.getPixel(128, 128)).isEqualTo(Color.RED)
+        assertThat(Color.alpha(drawn.getPixel(384, 128))).isEqualTo(0)
+    }
+
+    @Test
+    fun stageLogo_ofAVeryThinSvg_isAtLeastOnePixelWide() = runTest { // #211
+        val svg = anSvg("""<svg xmlns="$SVG_NS" width="1" height="100000"><rect width="1" height="100000" fill="red"/></svg>""")
+
+        val staged = photos.file(photos.stageLogo(Uri.fromFile(svg)))
+
+        assertThat(staged.size()).isEqualTo(1 to 512)
+    }
+
+    @Test
+    fun stageLogo_ofAnSvgThatCantBeDrawn_throws_andLeavesNoFile() = runTest { // #211: the logo screen says so
+        val unreadable = listOf(
+            "hello",
+            """<svg xmlns="$SVG_NS" width="200" height="100"><rect""",
+            """<html xmlns="http://www.w3.org/1999/xhtml"/>""",
+            """<svg xmlns="$SVG_NS" viewBox="0 0 0 100"><rect width="100" height="100" fill="red"/></svg>""",
+        )
+
+        unreadable.forEachIndexed { index, text ->
+            val svg = anSvg(text, "unreadable-$index.svg")
+            assertThrows(text, IOException::class.java) { runBlocking { photos.stageLogo(Uri.fromFile(svg)) } }
+        }
+
+        assertThat(directory.listFiles().orEmpty()).isEmpty()
+    }
+
+    @Test
+    fun stageLogo_ofAnSvgOverTheSizeLimit_throws_andLeavesNoFile() = runTest { // #211: too large to open
+        val svg = """<svg xmlns="$SVG_NS" width="200" height="100"><rect width="100" height="100" fill="red"/></svg>"""
+        fun padded(size: Long, name: String) = anSvg(svg + "<!--" + "x".repeat((size - svg.length - 7).toInt()) + "-->", name)
+        val atTheLimit = padded(5L * 1024 * 1024, "at-the-limit.svg")
+        val overIt = padded(5L * 1024 * 1024 + 1, "over-it.svg")
+        assertThat(atTheLimit.length()).isEqualTo(5L * 1024 * 1024)
+
+        val staged = photos.stageLogo(Uri.fromFile(atTheLimit))
+        assertThrows(IOException::class.java) { runBlocking { photos.stageLogo(Uri.fromFile(overIt)) } }
+
+        assertThat(directory.list()).asList().containsExactly(staged)
+    }
+
+    @Test
+    fun stageLogo_drawsNothingFromAFileTheSvgRefersTo() = runTest { // #211: nothing outside the file is read
+        val red = Bitmap.createBitmap(10, 10, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.RED) }
+        val redPng = temporaryFolder.newFile("red.png").apply { outputStream().use { red.compress(Bitmap.CompressFormat.PNG, 100, it) } }
+        fun referringTo(href: String) =
+            """<svg xmlns="$SVG_NS" xmlns:xlink="http://www.w3.org/1999/xlink" width="100" height="100">""" +
+                """<image xlink:href="$href" width="100" height="100"/></svg>"""
+        val embedded = anSvg(referringTo("data:image/png;base64," + Base64.getEncoder().encodeToString(redPng.readBytes())), "embedded.svg")
+        val linked = anSvg(referringTo(Uri.fromFile(redPng).toString()), "linked.svg")
+
+        val drawnEmbedded = BitmapFactory.decodeFile(photos.file(photos.stageLogo(Uri.fromFile(embedded))).path)
+        val drawnLinked = BitmapFactory.decodeFile(photos.file(photos.stageLogo(Uri.fromFile(linked))).path)
+
+        assertThat(drawnEmbedded.getPixel(256, 256)).isEqualTo(Color.RED) // the control: an image in the file is drawn
+        assertThat(Color.alpha(drawnLinked.getPixel(256, 256))).isEqualTo(0)
+    }
+
+    @Test
+    fun stageLogo_ofAnSvgWithEntities_drawsThem() = runTest { // #211: as some vector editors export an SVG
+        val svg = anSvg(
+            """<?xml version="1.0"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" [""" +
+                """<!ENTITY ns_svg "$SVG_NS"> <!ENTITY fill 'red'>]>""" +
+                """<svg xmlns="&ns_svg;" width="200" height="100"><rect width="100" height="100" fill="&fill;"/></svg>""",
+        )
+
+        val drawn = BitmapFactory.decodeFile(photos.file(photos.stageLogo(Uri.fromFile(svg))).path)
+
+        assertThat(drawn.getPixel(128, 128)).isEqualTo(Color.RED)
+    }
+
+    @Test
+    fun stageLogo_ofAnSvgWithAnEntityFromAnotherFile_throws_andLeavesNoFile() = runTest { // #211: nothing outside the file is read
+        val rect = temporaryFolder.newFile("rect.xml").apply { writeText("""<rect width="100" height="100" fill="red"/>""") }
+        val svg = anSvg(
+            """<?xml version="1.0"?><!DOCTYPE svg [<!ENTITY rect SYSTEM "${Uri.fromFile(rect)}">]>""" +
+                """<svg xmlns="$SVG_NS" width="200" height="100">&rect;</svg>""",
+        )
+
+        assertThrows(IOException::class.java) { runBlocking { photos.stageLogo(Uri.fromFile(svg)) } }
+
+        assertThat(directory.listFiles().orEmpty()).isEmpty()
+    }
+
+    @Test
+    fun stageLogo_ofAnSvgWithEntitiesInsideEntities_throws_andLeavesNoFile() = runTest { // #211: the shape of an expansion bomb
+        val svg = anSvg(
+            """<?xml version="1.0"?><!DOCTYPE svg [<!ENTITY a "aaaa"><!ENTITY b "&a;&a;&a;&a;"><!ENTITY c "&b;&b;&b;&b;">]>""" +
+                """<svg xmlns="$SVG_NS" width="200" height="100"><title>&c;</title><rect width="100" height="100" fill="red"/></svg>""",
+        )
+
+        assertThrows(IOException::class.java) { runBlocking { photos.stageLogo(Uri.fromFile(svg)) } }
+
+        assertThat(directory.listFiles().orEmpty()).isEmpty()
+    }
+
+    @Test
+    fun stageLogo_ofAnSvgWithEntitiesInsideEntities_inUtf16_throws_andLeavesNoFile() = runTest { // #211: not missed for its encoding
+        val svg = temporaryFolder.newFile("utf16.svg").apply {
+            writeText(
+                """<?xml version="1.0" encoding="UTF-16"?><!DOCTYPE svg [<!ENTITY a "aaaa"><!ENTITY b "&a;&a;&a;&a;">]>""" +
+                    """<svg xmlns="$SVG_NS" width="200" height="100"><title>&b;</title><rect width="100" height="100" fill="red"/></svg>""",
+                Charsets.UTF_16,
+            )
+        }
+
+        assertThrows(IOException::class.java) { runBlocking { photos.stageLogo(Uri.fromFile(svg)) } }
+
+        assertThat(directory.listFiles().orEmpty()).isEmpty()
+    }
+
+    @Test
+    fun stageLogo_drawsTheSvgOnTheIoDispatcher()= runBlocking { // #211: never on the caller's (main) thread
+        var ioThread: Thread? = null
+        val io = Executors.newSingleThreadExecutor { Thread(it).also { thread -> ioThread = thread } }
+        var drawnOn: Thread? = null
+        val drawing = FileCardPhotos(
+            directory,
+            ApplicationProvider.getApplicationContext<Context>().contentResolver::openInputStream,
+            io.asCoroutineDispatcher(),
+            drawSvg = { source, target ->
+                drawnOn = Thread.currentThread()
+                drawSvgLogo(source, target)
+            },
+        )
+        val svg = anSvg("""<svg xmlns="$SVG_NS" width="200" height="100"><rect width="100" height="100" fill="red"/></svg>""")
+
+        try {
+            drawing.stageLogo(Uri.fromFile(svg))
+        } finally {
+            io.shutdown()
+        }
+
+        assertThat(drawnOn).isSameInstanceAs(ioThread)
+        assertThat(drawnOn).isNotSameInstanceAs(Thread.currentThread())
+    }
+
+    @Test
+    fun stage_ofAnSvg_throws_andLeavesNoFile() = runTest { // #211: only a logo may be an SVG; card photos are unchanged
+        val svg = anSvg("""<svg xmlns="$SVG_NS" width="200" height="100"><rect width="100" height="100" fill="red"/></svg>""")
+
+        assertThrows(IOException::class.java) { runBlocking { photos.stage(Uri.fromFile(svg)) } }
+
+        assertThat(directory.listFiles().orEmpty()).isEmpty()
+    }
+
+    @Test
+    fun cropLogo_ofAStagedSvg_storesTheUsualPng() = runTest { // #211
+        val svg = anSvg("""<svg xmlns="$SVG_NS" width="200" height="100"><rect width="100" height="100" fill="red"/></svg>""")
+
+        val logo = photos.file(photos.cropLogo(photos.stageLogo(Uri.fromFile(svg)), PhotoCrop.WHOLE))
+
+        val drawn = BitmapFactory.decodeFile(logo.path)
+        assertThat(logo.mimeType()).isEqualTo("image/png")
+        assertThat(drawn.width to drawn.height).isEqualTo(512 to 256)
+        assertThat(drawn.getPixel(128, 128)).isEqualTo(Color.RED)
+        assertThat(Color.alpha(drawn.getPixel(384, 128))).isEqualTo(0)
+    }
+
+    @Test
     fun newCapture_isAFileInThePhotoDirectory_underANewName() = runTest { // #10: the camera app writes it, then crop stores it
         val first = photos.newCapture()
         val second = photos.newCapture()
@@ -512,6 +718,9 @@ class FileCardPhotosTest {
         }
     }
 
+    /** An SVG file holding [text], as a picker or a share hands one over. */
+    private fun anSvg(text: String, name: String = "logo.svg"): File = temporaryFolder.newFile(name).apply { writeText(text) }
+
     /** Writes EXIF [tags] into this JPEG, PNG or WebP, through androidx's ExifInterface: the platform's can't on API 29. */
     private fun File.withExif(vararg tags: Pair<String, String>): File = apply {
         val exif = ExifInterface(path)
@@ -548,6 +757,8 @@ class FileCardPhotosTest {
 
     private companion object {
         val PICKED: Uri = Uri.parse("content://media/picker/0/1")
+
+        const val SVG_NS = "http://www.w3.org/2000/svg"
 
         /** The test colour nearest to this pixel, so a JPEG's small colour shifts don't count. */
         fun Int.nearest(): Int = listOf(Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW, Color.WHITE, Color.BLACK)

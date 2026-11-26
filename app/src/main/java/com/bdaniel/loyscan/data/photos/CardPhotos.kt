@@ -35,6 +35,13 @@ interface CardPhotos {
     suspend fun stage(picture: Uri): String
 
     /**
+     * As [stage], for a store's logo (#211): a picture is copied in as it is, and an SVG, which [stage] refuses, is drawn
+     * once onto a transparent PNG at [MAX_LOGO_SIDE] pixels on its long side ([drawSvgLogo]), so the crop and [cropLogo]
+     * only ever see a PNG. Throws if [picture] can't be read, or is neither a picture nor an SVG that can be drawn.
+     */
+    suspend fun stageLogo(picture: Uri): String
+
+    /**
      * Copies the stored photo [name] (a card's front photo) to a new staged file, as [stage] copies a pick, for the crop
      * screen to frame it as a store's logo (#151): [cropLogo] deletes its source, so the card keeps its own photo.
      * Throws if [name] isn't a photo's name, its file is missing or it isn't a picture; nothing is left behind then.
@@ -105,6 +112,7 @@ class FileCardPhotos(
     private val openPicture: (Uri) -> InputStream?,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val shareCapture: (File) -> Uri = Uri::fromFile,
+    private val drawSvg: (source: File, target: File) -> Unit = ::drawSvgLogo,
 ) : CardPhotos {
 
     constructor(directory: File, contentResolver: ContentResolver, shareCapture: (File) -> Uri = Uri::fromFile) :
@@ -116,16 +124,40 @@ class FileCardPhotos(
      * isn't a picture is refused here, so the crop screen only ever shows one that can be shown ([encodeCardPhoto]).
      */
     override suspend fun stage(picture: Uri): String =
-        copyIn(picture) { openPicture(picture) ?: throw FileNotFoundException("Can't open $picture") }
+        copyIn(picture, open = { openPicture(picture) ?: throw FileNotFoundException("Can't open $picture") })
+
+    /**
+     * As [stage] (#211), but a copy that isn't a picture is drawn as an SVG ([drawSvg]) on the IO dispatcher, and the
+     * drawing replaces it under the same name, so a failure or a cancel leaves nothing behind as for [stage].
+     */
+    override suspend fun stageLogo(picture: Uri): String =
+        copyIn(picture, open = { openPicture(picture) ?: throw FileNotFoundException("Can't open $picture") }) { copy ->
+            if (!isPicture(copy)) {
+                val drawn = file(UUID.randomUUID().toString())
+                try {
+                    drawSvg(copy, drawn)
+                    drawn.copyTo(copy, overwrite = true)
+                } finally {
+                    drawn.delete()
+                }
+            }
+        }
 
     /** As [stage] copies a pick (#151); [file] refuses a name that isn't a photo's, and a missing one can't be opened. */
     override suspend fun stagePhoto(name: String): String {
         val photo = file(name)
-        return copyIn(name) { photo.inputStream() }
+        return copyIn(name, open = { photo.inputStream() })
     }
 
-    /** Copies what [open] reads to a new staged file and checks it is a picture; [source] names it in a failure. */
-    private suspend fun copyIn(source: Any, open: () -> InputStream): String {
+    /**
+     * Copies what [open] reads to a new staged file and hands it to [finish], on the IO dispatcher: by default it checks
+     * the copy is a picture; [source] names it in a failure.
+     */
+    private suspend fun copyIn(
+        source: Any,
+        open: () -> InputStream,
+        finish: (copy: File) -> Unit = { if (!isPicture(it)) throw IOException("Not a picture: $source") },
+    ): String {
         val name = UUID.randomUUID().toString()
         val file = file(name)
         try {
@@ -133,7 +165,7 @@ class FileCardPhotos(
                 directory.mkdirs()
                 open().use { from -> file.outputStream().use { from.copyTo(it) } }
                 ensureActive()
-                if (!isPicture(file)) throw IOException("Not a picture: $source")
+                finish(file)
             }
             return name
         } catch (e: Throwable) { // cancelled too: a half-written or unused file mustn't stay

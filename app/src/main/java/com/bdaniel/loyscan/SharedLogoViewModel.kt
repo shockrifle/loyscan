@@ -41,7 +41,7 @@ class SharedLogoViewModel @Inject constructor(
             val uri = Uri.parse(savedStateHandle.toRoute<SharedLogo>().uri)
             viewModelScope.launch {
                 try {
-                    savedStateHandle[STAGED] = photos.stage(uri)
+                    savedStateHandle[STAGED] = photos.stageLogo(uri) // an SVG is drawn as a PNG (#211)
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {

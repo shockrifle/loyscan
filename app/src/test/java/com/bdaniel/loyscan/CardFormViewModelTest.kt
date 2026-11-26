@@ -1305,6 +1305,21 @@ class CardFormViewModelTest {
     }
 
     @Test
+    fun aPickedSvg_isNotACardPhoto_andSaysSo() = runTest { // #211: only a store's logo may be an SVG
+        val viewModel = viewModel(CardForm("ruled"))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.onPhotoPicked(CardPhotoSide.FRONT, Uri.parse("content://media/picker/0/logo.svg"))
+            val failed = expectMostRecentItem()
+
+            assertThat(failed.photoFailed).isTrue()
+            assertThat(failed.cropping).isNull()
+            assertThat(failed.frontPhoto).isNull()
+        }
+    }
+
+    @Test
     fun aCancelledPick_changesNothing() = runTest { // #10
         val viewModel = viewModel(CardForm("ruled"))
 

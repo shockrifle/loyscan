@@ -33,6 +33,16 @@ class SharedLogoViewModelTest {
     }
 
     @Test
+    fun aSharedSvg_isCopiedIn_asALogo() = runTest { // #211: drawn when it is copied in
+        val svg = "content://example.provider/logo.svg"
+
+        val viewModel = SharedLogoViewModel(SavedStateHandle(route = SharedLogo(svg)), photos)
+
+        assertThat(photos.staged).containsExactly(Uri.parse(svg))
+        assertThat(viewModel.state.value).isEqualTo(SharedLogoState(staged = "staged-1"))
+    }
+
+    @Test
     fun whileItIsCopied_nothingIsStagedYet() = runTest {
         photos.importGate = CompletableDeferred()
 

@@ -30,4 +30,5 @@ in #55 ([[seed-data]]).
 - **No `INTERNET` permission** since #157 (2026-11-17), so a URL load fails at run time. Coil 2's `coil-base` still
   ships its OkHttp network fetcher; only the permission is gone. `AppPermissionsTest` fails if the permission comes
   back, from the app's manifest or a library's ([[android-app]] → Manifest facts). The SVG decoder (`coil-svg`) was
-  removed in the same change: every image is a PNG or JPEG file the app wrote.
+  removed in the same change: every image is a PNG or JPEG file the app wrote. An SVG logo is drawn into a PNG when
+  it is copied in, before Coil sees it ([[androidsvg]], #211).

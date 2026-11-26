@@ -83,6 +83,20 @@ class StoreLogoViewModelTest {
     }
 
     @Test
+    fun aPickedSvg_opensTheCrop_andTheCropBecomesTheStoresLogo() = runTest { // #211: drawn when it is copied in
+        val svg = Uri.parse("content://media/picker/0/logo.svg")
+        val viewModel = viewModel()
+
+        viewModel.onPicked(svg)
+        assertThat(viewModel.state.value.cropping).isEqualTo("staged-1")
+        viewModel.confirmCrop(square)
+
+        assertThat(photos.staged).containsExactly(svg)
+        assertThat(stores.stores.value.single { it.id == "shop" }.logo).isEqualTo("logo-1")
+        assertThat(viewModel.state.value.failed).isFalse()
+    }
+
+    @Test
     fun theCardPhotos_areTheFrontPhotosOfThisStoresCards() = runTest { // #151: a card's photo as the logo's source
         val shop = stores.stores.value.single { it.id == "shop" }
         val other = stores.stores.value.single { it.id == "other" }
