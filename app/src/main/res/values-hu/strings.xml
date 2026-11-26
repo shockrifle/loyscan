@@ -119,6 +119,7 @@
     <string name="take_photo">Fotó készítése</string>
     <string name="choose_from_gallery">Választás a galériából</string>
     <string name="photo_add_failed">Nem sikerült hozzáadni a fotót. Próbáld újra.</string>
+    <string name="show_photo_on_list">Fotó mutatása a Kártyáim között</string>
     <string name="camera_needed_for_photo">A kártya lefotózásához a LoyScannek szüksége van a kamerára.</string>
     <string name="camera_turned_off">A LoyScan nem férhet hozzá a kamerához. Az alkalmazás beállításaiban engedélyezheted.</string>
     <string name="open_settings">Beállítások megnyitása</string>

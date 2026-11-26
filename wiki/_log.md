@@ -4,6 +4,7 @@ Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
 - 2026-11-26 · grilling skill asks its questions through AskUserQuestion (selectable options, recommended first, yes/no for simple ones) · workflows/agent-skills · user request
+- 2026-11-26 · card form gets a "Show photo on My Cards" switch (shown with a front photo, off by default, off again when the front photo is removed, kept across process death) · features/card-photos, features/edit-card · #184
 - 2026-11-26 · schema v3, the first migration (`loyalty_cards.showPhotoOnList` by `@AutoMigration`); trap: an unbumped build rewrites the old schema JSON and the migration test passes vacuously · workflows/database-schema-changes, architecture, tech-debt/no-room-migrations · #184
 - 2026-11-26 · card screen's status bar icons follow the brand colour (scan mode dark, photo viewer light), restored on pause; tdd row for window effects · features/card-detail, workflows/tdd · #233
 - 2026-11-25 · review of PR #235: render PNGs' limits (no rounded corners) in the tdd row; home-screen-widget decision's logo box note; render test for a layout shown at another width · workflows/tdd, decisions/2026-11-04-home-screen-widget, apps/card-widget · #216
