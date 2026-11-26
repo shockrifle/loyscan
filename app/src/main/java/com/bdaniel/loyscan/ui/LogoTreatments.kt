@@ -61,11 +61,10 @@ fun inSingleColour(pixels: IntArray, tint: Int): IntArray {
 fun recoloured(pixels: IntArray, brand: Int, tint: Int): IntArray {
     val brandLab = lab(brand)
     val colour = tint and 0xFFFFFF
-    val near = HashMap<Int, Boolean>() // a logo has few distinct colours
+    // Each pixel on its own: a logo cropped from a photo has as many colours as pixels (review of PR #247).
     return IntArray(pixels.size) { i ->
         val pixel = pixels[i]
-        val rgb = pixel and 0xFFFFFF
-        if (near.getOrPut(rgb) { distance(lab(rgb), brandLab) <= RECOLOUR_DISTANCE }) (pixel and ALPHA) or colour else pixel
+        if (distance(lab(pixel), brandLab) <= RECOLOUR_DISTANCE) (pixel and ALPHA) or colour else pixel
     }
 }
 
@@ -103,9 +102,12 @@ private fun lightness(luminance: Double): Double =
 private fun relativeLuminance(pixel: Int): Double = 0.2126 * linear(pixel shr 16 and 0xFF) + 0.7152 * linear(pixel shr 8 and 0xFF) + 0.0722 * linear(pixel and 0xFF)
 
 /** An sRGB [channel], 0 to 255, as linear light, 0 to 1. */
-private fun linear(channel: Int): Double {
+private fun linear(channel: Int): Double = LINEAR[channel]
+
+/** [linear] worked out once for each of the 256 values: every pixel of a logo needs three. */
+private val LINEAR = DoubleArray(256) { channel ->
     val c = channel / 255.0
-    return if (c <= 0.04045) c / 12.92 else ((c + 0.055) / 1.055).pow(2.4)
+    if (c <= 0.04045) c / 12.92 else ((c + 0.055) / 1.055).pow(2.4)
 }
 
 /**

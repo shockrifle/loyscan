@@ -169,6 +169,21 @@ class WidgetPicturesTest {
     }
 
     @Test
+    fun aLogoNotRecoloured_andAPhoto_areReused_whenTheBrandColourChanges() = runTest { // review of PR #247
+        val logo = png("logo", 100, 100)
+        val photo = png("photo", 400, 250)
+        val logos = logos()
+        val first = logos.forTiles(listOf(tile("c1", logo, logoTreatment = SINGLE_WHITE), tile("c2", null, photo = photo)))
+
+        val second = logos.forTiles(
+            listOf(tile("c1", logo, logoTreatment = SINGLE_WHITE, color = "#AA0000"), tile("c2", null, photo = photo, color = "#AA0000")),
+        )
+
+        assertThat(second.getValue(logo)).isSameInstanceAs(first.getValue(logo))
+        assertThat(second.getValue(photo)).isSameInstanceAs(first.getValue(photo))
+    }
+
+    @Test
     fun aLogoNoLongerShown_isForgotten() = runTest {
         val logo = png("dropped", 100, 100)
         val logos = logos()

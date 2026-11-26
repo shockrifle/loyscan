@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
+import com.bdaniel.loyscan.domain.LogoStyle
 import com.bdaniel.loyscan.domain.LogoTreatment
 import com.bdaniel.loyscan.ui.drawnWith
 import kotlinx.coroutines.CoroutineDispatcher
@@ -49,8 +50,16 @@ class WidgetPictures(
     /** The part of a picture shown, [crop] (its whole when null), and its size fitted to its box. */
     private data class Fitted(val crop: Crop?, val size: IntSize)
 
-    /** How a picture is drawn: a photo As is, a logo with its treatment on its store's [brandColor] (#240). */
-    private data class DrawnAs(val treatment: LogoTreatment, val brandColor: String)
+    /**
+     * How a picture is drawn: a photo As is, a logo with its treatment (#240), and only for Recolour, which compares with
+     * it, on its store's [brandColor]: a new colour redraws only a Recoloured logo (review of PR #247).
+     */
+    private data class DrawnAs(val treatment: LogoTreatment, val brandColor: String? = null) {
+        companion object {
+            fun logo(treatment: LogoTreatment, brandColor: String) =
+                DrawnAs(treatment, brandColor.takeIf { treatment.style == LogoStyle.RECOLOUR })
+        }
+    }
 
     private data class Crop(val offset: IntOffset, val size: IntSize)
 
@@ -90,17 +99,17 @@ class WidgetPictures(
             for (tile in tiles) {
                 val photo = tile.photo?.let { name -> fitted(name, photo = true)?.let { name to it } }
                 val logo = if (photo == null) tile.logo?.let { name -> fitted(name, photo = false)?.let { name to it } } else null
-                photo?.let { (name, fit) -> drawn[name] = fit; drawnAs[name] = DrawnAs(LogoTreatment.AS_IS, tile.color) }
+                photo?.let { (name, fit) -> drawn[name] = fit; drawnAs[name] = DrawnAs(LogoTreatment.AS_IS) }
                 // A logo's file is its store's alone (a new logo is a new name), so one name is drawn one way, on its
                 // store's colour, which Recolour compares with (#240).
-                logo?.let { (name, fit) -> drawn[name] = fit; drawnAs[name] = DrawnAs(tile.logoTreatment, tile.color) }
+                logo?.let { (name, fit) -> drawn[name] = fit; drawnAs[name] = DrawnAs.logo(tile.logoTreatment, tile.color) }
             }
             val scale = widgetLogoScale(drawn.values.map { it.size }, budgetBytes)
             val decoded = drawn.mapValues { (name, fit) ->
                 val target = if (scale >= 1f) fit.size else fit.size.scaledBy(scale)
                 val drawnWith = drawnAs.getValue(name)
                 before[name]?.takeIf { it.width == target.width && it.height == target.height && beforeAs[name] == drawnWith }
-                    ?: withContext(ioDispatcher) { decode(name, fit.crop, target)?.drawnWith(drawnWith.treatment, drawnWith.brandColor) }
+                    ?: withContext(ioDispatcher) { decode(name, fit.crop, target)?.drawnWith(drawnWith.treatment, drawnWith.brandColor.orEmpty()) }
             }
             val failed = decoded.filterValues { it == null }.keys
             failed.forEach { next[it] = null }

@@ -205,7 +205,8 @@ Glance's `@layout/glance_default_loading_layout` as the initial layout). Glance 
 - `widget/WidgetPicturesTest` — real PNGs in a `TemporaryFolder`, `@GraphicsMode(NATIVE)` (#181). How a logo is drawn
   (#240): `aLogoInSingleColour_isDrawnInItsColour`, `aRecolouredLogo_isDrawnInItsColour`, and
   `aLogoDrawnAnotherWay_isDrawnAgain_atTheSameSize`, `aRecolouredLogo_isDrawnAgain_whenItsBrandColourChanges` (a bitmap is
-  reused only when its size, its treatment and its brand colour are unchanged). Photos (#185): a
+  reused only when its size and its treatment are unchanged, and for a Recoloured logo its brand colour too;
+  `aLogoNotRecoloured_andAPhoto_areReused_whenTheBrandColourChanges`, review of PR #247). Photos (#185): a
   large card-shaped one scaled to the photo box; a tall and a wide one cut around their middle (a banded PNG whose
   corners come back in the middle band's colour) and scaled to the box; a small one cut but not scaled up; a portrait
   photo at 2.75 density no larger than its 594 × 374px tile; a missing file, a non-picture, a PNG cut after its header
