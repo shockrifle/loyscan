@@ -283,6 +283,34 @@ class FileCardPhotosTest {
     }
 
     @Test
+    fun logoPixels_areAStoredLogosColours_withTheirOpacity() = runTest { // #240: the contrast check reads them
+        val pixels = intArrayOf(0xFFFF0000.toInt(), 0x80FFFFFF.toInt(), 0x00000000)
+        File(directory.apply { mkdirs() }, "logo").outputStream().use {
+            Bitmap.createBitmap(pixels, 3, 1, Bitmap.Config.ARGB_8888).compress(Bitmap.CompressFormat.PNG, 100, it)
+        }
+
+        assertThat(photos.logoPixels("logo")?.toList()).containsExactly(0xFFFF0000.toInt(), 0x80FFFFFF.toInt(), 0x00000000).inOrder()
+    }
+
+    @Test
+    fun logoPixels_ofALargeLogo_areSampledDown() = runTest { // 512 px is a logo's most; a quarter of each side is plenty
+        File(directory.apply { mkdirs() }, "logo").outputStream().use {
+            Bitmap.createBitmap(512, 256, Bitmap.Config.ARGB_8888).compress(Bitmap.CompressFormat.PNG, 100, it)
+        }
+
+        assertThat(photos.logoPixels("logo")?.size).isEqualTo(128 * 64)
+    }
+
+    @Test
+    fun logoPixels_ofAMissingOrUnreadableFile_areNull() = runTest { // the logo is still saved, As is
+        File(directory.apply { mkdirs() }, "broken").writeText("not a picture")
+
+        assertThat(photos.logoPixels("missing")).isNull()
+        assertThat(photos.logoPixels("broken")).isNull()
+        assertThat(photos.logoPixels("../outside")).isNull()
+    }
+
+    @Test
     fun stagePhoto_copiesAStoredPhotoForTheCrop_andKeepsTheOriginal() = runTest { // #151: a card's photo as a logo
         val photo = importWhole(Uri.fromFile(aPicture(40, 20)))
         val original = photos.file(photo).readBytes()

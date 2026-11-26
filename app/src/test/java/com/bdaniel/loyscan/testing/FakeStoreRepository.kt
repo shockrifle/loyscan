@@ -50,15 +50,18 @@ class FakeStoreRepository(stores: List<Store> = emptyList()) : StoreRepository {
     /** When set, [setLogo] suspends until it completes. */
     var setLogoGate: CompletableDeferred<Unit>? = null
 
-    /** Like the Room repository: any store's logo, a new one or none drawn As is (#240); the files are the photos fake's. */
-    override suspend fun setLogo(storeId: String, logo: String?) {
+    /**
+     * Like the Room repository: any store's logo, a new one drawn with [treatment], none As is, the same one again as it
+     * was (#240); the files are the photos fake's.
+     */
+    override suspend fun setLogo(storeId: String, logo: String?, treatment: LogoTreatment) {
         setLogoGate?.await()
         setLogoFailure?.let { throw it }
         stores.value = stores.value.map {
             when {
                 it.id != storeId -> it
                 it.logo == logo -> it
-                else -> it.copy(logo = logo, logoTreatment = LogoTreatment.AS_IS)
+                else -> it.copy(logo = logo, logoTreatment = if (logo == null) LogoTreatment.AS_IS else treatment)
             }
         }
     }

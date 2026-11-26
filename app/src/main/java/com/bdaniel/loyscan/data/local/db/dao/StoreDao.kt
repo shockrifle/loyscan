@@ -9,6 +9,7 @@ import androidx.room.Update
 import com.bdaniel.loyscan.data.local.db.entity.StoreEntity
 import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.domain.LogoStyle
+import com.bdaniel.loyscan.domain.LogoTreatment
 import kotlinx.coroutines.flow.Flow
 import java.time.Instant
 
@@ -53,15 +54,17 @@ interface StoreDao {
     suspend fun cardPhotosOfCustomStore(id: String): List<CardPhotoNames>
 
     /**
-     * Sets the store's logo (#151) and returns the logo files nothing names any more. A new logo, or none, is drawn As is
-     * (#240): how the old one was drawn was chosen for it.
+     * Sets the store's logo (#151) and returns the logo files nothing names any more. A new logo is drawn with [treatment]
+     * and none As is (#240): how the old one was drawn was chosen for it. The same logo again keeps how it is drawn.
      */
     @Transaction
-    suspend fun setLogoReturningDropped(id: String, logo: String?): List<String> {
+    suspend fun setLogoReturningDropped(id: String, logo: String?, treatment: LogoTreatment = LogoTreatment.AS_IS): List<String> {
         val old = logoOf(id)
         if (updateLogo(id, logo) == 0) return listOfNotNull(logo)
         if (old == logo) return emptyList()
-        updateLogoTreatment(id, style = null, tint = null, outline = null)
+        val drawn = if (logo == null) LogoTreatment.AS_IS else treatment
+        // Null, not false, without an outline: null throughout is As is (as the mapper writes it).
+        updateLogoTreatment(id, drawn.style, drawn.tint, drawn.outline.takeIf { it })
         return listOfNotNull(old)
     }
 

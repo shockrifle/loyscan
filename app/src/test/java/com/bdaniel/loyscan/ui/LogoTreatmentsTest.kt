@@ -1,5 +1,7 @@
 package com.bdaniel.loyscan.ui
 
+import com.bdaniel.loyscan.domain.LogoStyle
+import com.bdaniel.loyscan.domain.LogoTreatment
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
@@ -120,6 +122,65 @@ class LogoTreatmentsTest {
         val drawn = recoloured(intArrayOf(inside, beyond), brand = RED, tint = WHITE)
 
         assertThat(drawn.toList()).containsExactly(WHITE, beyond).inOrder()
+    }
+
+    // The contrast check (#240). On red, #FF0000 (relative luminance 0.2126): white is (1 + 0.05) / (0.2126 + 0.05) =
+    // 4.0:1 and black (0.2126 + 0.05) / 0.05 = 5.25:1, so black is the default colour; green #00A000 (0.2514) is
+    // 1.15:1, too little, and far from red (ΔE 141), so Recolour leaves it.
+
+    @Test
+    fun aLogoLegibleOnItsBrandColour_isDrawnAsIs() {
+        assertThat(preselectedTreatment(intArrayOf(WHITE, WHITE, CLEAR), brand = RED)).isEqualTo(LogoTreatment.AS_IS)
+    }
+
+    @Test
+    fun aLogoMostlyInItsBrandColour_isRecoloured_inTheContrastingColour() {
+        val treatment = preselectedTreatment(intArrayOf(RED, RED, RED, WHITE), brand = RED)
+
+        assertThat(treatment).isEqualTo(LogoTreatment(style = LogoStyle.RECOLOUR, tint = "#000000"))
+    }
+
+    @Test
+    fun aLogoMostlyInAnotherColourJustAsDark_isInSingleColour() { // Recolour would leave the green as it is
+        val green = 0xFF00A000.toInt()
+
+        val treatment = preselectedTreatment(intArrayOf(green, green, green, WHITE), brand = RED)
+
+        assertThat(treatment).isEqualTo(LogoTreatment(style = LogoStyle.SINGLE_COLOUR, tint = "#000000"))
+    }
+
+    @Test
+    fun aLogoExactlyHalfInItsBrandColour_isDrawnAsIs() { // "too much" is more than half
+        assertThat(preselectedTreatment(intArrayOf(RED, WHITE), brand = RED)).isEqualTo(LogoTreatment.AS_IS)
+    }
+
+    @Test
+    fun theCheck_weighsEachPixelByItsOpacity() { // a faint red haze over most of the square doesn't outweigh the white
+        val faintRed = 0x20FF0000
+
+        val treatment = preselectedTreatment(intArrayOf(faintRed, faintRed, faintRed, faintRed, WHITE), brand = RED)
+
+        assertThat(treatment).isEqualTo(LogoTreatment.AS_IS)
+    }
+
+    @Test
+    fun aHalfClearWhitePixel_isJudgedAsItShowsOnTheBrandColour() { // pink on red: (255, 128, 128) is 1.65:1, too little
+        val halfWhite = 0x80FFFFFF.toInt()
+
+        val treatment = preselectedTreatment(intArrayOf(halfWhite), brand = RED)
+
+        assertThat(treatment.style).isNotNull()
+    }
+
+    @Test
+    fun aLogoWithNothingDrawn_isDrawnAsIs() {
+        assertThat(preselectedTreatment(intArrayOf(CLEAR, CLEAR), brand = RED)).isEqualTo(LogoTreatment.AS_IS)
+    }
+
+    @Test
+    fun theDefaultColour_isWhiteOrBlack_whicheverContrastsMore() {
+        assertThat(defaultLogoTint(RED)).isEqualTo("#000000")
+        assertThat(defaultLogoTint(0xFF1E5AA8.toInt())).isEqualTo("#FFFFFF") // luminance 0.104: white 6.8:1, black 3.1:1
     }
 
     private companion object {

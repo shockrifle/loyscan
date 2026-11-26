@@ -302,6 +302,31 @@ class RoomStoreRepositoryTest {
     }
 
     @Test
+    fun setLogo_aNewLogoWithATreatment_savesBoth() = runTest { // #240: the treatment the contrast check chose
+        repository.setLogo("first", "old")
+
+        repository.setLogo("first", "new", RECOLOUR_WHITE)
+
+        val stored = repository.getAll().first().single { it.id == "first" }
+        assertThat(stored.logo).isEqualTo("new")
+        assertThat(stored.logoTreatment).isEqualTo(RECOLOUR_WHITE)
+    }
+
+    @Test
+    fun setLogo_aTreatmentForNoLogo_orForTheSameLogoAgain_isNotSaved() = runTest { // #240: it is a new logo's alone
+        repository.setLogo("first", "logo")
+        repository.setLogoTreatment("first", SINGLE_BLACK_OUTLINED)
+
+        repository.setLogo("first", "logo", RECOLOUR_WHITE)
+        val again = repository.getAll().first().single { it.id == "first" }.logoTreatment
+        repository.setLogo("first", null, RECOLOUR_WHITE)
+        val removed = repository.getAll().first().single { it.id == "first" }.logoTreatment
+
+        assertThat(again).isEqualTo(SINGLE_BLACK_OUTLINED)
+        assertThat(removed).isEqualTo(LogoTreatment.AS_IS)
+    }
+
+    @Test
     fun update_aCustomStoresNewColour_keepsHowItsLogoIsDrawn() = runTest { // #240
         repository.add(aStore(id = "custom", color = "#112233", countryCodes = emptyList(), isCustom = true))
         repository.setLogo("custom", "logo")
@@ -319,5 +344,6 @@ class RoomStoreRepositoryTest {
 
     private companion object {
         val SINGLE_BLACK_OUTLINED = LogoTreatment(style = LogoStyle.SINGLE_COLOUR, tint = "#000000", outline = true)
+        val RECOLOUR_WHITE = LogoTreatment(style = LogoStyle.RECOLOUR, tint = "#FFFFFF")
     }
 }

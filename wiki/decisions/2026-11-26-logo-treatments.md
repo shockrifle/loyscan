@@ -26,7 +26,7 @@ draws the tile), the card screen's band, the store picker's badge and the home-s
 
 - Three nullable columns on `stores` (`logoStyle`, `logoTint`, `logoOutline`; null = As is), schema v5
   ([[database-schema-changes]]), read as `Store.logoTreatment` (`domain/LogoTreatment.kt`). They belong to the user: the
-  catalogue sync never writes them ([[store-catalogue]]); a new logo, or none, resets them (`StoreDao.setLogoReturningDropped`);
+  catalogue sync never writes them ([[store-catalogue]]); a new logo replaces them with the contrast check's choice (slice 2; As is before it) and none resets them (`StoreDao.setLogoReturningDropped`);
   editing a custom store's colour keeps them. Setting the same logo again isn't a new logo and keeps them.
 - The pixels are changed in pure functions, `inSingleColour` and `recoloured` (`app/src/main/java/com/bdaniel/loyscan/ui/LogoTreatments.kt`),
   on the decoded bitmap: by a Coil `Transformation` (`LogoTreatmentTransformation`, in `StoreLogoImage`) on the three
@@ -45,8 +45,20 @@ draws the tile), the card screen's band, the store picker's badge and the home-s
   the published formulas. A soft edge between the brand colour and another colour is a blend, beyond the distance, so it
   stays as it was. Recolour compares with the brand colour the logo is drawn on, at draw time, so a new brand colour
   redraws it: the image loader's cache key and the widget's reuse key include the colour for Recolour.
-- Choosing Single colour or Recolour saves white or black, whichever contrasts more with the brand colour (`contrastingTextColor`),
-  unless a colour is already saved; the swatch row offers white, black, then the custom store palette.
+- Choosing Single colour or Recolour saves white or black, whichever contrasts more with the brand colour
+  (`defaultLogoTint`, by `contrastingTextColor`), unless a colour is already saved; the swatch row offers white, black,
+  then the custom store palette.
+- The contrast check (slice 2) runs once, when Crop saves a new logo (`StoreLogoViewModel.confirmCrop`,
+  `preselectedTreatment`), on its pixels read back from the stored PNG at 128–255 px (`CardPhotos.logoPixels`), and
+  the logo and its treatment are saved in one `StoreRepository.setLogo`. A logo blends in when **more than half** of it
+  has less than 3:1 WCAG contrast with the brand colour (the owner's choice on 2026-11-26): each pixel weighed by its
+  opacity, and judged blended onto the brand colour, as the screen shows it, so a faint haze doesn't count as much as
+  the solid mark. Then Recolour in the default colour, or Single colour when the recoloured logo still blends in (a
+  logo in another colour as dark as the brand's, which Recolour leaves alone). 3:1 is WCAG's least for graphics.
+  Pixels that can't be read save the logo As is: the check must never cost the user their logo.
+- The check uses the brand colour at save time, and the colour it picks stays when the brand colour changes later, as
+  every saved treatment does; Recolour still follows the new colour in which pixels it changes. Logos saved before
+  slice 2 are not checked (the issue asks it).
 
 ## Why
 
@@ -60,4 +72,4 @@ dark backgrounds) visible without asking the user a question they can't easily a
 - Coil caches a treated logo under a key with its style and tint, so a change draws again; the widget's bitmap is
   reused only when its size and its treatment are unchanged.
 - A treated bitmap is a new ARGB_8888 copy: the image loader's cached input is never changed.
-- The contrast check with its pre-selection (slice 2) and Outline (slice 3) are not implemented yet.
+- Outline (slice 3) is not implemented yet.

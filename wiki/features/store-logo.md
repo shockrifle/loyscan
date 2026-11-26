@@ -27,7 +27,8 @@ logo". Done in four slices, 2026-11-13 to 2026-11-16.
 - How the logo is drawn (#240, [[2026-11-26-logo-treatments]]): `LogoStyleControls` and `LOGO_COLOURS` in
   `StoreLogoScreen.kt`, `StoreLogoViewModel.onLogoStyle` / `onLogoTint`, `StoreRepository.setLogoTreatment`; drawn by
   `ui/StoreLogoImage.kt` and `ui/LogoTreatments.kt` (`inSingleColour`, `recoloured`), and on the widget by `WidgetPictures`.
-- `data/repository/StoreRepository.kt` (`setLogo`), `data/photos/CardPhotos.kt` (`cropLogo`): storage, see the decision.
+- `data/repository/StoreRepository.kt` (`setLogo`), `data/photos/CardPhotos.kt` (`cropLogo`, `logoPixels`): storage, see the decision.
+- The contrast check on a new logo (#240): `StoreLogoViewModel.confirmCrop`, `preselectedTreatment` in `ui/LogoTreatments.kt`.
 
 ## Behaviour
 
@@ -92,9 +93,13 @@ logo". Done in four slices, 2026-11-13 to 2026-11-16.
   mostly light one), so the detail inside it stays visible ([[2026-11-26-logo-treatments]]). Recolour draws the pixels
   near the brand colour (CIE76 ΔE ≤ 25 in CIELAB: its shades, not another hue) in the colour, at their own opacity, and
   leaves the other colours alone; it compares with the colour the logo is drawn on, so a new brand colour redraws it. A change that can't be
-  saved says "Couldn't save how the logo is drawn. Try again.". A new logo, or removing it, draws it As is again;
-  editing a custom store's colour keeps the choice. The contrast check with its pre-selection, and Outline, are not
-  implemented yet.
+  saved says "Couldn't save how the logo is drawn. Try again.". Removing the logo draws it As is again; editing a
+  custom store's colour keeps the choice, and the colour chosen with it. Outline is not implemented yet.
+- **A new logo is checked** (#240) as Crop saves it, in the same non-cancellable step: when more than half of it,
+  each pixel weighed by its opacity and judged as it shows on the brand colour, has less than 3:1 contrast with the
+  brand colour, it is saved Recoloured in white or black (whichever contrasts more), or in Single colour in that colour
+  when the recoloured logo still blends in; As is otherwise. The screen then shows the saved choice. A logo whose
+  pixels can't be read, or a brand colour that isn't one, is saved As is. Logos saved before are not checked again.
 - **Remove logo** clears it; the initials on colour come back and its file is deleted.
 - **A store that is gone** says "This store is no longer available." and offers nothing.
 - **A logo whose file is missing** is no logo, here, on the tiles and in the card screen's band, which show the initials (`CardPhotos.withoutMissing`). The
@@ -151,5 +156,13 @@ logo". Done in four slices, 2026-11-13 to 2026-11-16.
   `choosingRecolour_drawsItsBrandColouredPartWhiteOnADarkColour_andOffersTheColours`, `choosingAColour_drawsTheLogoInIt`, `choosingAsIs_hidesTheColours`, `aStyleThatCantBeSaved_saysSo`,
   `thePreview_drawsTheLogoAsChosen` (pixels), and the Hungarian test), `ui/LogoTreatmentsTest` (the pixels, worked out by
   hand), `ui/LogoTreatmentBitmapTest`; storage in `RoomStoreRepositoryTest` and `CatalogueDatabaseCallbackTest`.
+- The contrast check (#240): `ui/LogoTreatmentsTest` (`aLogoLegibleOnItsBrandColour_isDrawnAsIs`,
+  `aLogoMostlyInItsBrandColour_isRecoloured_inTheContrastingColour`, `aLogoMostlyInAnotherColourJustAsDark_isInSingleColour`,
+  `aLogoExactlyHalfInItsBrandColour_isDrawnAsIs`, `theCheck_weighsEachPixelByItsOpacity`,
+  `aHalfClearWhitePixel_isJudgedAsItShowsOnTheBrandColour`, contrast ratios worked out by hand), `StoreLogoViewModelTest`
+  (`aNewLogoInItsBrandColour_isSavedRecoloured`, `aNewLogoThatBlendsIn_evenRecoloured_isSavedInSingleColour`,
+  `aNewLogoThatShows_replacingOneDrawnAnotherWay_isSavedAsIs`, `aNewLogoWhosePixelsCantBeRead_orOnABrandColourThatIsNotOne_isSavedAsIs`),
+  `StoreLogoScreenTest.aNewLogoInTheBrandColour_isShownRecoloured`, `RoomStoreRepositoryTest.setLogo_aNewLogoWithATreatment_savesBoth`,
+  `setLogo_aTreatmentForNoLogo_orForTheSameLogoAgain_isNotSaved`, and the `logoPixels_` tests ([[card-photos]]).
 - `ui/LogoSearchTest`; the storage, sync, tile and band tests are listed on [[card-photos]], [[store-catalogue]],
   [[card-list]] and [[card-detail]].

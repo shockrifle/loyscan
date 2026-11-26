@@ -3,6 +3,7 @@ package com.bdaniel.loyscan.data.photos
 import android.content.ContentResolver
 import android.net.Uri
 import com.bdaniel.loyscan.domain.LoyaltyCard
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -62,6 +63,12 @@ interface CardPhotos {
      * and deletes the staged file. Throws if it can't be decoded or encoded; nothing is left behind then.
      */
     suspend fun cropLogo(name: String, crop: PhotoCrop): String
+
+    /**
+     * The ARGB pixels of the stored logo [name] (#240), for the contrast check when it is saved: sampled down to at most
+     * [LOGO_CHECK_SIDE] to twice that on its long side. `null` when it can't be read, whatever the reason.
+     */
+    suspend fun logoPixels(name: String): IntArray?
 
     /** Deletes these photos. A name without a file, or one that isn't a photo's name, is skipped. */
     suspend fun delete(names: Collection<String>)
@@ -209,6 +216,20 @@ class FileCardPhotos(
      * `image/jpeg` target. Creates the directory on the caller's thread: the camera app's write needs it, and the Uri
      * is needed at once to start the camera.
      */
+    override suspend fun logoPixels(name: String): IntArray? = withContext(ioDispatcher) {
+        try {
+            decodeLogoPixels(file(name))
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "Couldn't read the logo's pixels")
+            null
+        } catch (e: OutOfMemoryError) { // the logo is saved without the check
+            Timber.w(e, "Couldn't read the logo's pixels")
+            null
+        }
+    }
+
     override fun newCapture(): PhotoCapture {
         val name = "${UUID.randomUUID()}.jpg"
         directory.mkdirs()

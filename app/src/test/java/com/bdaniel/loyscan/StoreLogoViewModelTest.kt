@@ -85,6 +85,59 @@ class StoreLogoViewModelTest {
     }
 
     @Test
+    fun aNewLogoInItsBrandColour_isSavedRecoloured() = runTest { // #240: the contrast check, on a red store
+        givenTheShopIs("#FF0000")
+        photos.logoPixels["logo-1"] = intArrayOf(RED, RED, RED, WHITE)
+
+        cropAPickedPicture()
+
+        val shop = stores.stores.value.single { it.id == "shop" }
+        assertThat(shop.logo).isEqualTo("logo-1")
+        assertThat(shop.logoTreatment).isEqualTo(LogoTreatment(style = LogoStyle.RECOLOUR, tint = "#000000"))
+    }
+
+    @Test
+    fun aNewLogoThatBlendsIn_evenRecoloured_isSavedInSingleColour() = runTest { // #240: green, as dark as the red
+        givenTheShopIs("#FF0000")
+        val green = 0xFF00A000.toInt()
+        photos.logoPixels["logo-1"] = intArrayOf(green, green, green, WHITE)
+
+        cropAPickedPicture()
+
+        assertThat(stores.stores.value.single { it.id == "shop" }.logoTreatment)
+            .isEqualTo(LogoTreatment(style = LogoStyle.SINGLE_COLOUR, tint = "#000000"))
+    }
+
+    @Test
+    fun aNewLogoThatShows_replacingOneDrawnAnotherWay_isSavedAsIs() = runTest { // #240
+        givenTheShopIs("#FF0000")
+        stores.setLogo("shop", "old", LogoTreatment(style = LogoStyle.SINGLE_COLOUR, tint = "#FFFFFF"))
+        photos.logoPixels["logo-1"] = intArrayOf(WHITE, WHITE)
+
+        cropAPickedPicture()
+
+        assertThat(stores.stores.value.single { it.id == "shop" }.logoTreatment).isEqualTo(LogoTreatment.AS_IS)
+    }
+
+    @Test
+    fun aNewLogoWhosePixelsCantBeRead_orOnABrandColourThatIsNotOne_isSavedAsIs() = runTest { // #240: still saved
+        givenTheShopIs("#FF0000")
+        stores.setLogo("shop", "old", LogoTreatment(style = LogoStyle.SINGLE_COLOUR, tint = "#FFFFFF"))
+
+        cropAPickedPicture() // no pixels for logo-1
+        val unread = stores.stores.value.single { it.id == "shop" }
+        givenTheShopIs("not a colour")
+        photos.logoPixels["logo-2"] = intArrayOf(RED)
+        cropAPickedPicture()
+        val noColour = stores.stores.value.single { it.id == "shop" }
+
+        assertThat(unread.logo).isEqualTo("logo-1")
+        assertThat(unread.logoTreatment).isEqualTo(LogoTreatment.AS_IS)
+        assertThat(noColour.logo).isEqualTo("logo-2")
+        assertThat(noColour.logoTreatment).isEqualTo(LogoTreatment.AS_IS)
+    }
+
+    @Test
     fun aPickedSvg_opensTheCrop_andTheCropBecomesTheStoresLogo() = runTest { // #211: drawn when it is copied in
         val svg = Uri.parse("content://media/picker/0/logo.svg")
         val viewModel = viewModel()
@@ -495,6 +548,16 @@ class StoreLogoViewModelTest {
         assertThat(stores.stores.value.single { it.id == "other" }.logo).isNull()
     }
 
+    private fun givenTheShopIs(color: String) {
+        stores.stores.value = stores.stores.value.map { if (it.id == "shop") it.copy(color = color) else it }
+    }
+
+    private fun cropAPickedPicture() {
+        val viewModel = viewModel()
+        viewModel.onPicked(picked)
+        viewModel.confirmCrop(square)
+    }
+
     private fun viewModel(storeId: String = "shop") = viewModel(SavedStateHandle(route = StoreLogo(storeId)))
 
     private fun viewModel(handle: SavedStateHandle) = StoreLogoViewModel(handle, stores, cards, photos)
@@ -504,5 +567,10 @@ class StoreLogoViewModelTest {
         cards.cards.value = listOf(
             aLoyaltyCard(id = "card", store = stores.stores.value.single { it.id == "shop" }, frontPhotoPath = "front"),
         )
+    }
+
+    private companion object {
+        val RED = 0xFFFF0000.toInt()
+        val WHITE = 0xFFFFFFFF.toInt()
     }
 }

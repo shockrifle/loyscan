@@ -78,6 +78,11 @@ class FakeCardPhotos(vararg stored: String) : CardPhotos {
         return "logo-${croppedLogos.size}".also { stored += it }
     }
 
+    /** The pixels [logoPixels] gives for a logo's name; any other is `null`, as a file that can't be read. */
+    val logoPixels = mutableMapOf<String, IntArray>()
+
+    override suspend fun logoPixels(name: String): IntArray? = logoPixels[name]
+
     override suspend fun delete(names: Collection<String>) {
         stored -= names.toSet()
     }

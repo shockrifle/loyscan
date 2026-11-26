@@ -145,7 +145,8 @@ Shared helpers are in `testing/`:
   named `logo-1`… (pairs in `croppedLogos`, #151); `stageLogo` stages like `stage`, into `staged` too, but only `stage`
   refuses an SVG (a Uri whose path ends `.svg`), as the real one does (#211); `stagePhoto` copies a stored photo to `staged-N` too (listed in
   `stagedPhotos`; a name not in `stored` throws); `importFailure` / `importGate` make either copy
-  fail or hold, `cropFailure` makes the crop fail, `existsGate` holds `exists` (a file check in flight, #151). `newCapture` names captures `capture-1`… with a
+  fail or hold, `cropFailure` makes the crop fail, `existsGate` holds `exists` (a file check in flight, #151); `logoPixels` maps a
+  logo's name to the pixels the contrast check reads, any other name reading as unreadable (#240). `newCapture` names captures `capture-1`… with a
   `content://photos.test/…` Uri, lists them in `captures` and adds them to `stored`. Because a pick stages then crops
   asynchronously, a crop-flow test asserts on `viewModel.state.value` after driving both steps (a `getStateFlow` reads
   back even before Turbine delivers the item), rather than on a Turbine item.
