@@ -207,6 +207,18 @@ class StoreLogoScreenTest {
     }
 
     @Test
+    fun aNewLogoInTheBrandColour_isShownRecoloured() { // #240: the contrast check's choice, on the screen
+        photos.logoPixels["logo-1"] = IntArray(4) { 0xFF336699.toInt() }
+        setScreen()
+
+        composeRule.onNodeWithText("Choose image").performClick()
+        composeRule.onNodeWithText("Crop").performClick()
+
+        composeRule.onNodeWithText("Recolour").performScrollTo().assertIsSelected()
+        composeRule.onNodeWithContentDescription("White").performScrollTo().assertIsSelected()
+    }
+
+    @Test
     fun choosingAnImage_opensASquareCrop_andCropSetsTheLogo() {
         setScreen()
 

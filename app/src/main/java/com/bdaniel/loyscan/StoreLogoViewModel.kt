@@ -10,10 +10,11 @@ import com.bdaniel.loyscan.data.photos.PhotoCrop
 import com.bdaniel.loyscan.data.photos.withoutMissing
 import com.bdaniel.loyscan.data.repository.LoyaltyCardRepository
 import com.bdaniel.loyscan.data.repository.StoreRepository
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import com.bdaniel.loyscan.domain.LogoStyle
 import com.bdaniel.loyscan.domain.LogoTreatment
-import com.bdaniel.loyscan.ui.contrastingTextColor
+import com.bdaniel.loyscan.ui.defaultLogoTint
+import com.bdaniel.loyscan.ui.preselectedTreatment
 import com.bdaniel.loyscan.ui.toBrandColorOrNull
 import com.bdaniel.loyscan.domain.Store
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -176,7 +177,10 @@ class StoreLogoViewModel @Inject constructor(
         }
     }
 
-    /** Stores the staged picture framed by [crop] as the store's logo; the logo it replaces is deleted by the repository. */
+    /**
+     * Stores the staged picture framed by [crop] as the store's logo; the logo it replaces is deleted by the repository.
+     * It is saved drawn the way the contrast check chose (#240, [treatmentFor]).
+     */
     fun confirmCrop(crop: PhotoCrop) {
         val staged = savedStateHandle.get<String>(CROP_LOGO) ?: return
         savedStateHandle[CROP_LOGO] = null
@@ -186,7 +190,7 @@ class StoreLogoViewModel @Inject constructor(
                 withContext(NonCancellable) { // finished even if the screen closes meanwhile (#65)
                     val logo = photos.cropLogo(staged, crop)
                     try {
-                        storeRepository.setLogo(storeId, logo)
+                        storeRepository.setLogo(storeId, logo, treatmentFor(logo))
                     } catch (e: Exception) {
                         photos.discard(listOf(logo)) // nothing names it
                         throw e
@@ -267,8 +271,17 @@ class StoreLogoViewModel @Inject constructor(
     }
 
     /** White or black, whichever contrasts more with the brand [color] (#240); white on a colour that can't be read. */
-    private fun defaultTint(color: String): String =
-        if (color.toBrandColorOrNull()?.contrastingTextColor() == Color.Black) BLACK else WHITE
+    private fun defaultTint(color: String): String = color.toBrandColorOrNull()?.toArgb()?.let(::defaultLogoTint) ?: WHITE
+
+    /**
+     * How the new [logo] is drawn on the store's brand colour as it is now (#240): As is unless it blends in. As is when
+     * its pixels can't be read or the colour isn't one: the logo is saved all the same.
+     */
+    private suspend fun treatmentFor(logo: String): LogoTreatment {
+        val brand = (found.value as? Found.Store)?.store?.color?.toBrandColorOrNull()?.toArgb() ?: return LogoTreatment.AS_IS
+        val pixels = photos.logoPixels(logo) ?: return LogoTreatment.AS_IS
+        return preselectedTreatment(pixels, brand)
+    }
 
     // Reads the inputs, not `state`, so a guard holds whatever the screen observes.
     private fun canChange() =
@@ -286,6 +299,5 @@ class StoreLogoViewModel @Inject constructor(
         const val CROP_LOGO = "cropLogo"
         const val ROUTE_PICTURE_TAKEN = "routePictureTaken"
         const val WHITE = "#FFFFFF"
-        const val BLACK = "#000000"
     }
 }

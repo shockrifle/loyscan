@@ -19,6 +19,9 @@ internal const val MAX_PHOTO_SIDE = 2048
 /** The longest side, in pixels, a store logo is stored at (#151): it is drawn at most tile-sized. */
 const val MAX_LOGO_SIDE = 512
 
+/** The least long side a logo is read at for its contrast check (#240); see [CardPhotos.logoPixels]. */
+const val LOGO_CHECK_SIDE = 128
+
 /** A card photo's JPEG quality: re-encoded once, on import. */
 private const val PHOTO_JPEG_QUALITY = 90
 
@@ -64,6 +67,22 @@ internal fun encodeCardPhoto(source: File, target: File, crop: PhotoCrop = Photo
  */
 internal fun encodeStoreLogo(source: File, target: File, crop: PhotoCrop = PhotoCrop.WHOLE) =
     encodePicture(source, target, crop, MAX_LOGO_SIDE, background = null, Bitmap.CompressFormat.PNG, quality = 100)
+
+/**
+ * The ARGB pixels of the logo [file] (#240), sampled down by a power of two to [LOGO_CHECK_SIDE] to twice that on its
+ * long side; `null` when it isn't a picture.
+ */
+internal fun decodeLogoPixels(file: File): IntArray? {
+    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+    file.inputStream().use { BitmapFactory.decodeStream(it, null, bounds) }
+    if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
+    val options = BitmapFactory.Options().apply {
+        inSampleSize = sampleSize(max(bounds.outWidth, bounds.outHeight), LOGO_CHECK_SIDE)
+        inPreferredConfig = Bitmap.Config.ARGB_8888
+    }
+    val bitmap = file.inputStream().use { BitmapFactory.decodeStream(it, null, options) } ?: return null
+    return IntArray(bitmap.width * bitmap.height).also { bitmap.getPixels(it, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height) }
+}
 
 /** The shared encoding of [encodeCardPhoto] and [encodeStoreLogo]; [background] fills the canvas first, `null` leaves it transparent. */
 private fun encodePicture(

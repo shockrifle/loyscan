@@ -27,8 +27,8 @@ class RoomStoreRepository @Inject constructor(
     }
 
     /** Deletes the file of a replaced or removed logo, or the new one if the store is gone (#151). */
-    override suspend fun setLogo(storeId: String, logo: String?) {
-        photos.delete(storeDao.setLogoReturningDropped(storeId, logo))
+    override suspend fun setLogo(storeId: String, logo: String?, treatment: LogoTreatment) {
+        photos.delete(storeDao.setLogoReturningDropped(storeId, logo, treatment))
     }
 
     override suspend fun setLogoTreatment(storeId: String, treatment: LogoTreatment) {

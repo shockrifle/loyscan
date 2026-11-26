@@ -21,9 +21,10 @@ interface StoreRepository {
     /**
      * Sets any store's logo (#151), catalogue or custom: a file name in the photos' storage
      * ([com.bdaniel.loyscan.data.photos.CardPhotos.cropLogo]); `null` removes it. The file of the logo it replaces is
-     * deleted, and [logo]'s own when there is no such store. A new logo, or none, is drawn As is (#240).
+     * deleted, and [logo]'s own when there is no such store. A new logo is drawn with [treatment] (#240, the one the
+     * contrast check chose), and none As is; setting the same logo again keeps how it is drawn.
      */
-    suspend fun setLogo(storeId: String, logo: String?)
+    suspend fun setLogo(storeId: String, logo: String?, treatment: LogoTreatment = LogoTreatment.AS_IS)
 
     /** Sets how any store's logo is drawn (#240). Does nothing for an unknown id. */
     suspend fun setLogoTreatment(storeId: String, treatment: LogoTreatment)

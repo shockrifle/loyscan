@@ -1,6 +1,7 @@
 package com.bdaniel.loyscan.ui
 
 import android.graphics.Bitmap
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import coil.size.Size
 import coil.transform.Transformation
@@ -136,3 +137,58 @@ class LogoTreatmentTransformation(private val treatment: LogoTreatment, private 
 
     override suspend fun transform(input: Bitmap, size: Size): Bitmap = input.drawnWith(treatment, brandColor)
 }
+
+/**
+ * How a new logo, its ARGB [pixels], is drawn on its [brand] colour when it is saved (#240): As is when it shows (it
+ * doesn't [blendsIn]); else Recoloured in [defaultLogoTint] when that shows; else in Single colour, in the same colour.
+ * A logo with nothing drawn is As is.
+ */
+fun preselectedTreatment(pixels: IntArray, brand: Int): LogoTreatment {
+    if (!blendsIn(pixels, brand)) return LogoTreatment.AS_IS
+    val tint = defaultLogoTint(brand)
+    val tintArgb = if (tint == BLACK_HEX) BLACK_ARGB else WHITE_ARGB
+    val style = if (blendsIn(recoloured(pixels, brand, tintArgb), brand)) LogoStyle.SINGLE_COLOUR else LogoStyle.RECOLOUR
+    return LogoTreatment(style = style, tint = tint)
+}
+
+/**
+ * Whether a logo, its ARGB [pixels], blends into the [brand] colour (#240): more than half of it, each pixel weighed by
+ * its opacity, has less than [LEGIBLE_CONTRAST] with the brand colour, judged as it shows there, blended onto it.
+ */
+private fun blendsIn(pixels: IntArray, brand: Int): Boolean {
+    val brandLuminance = relativeLuminance(brand)
+    var drawn = 0L
+    var faint = 0L
+    for (pixel in pixels) {
+        val alpha = pixel ushr 24
+        if (alpha == 0) continue
+        drawn += alpha
+        if (contrast(relativeLuminance(pixel.over(brand)), brandLuminance) < LEGIBLE_CONTRAST) faint += alpha
+    }
+    return faint * 2 > drawn
+}
+
+/** WCAG's least contrast for large text and graphics. */
+private const val LEGIBLE_CONTRAST = 3.0
+
+/** The WCAG contrast ratio of two relative luminances, 1 to 21. */
+private fun contrast(a: Double, b: Double): Double = (maxOf(a, b) + 0.05) / (minOf(a, b) + 0.05)
+
+/** This ARGB pixel blended onto the opaque [background], as the screen shows it: an opaque colour. */
+private fun Int.over(background: Int): Int {
+    val alpha = (this ushr 24) / 255.0
+    fun channel(shift: Int) =
+        ((this shr shift and 0xFF) * alpha + (background shr shift and 0xFF) * (1 - alpha)).roundToInt()
+    return ALPHA or (channel(16) shl 16) or (channel(8) shl 8) or channel(0)
+}
+
+/**
+ * White or black, `#RRGGBB`, whichever contrasts more with the [brand] colour, ARGB (#240): the colour Single colour and
+ * Recolour start in.
+ */
+fun defaultLogoTint(brand: Int): String = if (Color(brand).contrastingTextColor() == Color.Black) BLACK_HEX else WHITE_HEX
+
+private const val BLACK_HEX = "#000000"
+private const val WHITE_HEX = "#FFFFFF"
+private const val BLACK_ARGB = 0xFF000000.toInt()
+private const val WHITE_ARGB = 0xFFFFFFFF.toInt()

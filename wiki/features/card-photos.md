@@ -142,7 +142,9 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   as a store's logo, a PNG with transparency at most 512 px, in the same directory, so it is backed up and loaded as a
   photo is. Its crop may reach past the picture (transparent there); a card photo's may not (`crop` throws).
   `stagePhoto` copies a stored photo (a card's front photo) to a new staged file, through the same copy as `stage`, so
-  `cropLogo`, which deletes its source, deletes the copy and the card keeps its photo.
+  `cropLogo`, which deletes its source, deletes the copy and the card keeps its photo. `logoPixels` reads a stored
+  logo's pixels, sampled down to 128–255 px on its long side, for the contrast check when it is saved (#240,
+  [[store-logo]]); `null` for a file that can't be read, so the logo is saved As is.
 - **Orphans:** a process killed with a form open (swiped from Recents) skips `onCleared`. On every database open
   `CardPhotoSweepCallback` (`data/local/db/`, added in `di/DatabaseModule.kt`) deletes photo files that no card (and no
   store, as its logo) names and that are over a day old; newer ones may belong to a form still open or about to be restored. A save drops a
@@ -210,7 +212,8 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
 - Logos: `FileCardPhotosTest.cropLogo_…` (PNG in the photo directory, the 512 px limit, transparency, the framed part,
   upright, a frame past the picture, no metadata, a failure leaves no file), `crop_ofAFrameReachingPastThePicture_throws_…`;
   `stagePhoto_…` (a copy, the original kept; a missing file, a non-picture or a bad name leaves nothing),
-  `cropLogo_ofAStagedPhotoCopy_keepsTheCardsPhoto`;
+  `cropLogo_ofAStagedPhotoCopy_keepsTheCardsPhoto`; `logoPixels_areAStoredLogosColours_withTheirOpacity`,
+  `logoPixels_ofALargeLogo_areSampledDown`, `logoPixels_ofAMissingOrUnreadableFile_areNull` (#240);
   `RoomStoreRepositoryTest.setLogo_…`, `delete_deletesTheStoresLogo`, `delete_ofACatalogueStore_keepsItsLogo`;
   `CardPhotoSweepCallbackTest.reopen_keepsAnOldLogoAStoreNames`.
 - `CardPhotoSweepCallbackTest` (on-disk database, closed and reopened), `DatabaseModuleTest.opening_sweepsAnOldPhotoNoCardNames`,
