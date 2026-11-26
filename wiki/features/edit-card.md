@@ -40,7 +40,7 @@ number and store of one card. Deleting a card is on [[card-detail]].
   store that doesn't exist yet. Its texts are translated with the store picker's, and the form's own with the card
   form's ([[add-card]] → Language, #72; `CardFormScreenTest.inHungarian_editingACard_isTranslated`).
 - **Saving writes only what the form edits:** the store, label, number, scanned format, note (#9), photos (#10),
-  whether the front photo shows on My Cards (`showPhotoOnList`, #184, [[card-photos]]) and `updatedAt` (now). Room's partial `@Update(entity = LoyaltyCardEntity::class)` with `LoyaltyCardEdit` writes those
+  whether the front photo shows on My Cards (`showPhotoOnList`, #184) and on the widget (`showPhotoOnWidget`, #185, [[card-photos]]) and `updatedAt` (now). Room's partial `@Update(entity = LoyaltyCardEntity::class)` with `LoyaltyCardEdit` writes those
   columns and no others, so `createdAt`, the use count and `lastUsedAt` stay as stored even if they changed after the
   form loaded the card. A photo the edit replaces or removes is deleted, and one whose file is missing starts as no photo, so the save clears its name ([[card-photos]], #87). A blank label or note is saved as `null`; the note is trimmed.
 - **After saving**, `CardFormDirections.toCard` opens the card in place of the card and its form

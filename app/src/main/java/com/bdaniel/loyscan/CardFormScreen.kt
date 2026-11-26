@@ -214,33 +214,19 @@ fun CardFormScreen(
                 }
             }
             if (state.frontPhoto != null) {
-                // The whole row toggles, so TalkBack reads one switch named by its text (#184).
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        // The Switch has no handler of its own, so it adds no touch-target padding: the row is the
-                        // target, at least Material's 48dp tall (review of #184).
-                        .heightIn(min = LocalMinimumInteractiveComponentSize.current)
-                        .toggleable(
-                            value = state.showPhotoOnList,
-                            enabled = !state.saving && state.savedCardId == null,
-                            role = Role.Switch,
-                            onValueChange = viewModel::onShowPhotoOnListChange,
-                        ),
-                    horizontalArrangement = Arrangement.spacedBy(Spacing.m),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        stringResource(R.string.show_photo_on_list),
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.weight(1f),
-                    )
-                    Switch(
-                        checked = state.showPhotoOnList,
-                        onCheckedChange = null,
-                        enabled = !state.saving && state.savedCardId == null,
-                    )
-                }
+                val canToggle = !state.saving && state.savedCardId == null
+                PhotoSwitch(
+                    text = stringResource(R.string.show_photo_on_list),
+                    checked = state.showPhotoOnList,
+                    enabled = canToggle,
+                    onCheckedChange = viewModel::onShowPhotoOnListChange,
+                )
+                PhotoSwitch(
+                    text = stringResource(R.string.show_photo_on_widget),
+                    checked = state.showPhotoOnWidget,
+                    enabled = canToggle,
+                    onCheckedChange = viewModel::onShowPhotoOnWidgetChange,
+                )
             }
             if (state.photoFailed) {
                 Text(
@@ -397,4 +383,25 @@ private fun problemText(check: NumberCheck, storeName: String): String? = when (
             Validation.Error.BAD_CHECK_DIGIT -> stringResource(R.string.number_bad_check_digit)
         }
     }.joinToString(" ")
+}
+
+/**
+ * A switch for where the card's front photo is shown: My cards (#184) or the widget (#185). The whole row toggles, so
+ * TalkBack reads one switch named by its [text].
+ */
+@Composable
+private fun PhotoSwitch(text: String, checked: Boolean, enabled: Boolean, onCheckedChange: (Boolean) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            // The Switch has no handler of its own, so it adds no touch-target padding: the row is the target, at
+            // least Material's 48dp tall (review of #184).
+            .heightIn(min = LocalMinimumInteractiveComponentSize.current)
+            .toggleable(value = checked, enabled = enabled, role = Role.Switch, onValueChange = onCheckedChange),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.m),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(text, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+        Switch(checked = checked, onCheckedChange = null, enabled = enabled)
+    }
 }

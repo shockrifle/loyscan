@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-26 · "Show photo on widget" switch on the card form, separate from the My Cards one · features/card-photos, features/edit-card · #185
 - 2026-11-26 · schema v4, loyalty_cards.showPhotoOnWidget by AutoMigration 3 → 4 · database-schema-changes, architecture, tech-debt/no-room-migrations · #185
 - 2026-11-26 · grilling skill asks its questions through AskUserQuestion (selectable options, recommended first, yes/no for simple ones) · workflows/agent-skills · user request
 - 2026-11-26 · review of PR #238: a swept front pick that falls back to the card's own photo keeps that photo's setting; the switch row is a 48dp touch target · features/card-photos · #184

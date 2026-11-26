@@ -415,6 +415,46 @@ class CardFormScreenTest {
     }
 
     @Test
+    fun addingAFrontPhoto_offersShowPhotoOnWidget_off_andTurningItOnSavesIt() { // #185
+        setScreen(CardForm("ruled"))
+        composeRule.onNodeWithTag(CARD_NUMBER_TAG).performTextInput("12345674")
+        composeRule.onNodeWithText(SHOW_PHOTO_ON_WIDGET).assertDoesNotExist()
+
+        composeRule.onNodeWithText("Add front photo").performScrollTo().performClick()
+        composeRule.onNodeWithText("Crop").performClick()
+
+        composeRule.onNodeWithText(SHOW_PHOTO_ON_WIDGET).performScrollTo().assertIsOff().performClick()
+        composeRule.onNodeWithText(SHOW_PHOTO_ON_WIDGET).assertIsOn()
+        composeRule.onNodeWithText(SHOW_PHOTO_ON_LIST).assertIsOff()
+        composeRule.onNodeWithText("Save").performScrollTo().performClick()
+        composeRule.waitForIdle()
+        assertThat(cards.cards.value.single().showPhotoOnWidget).isTrue()
+        assertThat(cards.cards.value.single().showPhotoOnList).isFalse()
+    }
+
+    @Test
+    fun editingACardShowingItsPhotoOnTheWidget_showsThatSwitchOn_andRemovingThePhotoHidesIt() { // #185
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, number = "12345674", frontPhotoPath = "front", showPhotoOnWidget = true))
+        photos.stored += "front"
+        setScreen(CardForm("ruled", cardId = cardId(1)))
+
+        composeRule.onNodeWithText(SHOW_PHOTO_ON_WIDGET).performScrollTo().assertIsOn()
+        composeRule.onNodeWithText(SHOW_PHOTO_ON_LIST).assertIsOff()
+
+        composeRule.onNodeWithContentDescription("Remove front photo").performScrollTo().performClick()
+        composeRule.onNodeWithText(SHOW_PHOTO_ON_WIDGET).assertDoesNotExist()
+    }
+
+    @Test
+    fun showPhotoOnWidget_isAtLeastA48dpTouchTarget() { // #185, as the My Cards switch
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, number = "12345674", frontPhotoPath = "front"))
+        photos.stored += "front"
+        setScreen(CardForm("ruled", cardId = cardId(1)))
+
+        composeRule.onNodeWithText(SHOW_PHOTO_ON_WIDGET).performScrollTo().assertHeightIsAtLeast(48.dp)
+    }
+
+    @Test
     fun aCardWithOnlyABackPhoto_offersNoShowPhotoOnMyCards() { // #184: only the front photo can be the tile
         cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, number = "12345674", backPhotoPath = "back"))
         photos.stored += "back"
@@ -422,6 +462,7 @@ class CardFormScreenTest {
 
         composeRule.onNodeWithContentDescription("Back photo").assertExists()
         composeRule.onNodeWithText(SHOW_PHOTO_ON_LIST).assertDoesNotExist()
+        composeRule.onNodeWithText(SHOW_PHOTO_ON_WIDGET).assertDoesNotExist()
     }
 
     @Test
@@ -710,6 +751,7 @@ class CardFormScreenTest {
             "Előoldali fotó cseréje",
             "Előoldali fotó eltávolítása",
             SHOW_PHOTO_ON_LIST_HU,
+            SHOW_PHOTO_ON_WIDGET_HU,
             "Mentés így is",
             "Nem sikerült menteni a kártyát. Próbáld újra.",
         )
@@ -725,7 +767,7 @@ class CardFormScreenTest {
         setScreen(CardForm("ruled", cardId = cardId(1)))
         val shown = ShownTexts(composeRule)
 
-        composeRule.onNodeWithText(SHOW_PHOTO_ON_LIST_HU).performScrollTo()
+        composeRule.onNodeWithText(SHOW_PHOTO_ON_WIDGET_HU).performScrollTo()
         shown.collect()
 
         shown.assertEveryTextIsTranslated("Ruled Store")
@@ -736,6 +778,7 @@ class CardFormScreenTest {
             "Hátoldali fotó cseréje",
             "Hátoldali fotó eltávolítása",
             SHOW_PHOTO_ON_LIST_HU,
+            SHOW_PHOTO_ON_WIDGET_HU,
         )
     }
 
@@ -893,11 +936,12 @@ class CardFormScreenTest {
 
     @Test
     @GraphicsMode(GraphicsMode.Mode.NATIVE) // real text measuring
-    fun atFontScale2_onANarrowScreen_showPhotoOnMyCards_isNotClippedAndDoesNotOverlap() { // #184
+    fun atFontScale2_onANarrowScreen_showPhotoOnMyCards_isNotClippedAndDoesNotOverlap() { // #184, and on widget #185
         cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, number = "12345674", frontPhotoPath = "front"))
         photos.stored += "front"
         setScreen(CardForm("ruled", cardId = cardId(1)), fontScale = 2f)
-        composeRule.onNodeWithText(SHOW_PHOTO_ON_LIST).performScrollTo()
+        composeRule.onNodeWithText(SHOW_PHOTO_ON_WIDGET).performScrollTo()
+        composeRule.onNodeWithText(SHOW_PHOTO_ON_LIST).assertIsDisplayed()
 
         composeRule.assertTextFitsAndDoesNotOverlap()
     }
@@ -906,6 +950,8 @@ class CardFormScreenTest {
         val PICKED: Uri = Uri.parse("content://media/picker/0/1")
         const val SHOW_PHOTO_ON_LIST = "Show photo on My Cards"
         const val SHOW_PHOTO_ON_LIST_HU = "Fotó mutatása a Kártyáim között"
+        const val SHOW_PHOTO_ON_WIDGET = "Show photo on widget"
+        const val SHOW_PHOTO_ON_WIDGET_HU = "Fotó mutatása a widgeten"
         const val CAMERA_NEEDED = "LoyScan needs the camera to take a photo of your card."
         const val CAMERA_TURNED_OFF = "Camera access is turned off for LoyScan. You can allow it in the app's settings."
     }
