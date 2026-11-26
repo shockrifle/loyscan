@@ -14,6 +14,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.common.truth.Truth.assertThat
 import org.junit.Assert.assertThrows
@@ -69,6 +70,30 @@ class LayoutTest {
 
         composeRule.assertTextFitsAndDoesNotOverlap(under = hasTestTag("overlay"))
         assertThrows(AssertionError::class.java) { composeRule.assertTextFitsAndDoesNotOverlap() }
+    }
+
+    @Test
+    fun under_aNodeInADialog_isMeasuredAgainstTheDialogsWindow() { // #209: a dialog is a second root
+        composeRule.setContent {
+            Text("Behind")
+            Dialog(onDismissRequest = {}) { Box(Modifier.testTag("dialog")) { Text("Front") } }
+        }
+
+        composeRule.assertTextFitsAndDoesNotOverlap(under = hasTestTag("dialog"))
+    }
+
+    @Test
+    fun aTextRunningOffADialog_fails() { // #209
+        composeRule.setContent {
+            Dialog(onDismissRequest = {}) {
+                Box(Modifier.testTag("dialog").requiredWidth(2000.dp)) { Text("Gone", Modifier.align(Alignment.CenterEnd)) }
+            }
+        }
+
+        val error = assertThrows(AssertionError::class.java) {
+            composeRule.assertTextFitsAndDoesNotOverlap(under = hasTestTag("dialog"))
+        }
+        assertThat(error).hasMessageThat().contains("\"Gone\" runs off the screen")
     }
 
     @Test

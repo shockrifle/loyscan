@@ -6,6 +6,10 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.bdaniel.loyscan.ui.PHOTO_CROP_FRAME_TAG
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.isDialog
+import com.bdaniel.loyscan.ui.LEAVE_FORM_DIALOG_TAG
+import com.bdaniel.loyscan.testing.SystemBack
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.onRoot
@@ -33,6 +37,7 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.performTouchInput
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.testing.invoke
@@ -895,10 +900,183 @@ class CardFormScreenTest {
         shown.assertSeen("Ez a bolt már nem létezik.")
     }
 
+    @Test
+    fun editingACard_systemBackWithAChange_asksToSaveChanges_andBackInTheDialogKeepsEditing() { // #209
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, label = "Gold card", number = "12345674"))
+        setScreen(CardForm("ruled", cardId = cardId(1)))
+        composeRule.onNodeWithTag(CARD_LABEL_TAG).performTextReplacement("Gold card plus")
+
+        back.onTheScreen()
+
+        composeRule.onNode(hasText("Save changes?") and hasAnyAncestor(isDialog())).assertIsDisplayed()
+        composeRule.onNode(inTheDialog("Discard")).assertIsDisplayed()
+        composeRule.onNode(inTheDialog("Save")).assertIsDisplayed()
+        back.inTheDialog()
+        composeRule.onNode(isDialog()).assertDoesNotExist()
+        composeRule.onNodeWithTag(CARD_LABEL_TAG).assertTextContains("Gold card plus")
+        assertThat(backs).isEqualTo(0)
+    }
+
+    @Test
+    fun addingACard_theBackArrowWithAChange_asksToDiscardTheCard() { // #209
+        setScreen(CardForm("ruled"))
+        composeRule.onNodeWithTag(CARD_NUMBER_TAG).performTextInput("12345674")
+
+        composeRule.onNodeWithContentDescription("Back").performClick()
+
+        composeRule.onNode(hasText("Discard this card?") and hasAnyAncestor(isDialog())).assertIsDisplayed()
+        assertThat(backs).isEqualTo(0)
+    }
+
+    @Test
+    fun tappingOutsideTheDialog_keepsEditing() { // #209
+        setScreen(CardForm("ruled"))
+        composeRule.onNodeWithTag(CARD_NUMBER_TAG).performTextInput("12345674")
+        composeRule.onNodeWithContentDescription("Back").performClick()
+
+        back.tapOutsideTheDialog()
+
+        composeRule.onNode(isDialog()).assertDoesNotExist()
+        composeRule.onNodeWithTag(CARD_NUMBER_TAG).assertTextContains("12345674")
+        assertThat(backs).isEqualTo(0)
+    }
+
+    @Test
+    fun aValueTypedAndDeleted_orAScanLeftAsItIs_leavesWithoutAsking() { // #209
+        setScreen(CardForm("ruled", scannedContent = "12345674", scannedFormat = BarcodeFormat.CODE_128))
+        composeRule.onNodeWithTag(CARD_LABEL_TAG).performTextInput("Gold")
+        composeRule.onNodeWithTag(CARD_LABEL_TAG).performTextClearance()
+
+        composeRule.onNodeWithContentDescription("Back").performClick()
+
+        composeRule.onNode(isDialog()).assertDoesNotExist()
+        assertThat(backs).isEqualTo(1)
+    }
+
+    @Test
+    fun backWhileCroppingAChangedForm_cancelsTheCrop_withoutAsking() { // #209: the crop screen's Back wins
+        setScreen(CardForm("ruled"))
+        composeRule.onNodeWithTag(CARD_LABEL_TAG).performTextInput("Gold")
+        composeRule.onNodeWithText("Add front photo").performScrollTo().performClick()
+        composeRule.onNodeWithText("Crop").assertIsDisplayed()
+
+        back.onTheScreen()
+
+        composeRule.onNodeWithText("Crop").assertDoesNotExist()
+        composeRule.onNode(isDialog()).assertDoesNotExist()
+        composeRule.onNodeWithText("Add front photo").assertExists()
+        assertThat(photos.stored).isEmpty()
+    }
+
+    @Test
+    fun theDialogsSave_savesTheEdit_andOpensTheCard_asTheFormsSaveDoes() { // #209
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, label = "Gold card", number = "12345674"))
+        setScreen(CardForm("ruled", cardId = cardId(1)))
+        composeRule.onNodeWithTag(CARD_LABEL_TAG).performTextReplacement("Gold card plus")
+        composeRule.onNodeWithContentDescription("Back").performClick()
+
+        composeRule.onNode(inTheDialog("Save")).performClick()
+
+        composeRule.waitForIdle()
+        assertThat(cards.cards.value.single().label).isEqualTo("Gold card plus")
+        assertThat(opened).containsExactly(cardId(1) to "#112233")
+        assertThat(backs).isEqualTo(0)
+    }
+
+    @Test
+    fun aNumberThatFailsItsCheck_isSavedAnywayFromTheDialog() { // #209
+        setScreen(CardForm("ruled"))
+        composeRule.onNodeWithTag(CARD_NUMBER_TAG).performTextInput("12345675")
+        composeRule.onNodeWithContentDescription("Back").performClick()
+
+        composeRule.onNode(inTheDialog("Save anyway")).performClick()
+
+        composeRule.waitForIdle()
+        val saved = cards.cards.value.single()
+        assertThat(saved.number).isEqualTo("12345675")
+        assertThat(opened).containsExactly(saved.id to "#112233")
+    }
+
+    @Test
+    fun aFormThatCantBeSaved_offersDiscardAndKeepEditing() { // #209: an empty number can't be saved
+        setScreen(CardForm("ruled"))
+        composeRule.onNodeWithTag(CARD_LABEL_TAG).performTextInput("Gold")
+        composeRule.onNodeWithContentDescription("Back").performClick()
+
+        composeRule.onNode(inTheDialog("Discard")).assertIsDisplayed()
+        composeRule.onNode(inTheDialog("Save")).assertDoesNotExist()
+        composeRule.onNode(inTheDialog("Keep editing")).performClick()
+
+        composeRule.onNode(isDialog()).assertDoesNotExist()
+        composeRule.onNodeWithTag(CARD_LABEL_TAG).assertTextContains("Gold")
+        assertThat(backs).isEqualTo(0)
+    }
+
+    @Test
+    fun discard_leaves_andDeletesThePhotoPickedInTheForm() { // #209
+        setScreen(CardForm("ruled"))
+        composeRule.onNodeWithText("Add front photo").performScrollTo().performClick()
+        composeRule.onNodeWithText("Crop").performClick()
+        composeRule.onNodeWithContentDescription("Front photo").assertExists()
+        assertThat(photos.stored).containsExactly("photo-1")
+
+        composeRule.onNodeWithContentDescription("Back").performClick()
+        composeRule.onNode(inTheDialog("Discard")).performClick()
+
+        assertThat(backs).isEqualTo(1)
+        assertThat(photos.stored).isEmpty()
+        assertThat(cards.cards.value).isEmpty()
+    }
+
+    @Test
+    @Config(qualifiers = "+hu")
+    fun inHungarian_theDialogOnAnEditedCard_isTranslated() { // #209
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, label = "Gold card", number = "12345674"))
+        setScreen(CardForm("ruled", cardId = cardId(1)))
+        composeRule.onNodeWithTag(CARD_LABEL_TAG).performTextReplacement("Gold card plus")
+        val shown = ShownTexts(composeRule)
+
+        back.onTheScreen()
+        shown.collect()
+
+        shown.assertEveryTextIsTranslated("Ruled Store", "Gold card plus", "1234 5674")
+        shown.assertSeen("Mented a módosításokat?", "Elvetés", "Mentés")
+    }
+
+    @Test
+    @Config(qualifiers = "+hu")
+    fun inHungarian_theDialogOnANewCardThatCantBeSaved_isTranslated() { // #209
+        setScreen(CardForm("ruled"))
+        composeRule.onNodeWithTag(CARD_LABEL_TAG).performTextInput("Gold")
+        val shown = ShownTexts(composeRule)
+
+        back.onTheScreen()
+        shown.collect()
+
+        shown.assertEveryTextIsTranslated("Ruled Store", "Gold")
+        shown.assertSeen("Elveted ezt a kártyát?", "Elvetés", "Szerkesztés folytatása")
+    }
+
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE) // real text measuring
+    fun atFontScale2_onANarrowScreen_theDialogsTextsFit() { // #209
+        setScreen(CardForm("ruled"), fontScale = 2f)
+        composeRule.onNodeWithTag(CARD_NUMBER_TAG).performTextInput("12345675")
+
+        back.onTheScreen()
+
+        composeRule.onNode(inTheDialog("Save anyway")).assertIsDisplayed()
+        composeRule.assertTextFitsAndDoesNotOverlap(under = hasTestTag(LEAVE_FORM_DIALOG_TAG))
+    }
+
+    private fun inTheDialog(text: String) = hasText(text) and hasClickAction() and hasAnyAncestor(isDialog())
+
     private fun typeNumber(number: String) {
         composeRule.onNodeWithTag(CARD_NUMBER_TAG).performTextClearance()
         composeRule.onNodeWithTag(CARD_NUMBER_TAG).performTextInput(number)
     }
+
+    private val back = SystemBack(composeRule)
 
     /** The view the screen is composed in, to send it window insets. */
     private var hostView: android.view.View? = null
@@ -914,6 +1092,7 @@ class CardFormScreenTest {
         val directions = CardFormDirections(toCard = { id, color -> opened += id to color }, toBack = { backs++ })
         composeRule.setContent {
             hostView = LocalView.current
+            back.capture()
             WithFontScale(fontScale) {
                 CardFormScreen(
                     directions = directions,

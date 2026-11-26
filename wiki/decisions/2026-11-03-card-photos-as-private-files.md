@@ -91,6 +91,9 @@ by deleting its custom store, where `ON DELETE CASCADE` deletes the rows in SQLi
   are small (at most ~1 MB each since #88) and private, so the latency is accepted; deleting on a real back-stack pop
   would need a signal from the UI layer the ViewModel doesn't have. (Changed 2026-11-04 for #95: `onCleared` and the
   failed-save path used to delete the picks at once, which lost them when the clear was an activity destroy, not a close.)
+  (Corrected 2026-11-26 for #209: that signal now exists. Back from a changed form asks, and its **Discard** calls
+  `CardFormViewModel.discard`, which deletes the picks no save was handed; other closes still leave them to the sweep,
+  [[2026-11-26-unsaved-changes-on-back]].)
 - A card row can name a photo file that no longer exists on disk. Since #87 such a photo is shown as none, on the card
   screen and in the form, and a saved edit clears its name ([[card-photos]]). (Changed 2026-11-05 for #71: this bullet
   used to say a *cloud restore* caused it, by bringing back `loyscan.db` but not the photos. Cloud backup now carries no

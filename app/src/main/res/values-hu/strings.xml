@@ -126,6 +126,10 @@
     <string name="open_settings">Beállítások megnyitása</string>
     <string name="card_save_failed">Nem sikerült menteni a kártyát. Próbáld újra.</string>
     <string name="save_anyway">Mentés így is</string>
+    <string name="save_changes_question">Mented a módosításokat?</string>
+    <string name="discard_card_question">Elveted ezt a kártyát?</string>
+    <string name="discard">Elvetés</string>
+    <string name="keep_editing">Szerkesztés folytatása</string>
     <string name="number_does_not_fit_format">Ez a szám nem érvényes ebben a formátumban: %1$s.</string>
     <string name="scan_does_not_match_store">Ez a vonalkód nem tűnik %1$s kártyának.</string>
     <string name="number_has_invalid_characters">%1$s kártyaszámban nem lehet ilyen karakter.</string>

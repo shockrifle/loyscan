@@ -285,6 +285,26 @@ class AppNavigationTest {
     }
 
     @Test
+    fun backFromAnEditedCardForm_asksToSaveChanges_andDiscardReturnsToTheCardAsItWas() { // #209
+        waitForText("Gold card")
+        composeRule.onNodeWithText("Gold card").performClick()
+        waitForText("0042")
+        composeRule.onNodeWithContentDescription("Edit").performClick()
+        waitForTheCardFormToLoad()
+        composeRule.onNodeWithTag(CARD_LABEL_TAG).performTextReplacement("Silver card")
+
+        composeRule.waitForIdle()
+        composeRule.runOnUiThread { composeRule.activity.onBackPressedDispatcher.onBackPressed() }
+        waitForText("Save changes?")
+        composeRule.onNodeWithText("Discard").performClick()
+
+        waitForTheCardFormToClose()
+        waitForText("Gold card")
+        composeRule.onNodeWithText("0042").assertIsDisplayed()
+        assertThat(runBlocking { db.loyaltyCardDao().getAllWithStore().first() }.single().loyaltyCard.label).isEqualTo("Gold card")
+    }
+
+    @Test
     fun aNoteWrittenInTheCardForm_isShownOnTheCard_andKeptByTheNextEdit() { // #9
         waitForText("Gold card")
         composeRule.onNodeWithText("Gold card").performClick()

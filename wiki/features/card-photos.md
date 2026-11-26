@@ -73,7 +73,9 @@ deleted with the card. Storage and deletion: [[2026-11-03-card-photos-as-private
   it starts, and a pick on that list may be named by a stored card, e.g. in a form restored after its save stored the
   card, so it stays until the form's own save drops it from the card (the repository deletes it then) or the sweep
   finds no card naming it (#141). A failed save takes back the names it added. The edited card's own photo stays
-  until the edit is saved, then the repository deletes it. A form closed without saving leaves the copies picked in
+  until the edit is saved, then the repository deletes it. A form left with **Discard** (Back with changes asks first,
+  #209) deletes the copies picked in it that no save was handed (`CardFormViewModel.discard`,
+  [[2026-11-26-unsaved-changes-on-back]]). A form closed any other way without saving leaves the copies picked in
   it to the orphan sweep (Orphans): `onCleared` deletes nothing, because it also runs when the activity is destroyed
   with the form still on the back stack and its process alive ("Don't keep activities", a background kill), and the
   form restored from the same saved state still names those copies, so their files must survive (#95; the unanswered

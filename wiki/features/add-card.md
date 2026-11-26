@@ -124,6 +124,18 @@ with the picture's barcode (#77, below). Everything runs offline on the local da
   tapped, so it isn't made again on return from the picker or the form (Edit: found in review; leaving composition
   cancels the snackbar before it ends). Scan mode covers the snackbar, so the offer waits while scan mode is open and
   is made afresh when it closes (found in review: it timed out unseen).
+- **Back with changes asks first** (#209): Back (system, gesture or the top bar's arrow) on a form whose values differ
+  from what it opened with (the routed store and scan, nothing typed) shows "Discard this card?" with **Discard** and
+  the form's own **Save** / **Save anyway**, or **Discard** and **Keep editing** when it can't be saved; Back or a tap
+  outside keeps editing. Back straight after a scan leaves without asking. Discard deletes the photos picked in the
+  form (`CardFormViewModel.discard`). Back while cropping still cancels the crop. Why the opening state is derived:
+  [[2026-11-26-unsaved-changes-on-back]]. Tests: `CardFormViewModelTest.anUntouchedForm_hasNoChanges`,
+  `addingACard_anythingTypedIsAChange_butTheRoutedScanIsNot`, `aChange_isStillAChange_afterProcessDeath_andARevertedOneIsNot`,
+  `discarding_aFormRestoredWhileItsSaveRan_keepsThePhotoThatSaveWasHanded`;
+  `CardFormScreenTest.addingACard_theBackArrowWithAChange_asksToDiscardTheCard`, `tappingOutsideTheDialog_keepsEditing`,
+  `aValueTypedAndDeleted_orAScanLeftAsItIs_leavesWithoutAsking`, `backWhileCroppingAChangedForm_cancelsTheCrop_withoutAsking`,
+  `aNumberThatFailsItsCheck_isSavedAnywayFromTheDialog`, `aFormThatCantBeSaved_offersDiscardAndKeepEditing`,
+  `discard_leaves_andDeletesThePhotoPickedInTheForm`.
 - **Back during the save** (#64): the user stays where Back took them, and the card is still saved.
   `CardFormDirections.toCard` navigates only while the form's own back-stack entry (`cardFormDirections(entry)`) is
   current, so not after Back, nor over a form opened since (Edit again while the first one animates out; found in

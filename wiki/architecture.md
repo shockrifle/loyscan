@@ -84,6 +84,8 @@ outputs ([[tdd]] → the layer table).
 - **Another app opened for the user** (the browser for "Find a logo online", #151) is a `fun interface LogoSearch`
   parameter, so a screen test passes a recording lambda; the real `rememberLogoSearch` (`ui/LogoSearch.kt`) is tested on
   Robolectric through the started intent, and with `checkActivities(true)` for no browser (`LogoSearchTest`).
+- **System Back** is the activity's `OnBackPressedDispatcher`, and a dialog's own while one shows: a screen test
+  presses it through `testing/SystemBack.kt` ([[tdd]] → Fixtures, #209), so a screen's `BackHandler` needs no seam.
 - **Layout at a large font scale** is checked through the screen's semantics: `testing/Layout.kt`
   (`WithFontScale`, `assertTextFitsAndDoesNotOverlap`) reads every text node's bounds and text layout, under
   `@GraphicsMode(NATIVE)` so text is measured for real ([[tdd]], [[design-system]], #108).
