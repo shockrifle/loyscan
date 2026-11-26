@@ -19,7 +19,8 @@ Code: `drawSvgLogo` in `app/src/main/java/com/bdaniel/loyscan/data/photos/SvgLog
   `StackOverflowError` from deep nesting too) is an `IOException`, so the logo screen says the picture couldn't be used.
   The cap is checked on the copy before parsing; the copy itself isn't capped, as for any pick. A gzipped SVG (an
   `.svgz`, gzip's `1f 8b` first) is unpacked by `drawSvgLogo` itself, up to the same cap, and the checks below read the
-  unpacked text: AndroidSVG would unpack it too, after them (PR #242 review).
+  unpacked text: AndroidSVG would unpack it too, after them (PR #242 review). One packed twice is refused, since
+  AndroidSVG would unpack the inner layer.
 - **Nothing outside the file is read.** No `SVGExternalFileResolver` is registered (it is process-wide and static), so
   AndroidSVG skips an `<image>` or a font that isn't embedded as a `data:` URI. Its SAX parser, used once a DOCTYPE
   declares entities, turns external entities off.
