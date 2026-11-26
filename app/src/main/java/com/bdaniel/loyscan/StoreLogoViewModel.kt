@@ -251,6 +251,12 @@ class StoreLogoViewModel @Inject constructor(
         saveLogoTreatment(current.copy(tint = tint))
     }
 
+    /** Draws the store's logo with an Outline, or without (#240), saved at once, with any style; only while it has a logo. */
+    fun onLogoOutline(on: Boolean) {
+        val current = (found.value as? Found.Store)?.store?.logoTreatment ?: return
+        saveLogoTreatment(current.copy(outline = on))
+    }
+
     private fun saveLogoTreatment(treatment: LogoTreatment) {
         if (!canChange() || (found.value as? Found.Store)?.store?.logo == null) return
         // One quick write per tap: no progress bar flashing on every swatch, only an earlier failure cleared. Only

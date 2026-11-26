@@ -5,6 +5,11 @@ import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
 import com.bdaniel.loyscan.testing.writeSolidPng
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.assertIsOn
+import androidx.compose.ui.test.assertIsOff
+import com.bdaniel.loyscan.testing.writeSquareOnClearPng
+import com.bdaniel.loyscan.testing.ringPixel
 import com.bdaniel.loyscan.domain.LogoTreatment
 import com.bdaniel.loyscan.domain.LogoStyle
 import androidx.navigation.testing.invoke
@@ -109,6 +114,50 @@ class StoreLogoScreenTest {
 
         composeRule.onNodeWithText("How the logo is drawn").assertDoesNotExist()
         composeRule.onNodeWithText("As is").assertDoesNotExist()
+        composeRule.onNodeWithText("Outline").assertDoesNotExist()
+    }
+
+    @Test
+    fun withALogo_offersAnOutlineSwitch_readOutAsASwitch_off() { // #240
+        givenALogo()
+        setScreen()
+
+        composeRule.onNodeWithText("Outline").performScrollTo().assertIsDisplayed()
+        composeRule.onNode(hasText("Outline") and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Switch)).assertIsOff()
+    }
+
+    @Test
+    fun turningOnTheOutline_savesIt_withAnyStyle() { // #240
+        givenALogo()
+        setScreen()
+        composeRule.onNodeWithText("Single colour").performScrollTo().performClick()
+
+        composeRule.onNodeWithText("Outline").performScrollTo().performClick()
+
+        assertThat(stores.stores.value.single().logoTreatment)
+            .isEqualTo(LogoTreatment(style = LogoStyle.SINGLE_COLOUR, tint = "#FFFFFF", outline = true))
+        composeRule.onNode(hasText("Outline") and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Switch)).assertIsOn()
+
+        composeRule.onNodeWithText("As is").performClick() // As is keeps it
+        composeRule.onNode(hasText("Outline") and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Switch)).assertIsOn()
+    }
+
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE) // real drawing, for the pixels
+    @Config(qualifiers = "xxhdpi") // a ring a few pixels wide, not one blended by scaling
+    fun thePreview_drawsTheOutline() { // #240: white around the logo on the dark blue store
+        File(context.filesDir, CardPhotosModule.PHOTO_DIRECTORY).resolve("logo").writeSquareOnClearPng(0xFFAA0000.toInt())
+        runBlocking { stores.setLogo("shop", "logo") }
+        photos.stored += "logo"
+        setScreen()
+
+        composeRule.onNodeWithText("Outline").performScrollTo().performClick()
+        waitForAnImageToLoad()
+
+        composeRule.waitUntil(WAIT_TIMEOUT_MS) {
+            composeRule.waitForIdle()
+            composeRule.onNode(previewLogo, useUnmergedTree = true).captureToImage().toPixelMap().ringPixel() == Color.White
+        }
     }
 
     @Test
@@ -396,7 +445,7 @@ class StoreLogoScreenTest {
         givenALogo()
         setScreen()
 
-        composeRule.onNodeWithText("Choose image").performClick()
+        composeRule.onNodeWithText("Choose image").performScrollTo().performClick() // below the logo's controls
 
         composeRule.onNodeWithText("Choose image").assertIsNotEnabled()
         composeRule.onNodeWithText("Remove logo").performScrollTo().assertIsNotEnabled()
@@ -433,6 +482,7 @@ class StoreLogoScreenTest {
         shown.collect()
         composeRule.onNodeWithText("Átszínezés").performClick()
         shown.collect()
+        composeRule.onNodeWithText("Körvonal").performScrollTo().assertExists()
         stores.setLogoTreatmentFailure = IllegalStateException("disk full")
         composeRule.onNodeWithText("Eredeti").performClick()
         shown.collect()
@@ -449,7 +499,7 @@ class StoreLogoScreenTest {
             "Bolt logója", "Vissza", "Kép kiválasztása", "Logó keresése az interneten", "Logó eltávolítása",
             "Ez a logó látszik a bolt minden kártyáján.", "Az egész kép", "Kivágás", "Mégse",
             "Nem sikerült felhasználni a képet. Próbáld újra.", "Kártya fotójának használata", "Melyik kártya fotója?",
-            "A logó megjelenése", "Eredeti", "Egyszínű", "Átszínezés", "A logó színe", "Fehér", "Fekete",
+            "A logó megjelenése", "Eredeti", "Egyszínű", "Átszínezés", "A logó színe", "Fehér", "Fekete", "Körvonal",
             "Nem sikerült menteni a logó megjelenését. Próbáld újra.",
         )
         shown.assertEveryTextIsTranslated("Shop", "Mine", "Partner's")

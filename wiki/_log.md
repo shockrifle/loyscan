@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-26 · the logo screen's Outline switch, with any style, read out as a switch; #240 complete · features/store-logo, glossary, decisions/2026-11-26-logo-treatments · #240
 - 2026-11-26 · Outline: a ring around the logo, white or black by contrast with the brand colour, 4% of its side, on every surface; the widget decodes an outlined logo smaller and reuses it by the size it was drawn for; writeSquareOnClearPng / ringPixel fixtures · decisions/2026-11-26-logo-treatments, decisions/_index, features/card-list, features/card-detail, features/add-card, apps/card-widget, glossary, workflows/tdd · #240
 - 2026-11-26 · review of PR #245: the card form's Back handler no longer disables itself while cropping (it guarded nothing; the crop screen's callback is always added later); the decision page's claim corrected · decisions/2026-11-26-unsaved-changes-on-back · #209
 - 2026-11-26 · Back from a changed custom store form asks too ("Save changes?" / "Discard this store?"); the logo screen doesn't · features/edit-store, decisions/2026-11-26-unsaved-changes-on-back · #209

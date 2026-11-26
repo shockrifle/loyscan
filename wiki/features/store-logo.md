@@ -25,8 +25,8 @@ logo". Done in four slices, 2026-11-13 to 2026-11-16.
   `ui/LogoPreview.kt` and draws the list tile's face, `ui/CardTileFace.kt` (#192, #162), shared with the custom store form's logo slot.
 - `ui/LogoSearch.kt`: "Find a logo online".
 - How the logo is drawn (#240, [[2026-11-26-logo-treatments]]): `LogoStyleControls` and `LOGO_COLOURS` in
-  `StoreLogoScreen.kt`, `StoreLogoViewModel.onLogoStyle` / `onLogoTint`, `StoreRepository.setLogoTreatment`; drawn by
-  `ui/StoreLogoImage.kt` and `ui/LogoTreatments.kt` (`inSingleColour`, `recoloured`), and on the widget by `WidgetPictures`.
+  `StoreLogoScreen.kt`, `StoreLogoViewModel.onLogoStyle` / `onLogoTint` / `onLogoOutline`, `StoreRepository.setLogoTreatment`; drawn by
+  `ui/StoreLogoImage.kt` and `ui/LogoTreatments.kt` (`inSingleColour`, `recoloured`, `outlined`), and on the widget by `WidgetPictures`.
 - `data/repository/StoreRepository.kt` (`setLogo`), `data/photos/CardPhotos.kt` (`cropLogo`, `logoPixels`): storage, see the decision.
 - The contrast check on a new logo (#240): `StoreLogoViewModel.confirmCrop`, `preselectedTreatment` in `ui/LogoTreatments.kt`.
 
@@ -83,18 +83,21 @@ logo". Done in four slices, 2026-11-13 to 2026-11-16.
   under one "LoyScan" tile, which offers "LoyScan" and "Set as store logo" (a target used before also shows on its own
   in the direct row); the alias starts in a task of its own, and Back after the crop returns to the list, then to the
   sender. Reopening from recents is not checked.
-- **How the logo is drawn** (#240, slices 1 and 2 of 3): under the preview while the store has a logo, "How the logo is drawn"
+- **How the logo is drawn** (#240): under the preview while the store has a logo, "How the logo is drawn"
   offers **As is** / **Single colour** / **Recolour** (segmented buttons), and unless As is, "Logo colour": a row of swatches, white,
-  black, then the custom store palette, each read out by its colour's name as a choice. Every tap is saved at once
+  black, then the custom store palette, each read out by its colour's name as a choice; then an **Outline** switch
+  ("Körvonal"), with any style, the whole row read out as a switch, on or off. Every tap is saved at once
   (`StoreRepository.setLogoTreatment`) and shows in the preview, the tiles, the card screen's band, the picker's badge,
   the custom store form's logo slot and the widget. Single colour and Recolour start in white or black, whichever contrasts more
-  with the brand colour; As is keeps the outline (none can be set yet). Single colour draws every pixel in the colour,
+  with the brand colour; As is keeps the Outline. Single colour draws every pixel in the colour,
   its opacity from its brightness, the solid end following the logo (dark parts of a mostly dark logo, light parts of a
   mostly light one), so the detail inside it stays visible ([[2026-11-26-logo-treatments]]). Recolour draws the pixels
   near the brand colour (CIE76 ΔE ≤ 25 in CIELAB: its shades, not another hue) in the colour, at their own opacity, and
   leaves the other colours alone; it compares with the colour the logo is drawn on, so a new brand colour redraws it. A change that can't be
   saved says "Couldn't save how the logo is drawn. Try again.". Removing the logo draws it As is again; editing a
-  custom store's colour keeps the choice, and the colour chosen with it. Outline is not implemented yet.
+  custom store's colour keeps the choice, and the colour chosen with it. The Outline is a ring around the logo's shape,
+  4% of its longer side wide, in white or black, whichever contrasts more with the brand colour, so it follows a new
+  one; an outlined logo draws about 8% smaller in its box, to fit its ring. A new logo has none.
 - **A new logo is checked** (#240) as Crop saves it, in the same non-cancellable step: when more than half of it,
   each pixel weighed by its opacity and judged as it shows on the brand colour, has less than 3:1 contrast with the
   brand colour, it is saved Recoloured in white or black (whichever contrasts more), or in Single colour in that colour
@@ -150,11 +153,12 @@ logo". Done in four slices, 2026-11-13 to 2026-11-16.
   `AddCardDirectionsTest.aStoresLogoButton_opensItsLogoScreenOverThePicker_andBackReturnsToIt`;
   end to end `AppNavigationTest.aCatalogueStoresLogoScreen_opensFromThePicker_andBackReturnsToIt`.
 - How the logo is drawn (#240): `StoreLogoViewModelTest` (Single colour white on a dark brand colour, black on a light
-  one; a colour; As is keeping the outline; a colour while As is, and a style without a logo, not saved; a save that
-  fails), `StoreLogoScreenTest` (`withoutALogo_offersNoWayToDrawIt`, `withALogo_drawnAsIs_offersTheStyles_butNoColours`,
+  one; a colour; As is keeping the outline; the Outline on and off, with a style and As is; a colour while As is, and a
+  style or an Outline without a logo, not saved; a save that fails), `StoreLogoScreenTest` (`withoutALogo_offersNoWayToDrawIt`, `withALogo_drawnAsIs_offersTheStyles_butNoColours`,
   `choosingSingleColour_drawsTheLogoWhiteOnADarkColour_andOffersTheColours` (the swatches in order, read out as choices),
   `choosingRecolour_drawsItsBrandColouredPartWhiteOnADarkColour_andOffersTheColours`, `choosingAColour_drawsTheLogoInIt`, `choosingAsIs_hidesTheColours`, `aStyleThatCantBeSaved_saysSo`,
-  `thePreview_drawsTheLogoAsChosen` (pixels), and the Hungarian test), `ui/LogoTreatmentsTest` (the pixels, worked out by
+  `thePreview_drawsTheLogoAsChosen` (pixels), `withALogo_offersAnOutlineSwitch_readOutAsASwitch_off`,
+  `turningOnTheOutline_savesIt_withAnyStyle`, `thePreview_drawsTheOutline` (its ring's pixel), and the Hungarian test), `ui/LogoTreatmentsTest` (the pixels, worked out by
   hand), `ui/LogoTreatmentBitmapTest`; storage in `RoomStoreRepositoryTest` and `CatalogueDatabaseCallbackTest`.
 - The contrast check (#240): `ui/LogoTreatmentsTest` (`aLogoLegibleOnItsBrandColour_isDrawnAsIs`,
   `aLogoMostlyInItsBrandColour_isRecoloured_inTheContrastingColour`, `aLogoMostlyInAnotherColourJustAsDark_isInSingleColour`,
