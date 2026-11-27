@@ -55,7 +55,7 @@ with the picture's barcode (#77, below). Everything runs offline on the local da
   (`everyTextOnTheNewCardForm_isTranslated` walks the number checks, the photo menu, the crop screen and a failed
   save; one small test per other state).
 - **Custom store** ([[2026-10-22-custom-stores]]): a name (required, trimmed), one of eight colours (the first picked
-  by default) and the barcode format for the store's typed numbers (Code 128 by default; the 13 formats of
+  by default) and the type the store's new typed cards start at (Code 128 by default; the 13 formats of
   `BarcodeFormat.forCustomStores`, no GS1 or DataBar, #47). A scan keeps its own format. "Create" saves the store once
   (`StoreRepository.add`: UUID id, `isCustom = true`, no rule); a failed save says "The store couldn't be saved. Try
   again." and leaves the form open, as a failed card save does. The scanner for the new store then replaces the form,
@@ -75,7 +75,20 @@ with the picture's barcode (#77, below). Everything runs offline on the local da
   control characters as spaces) is **read-only**, with "Type the number instead", which empties the field; editing
   that rendering would have saved it, brackets and all, as the barcode (found in review). A typed number: `scannedFormat` is dropped and the barcode is built from the typed number by the store's
   rule, the same rule #8 asks of editing. A typed number is stored as typed (trimmed). For a typed number the form
-  says "Barcode: <format>" (the rule's, else the store's default).
+  says "Barcode: <format>".
+- **The card's type** (#187, [[2026-11-20-barcode-type-per-card]]; the selector isn't built yet). Every card is saved
+  with its barcode type: a scan in its scanned format (also after switching to a suggested store), a new typed card in
+  the store's starting type (`Store.startingBarcodeFormat`: the rule's format, else the store's default). An edited
+  scan's number starts at the scan's format when a typed card of the store can be in it
+  (`Store.barcodeFormatChoices`: `BarcodeFormat.forCustomStores` plus the starting type), else at the starting type, so
+  an edited GS1-128 scan isn't saved as GS1. The store's rule checks the number, formats it and makes its barcode only
+  while the card is in the rule's format; in any other type the number is checked as a store without a rule checks it
+  (`DoesNotFitFormat`) and drawn as typed, and the field asks for digits only while a digits rule applies
+  (`CardFormState.numberDigitsOnly`). Tests: `CardFormViewModelTest.aNewTypedCard_startsAtItsStoresRuleType_andIsSavedInIt`,
+  `aNewTypedCard_ofAStoreWithoutARule_isSavedInTheStoresDefault`, `editingANewScansNumber_startsAtTheScansType_whenTheSelectorOffersIt`,
+  `editingAScanInAnotherTypeThanTheRules_keepsTheScansType_andChecksTheNumberAsTyped`,
+  `aScan_isSavedInItsScannedFormat_alsoAfterASwitchToAnotherStore`, `theNumberField_asksForDigits_onlyWhileTheStoresDigitsRuleApplies`;
+  `domain/LoyaltyCardTest.aTypedCardAtItsRulesType_isBuiltAndShownByTheRule`, `aTypedCardAtAnotherType_isDrawnAndShownAsTyped_withoutTheRule`.
 - **Live check** against the store's card-number rule ([[2026-10-09-card-number-rule-engine]]), on every change:
   - typed: `CardNumberEngine.validate`; each error has a message (too short, too long, characters the store doesn't
     use, wrong start, check digit). An empty field can't be saved. A store without a rule accepts any number its

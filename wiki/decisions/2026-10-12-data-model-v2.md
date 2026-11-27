@@ -42,6 +42,8 @@ timestamps, use count, note, photo paths. It also asks for ids that let restores
   - Scanned card: `barcodeContent` is `number` verbatim. `displayNumber` is the core that `CardNumberEngine.match`
     recovers from the scan, formatted by the rule, or the scanned content when the rule doesn't match.
   - `barcodeFormat` is the scanned format, else the rule's format, else the store's `defaultBarcodeFormat`.
+    *Amended 2026-11-27 (#187):* the format is now stored on every card, and a typed card goes through the rule only
+    while it is in the rule's format ([[2026-11-20-barcode-type-per-card]]).
   A scan is the ground truth of what is on the card: rebuilding it from the store's *current* rule would change the
   barcode when a catalogue update changes the rule, or produce a barcode that isn't on the card when the scan
   doesn't match the rule (found in review of #1).

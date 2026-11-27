@@ -9,6 +9,7 @@ import com.bdaniel.loyscan.data.local.db.FrozenSchemaTest.Companion.FIRST_RELEAS
 import com.bdaniel.loyscan.data.local.db.FrozenSchemaTest.Companion.FROZEN_SCHEMAS
 import com.bdaniel.loyscan.data.mapper.toDomainModel
 import com.bdaniel.loyscan.di.CardPhotosModule
+import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.domain.LogoTreatment
 import com.bdaniel.loyscan.di.DatabaseModule
 import com.bdaniel.loyscan.testing.createDatabaseFromExportedSchema
@@ -105,6 +106,67 @@ class DatabaseMigrationTest {
     }
 
     @Test
+    fun aTypedCardOfAStoreWithARule_atVersion5_getsTheRulesFormat_afterTheMigration() = runTest { // #187
+        createDatabaseFromExportedSchema(context, DATABASE, 5).use {
+            it.insertACardAsTheFirstReleaseStoredIt(defaultBarcodeFormat = "EAN_13", cardNumberRule = QR_RULE)
+        }
+
+        val card = openAsTheAppDoes().loyaltyCardDao().getAllWithStore().first().single().loyaltyCard
+
+        assertThat(card.barcodeFormat).isEqualTo(BarcodeFormat.QR_CODE)
+    }
+
+    @Test
+    fun aTypedCardOfAStoreWithoutARule_atVersion5_getsTheStoresDefault_afterTheMigration() = runTest { // #187
+        createDatabaseFromExportedSchema(context, DATABASE, 5).use {
+            it.insertACardAsTheFirstReleaseStoredIt(defaultBarcodeFormat = "ITF")
+        }
+
+        val card = openAsTheAppDoes().loyaltyCardDao().getAllWithStore().first().single().loyaltyCard
+
+        assertThat(card.barcodeFormat).isEqualTo(BarcodeFormat.ITF)
+    }
+
+    @Test
+    fun aScannedCard_atVersion5_keepsItsScannedFormat_afterTheMigration() = runTest { // #187
+        createDatabaseFromExportedSchema(context, DATABASE, 5).use {
+            it.insertACardAsTheFirstReleaseStoredIt(
+                defaultBarcodeFormat = "EAN_13", cardNumberRule = QR_RULE, scannedFormat = "CODE_39",
+            )
+        }
+
+        val card = openAsTheAppDoes().loyaltyCardDao().getAllWithStore().first().single().loyaltyCard
+
+        assertThat(card.scannedFormat).isEqualTo(BarcodeFormat.CODE_39)
+        assertThat(card.barcodeFormat).isEqualTo(BarcodeFormat.CODE_39)
+    }
+
+    @Test
+    fun aTypedCardWhoseStoresRuleCantBeRead_atVersion5_getsTheStoresDefault_afterTheMigration() = runTest { // #187
+        // A catalogue id: the catalogue sync after the migration rewrites the store's rule, so the card reads back.
+        createDatabaseFromExportedSchema(context, DATABASE, 5).use {
+            it.insertACardAsTheFirstReleaseStoredIt(
+                storeId = "hu-ofotert", defaultBarcodeFormat = "CODE_39", cardNumberRule = "not a rule",
+            )
+        }
+
+        val card = openAsTheAppDoes().loyaltyCardDao().getAllWithStore().first().single().loyaltyCard
+
+        assertThat(card.barcodeFormat).isEqualTo(BarcodeFormat.CODE_39)
+    }
+
+    @Test
+    fun aTypedCardFromTheFirstRelease_getsItsStoresDefault_afterTheMigrations() = runTest { // #187
+        createDatabaseFromExportedSchema(context, DATABASE, FIRST_RELEASED_VERSION).use {
+            it.insertACardAsTheFirstReleaseStoredIt(defaultBarcodeFormat = "UPC_A")
+        }
+
+        val card = openAsTheAppDoes().loyaltyCardDao().getAllWithStore().first().single().loyaltyCard
+
+        assertThat(card.barcodeFormat).isEqualTo(BarcodeFormat.UPC_A)
+    }
+
+    @Test
     fun anEmptyDatabaseAtEveryFrozenVersion_opensInTheCurrentApp() = runTest {
         for (version in FROZEN_SCHEMAS.keys.sorted()) {
             createDatabaseFromExportedSchema(context, DATABASE, version).close()
@@ -146,20 +208,24 @@ class DatabaseMigrationTest {
         frontPhotoPath: String? = null,
         showPhotoOnList: Boolean? = null,
         logo: String? = null,
+        storeId: String = "custom-1",
+        defaultBarcodeFormat: String = "EAN_13",
+        cardNumberRule: String? = null,
+        scannedFormat: String? = null,
     ) {
         insertOrThrow(
             "stores", null,
             contentValuesOf(
-                "id" to "custom-1", "name" to "Corner Shop", "color" to "#336699", "logo" to logo,
-                "aliases" to "[]", "countryCodes" to "[]", "defaultBarcodeFormat" to "EAN_13",
-                "cardNumberRule" to null, "frequentlyAdded" to 0, "isCustom" to 1, "updatedAt" to 1_700_000_000_000L,
+                "id" to storeId, "name" to "Corner Shop", "color" to "#336699", "logo" to logo,
+                "aliases" to "[]", "countryCodes" to "[]", "defaultBarcodeFormat" to defaultBarcodeFormat,
+                "cardNumberRule" to cardNumberRule, "frequentlyAdded" to 0, "isCustom" to 1, "updatedAt" to 1_700_000_000_000L,
             ),
         )
         insertOrThrow(
             "loyalty_cards", null,
             contentValuesOf(
-                "id" to "card-1", "storeId" to "custom-1", "label" to "Everyday", "number" to "1234567890128",
-                "scannedFormat" to null, "createdAt" to 1_700_000_000_000L, "lastUsedAt" to 1_700_000_100_000L,
+                "id" to "card-1", "storeId" to storeId, "label" to "Everyday", "number" to "1234567890128",
+                "scannedFormat" to scannedFormat, "createdAt" to 1_700_000_000_000L, "lastUsedAt" to 1_700_000_100_000L,
                 "useCount" to 3, "note" to "Behind the counter", "frontPhotoPath" to frontPhotoPath, "backPhotoPath" to null,
                 "updatedAt" to 1_700_000_000_000L,
             ).apply { showPhotoOnList?.let { put("showPhotoOnList", if (it) 1 else 0) } },
@@ -168,5 +234,8 @@ class DatabaseMigrationTest {
 
     private companion object {
         const val DATABASE = "loyscan.db"
+
+        /** A rule as v5 stored it (its JSON), in a format other than the stores' default in these tests. */
+        const val QR_RULE = """{"id":"r","format":"QR_CODE"}"""
     }
 }

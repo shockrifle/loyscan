@@ -33,6 +33,7 @@ fun LoyaltyCardEntity.toContentValues(): ContentValues = contentValuesOf(
     "label" to label,
     "number" to number,
     "scannedFormat" to scannedFormat?.name,
+    "barcodeFormat" to barcodeFormat.name,
     "createdAt" to converters.fromInstant(createdAt),
     "lastUsedAt" to converters.fromInstant(lastUsedAt),
     "useCount" to useCount,

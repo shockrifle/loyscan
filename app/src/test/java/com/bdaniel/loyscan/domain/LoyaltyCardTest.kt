@@ -9,7 +9,10 @@ import com.bdaniel.loyscan.testing.aStore
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
-/** Barcode content, display number and barcode format are derived from the number and the store, not stored (#1). */
+/**
+ * Barcode content and display number are derived from the number, the store and the card's type (#1); the type is
+ * stored (#187), and the store's rule applies only while the card is in the rule's type.
+ */
 class LoyaltyCardTest {
 
     /** Example rule: 9-digit printed number, barcode = EAN-13 "200" + number + check digit. */
@@ -125,17 +128,26 @@ class LoyaltyCardTest {
     }
 
     @Test
-    fun barcodeFormat_isTheRulesFormat_whenNotScanned() {
-        val store = aStore(defaultBarcodeFormat = BarcodeFormat.CODE_128, cardNumberRule = prefixedEan)
-        val card = aLoyaltyCard(store = store, scannedFormat = null)
+    fun aTypedCard_isDrawnInTheTypeItWasSavedWith_notItsStoresDefault() { // #187
+        val card = aLoyaltyCard(store = aStore(defaultBarcodeFormat = BarcodeFormat.CODE_39), barcodeFormat = BarcodeFormat.ITF)
 
-        assertThat(card.barcodeFormat).isEqualTo(BarcodeFormat.EAN_13)
+        assertThat(card.barcodeFormat).isEqualTo(BarcodeFormat.ITF)
     }
 
     @Test
-    fun barcodeFormat_isTheStoreDefault_whenNotScannedAndNoRule() {
-        val card = aLoyaltyCard(store = aStore(defaultBarcodeFormat = BarcodeFormat.CODE_39), scannedFormat = null)
+    fun aTypedCardAtItsRulesType_isBuiltAndShownByTheRule() { // #187
+        val card = aLoyaltyCard(store = ruledStore, number = "123456789", barcodeFormat = BarcodeFormat.EAN_13)
 
-        assertThat(card.barcodeFormat).isEqualTo(BarcodeFormat.CODE_39)
+        assertThat(card.barcodeContent).isEqualTo("2001234567893")
+        assertThat(card.displayNumber).isEqualTo("123 456 789")
+    }
+
+    @Test
+    fun aTypedCardAtAnotherType_isDrawnAndShownAsTyped_withoutTheRule() { // #187
+        val card = aLoyaltyCard(store = ruledStore, number = " 123-456789 ", barcodeFormat = BarcodeFormat.CODE_128)
+
+        assertThat(card.barcodeFormat).isEqualTo(BarcodeFormat.CODE_128)
+        assertThat(card.barcodeContent).isEqualTo("123-456789")
+        assertThat(card.displayNumber).isEqualTo("123-456789")
     }
 }

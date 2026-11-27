@@ -67,7 +67,7 @@ class FakeLoyaltyCardRepository(
     }
 
     /**
-     * Like the Room repository: only the store, label, number, scanned format, note, photos and `updatedAt` change, and
+     * Like the Room repository: only the store, label, number, scanned format, barcode format (#187), note, photos and `updatedAt` change, and
      * a photo the edit replaces or removes is deleted from [photos].
      */
     override suspend fun update(card: LoyaltyCard) {
@@ -85,6 +85,7 @@ class FakeLoyaltyCardRepository(
                 label = card.label,
                 number = card.number,
                 scannedFormat = card.scannedFormat,
+                barcodeFormat = card.barcodeFormat,
                 note = card.note,
                 frontPhotoPath = card.frontPhotoPath,
                 backPhotoPath = card.backPhotoPath,

@@ -29,12 +29,12 @@ abstract class AppDatabase : RoomDatabase() {
 
     /** Schemas from version 2 (the first release) on are frozen: wiki/workflows/database-schema-changes.md (#12). */
     companion object {
-        const val VERSION = 5
+        const val VERSION = 6
 
         /**
          * Every hand-written migration from a released version on; `DatabaseModule` adds them to the builder. The
          * `autoMigrations` above are wired by Room itself.
          */
-        val MIGRATIONS: Array<Migration> = emptyArray()
+        val MIGRATIONS: Array<Migration> = arrayOf(CardBarcodeFormatMigration)
     }
 }

@@ -27,6 +27,11 @@ data class LoyaltyCardEntity(
         val label: String?,
         val number: String,
         val scannedFormat: BarcodeFormat?,
+        /**
+         * The symbology the card is drawn in (#187): a scan's [scannedFormat], else the type the typed number was saved
+         * with. Schema v6; the migration wrote each older card's type as it was then drawn.
+         */
+        val barcodeFormat: BarcodeFormat,
         val createdAt: Instant,
         val lastUsedAt: Instant?,
         val useCount: Int,

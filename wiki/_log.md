@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-27 · every card stores its barcode type (schema v6, the first hand-written migration); the store rule applies only in its own type; the card form saves a new, kept, moved or edited-scan card's type; a custom store's new format no longer redraws its cards · decisions/2026-11-20-barcode-type-per-card, decisions/_index, decisions/2026-10-12-data-model-v2, decisions/2026-10-22-custom-stores, features/add-card, features/edit-card, features/edit-store, workflows/database-schema-changes, workflows/tdd, architecture, glossary · #187 slice 1
 - 2026-11-26 · review of PR #248: an Outline closes the gaps of a wordmark across the square logo, recorded as the trade-off of a width relative to the logo · decisions/2026-11-26-logo-treatments · #240
 - 2026-11-26 · the logo screen's Outline switch, with any style, read out as a switch; #240 complete · features/store-logo, glossary, decisions/2026-11-26-logo-treatments · #240
 - 2026-11-26 · Outline: a ring around the logo, white or black by contrast with the brand colour, 4% of its side, on every surface; the widget decodes an outlined logo smaller and reuses it by the size it was drawn for; writeSquareOnClearPng / ringPixel fixtures · decisions/2026-11-26-logo-treatments, decisions/_index, features/card-list, features/card-detail, features/add-card, apps/card-widget, glossary, workflows/tdd · #240

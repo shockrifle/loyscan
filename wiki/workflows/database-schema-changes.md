@@ -1,6 +1,6 @@
 # Changing the database schema
 
-The Room DB `AppDatabase` is at **`AppDatabase.VERSION = 5`**, and **every version from 2 on is frozen**
+The Room DB `AppDatabase` is at **`AppDatabase.VERSION = 6`**, and **every version from 2 on is frozen**
 ([[2026-11-05-room-schema-frozen-from-v2]], #12): a schema change is always a version bump with a migration. There is
 no destructive fallback, so a missing migration crashes on open rather than deleting the user's cards
 (`app/src/main/java/com/bdaniel/loyscan/data/local/db/AppDatabase.kt`, `companion object`;
@@ -32,7 +32,10 @@ the unit-test task (`app/build.gradle.kts`, `testOptions`), so editing a schema 
 4. Write the migration: a `Migration(old, new)` in `AppDatabase.MIGRATIONS`, or an `@AutoMigration(from, to)` in
    `@Database` when Room can work it out (it needs the exported schemas, which are committed). An added `NOT NULL`
    column needs `@ColumnInfo(defaultValue = …)` on the entity for an auto-migration to fill the existing rows. Room
-   wires `autoMigrations` itself; `DatabaseModule` adds only `MIGRATIONS`. Room checks the
+   wires `autoMigrations` itself; `DatabaseModule` adds only `MIGRATIONS`. A column whose value must be worked out per
+   row (from JSON, or from another table) needs a hand-written one: `CardBarcodeFormatMigration` (v5 → v6) adds the
+   column with a placeholder default, then writes each row; an entity without `@ColumnInfo(defaultValue)` still passes
+   Room's check over a column added with `DEFAULT`, since Room compares defaults only when the entity names one. Room checks the
    migrated tables against the entities when the database opens, so the test from step 1 fails on a wrong
    migration ("Migration didn't properly handle …").
 5. Update the raw-row mappers in `data/local/db/ContentValues.kt` (`ContentValuesTest` fails until you do), and the
@@ -66,3 +69,15 @@ migration is owed either way.
   needed), by `@AutoMigration(from = 4, to = 5)`; how a logo is drawn ([[store-logo]]). The catalogue sync leaves them alone
   ([[store-catalogue]]). The trap in step 3 bit again: a build before the bump rewrote `4.json` and the new test passed
   with no migration. Test: `DatabaseMigrationTest.aStoreWithALogo_atVersion4_drawsItAsIs_afterTheMigration` (built from `4.json`).
+- 2026-11-27 (#187): v6, `loyalty_cards.barcodeFormat` (`NOT NULL`), the first hand-written migration,
+  `CardBarcodeFormatMigration` in `app/src/main/java/com/bdaniel/loyscan/data/local/db/CardBarcodeFormatMigration.kt`
+  (in `AppDatabase.MIGRATIONS`). Each card gets the type it was drawn in: a scan its `scannedFormat`, a typed number
+  its store rule's `format`, else the store's `defaultBarcodeFormat` ([[2026-11-20-barcode-type-per-card]]). The rule
+  is JSON, so only its `format` field is read, leniently: a rule that can't be read gives the store's default instead
+  of failing the open. `5.json` was checked unchanged before the bump (the step 3 trap). Tests:
+  `DatabaseMigrationTest.aTypedCardOfAStoreWithARule_atVersion5_getsTheRulesFormat_afterTheMigration`,
+  `aTypedCardOfAStoreWithoutARule_atVersion5_getsTheStoresDefault_afterTheMigration`,
+  `aScannedCard_atVersion5_keepsItsScannedFormat_afterTheMigration`,
+  `aTypedCardWhoseStoresRuleCantBeRead_atVersion5_getsTheStoresDefault_afterTheMigration` (a catalogue store's id, so
+  the catalogue sync after the migration rewrites the unreadable rule and the card reads back),
+  `aTypedCardFromTheFirstRelease_getsItsStoresDefault_afterTheMigrations`.

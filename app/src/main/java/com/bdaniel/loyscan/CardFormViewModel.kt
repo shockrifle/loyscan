@@ -15,6 +15,7 @@ import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.domain.LoyaltyCard
 import com.bdaniel.loyscan.domain.Store
 import com.bdaniel.loyscan.domain.cardnumber.CardNumberEngine
+import com.bdaniel.loyscan.domain.cardnumber.CardNumberRule
 import com.bdaniel.loyscan.domain.matchingScan
 import com.bdaniel.loyscan.domain.search
 import com.bdaniel.loyscan.domain.cardnumber.Validation
@@ -61,6 +62,8 @@ data class CardFormState(
     /** The number as the card will show it, when that differs from the field's text. */
     val shownAs: String? = null,
     val barcodeFormat: BarcodeFormat? = null,
+    /** The number field asks for digits: the store's rule applies to this number and allows digits only (#187). */
+    val numberDigitsOnly: Boolean = false,
     val saving: Boolean = false,
     /** The last save failed; the form stays open to try again. */
     val saveFailed: Boolean = false,
@@ -507,14 +510,24 @@ class CardFormViewModel @Inject constructor(
     /**
      * The card as it would be saved: the untouched scan verbatim with its format, else the typed number (trimmed). An
      * edit starts from the [original] card, so its id, creation and uses stay.
+     *
+     * Its type (#187): an untouched scan's format; an edited typed card's own, also in another store (the owner's choice);
+     * an edited scan's format when the store offers it for a typed number, else the store's starting type, as for a new
+     * typed card.
      */
     private fun draft(store: Store, original: LoyaltyCard?, typed: String?): LoyaltyCard {
         val typedNumber = typedOrNull(original, typed)
-        val untouchedScan = scan(original)?.takeIf { typedNumber == null }
+        val scan = scan(original)
+        val untouchedScan = scan?.takeIf { typedNumber == null }
+        val barcodeFormat = untouchedScan?.second
+            ?: original?.takeIf { it.scannedFormat == null }?.barcodeFormat
+            ?: scan?.second?.takeIf { it in store.barcodeFormatChoices }
+            ?: store.startingBarcodeFormat
         return (original ?: LoyaltyCard.EMPTY).copy(
             store = store,
             number = untouchedScan?.first ?: typedNumber.orEmpty().trim(),
             scannedFormat = untouchedScan?.second,
+            barcodeFormat = barcodeFormat,
         )
     }
 
@@ -542,15 +555,17 @@ class CardFormViewModel @Inject constructor(
         val draft = draft(store, original, changedNumber)
         val scannedFormat = draft.scannedFormat
         val rule = store.cardNumberRule
+        // A typed number goes by the rule only while the card is in the rule's type (#187).
+        val typedRule = rule?.takeIf { it.format == draft.barcodeFormat }
         val ruleReadsScan = scannedFormat != null && rule != null &&
             CardNumberEngine.match(draft.number, scannedFormat, rule) != null
         val check = if (scannedFormat != null) {
             if (rule == null || ruleReadsScan) NumberCheck.Valid else NumberCheck.ScanDoesNotMatchStore
         } else {
-            when (val validation = CardNumberEngine.validate(typed.orEmpty(), rule)) {
+            when (val validation = CardNumberEngine.validate(typed.orEmpty(), typedRule)) {
                 is Validation.Valid ->
-                    // Without a rule nothing else checks the number against the store's format.
-                    if (rule == null && !BarcodeEncoder.holdsAsIs(draft.barcodeContent, draft.barcodeFormat)) {
+                    // Without a rule that applies nothing else checks the number against the card's type.
+                    if (typedRule == null && !BarcodeEncoder.holdsAsIs(draft.barcodeContent, draft.barcodeFormat)) {
                         NumberCheck.DoesNotFitFormat(draft.barcodeFormat)
                     } else {
                         NumberCheck.Valid
@@ -584,6 +599,7 @@ class CardFormViewModel @Inject constructor(
             check = check,
             shownAs = draft.displayNumber.takeIf { check != NumberCheck.Empty && it != number.trim() },
             barcodeFormat = draft.barcodeFormat,
+            numberDigitsOnly = (if (scannedFormat == null) typedRule else rule)?.charset == CardNumberRule.Charset.DIGITS,
             saving = progress.saving,
             saveFailed = progress.saveFailed,
             savedCardId = progress.savedCardId,

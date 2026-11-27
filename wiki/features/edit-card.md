@@ -25,7 +25,14 @@ number and store of one card. Deleting a card is on [[card-detail]].
   instead"). The saved-state keys for the label, note and number stay `null` until the user changes them, so the card's
   values aren't copied into them and a change survives process death.
 - **Editing a scanned card's number by hand** makes it a typed number: `scannedFormat` is cleared, so the barcode is
-  built from the typed number by the store's rule, not drawn verbatim ([[2026-10-12-data-model-v2]]). Changing only the
+  built from the typed number, not drawn verbatim ([[2026-10-12-data-model-v2]]). Its type starts at the scan's when
+  the store offers it for a typed card, else at the store's starting type ([[add-card]] → The card's type, #187).
+- **The card keeps its type** (#187, [[2026-11-20-barcode-type-per-card]]): a typed card opens and is saved in the type
+  it was saved in, even when its store now starts new cards at another, and also when it is moved to another store (the
+  owner's choice, 2026-11-27); in a type other than the store rule's, the rule doesn't apply. Tests:
+  `CardFormViewModelTest.editingATypedCard_keepsTheTypeItWasSavedWith_notItsStoresDefault`,
+  `aTypedCardInAnotherTypeThanItsStoresRule_isCheckedAsTyped_notByTheRule`, `movingATypedCardToAnotherStore_keepsItsType`,
+  `editingAScansNumber_startsAtTheScansType_whenTheSelectorOffersIt`, `editingAGs1ScansNumber_startsAtTheStoresStartingType`. Changing only the
   label keeps the scan as it is.
 - The live check, "Save anyway", "Shown as …" and the "It looks like a card from:" hints work as when adding
   ([[add-card]]). Switching to a suggested store moves the card to that store.
@@ -39,7 +46,7 @@ number and store of one card. Deleting a card is on [[card-detail]].
   the picker there. Catalogue and custom stores are both listed; "Other card" isn't, so a card can't be moved to a
   store that doesn't exist yet. Its texts are translated with the store picker's, and the form's own with the card
   form's ([[add-card]] → Language, #72; `CardFormScreenTest.inHungarian_editingACard_isTranslated`).
-- **Saving writes only what the form edits:** the store, label, number, scanned format, note (#9), photos (#10),
+- **Saving writes only what the form edits:** the store, label, number, scanned format, barcode format (#187), note (#9), photos (#10),
   whether the front photo shows on My Cards (`showPhotoOnList`, #184) and on the widget (`showPhotoOnWidget`, #185, [[card-photos]]) and `updatedAt` (now). Room's partial `@Update(entity = LoyaltyCardEntity::class)` with `LoyaltyCardEdit` writes those
   columns and no others, so `createdAt`, the use count and `lastUsedAt` stay as stored even if they changed after the
   form loaded the card. A photo the edit replaces or removes is deleted, and one whose file is missing starts as no photo, so the save clears its name ([[card-photos]], #87). A blank label or note is saved as `null`; the note is trimmed.
@@ -83,4 +90,4 @@ number and store of one card. Deleting a card is on [[card-detail]].
 ## Not implemented
 
 Nothing on the form itself. Out of scope here: deleting several cards is the list's multi-select ([[card-list]], #7); a
-custom store's barcode format belongs to the store, so changing it is editing the store ([[edit-store]], #53).
+card's type can't be chosen on the form yet (the selector of #187).

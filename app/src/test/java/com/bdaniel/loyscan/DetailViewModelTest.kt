@@ -107,7 +107,7 @@ class DetailViewModelTest {
     }
 
     @Test
-    fun aStoreFormatChange_redrawsATypedCard_butNotAScannedOne() = runTest { // #53: a custom store's format is edited
+    fun aStoreFormatChange_redrawsNeitherATypedCardNorAScannedOne() = runTest { // #53: a custom store's format is edited; #187
         val store = aStore(isCustom = true, defaultBarcodeFormat = BarcodeFormat.CODE_128)
         repository.cards.value = listOf(
             aLoyaltyCard(id = cardId(1), store = store, number = "4242"),
@@ -121,7 +121,7 @@ class DetailViewModelTest {
             // What the Room repository emits once the store's row changes: every card with the edited store.
             val edited = store.copy(defaultBarcodeFormat = BarcodeFormat.QR_CODE)
             repository.cards.value = repository.cards.value.map { it.copy(store = edited) }
-            assertThat(awaitItem().barcodeFormat).isEqualTo(BarcodeFormat.QR_CODE)
+            assertThat(awaitItem().barcodeFormat).isEqualTo(BarcodeFormat.CODE_128) // the type it was saved in
         }
         scanned.card.test {
             assertThat(awaitItem().barcodeFormat).isEqualTo(BarcodeFormat.EAN_13)

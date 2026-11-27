@@ -504,7 +504,7 @@ class AppNavigationTest {
     }
 
     @Test
-    fun aCustomStoresNewFormat_redrawsItsTypedCard() { // #53
+    fun aCustomStoresNewFormat_leavesItsTypedCardInTheTypeItWasSavedIn() { // #53; since #187 a card keeps its type
         runBlocking {
             db.storeDao().insert(aStoreEntity(id = "custom", name = "My Shop", isCustom = true))
             db.loyaltyCardDao().insert(aLoyaltyCardEntity(id = cardId(2), storeId = "custom", label = "Gym card", number = "4242"))
@@ -513,7 +513,7 @@ class AppNavigationTest {
         waitForText("My Shop")
         composeRule.onNodeWithContentDescription("Edit My Shop").performClick()
         waitForTheStoreFormToLoad()
-        // 4242 isn't an EAN-13, so the card is now drawn in the fallback and the detail says so.
+        // Before #187 the card was redrawn in EAN-13, which can't hold 4242, so the detail said "Shown as Code 128".
         composeRule.onNodeWithText(BarcodeFormat.EAN_13.displayName).performScrollTo().performClick()
         composeRule.onNodeWithText("Save").performScrollTo().performClick()
         waitForTheStoreFormToClose()
@@ -522,8 +522,8 @@ class AppNavigationTest {
 
         waitForText("Gym card")
         composeRule.onNodeWithText("Gym card").performClick()
-        waitForText("Shown as ${BarcodeFormat.CODE_128.displayName}")
-        composeRule.onNodeWithText("Shown as ${BarcodeFormat.CODE_128.displayName}").assertIsDisplayed()
+        waitForText("4242")
+        composeRule.onNodeWithText("Shown as", substring = true).assertDoesNotExist()
     }
 
     @Test
