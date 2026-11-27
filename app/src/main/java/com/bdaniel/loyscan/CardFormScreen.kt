@@ -418,10 +418,6 @@ private fun problemText(check: NumberCheck, storeName: String): String? = when (
 }
 
 /**
- * A switch for where the card's front photo is shown: My cards (#184) or the widget (#185). The whole row toggles, so
- * TalkBack reads one switch named by its [text].
- */
-/**
  * The card's type (#187), collapsed to one line for the many who never change it; tapping it shows [choices] as chips,
  * and picking one collapses it again.
  */
@@ -463,6 +459,10 @@ private fun BarcodeTypeSelector(format: BarcodeFormat, choices: List<BarcodeForm
     }
 }
 
+/**
+ * A switch for where the card's front photo is shown: My cards (#184) or the widget (#185). The whole row toggles, so
+ * TalkBack reads one switch named by its [text].
+ */
 @Composable
 private fun PhotoSwitch(text: String, checked: Boolean, enabled: Boolean, onCheckedChange: (Boolean) -> Unit) {
     Row(
