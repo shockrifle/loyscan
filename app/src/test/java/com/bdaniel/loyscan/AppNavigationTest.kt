@@ -36,6 +36,7 @@ import com.bdaniel.loyscan.data.photos.FileCardPhotos
 import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.testing.STORE_ID
 import com.bdaniel.loyscan.testing.WAIT_TIMEOUT_MS
+import com.bdaniel.loyscan.data.repository.LoyaltyCardRepository
 import com.bdaniel.loyscan.testing.aLoyaltyCardEntity
 import com.bdaniel.loyscan.testing.aStoreEntity
 import com.bdaniel.loyscan.testing.cardId
@@ -73,6 +74,9 @@ class AppNavigationTest {
 
     @Inject
     lateinit var db: AppDatabase
+
+    @Inject
+    lateinit var cardRepository: LoyaltyCardRepository
 
     @Inject
     lateinit var photos: FileCardPhotos
@@ -504,26 +508,26 @@ class AppNavigationTest {
     }
 
     @Test
-    fun aCustomStoresNewFormat_leavesItsTypedCardInTheTypeItWasSavedIn() { // #53; since #187 a card keeps its type
-        runBlocking {
-            db.storeDao().insert(aStoreEntity(id = "custom", name = "My Shop", isCustom = true))
-            db.loyaltyCardDao().insert(aLoyaltyCardEntity(id = cardId(2), storeId = "custom", label = "Gym card", number = "4242"))
-        }
+    fun aTypePickedOnTheCardForm_ofANewCustomStore_isTheTypeTheCardIsSavedIn() { // #187
         composeRule.onNodeWithContentDescription("Add card").performClick()
-        waitForText("My Shop")
-        composeRule.onNodeWithContentDescription("Edit My Shop").performClick()
-        waitForTheStoreFormToLoad()
-        // Before #187 the card was redrawn in EAN-13, which can't hold 4242, so the detail said "Shown as Code 128".
-        composeRule.onNodeWithText(BarcodeFormat.EAN_13.displayName).performScrollTo().performClick()
-        composeRule.onNodeWithText("Save").performScrollTo().performClick()
-        waitForTheStoreFormToClose()
-        waitForText("Choose store")
-        composeRule.onNodeWithContentDescription("Back").performClick()
+        waitForText("Other card")
+        composeRule.onNodeWithText("Other card").performClick()
+        waitForText("New store")
+        composeRule.onNodeWithTag(CUSTOM_STORE_NAME_TAG).performTextInput("My Shop")
+        composeRule.onNodeWithText("Create").performScrollTo().performClick()
+        waitForText("Enter manually")
+        composeRule.onNodeWithText("Enter manually").performClick()
+        waitForText("Card number")
+        composeRule.onNodeWithTag(CARD_NUMBER_TAG).performTextInput("4242")
 
-        waitForText("Gym card")
-        composeRule.onNodeWithText("Gym card").performClick()
+        composeRule.onNodeWithText("Barcode: Code 128").performScrollTo().performClick() // a new custom store's start
+        composeRule.onNodeWithText("QR code").performScrollTo().performClick()
+        composeRule.onNodeWithText("Save").performScrollTo().performClick()
+        waitForTheCardFormToClose()
         waitForText("4242")
-        composeRule.onNodeWithText("Shown as", substring = true).assertDoesNotExist()
+
+        val saved = runBlocking { cardRepository.getAllWithStore().first() }.single { it.number == "4242" }
+        assertThat(saved.barcodeFormat).isEqualTo(BarcodeFormat.QR_CODE)
     }
 
     @Test

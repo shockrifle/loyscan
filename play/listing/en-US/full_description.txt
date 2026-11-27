@@ -2,7 +2,7 @@ LoyScan keeps your loyalty cards on your phone, so the plastic ones can stay at 
 
 Add a card
 • Scan the card's barcode with the camera, read it from a picture, or type the number.
-• Pick the store from the built-in list of Hungarian stores, or add your own with a name, colour and barcode type.
+• Pick the store from the built-in list of Hungarian stores, or add your own with a name and colour.
 • For most listed stores, LoyScan checks the number's length and format as you type, and its check digit where the card has one.
 • Keep photos of the card's front and back, and give a store a logo of your own.
 

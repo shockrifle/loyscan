@@ -54,9 +54,10 @@ with the picture's barcode (#77, below). Everything runs offline on the local da
   `StorePickerScreenTest.inHungarian_everyTextOnThePicker_isTranslated`, `CardFormScreenTest.inHungarian_…`
   (`everyTextOnTheNewCardForm_isTranslated` walks the number checks, the photo menu, the crop screen and a failed
   save; one small test per other state).
-- **Custom store** ([[2026-10-22-custom-stores]]): a name (required, trimmed), one of eight colours (the first picked
-  by default) and the type the store's new typed cards start at (Code 128 by default; the 13 formats of
-  `BarcodeFormat.forCustomStores`, no GS1 or DataBar, #47). A scan keeps its own format. "Create" saves the store once
+- **Custom store** ([[2026-10-22-custom-stores]]): a name (required, trimmed) and one of eight colours (the first picked
+  by default). Since #187 it asks for no barcode type: a new store's typed cards start at Code 128, and each card's type
+  is chosen on the card form (The type selector, below; `CustomStoreScreenTest.theNewStoreForm_asksForNoBarcodeType`,
+  `CustomStoreViewModelTest.create_savesACustomStoreWithTheTrimmedNameAndColour_inCode128_andNamesIt`). A scan keeps its own format. "Create" saves the store once
   (`StoreRepository.add`: UUID id, `isCustom = true`, no rule); a failed save says "The store couldn't be saved. Try
   again." and leaves the form open, as a failed card save does. The scanner for the new store then replaces the form,
   so back returns to the picker, which now lists the store. Back during "Create" leaves the user on the picker, and

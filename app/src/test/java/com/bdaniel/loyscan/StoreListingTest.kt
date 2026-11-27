@@ -338,14 +338,14 @@ class StoreListingTest {
                     AppNavigationTest::class.tests(AppNavigationTest::addingACardByHand_savesIt_opensIt_andBackReturnsToTheListWithIt),
             ),
             ListingClaim(
-                "Pick the store from the built-in list of Hungarian stores, or add your own with a name, colour and barcode type.",
+                "Pick the store from the built-in list of Hungarian stores, or add your own with a name and colour.",
                 ShippedCatalogueTest::class.tests(
                     ShippedCatalogueTest::shippedCatalogue_loadsIntoTheDatabase,
                     ShippedCatalogueTest::everyShippedStore_isAHungarianStore,
                 ) +
                     StorePickerScreenTest::class.tests(StorePickerScreenTest::tappingAStore_picksIt) +
                     CustomStoreScreenTest::class.tests(
-                        CustomStoreScreenTest::creatingAStore_savesItWithTheChosenColourAndFormat_andOpensTheScannerForIt,
+                        CustomStoreScreenTest::creatingAStore_savesItWithTheChosenColour_inCode128_andOpensTheScannerForIt,
                     ),
             ),
             ListingClaim(

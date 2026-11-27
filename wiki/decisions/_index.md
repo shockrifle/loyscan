@@ -20,7 +20,7 @@ inferred whys as inferred.
 - [[2026-10-16-zxing-cpp-for-scanning]] — zxing-cpp 3.1.1 + CameraX for scanning: reads all DataBar, no Play Services; not ML Kit
 - [[2026-10-21-gs1-scans-shown-as-hri]] — a GS1 scan no rule matches is shown as `(01)…(10)…`; other control characters as a space
 - [[2026-10-21-gs1-mark-as-barcode-format]] — a GS1 Data Matrix or QR scan is stored as `GS1_DATA_MATRIX` / `GS1_QR_CODE`, not a flag; GS1 data falls back to GS1-128, then GS1 QR
-- [[2026-10-22-custom-stores]] — "Other card" saves a custom store on its own screen, with the barcode format for its typed numbers; the picker offers the 13 formats ZXing core writes as themselves, no GS1 or DataBar
+- [[2026-10-22-custom-stores]] — "Other card" saves a custom store on its own screen, with the barcode format for its typed numbers (no longer asked since #187); the picker offers the 13 formats ZXing core writes as themselves, no GS1 or DataBar
 - [[2026-10-28-datastore-for-user-preferences]] — user preferences (the card list's sort) in one DataStore Preferences file behind `UserPreferencesRepository`; unknown values read as the default
 - [[2026-10-28-portrait-on-phones]] — on a phone every screen but the card is held in portrait; screens 600dp or wider rotate freely (#63)
 - [[2026-10-30-frequently-added-stores]] — "frequently added" is a curated catalogue flag; the country is the SIM's, then the network's, then the locale's; added to schema v2 in place
@@ -41,7 +41,7 @@ inferred whys as inferred.
 - [[2026-11-12-design-tokens-and-card-shape]] — a plain `Spacing` object shared with the widget, M3 default `Shapes`, one ID-1-proportional `CardShape` (6%) for every depiction of the card; a visual-only scanner viewfinder; card-ratio widget tiles in 1–2 columns, square corners on API 29–30 (#108)
 - [[2026-11-17-release-versioning]] — semver `loyscan.versionName` in `gradle.properties`; `versionCode = X*10000 + Y*100 + Z`, derived and checked by the build (#74)
 - [[2026-11-17-release-signing-on-ci]] — Play App Signing; the upload key (PKCS12, one password) is read from Gradle properties or `LOYSCAN_UPLOAD_*` variables, never a repo file; half set up stops the build; CI signs on a tag (#74)
-- [[2026-11-20-barcode-type-per-card]] — (partly built: not yet the custom-store forms) a typed number's barcode type is saved on every card and chosen on the card form; another type than the rule's turns the rule off; custom-store forms stop asking (#187)
+- [[2026-11-20-barcode-type-per-card]] — a typed number's barcode type is saved on every card and chosen on the card form; another type than the rule's turns the rule off; custom-store forms stop asking (#187)
 - [[2026-11-23-public-repository]] — the repo goes public under GPL-3.0-or-later after a sweep; author email accepted, old Actions runs deleted (#200)
 - [[2026-11-23-ci-run-trims]] — the Tests workflow's first step decides whether the run needs the gate; a wiki-only PR runs only the public-safe test, a merged PR's tested tree isn't re-run on `master`, Dependabot monthly (#199)
 - [[2026-11-25-widget-tile-height-from-its-real-width]] — a widget tile's height comes from its real width (a sizer `ImageView` with `adjustViewBounds` in a layout of our own), not from the width of the layout the launcher picked; square below 120dp of tile width, 4 layout sizes at the switch points (#216)

@@ -87,41 +87,49 @@ class CustomStoreScreenTest {
     }
 
     @Test
-    fun theFirstColourAndCode128_arePickedAtFirst() {
+    fun theFirstColour_isPickedAtFirst() {
         setScreen()
 
         composeRule.onNodeWithContentDescription("Blue") // COLORS[0]
             .assertIsSelected()
         composeRule.onNodeWithContentDescription("Red") // COLORS[1]
             .assertIsNotSelected()
-        composeRule.onNodeWithText(BarcodeFormat.CODE_128.displayName).performScrollTo().assertIsSelected()
     }
 
     @Test
-    fun everyFormatACustomStoreCanPick_isOffered() { // #47
+    fun theNewStoreForm_asksForNoBarcodeType() { // #187: the card form asks for it
         setScreen()
 
-        CustomStoreViewModel.FORMATS.forEach {
-            composeRule.onNodeWithText(it.displayName).performScrollTo().assertIsDisplayed()
-        }
-        composeRule.onNodeWithText(BarcodeFormat.GS1_128.displayName).assertDoesNotExist()
+        composeRule.onNodeWithText("Create").performScrollTo()
+        composeRule.onNodeWithText("Barcode for typed numbers").assertDoesNotExist()
+        composeRule.onNodeWithText("Code 128").assertDoesNotExist()
+        composeRule.onNodeWithText("A scanned card keeps the barcode it was scanned in.").assertDoesNotExist()
     }
 
     @Test
-    fun creatingAStore_savesItWithTheChosenColourAndFormat_andOpensTheScannerForIt() {
+    fun theEditStoreForm_asksForNoBarcodeType() { // #187
+        stores.stores.value = listOf(aStore(id = "custom", name = "My Shop", isCustom = true, defaultBarcodeFormat = BarcodeFormat.EAN_13))
+        setScreen(CustomStore("custom"))
+
+        composeRule.onNodeWithText("Change logo").performScrollTo()
+        composeRule.onNodeWithText("Barcode for typed numbers").assertDoesNotExist()
+        composeRule.onNodeWithText("EAN-13").assertDoesNotExist()
+    }
+
+    @Test
+    fun creatingAStore_savesItWithTheChosenColour_inCode128_andOpensTheScannerForIt() { // Code 128: #187
         setScreen()
         val color = CustomStoreViewModel.COLORS[3]
 
         composeRule.onNodeWithTag(CUSTOM_STORE_NAME_TAG).performTextInput("My Shop")
         composeRule.onNodeWithContentDescription("Orange").performClick() // COLORS[3]
-        composeRule.onNodeWithText(BarcodeFormat.EAN_13.displayName).performScrollTo().performClick()
         composeRule.onNodeWithText("Create").performScrollTo().performClick()
 
         composeRule.runOnIdle {
             val saved = stores.stores.value.single()
             assertThat(saved.name).isEqualTo("My Shop")
             assertThat(saved.color).isEqualTo(color.hex)
-            assertThat(saved.defaultBarcodeFormat).isEqualTo(BarcodeFormat.EAN_13)
+            assertThat(saved.defaultBarcodeFormat).isEqualTo(BarcodeFormat.CODE_128)
             assertThat(scanned).containsExactly(saved.id)
         }
     }
@@ -149,7 +157,9 @@ class CustomStoreScreenTest {
 
     @Test
     fun editingAStore_showsItsValues_andSavingItReturns() { // #53
-        stores.stores.value = listOf(aStore(id = "custom", name = "My Shop", color = CustomStoreViewModel.COLORS[2].hex, isCustom = true))
+        stores.stores.value = listOf(
+            aStore(id = "custom", name = "My Shop", color = CustomStoreViewModel.COLORS[2].hex, isCustom = true, defaultBarcodeFormat = BarcodeFormat.QR_CODE),
+        )
         setScreen(CustomStore("custom"))
 
         composeRule.onNodeWithText("Edit store").assertIsDisplayed()
@@ -157,11 +167,13 @@ class CustomStoreScreenTest {
         composeRule.onNodeWithContentDescription("Green") // COLORS[2]
             .assertIsSelected()
         composeRule.onNodeWithText("Create").assertDoesNotExist()
-        composeRule.onNodeWithText(BarcodeFormat.QR_CODE.displayName).performScrollTo().performClick()
+        composeRule.onNodeWithTag(CUSTOM_STORE_NAME_TAG).performTextInput("2")
         composeRule.onNodeWithText("Save").performScrollTo().performClick()
 
         composeRule.runOnIdle {
-            assertThat(stores.stores.value.single().defaultBarcodeFormat).isEqualTo(BarcodeFormat.QR_CODE)
+            val saved = stores.stores.value.single()
+            assertThat(saved.name).isEqualTo("2My Shop") // typed where the cursor starts
+            assertThat(saved.defaultBarcodeFormat).isEqualTo(BarcodeFormat.QR_CODE) // its own type, not asked (#187)
             assertThat(backs).isEqualTo(1)
             assertThat(scanned).isEmpty()
         }
@@ -319,13 +331,10 @@ class CustomStoreScreenTest {
         shown.collect()
 
         shown.assertSeen(
-            "Új bolt", "Vissza", "Bolt neve", "Szín", "Kék", "Szürke", "Vonalkód a beírt számokhoz", "QR-kód",
-            "A beolvasott kártya megtartja a saját vonalkódját.", "Nem sikerült menteni a boltot. Próbáld újra.",
+            "Új bolt", "Vissza", "Bolt neve", "Szín", "Kék", "Szürke", "Nem sikerült menteni a boltot. Próbáld újra.",
             "Létrehozás",
         )
-        // Symbology names other than the QR ones are proper names (wiki: 2026-11-09-ui-language).
-        val symbologyNames = CustomStoreViewModel.FORMATS.filter { it != BarcodeFormat.QR_CODE }.map { it.displayName }
-        shown.assertEveryTextIsTranslated("My Shop", *symbologyNames.toTypedArray())
+        shown.assertEveryTextIsTranslated("My Shop")
     }
 
     @Test
@@ -350,8 +359,7 @@ class CustomStoreScreenTest {
             "Bolt szerkesztése", "Mentés", "Törlés", "Törlöd ezt a boltot: My Shop?", "Logó", "Logó módosítása",
             "A hozzá tartozó 2 kártya is törlődik vele.", "Mégse", "Nem sikerült törölni a boltot. Próbáld újra.",
         )
-        val symbologyNames = CustomStoreViewModel.FORMATS.filter { it != BarcodeFormat.QR_CODE }.map { it.displayName }
-        shown.assertEveryTextIsTranslated("My Shop", "MS", *symbologyNames.toTypedArray()) // its initials in the logo slot (#192)
+        shown.assertEveryTextIsTranslated("My Shop", "MS") // its initials in the logo slot (#192)
     }
 
     @Test
@@ -502,8 +510,7 @@ class CustomStoreScreenTest {
         back.onTheScreen()
         shown.collect()
 
-        val symbologyNames = CustomStoreViewModel.FORMATS.filter { it != BarcodeFormat.QR_CODE }.map { it.displayName }
-        shown.assertEveryTextIsTranslated(*symbologyNames.toTypedArray())
+        shown.assertEveryTextIsTranslated()
         shown.assertSeen("Elveted ezt a boltot?", "Elvetés", "Szerkesztés folytatása")
     }
 

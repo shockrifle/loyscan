@@ -81,8 +81,6 @@
     <string name="store_gone">This store is no longer available.</string>
     <string name="store_name">Store name</string>
     <string name="store_colour">Colour</string>
-    <string name="barcode_for_typed_numbers">Barcode for typed numbers</string>
-    <string name="scanned_card_keeps_its_barcode">A scanned card keeps the barcode it was scanned in.</string>
     <string name="store_save_failed">The store couldn\'t be saved. Try again.</string>
     <string name="save">Save</string>
     <string name="create">Create</string>

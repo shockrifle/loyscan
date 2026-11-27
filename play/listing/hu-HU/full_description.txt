@@ -2,7 +2,7 @@ A LoyScan a telefonodon tartja a törzsvásárlói kártyáidat, így a műanyag
 
 Kártya hozzáadása
 • Olvasd be a kártya vonalkódját a kamerával, egy képről, vagy írd be a számát.
-• Válaszd ki a boltot a beépített magyar boltlistából, vagy add meg a sajátodat névvel, színnel és vonalkódtípussal.
+• Válaszd ki a boltot a beépített magyar boltlistából, vagy add meg a sajátodat névvel és színnel.
 • A listában szereplő boltok többségénél a LoyScan gépelés közben ellenőrzi a szám hosszát és formátumát, és az ellenőrző számjegyét is, ha a kártyának van ilyen.
 • Fotózd le a kártya elejét és hátulját, és adj saját logót egy boltnak.
 

@@ -18,7 +18,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -50,14 +49,13 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.bdaniel.loyscan.ui.LeaveFormDialog
 import com.bdaniel.loyscan.ui.LogoPreview
 import com.bdaniel.loyscan.ui.theme.Spacing
-import com.bdaniel.loyscan.ui.barcodeFormatName
 import com.bdaniel.loyscan.ui.theme.icons.Icons
 import com.bdaniel.loyscan.ui.toBrandColorOrNull
 
 const val CUSTOM_STORE_NAME_TAG = "customStoreName"
 
 /**
- * "Other card": a store that isn't listed, with a name, a colour and the barcode format for its typed numbers.
+ * "Other card": a store that isn't listed, with a name and a colour (its cards' barcode type is chosen on the card form, #187).
  * Creating it opens the scanner for it. Editing a custom store (#53) saves it and goes back; it can also be deleted,
  * after a confirmation that says how many cards go with it, and its logo is shown with a way to its logo screen (#151).
  */
@@ -164,20 +162,6 @@ fun CustomStoreScreen(
                     )
                 }
             }
-            Text(stringResource(R.string.barcode_for_typed_numbers), style = MaterialTheme.typography.titleSmall)
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
-                CustomStoreViewModel.FORMATS.forEach { format ->
-                    FilterChip(
-                        selected = format == state.format,
-                        onClick = { viewModel.onFormatChange(format) },
-                        label = { Text(barcodeFormatName(format)) },
-                    )
-                }
-            }
-            Text(
-                stringResource(R.string.scanned_card_keeps_its_barcode),
-                style = MaterialTheme.typography.bodyMedium,
-            )
             val storeId = state.storeId
             if (storeId != null) { // the edit form only: a new store has no id before Create (#151)
                 Text(stringResource(R.string.logo), style = MaterialTheme.typography.titleSmall)
