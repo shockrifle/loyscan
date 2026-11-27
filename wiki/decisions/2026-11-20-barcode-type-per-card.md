@@ -32,6 +32,10 @@ form no longer asks for it.
   "Scanned · <type>" without one while its number is untouched. Editing a scan's number makes it typed; it then starts
   at the scan's type when the selector offers it, else at the store's starting type below. Editing a card shows and
   keeps its saved type.
+  *Amended 2026-11-27 (#187 review, the owner's choice):* an edited scan that the store's rule reads starts at the
+  rule's type instead. The field shows the core the rule recovered from the scan, not the scanned content, so in the
+  scan's own type with the rule off that core would become the barcode: a Tesco card read without its GS1 mark would
+  lose the rule's prefix and check digit, and the form would call it valid.
 - A new typed card starts at the rule's type, else the store's default. The rule makes the barcode content while the
   card's type equals the rule's; any other type draws the number as typed.
 - Neither custom-store form asks for a type; a new custom store's default is Code 128, an existing one keeps its own.

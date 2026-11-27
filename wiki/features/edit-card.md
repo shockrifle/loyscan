@@ -25,8 +25,9 @@ number and store of one card. Deleting a card is on [[card-detail]].
   instead"). The saved-state keys for the label, note and number stay `null` until the user changes them, so the card's
   values aren't copied into them and a change survives process death.
 - **Editing a scanned card's number by hand** makes it a typed number: `scannedFormat` is cleared, so the barcode is
-  built from the typed number, not drawn verbatim ([[2026-10-12-data-model-v2]]). Its type starts at the scan's when
-  the store offers it for a typed card, else at the store's starting type ([[add-card]] → The card's type, #187).
+  built from the typed number, not drawn verbatim ([[2026-10-12-data-model-v2]]). Its type starts at the rule's when the
+  store's rule reads the scan, else at the scan's when the store offers it for a typed card, else at the store's
+  starting type ([[add-card]] → The card's type, #187).
 - **The card keeps its type** (#187, [[2026-11-20-barcode-type-per-card]]): a typed card opens and is saved in the type
   it was saved in, even when its store now starts new cards at another, and also when it is moved to another store (the
   owner's choice, 2026-11-27); in a type other than the store rule's, the rule doesn't apply. Tests:

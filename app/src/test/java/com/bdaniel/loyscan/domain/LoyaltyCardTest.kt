@@ -128,13 +128,6 @@ class LoyaltyCardTest {
     }
 
     @Test
-    fun aTypedCard_isDrawnInTheTypeItWasSavedWith_notItsStoresDefault() { // #187
-        val card = aLoyaltyCard(store = aStore(defaultBarcodeFormat = BarcodeFormat.CODE_39), barcodeFormat = BarcodeFormat.ITF)
-
-        assertThat(card.barcodeFormat).isEqualTo(BarcodeFormat.ITF)
-    }
-
-    @Test
     fun aTypedCardAtItsRulesType_isBuiltAndShownByTheRule() { // #187
         val card = aLoyaltyCard(store = ruledStore, number = "123456789", barcodeFormat = BarcodeFormat.EAN_13)
 

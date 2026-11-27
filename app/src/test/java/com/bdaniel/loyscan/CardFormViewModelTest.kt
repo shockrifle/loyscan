@@ -213,7 +213,9 @@ class CardFormViewModelTest {
     }
 
     @Test
-    fun editingAScanInAnotherTypeThanTheRules_keepsTheScansType_andChecksTheNumberAsTyped() = runTest { // #187
+    fun editingAScanTheRuleReadsInAnotherFormat_startsAtTheRulesType_soTheRuleBuildsTheBarcode() = runTest { // #187 review
+        // The field shows the rule's core ("1234 5674"), not the QR content: kept in QR with the rule off, the core text
+        // itself would become the barcode.
         val viewModel = viewModel(CardForm("ruled", scannedContent = "12345674", scannedFormat = BarcodeFormat.QR_CODE))
 
         viewModel.state.test {
@@ -221,9 +223,25 @@ class CardFormViewModelTest {
             viewModel.onNumberChange("1234 567")
 
             val state = awaitItem()
-            assertThat(state.barcodeFormat).isEqualTo(BarcodeFormat.QR_CODE)
-            assertThat(state.check).isEqualTo(NumberCheck.Valid) // the rule's 8 digits don't apply to a QR code
-            assertThat(state.numberDigitsOnly).isFalse()
+            assertThat(state.barcodeFormat).isEqualTo(BarcodeFormat.CODE_128)
+            assertThat(state.check).isEqualTo(NumberCheck.Invalid(setOf(Validation.Error.TOO_SHORT)))
+            assertThat(state.numberDigitsOnly).isTrue()
+        }
+    }
+
+    @Test
+    fun editingAPlainReadOfAGs1RulesCard_isSavedInTheRulesGs1Type_builtByTheRule() = runTest { // #187 review: a Tesco card read without its GS1 mark
+        val viewModel = viewModel(CardForm("gs1", scannedContent = "12345674", scannedFormat = BarcodeFormat.CODE_128))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.onNumberChange("1234 5682")
+            viewModel.save()
+
+            val saved = cards.cards.value.single()
+            assertThat(saved.barcodeFormat).isEqualTo(BarcodeFormat.GS1_128)
+            assertThat(saved.barcodeContent).isEqualTo("12345682") // by the rule: the spaces go
+            cancelAndIgnoreRemainingEvents()
         }
     }
 
