@@ -156,6 +156,19 @@ class DatabaseMigrationTest {
     }
 
     @Test
+    fun aTypedCardWhoseStoresRuleNamesNoKnownFormat_atVersion5_getsTheStoresDefault_afterTheMigration() = runTest { // #187 review
+        createDatabaseFromExportedSchema(context, DATABASE, 5).use {
+            it.insertACardAsTheFirstReleaseStoredIt(
+                storeId = "hu-ofotert", defaultBarcodeFormat = "CODE_93", cardNumberRule = """{"id":"r","format":"NOPE"}""",
+            )
+        }
+
+        val card = openAsTheAppDoes().loyaltyCardDao().getAllWithStore().first().single().loyaltyCard
+
+        assertThat(card.barcodeFormat).isEqualTo(BarcodeFormat.CODE_93)
+    }
+
+    @Test
     fun aTypedCardFromTheFirstRelease_getsItsStoresDefault_afterTheMigrations() = runTest { // #187
         createDatabaseFromExportedSchema(context, DATABASE, FIRST_RELEASED_VERSION).use {
             it.insertACardAsTheFirstReleaseStoredIt(defaultBarcodeFormat = "UPC_A")

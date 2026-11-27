@@ -79,14 +79,16 @@ with the picture's barcode (#77, below). Everything runs offline on the local da
 - **The card's type** (#187, [[2026-11-20-barcode-type-per-card]]; the selector isn't built yet). Every card is saved
   with its barcode type: a scan in its scanned format (also after switching to a suggested store), a new typed card in
   the store's starting type (`Store.startingBarcodeFormat`: the rule's format, else the store's default). An edited
-  scan's number starts at the scan's format when a typed card of the store can be in it
+  scan the store's rule reads starts at the rule's type, since the field showed the rule's core, which only the rule
+  turns back into the barcode (review; `editingAScanTheRuleReadsInAnotherFormat_startsAtTheRulesType_soTheRuleBuildsTheBarcode`,
+  `editingAPlainReadOfAGs1RulesCard_isSavedInTheRulesGs1Type_builtByTheRule`). Any other edited scan's number starts at
+  the scan's format when a typed card of the store can be in it
   (`Store.barcodeFormatChoices`: `BarcodeFormat.forCustomStores` plus the starting type), else at the starting type, so
   an edited GS1-128 scan isn't saved as GS1. The store's rule checks the number, formats it and makes its barcode only
   while the card is in the rule's format; in any other type the number is checked as a store without a rule checks it
   (`DoesNotFitFormat`) and drawn as typed, and the field asks for digits only while a digits rule applies
   (`CardFormState.numberDigitsOnly`). Tests: `CardFormViewModelTest.aNewTypedCard_startsAtItsStoresRuleType_andIsSavedInIt`,
   `aNewTypedCard_ofAStoreWithoutARule_isSavedInTheStoresDefault`, `editingANewScansNumber_startsAtTheScansType_whenTheSelectorOffersIt`,
-  `editingAScanInAnotherTypeThanTheRules_keepsTheScansType_andChecksTheNumberAsTyped`,
   `aScan_isSavedInItsScannedFormat_alsoAfterASwitchToAnotherStore`, `theNumberField_asksForDigits_onlyWhileTheStoresDigitsRuleApplies`;
   `domain/LoyaltyCardTest.aTypedCardAtItsRulesType_isBuiltAndShownByTheRule`, `aTypedCardAtAnotherType_isDrawnAndShownAsTyped_withoutTheRule`.
 - **Live check** against the store's card-number rule ([[2026-10-09-card-number-rule-engine]]), on every change:

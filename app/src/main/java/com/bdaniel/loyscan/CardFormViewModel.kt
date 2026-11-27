@@ -511,16 +511,21 @@ class CardFormViewModel @Inject constructor(
      * The card as it would be saved: the untouched scan verbatim with its format, else the typed number (trimmed). An
      * edit starts from the [original] card, so its id, creation and uses stay.
      *
-     * Its type (#187): an untouched scan's format; an edited typed card's own, also in another store (the owner's choice);
-     * an edited scan's format when the store offers it for a typed number, else the store's starting type, as for a new
-     * typed card.
+     * Its type (#187): an untouched scan's format; an edited typed card's own, also in another store (the owner's choice).
+     * An edited scan the store's rule reads starts at the rule's type: the field showed the core the rule recovered, so
+     * only the rule makes the barcode from it again (#187 review: a Tesco card read without its GS1 mark). Any other
+     * edited scan starts at its own format when the store offers it for a typed number, else at the store's starting
+     * type, as a new typed card does.
      */
     private fun draft(store: Store, original: LoyaltyCard?, typed: String?): LoyaltyCard {
         val typedNumber = typedOrNull(original, typed)
         val scan = scan(original)
         val untouchedScan = scan?.takeIf { typedNumber == null }
+        val rule = store.cardNumberRule
+        val ruleReadsScan = scan != null && rule != null && CardNumberEngine.match(scan.first, scan.second, rule) != null
         val barcodeFormat = untouchedScan?.second
             ?: original?.takeIf { it.scannedFormat == null }?.barcodeFormat
+            ?: rule?.format?.takeIf { ruleReadsScan }
             ?: scan?.second?.takeIf { it in store.barcodeFormatChoices }
             ?: store.startingBarcodeFormat
         return (original ?: LoyaltyCard.EMPTY).copy(
