@@ -108,6 +108,7 @@
     <string name="looks_like_card_from">Ezek közül valamelyik bolt kártyájának tűnik:</string>
     <string name="scanned_format">Beolvasva · %1$s</string>
     <string name="typed_number_barcode">Vonalkód: %1$s</string>
+    <string name="change_barcode_type">Vonalkódtípus módosítása</string>
     <string name="label_optional">Címke (nem kötelező)</string>
     <string name="note_optional">Megjegyzés (nem kötelező)</string>
     <string name="add_front_photo">Előoldali fotó hozzáadása</string>

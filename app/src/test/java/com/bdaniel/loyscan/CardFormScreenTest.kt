@@ -195,6 +195,45 @@ class CardFormScreenTest {
     }
 
     @Test
+    fun aScansType_isNoSelector_butOnceItsNumberIsEdited_theTypeIsCollapsed_andTappingItOffersTheTypes() { // #187
+        setScreen(CardForm("plain", scannedContent = "ABC-1", scannedFormat = BarcodeFormat.CODE_39))
+
+        composeRule.onNode(hasText("Scanned · Code 39") and hasClickAction()).assertDoesNotExist()
+        composeRule.onNodeWithText("Scanned · Code 39").assertIsDisplayed()
+        typeNumber("ABC-2")
+
+        composeRule.onNode(hasText("Barcode: Code 39") and hasClickAction()).assertIsDisplayed()
+        composeRule.onNodeWithText("Code 93").assertDoesNotExist() // collapsed
+        composeRule.onNodeWithText("Barcode: Code 39").performClick()
+        composeRule.onNodeWithText("Code 93").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("QR code").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun pickingAType_collapsesTheSelector_andTheCardIsSavedInIt() { // #187
+        setScreen(CardForm("plain"))
+        typeNumber("ABC-1")
+
+        composeRule.onNodeWithText("Barcode: Code 128").performScrollTo().performClick()
+        composeRule.onNodeWithText("Code 39").performScrollTo().performClick()
+
+        composeRule.onNodeWithText("Barcode: Code 39").assertIsDisplayed()
+        composeRule.onNodeWithText("Code 93").assertDoesNotExist()
+        composeRule.onNodeWithText("Save").performScrollTo().performClick()
+        composeRule.waitForIdle()
+        assertThat(cards.cards.value.single().barcodeFormat).isEqualTo(BarcodeFormat.CODE_39)
+    }
+
+    @Test
+    fun theTypeSelector_isTallEnoughToTap() { // #187: 48dp laid out, as touch bounds are padded to 48dp regardless
+        setScreen(CardForm("plain"))
+        typeNumber("ABC-1")
+
+        val row = composeRule.onNode(hasText("Barcode: Code 128") and hasClickAction()).fetchSemanticsNode()
+        with(composeRule.density) { assertThat(row.boundsInRoot.height.toDp()).isAtLeast(48.dp) }
+    }
+
+    @Test
     @Config(qualifiers = "+hu")
     fun inHungarian_aScannedQrCode_namesItsFormatInHungarian() { // #72
         setScreen(CardForm("plain", scannedContent = "ABC-123", scannedFormat = BarcodeFormat.QR_CODE))
@@ -721,6 +760,8 @@ class CardFormScreenTest {
             typeNumber(number)
             shown.collect()
         }
+        composeRule.onNodeWithText("Vonalkód: Code 128").performScrollTo().performClick() // #187
+        shown.collect()
         composeRule.onNodeWithText("Előoldali fotó hozzáadása").performScrollTo().performClick()
         shown.collect()
         composeRule.onNodeWithText("Választás a galériából").performClick()
@@ -733,7 +774,11 @@ class CardFormScreenTest {
         composeRule.onNodeWithText("Nem sikerült menteni a kártyát. Próbáld újra.").performScrollTo()
         shown.collect()
 
-        shown.assertEveryTextIsTranslated("Ruled Store")
+        // The symbology names other than the QR ones are proper names, shown untranslated (barcodeFormatName).
+        val symbologyNames = arrayOf(
+            "Aztec", "Codabar", "Code 39", "Code 93", "Code 128", "Data Matrix", "EAN-8", "EAN-13", "ITF", "PDF417", "UPC-A", "UPC-E",
+        )
+        shown.assertEveryTextIsTranslated("Ruled Store", *symbologyNames)
         shown.assertSeen(
             "Kártya hozzáadása",
             "Vissza",
@@ -748,6 +793,9 @@ class CardFormScreenTest {
             "Ruled Store kártyaszámban nem lehet ilyen karakter.",
             "Túl hosszú Ruled Store kártyaszámnak.",
             "Megjelenítve: 1234 5674",
+            "Vonalkód: Code 128",
+            "QR-kód",
+            "Vonalkódtípus módosítása",
             "Fotó készítése",
             "Választás a galériából",
             "Mégse",
@@ -1109,6 +1157,8 @@ class CardFormScreenTest {
     @GraphicsMode(GraphicsMode.Mode.NATIVE) // real text measuring
     fun atFontScale2_onANarrowScreen_noTextIsClippedOrOverlaps() { // #108; Robolectric's default screen is 320dp wide
         setScreen(CardForm("ruled"), fontScale = 2f)
+        composeRule.onNodeWithText("Barcode: Code 128").performScrollTo().performClick() // the open selector too (#187)
+        composeRule.onNodeWithText("QR code").performScrollTo()
 
         composeRule.assertTextFitsAndDoesNotOverlap()
     }

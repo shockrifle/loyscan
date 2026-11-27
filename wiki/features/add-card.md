@@ -76,7 +76,7 @@ with the picture's barcode (#77, below). Everything runs offline on the local da
   that rendering would have saved it, brackets and all, as the barcode (found in review). A typed number: `scannedFormat` is dropped and the barcode is built from the typed number by the store's
   rule, the same rule #8 asks of editing. A typed number is stored as typed (trimmed). For a typed number the form
   says "Barcode: <format>".
-- **The card's type** (#187, [[2026-11-20-barcode-type-per-card]]; the selector isn't built yet). Every card is saved
+- **The card's type** (#187, [[2026-11-20-barcode-type-per-card]]). Every card is saved
   with its barcode type: a scan in its scanned format (also after switching to a suggested store), a new typed card in
   the store's starting type (`Store.startingBarcodeFormat`: the rule's format, else the store's default). An edited
   scan the store's rule reads starts at the rule's type, since the field showed the rule's core, which only the rule
@@ -91,6 +91,23 @@ with the picture's barcode (#77, below). Everything runs offline on the local da
   `aNewTypedCard_ofAStoreWithoutARule_isSavedInTheStoresDefault`, `editingANewScansNumber_startsAtTheScansType_whenTheSelectorOffersIt`,
   `aScan_isSavedInItsScannedFormat_alsoAfterASwitchToAnotherStore`, `theNumberField_asksForDigits_onlyWhileTheStoresDigitsRuleApplies`;
   `domain/LoyaltyCardTest.aTypedCardAtItsRulesType_isBuiltAndShownByTheRule`, `aTypedCardAtAnotherType_isDrawnAndShownAsTyped_withoutTheRule`.
+- **The type selector** (#187). An untouched scan shows "Scanned · <type>" as plain text. A typed or edited number
+  shows "Barcode: <type>" as a row (`BarcodeTypeSelector` in `CardFormScreen.kt`, at least 48dp tall, click label
+  "Change barcode type"); tapping it shows chips of `CardFormState.barcodeFormatChoices`, and picking one sets the type
+  (`CardFormViewModel.onBarcodeFormatChange`, kept in the saved state) and collapses the chips. The choices are
+  `Store.barcodeFormatChoices` plus the card's own type when that isn't among them: an edited card moved from a store
+  whose rule is GS1-128 keeps that type, and it stays selectable (the owner's choice, 2026-11-27). A picked type comes
+  before every other rule for a typed number and is kept across a store switch, as an edited card's own type is. A
+  pick on an untouched scan, or once saving has started, is ignored. The open/closed state isn't saved: the selector
+  starts collapsed after process death. A changed type is a change for Back (#209). Tests:
+  `CardFormViewModelTest.aTypedNumber_offersEveryCustomStoreType_plusItsStoresGs1RuleType_butAnUntouchedScanNone`,
+  `aTypedNumber_ofAStoreWhoseTypeIsAmongThem_offersTheCustomStoreTypesOnly`, `aPickedType_isSavedWithTheCard_andTurnsTheStoresRuleOff`,
+  `pickingTheRulesTypeAgain_turnsTheRuleBackOn`, `aPickOnAnUntouchedScan_isIgnored_alsoOnceItsNumberIsEdited`,
+  `editingAScansNumber_thenPickingAType_savesThatType`, `aPickedType_isKeptAfterASwitchToAnotherStore`,
+  `aPickedType_isRestoredAfterProcessDeath`, `aChangedType_isAChange_andPickingTheOpeningTypeAgainIsNot`,
+  `theTypeCantBePicked_whileTheCardIsSaving`; `CardFormScreenTest.aScansType_isNoSelector_butOnceItsNumberIsEdited_theTypeIsCollapsed_andTappingItOffersTheTypes`,
+  `pickingAType_collapsesTheSelector_andTheCardIsSavedInIt`, `theTypeSelector_isTallEnoughToTap` (it measures the
+  laid-out bounds: a node's touch bounds are padded to 48dp anyway, so they passed without the row's minimum height).
 - **Live check** against the store's card-number rule ([[2026-10-09-card-number-rule-engine]]), on every change:
   - typed: `CardNumberEngine.validate`; each error has a message (too short, too long, characters the store doesn't
     use, wrong start, check digit). An empty field can't be saved. A store without a rule accepts any number its

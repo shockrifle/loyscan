@@ -5,7 +5,10 @@ import androidx.activity.compose.BackHandler
 import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.aspectRatio
@@ -21,6 +24,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
@@ -62,6 +66,7 @@ import com.bdaniel.loyscan.ui.CardPhoto
 import com.bdaniel.loyscan.ui.PhotoCamera
 import com.bdaniel.loyscan.ui.LeaveFormDialog
 import com.bdaniel.loyscan.ui.PhotoCropScreen
+import com.bdaniel.loyscan.domain.BarcodeFormat
 import com.bdaniel.loyscan.ui.rememberPhotoCamera
 import com.bdaniel.loyscan.ui.hiltImageLoader
 import com.bdaniel.loyscan.ui.barcodeFormatName
@@ -170,13 +175,17 @@ fun CardFormScreen(
                 }
             }
             state.barcodeFormat?.let { format ->
-                Text(
-                    stringResource(
-                        if (state.scannedFormat != null) R.string.scanned_format else R.string.typed_number_barcode,
-                        barcodeFormatName(format),
-                    ),
-                    style = MaterialTheme.typography.bodyMedium,
-                )
+                if (state.barcodeFormatChoices.isEmpty()) { // an untouched scan is drawn as scanned (#187)
+                    Text(
+                        stringResource(
+                            if (state.scannedFormat != null) R.string.scanned_format else R.string.typed_number_barcode,
+                            barcodeFormatName(format),
+                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                } else {
+                    BarcodeTypeSelector(format, state.barcodeFormatChoices, viewModel::onBarcodeFormatChange)
+                }
             }
             OutlinedTextField(
                 value = state.label,
@@ -412,6 +421,48 @@ private fun problemText(check: NumberCheck, storeName: String): String? = when (
  * A switch for where the card's front photo is shown: My cards (#184) or the widget (#185). The whole row toggles, so
  * TalkBack reads one switch named by its [text].
  */
+/**
+ * The card's type (#187), collapsed to one line for the many who never change it; tapping it shows [choices] as chips,
+ * and picking one collapses it again.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun BarcodeTypeSelector(format: BarcodeFormat, choices: List<BarcodeFormat>, onPick: (BarcodeFormat) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    val changeLabel = stringResource(R.string.change_barcode_type)
+    Column {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = LocalMinimumInteractiveComponentSize.current) // the row is the touch target
+                .clickable(onClickLabel = changeLabel, role = Role.Button) { expanded = !expanded },
+            horizontalArrangement = Arrangement.spacedBy(Spacing.m),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                stringResource(R.string.typed_number_barcode, barcodeFormatName(format)),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.weight(1f),
+            )
+            Icon(Icons.Default.Edit, contentDescription = null)
+        }
+        if (expanded) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
+                choices.forEach { choice ->
+                    FilterChip(
+                        selected = choice == format,
+                        onClick = {
+                            onPick(choice)
+                            expanded = false
+                        },
+                        label = { Text(barcodeFormatName(choice)) },
+                    )
+                }
+            }
+        }
+    }
+}
+
 @Composable
 private fun PhotoSwitch(text: String, checked: Boolean, enabled: Boolean, onCheckedChange: (Boolean) -> Unit) {
     Row(

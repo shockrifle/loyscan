@@ -1,7 +1,7 @@
 # Barcode type per card, chosen on the card form
 
-**Status:** Partly built (2026-11-27, #187 slice 1: the stored type, the migration, the rule on and off, the type the
-card form saves; not yet the selector or the custom-store forms without a type) · amends [[2026-10-22-custom-stores]] · **Date:** 2026-11-20 ·
+**Status:** Partly built (2026-11-27, #187: the stored type, the migration, the rule on and off, the type the card form
+saves, the selector; not yet the custom-store forms without a type) · amends [[2026-10-22-custom-stores]] · **Date:** 2026-11-20 ·
 **Issue:** [#187](https://github.com/shockrifle/loyscan/issues/187)
 
 A typed number's barcode type is saved on the card and chosen on the card form, for every store. A custom store's
@@ -36,6 +36,8 @@ form no longer asks for it.
   rule's type instead. The field shows the core the rule recovered from the scan, not the scanned content, so in the
   scan's own type with the rule off that core would become the barcode: a Tesco card read without its GS1 mark would
   lose the rule's prefix and check digit, and the form would call it valid.
+  *Amended 2026-11-27 (#187, the owner's choice):* the selector also lists the card's own type when the store doesn't
+  offer it. An edited card moved from a store whose rule is GS1-128 keeps that type, so it must stay selectable.
 - A new typed card starts at the rule's type, else the store's default. The rule makes the barcode content while the
   card's type equals the rule's; any other type draws the number as typed.
 - Neither custom-store form asks for a type; a new custom store's default is Code 128, an existing one keeps its own.

@@ -34,7 +34,9 @@ number and store of one card. Deleting a card is on [[card-detail]].
   `CardFormViewModelTest.editingATypedCard_keepsTheTypeItWasSavedWith_notItsStoresDefault`,
   `aTypedCardInAnotherTypeThanItsStoresRule_isCheckedAsTyped_notByTheRule`, `movingATypedCardToAnotherStore_keepsItsType`,
   `editingAScansNumber_startsAtTheScansType_whenTheSelectorOffersIt`, `editingAGs1ScansNumber_startsAtTheStoresStartingType`. Changing only the
-  label keeps the scan as it is.
+  label keeps the scan as it is. A typed card's type can be changed in the collapsed selector ([[add-card]] → The type
+  selector); a card in a type its store doesn't offer has that type among the choices too
+  (`CardFormViewModelTest.editingACardInATypeItsStoreDoesntOffer_listsThatTypeAmongTheChoices`).
 - The live check, "Save anyway", "Shown as …" and the "It looks like a card from:" hints work as when adding
   ([[add-card]]). Switching to a suggested store moves the card to that store.
 - **Change store** (next to the store's name, only while editing): a full-screen dialog, "Choose store", lists every
@@ -90,5 +92,4 @@ number and store of one card. Deleting a card is on [[card-detail]].
 
 ## Not implemented
 
-Nothing on the form itself. Out of scope here: deleting several cards is the list's multi-select ([[card-list]], #7); a
-card's type can't be chosen on the form yet (the selector of #187).
+Nothing on the form itself. Out of scope here: deleting several cards is the list's multi-select ([[card-list]], #7).
