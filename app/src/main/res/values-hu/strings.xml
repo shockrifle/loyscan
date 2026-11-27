@@ -79,8 +79,6 @@
     <string name="store_gone">Ez a bolt már nem létezik.</string>
     <string name="store_name">Bolt neve</string>
     <string name="store_colour">Szín</string>
-    <string name="barcode_for_typed_numbers">Vonalkód a beírt számokhoz</string>
-    <string name="scanned_card_keeps_its_barcode">A beolvasott kártya megtartja a saját vonalkódját.</string>
     <string name="store_save_failed">Nem sikerült menteni a boltot. Próbáld újra.</string>
     <string name="save">Mentés</string>
     <string name="create">Létrehozás</string>

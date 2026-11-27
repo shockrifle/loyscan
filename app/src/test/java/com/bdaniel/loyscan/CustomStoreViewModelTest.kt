@@ -41,19 +41,13 @@ class CustomStoreViewModelTest {
     private val photos = FakeCardPhotos()
 
     @Test
-    fun theForm_startsWithNoName_theFirstColourAndCode128_andCantBeCreated() = runTest {
+    fun theForm_startsWithNoName_andTheFirstColour_andCantBeCreated() = runTest {
         viewModel().state.test {
             val state = awaitItem()
             assertThat(state.name).isEmpty()
             assertThat(state.color).isEqualTo(CustomStoreViewModel.COLORS.first().hex)
-            assertThat(state.format).isEqualTo(BarcodeFormat.CODE_128)
             assertThat(state.canSave).isFalse()
         }
-    }
-
-    @Test
-    fun theFormats_areTheOnesACustomStoreCanPick() { // #47
-        assertThat(CustomStoreViewModel.FORMATS).isEqualTo(BarcodeFormat.forCustomStores)
     }
 
     @Test
@@ -72,13 +66,12 @@ class CustomStoreViewModelTest {
     }
 
     @Test
-    fun create_savesACustomStoreWithTheTrimmedName_colourAndFormat_andNamesIt() = runTest {
+    fun create_savesACustomStoreWithTheTrimmedNameAndColour_inCode128_andNamesIt() = runTest { // Code 128: #187
         val viewModel = viewModel()
         val color = CustomStoreViewModel.COLORS[2].hex
 
         viewModel.onNameChange("  My Shop ")
         viewModel.onColorChange(color)
-        viewModel.onFormatChange(BarcodeFormat.EAN_13)
 
         viewModel.state.test {
             skipItems(1)
@@ -95,7 +88,7 @@ class CustomStoreViewModelTest {
                     logo = null,
                     aliases = emptyList(),
                     countryCodes = emptyList(),
-                    defaultBarcodeFormat = BarcodeFormat.EAN_13,
+                    defaultBarcodeFormat = BarcodeFormat.CODE_128,
                     cardNumberRule = null,
                     isCustom = true,
                     updatedAt = now,
@@ -164,19 +157,17 @@ class CustomStoreViewModelTest {
     }
 
     @Test
-    fun theNameColourAndFormat_areRestoredAfterProcessDeath() = runTest {
+    fun theNameAndColour_areRestoredAfterProcessDeath() = runTest {
         val handle = SavedStateHandle()
         viewModel(handle).apply {
             onNameChange("My Shop")
             onColorChange(CustomStoreViewModel.COLORS[1].hex)
-            onFormatChange(BarcodeFormat.QR_CODE)
         }
 
         viewModel(SavedStateHandle(handle.keys().associateWith { handle.get<Any?>(it) })).state.test {
             val state = awaitItem()
             assertThat(state.name).isEqualTo("My Shop")
             assertThat(state.color).isEqualTo(CustomStoreViewModel.COLORS[1].hex)
-            assertThat(state.format).isEqualTo(BarcodeFormat.QR_CODE)
         }
     }
 
@@ -190,7 +181,6 @@ class CustomStoreViewModelTest {
             assertThat(state.ready).isTrue()
             assertThat(state.name).isEqualTo("My Shop")
             assertThat(state.color).isEqualTo(CustomStoreViewModel.COLORS[4].hex)
-            assertThat(state.format).isEqualTo(BarcodeFormat.EAN_13)
             assertThat(state.canSave).isTrue()
         }
     }
@@ -269,7 +259,7 @@ class CustomStoreViewModelTest {
     }
 
     @Test
-    fun savingAnEdit_writesTheNewNameColourAndFormat_andSaysItIsSaved() = runTest { // #53
+    fun savingAnEdit_writesTheNewNameAndColour_keepsTheStoresType_andSaysItIsSaved() = runTest { // #53; the type: #187
         stores.stores.value += custom
         val viewModel = editViewModel()
 
@@ -277,7 +267,6 @@ class CustomStoreViewModelTest {
             skipItems(1)
             viewModel.onNameChange(" My Gym ")
             viewModel.onColorChange(CustomStoreViewModel.COLORS[1].hex)
-            viewModel.onFormatChange(BarcodeFormat.QR_CODE)
             viewModel.save()
 
             val state = expectMostRecentItem()
@@ -287,7 +276,6 @@ class CustomStoreViewModelTest {
                 custom.copy(
                     name = "My Gym",
                     color = CustomStoreViewModel.COLORS[1].hex,
-                    defaultBarcodeFormat = BarcodeFormat.QR_CODE,
                     updatedAt = now,
                 )
             )
@@ -353,7 +341,6 @@ class CustomStoreViewModelTest {
         viewModel(SavedStateHandle(handle.keys().associateWith { handle.get<Any?>(it) })).state.test {
             val state = expectMostRecentItem()
             assertThat(state.name).isEqualTo("My Gym")
-            assertThat(state.format).isEqualTo(BarcodeFormat.EAN_13)
         }
     }
 
@@ -530,12 +517,11 @@ class CustomStoreViewModelTest {
     }
 
     @Test
-    fun theNameColourOrFormat_isAChange_whenItDiffersFromTheStoreOrTheDefaults() = runTest { // #209
+    fun theNameOrColour_isAChange_whenItDiffersFromTheStoreOrTheDefaults() = runTest { // #209
         stores.stores.value += custom
         val edits: List<Pair<String, CustomStoreViewModel.() -> Unit>> = listOf(
             "name" to { onNameChange("My Gym") },
             "colour" to { onColorChange(CustomStoreViewModel.COLORS[1].hex) },
-            "format" to { onFormatChange(BarcodeFormat.QR_CODE) },
         )
 
         for ((what, edit) in edits) {
@@ -560,8 +546,6 @@ class CustomStoreViewModelTest {
             form.onNameChange(" My Shop ")
             form.onColorChange(CustomStoreViewModel.COLORS[1].hex)
             form.onColorChange(CustomStoreViewModel.COLORS[4].hex)
-            form.onFormatChange(BarcodeFormat.QR_CODE)
-            form.onFormatChange(BarcodeFormat.EAN_13)
 
             assertThat(expectMostRecentItem().hasChanges).isFalse()
         }

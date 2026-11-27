@@ -1,7 +1,6 @@
 # Barcode type per card, chosen on the card form
 
-**Status:** Partly built (2026-11-27, #187: the stored type, the migration, the rule on and off, the type the card form
-saves, the selector; not yet the custom-store forms without a type) · amends [[2026-10-22-custom-stores]] · **Date:** 2026-11-20 ·
+**Status:** Active (built 2026-11-27, #187) · amends [[2026-10-22-custom-stores]] · **Date:** 2026-11-20 ·
 **Issue:** [#187](https://github.com/shockrifle/loyscan/issues/187)
 
 A typed number's barcode type is saved on the card and chosen on the card form, for every store. A custom store's

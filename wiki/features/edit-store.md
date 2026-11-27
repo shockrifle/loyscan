@@ -1,7 +1,7 @@
 # Edit store
 
 A custom store ("Other card", [[add-card]]) has an Edit button in the store picker. It opens the custom-store form
-for that store, which saves its new name, colour and barcode format for typed numbers and returns to the picker. The
+for that store, which saves its new name and colour and returns to the picker. The
 form's Delete action deletes the store and its cards after a confirmation that says how many cards go with it.
 Catalogue stores have no Edit button and can't be renamed, recoloured or deleted; only their logo can be set
 ([[store-logo]]). Issue [#53](https://github.com/shockrifle/loyscan/issues/53).
@@ -19,16 +19,19 @@ Catalogue stores have no Edit button and can't be renamed, recoloured or deleted
 ## Behaviour
 
 - **The form starts as the store.** The ViewModel finds the routed id among the custom stores (`StoreRepository.getAll`).
-  Until it has loaded, the form shows nothing (`CustomStoreState.ready`). The saved-state keys for the name, colour and
-  format stay `null` until the user changes them, so a change survives process death and the store's own values aren't
+  Until it has loaded, the form shows nothing (`CustomStoreState.ready`). The saved-state keys for the name and colour
+  stay `null` until the user changes them, so a change survives process death and the store's own values aren't
   copied into them, as for [[edit-card]].
-- **Saving writes only what the form edits:** the name (trimmed, required), colour, `defaultBarcodeFormat` and
-  `updatedAt` (now). `StoreDao.updateCustom` is an `UPDATE … WHERE id = :id AND isCustom = 1`, so a catalogue store
+- **Saving writes only what the form edits:** the name (trimmed, required), colour and `updatedAt` (now); the store's
+  `defaultBarcodeFormat` is written back as it was (`CustomStoreViewModelTest.savingAnEdit_writesTheNewNameAndColour_keepsTheStoresType_andSaysItIsSaved`,
+  `CustomStoreScreenTest.theEditStoreForm_asksForNoBarcodeType`). `StoreDao.updateCustom` is an `UPDATE … WHERE id = :id AND isCustom = 1`, so a catalogue store
   is never changed through it, whatever the caller passes; the catalogue loader owns those rows ([[store-catalogue]]).
   Then the form goes back to the picker (`CustomStoreDirections.toBack`), which lists the store under its new name.
-- **What a new format changes.** Since #187 every card keeps the type it was saved in
-  ([[2026-11-20-barcode-type-per-card]]), so the store's existing cards stay as they are; the format is only where a
-  new typed card of the store starts. Until #187 a typed card had no format of its own and was redrawn in the new one.
+- **No barcode type on the form** (#187, [[2026-11-20-barcode-type-per-card]]): each card's type is chosen on the
+  card form ([[add-card]] → The type selector), and the store's `defaultBarcodeFormat` is only where its new typed cards
+  start. Before #187 the form offered the 13 types of `BarcodeFormat.forCustomStores` as chips, and a new one redrew
+  the store's typed cards. `StoreRepository.update` still writes the column, so a store's own type stays as it was
+  (`RoomStoreRepositoryTest.aCustomStoresNewFormat_leavesItsCardsInTheTypesTheyWereSavedIn`).
 - A failed save keeps the form open with "The store couldn't be saved. Try again.", as when creating.
 - **Deleting.** The top bar's Delete icon (edit mode only, once the store has loaded) asks "Delete <name>?", naming
   the store as saved, not an unsaved rename in the field. The text says what goes with it: "It has no cards.", "Its
@@ -51,13 +54,13 @@ Catalogue stores have no Edit button and can't be renamed, recoloured or deleted
   **Change logo**, which opens the store's logo screen over the form (`CustomStoreDirections.toStoreLogo`); Back
   returns to the form with its unsaved edits, and a logo set there shows at once. Save leaves the logo as it is
   (`updateCustom` doesn't write it; `RoomStoreRepositoryTest.update_keepsACustomStoresLogo`). The new-store form has no slot ([[2026-11-13-user-supplied-store-logos]]).
-- **Back with changes asks first** (#209), on the new-store form too: a name (trimmed), colour or format that differs
+- **Back with changes asks first** (#209), on the new-store form too: a name (trimmed) or colour that differs
   from the store as stored, or from a new store's defaults, makes Back (system, gesture or the arrow) ask "Save
   changes?" (editing) or "Discard this store?" (creating), with **Discard** and **Save**, which is the form's Save or
   Create; with no name, **Discard** and **Keep editing**. The logo isn't part of it: the logo screen saves on crop and
   leaves without asking (`StoreLogoScreenTest.back_goesBack`). Not once a save or delete has started (below). Why:
   [[2026-11-26-unsaved-changes-on-back]]. Tests: `CustomStoreViewModelTest.anUntouchedForm_hasNoChanges_creatingOrEditing`,
-  `theNameColourOrFormat_isAChange_whenItDiffersFromTheStoreOrTheDefaults`, `aValueChangedAndChangedBack_orOnlyPaddedWithSpaces_isNoChange`,
+  `theNameOrColour_isAChange_whenItDiffersFromTheStoreOrTheDefaults`, `aValueChangedAndChangedBack_orOnlyPaddedWithSpaces_isNoChange`,
   `aChange_isStillAChange_afterProcessDeath`, `onceSavingHasStarted_orTheStoreIsDeleting_theFormHasNoChangesToAskAbout`;
   `CustomStoreScreenTest.editingAStore_systemBackWithAChange_asksToSaveChanges_andBackInTheDialogKeepsEditing`,
   `creatingAStore_theBackArrowWithAName_asksToDiscardTheStore_andDiscardLeavesWithoutSaving`,
@@ -75,8 +78,7 @@ Catalogue stores have no Edit button and can't be renamed, recoloured or deleted
 - **Language** (#72): every text on the form and its delete dialog is a string resource, in English or Hungarian by
   the phone's language; the store's name is data. The card count is a plural (`one`, `other`), with its own string for
   no cards, since English and Hungarian say 0 with `other`. The colour swatches' names come from the ViewModel as
-  resource ids (`CustomStoreViewModel.Swatch.name`), and the format chips are named by `barcodeFormatName`
-  ([[2026-11-09-ui-language]]: only the QR names are translated). Tests: `CustomStoreScreenTest.inHungarian_…` (the
+  resource ids (`CustomStoreViewModel.Swatch.name`). Tests: `CustomStoreScreenTest.inHungarian_…` (the
   new form with a failed create, the edit form with its delete dialog and a failed delete, one card, no cards, a store
   that is gone).
 
@@ -93,8 +95,8 @@ Catalogue stores have no Edit button and can't be renamed, recoloured or deleted
   `aCustomStoresNewFormat_leavesItsCardsInTheTypesTheyWereSavedIn`, `delete_removesACustomStore_andItsCards`,
   `delete_leavesACatalogueStoreAndItsCards`; `RoomLoyaltyCardRepositoryTest.countForStore_…`.
 - `StorePickerScreenTest.aCustomStoresEditButton_…`; `AddCardDirectionsTest.editingACustomStore_opensItsFormOverThePicker`.
-- A new format not reaching the cards (#187): `DetailViewModelTest.aStoreFormatChange_redrawsNeitherATypedCardNorAScannedOne`,
-  and end to end `AppNavigationTest.aCustomStoresNewFormat_leavesItsTypedCardInTheTypeItWasSavedIn` (4242, saved in
-  Code 128, isn't redrawn in EAN-13, so the detail says no "Shown as").
+- A store's format not reaching its cards (#187): `DetailViewModelTest.aStoreFormatChange_redrawsNeitherATypedCardNorAScannedOne`.
+  The end-to-end test that changed it on this form went with the form's chips; the type picked on the card form is
+  tested end to end by `AppNavigationTest.aTypePickedOnTheCardForm_ofANewCustomStore_isTheTypeTheCardIsSavedIn`.
 - `AppNavigationTest.editingACustomStore_fromThePicker_renamesItForItsCards`,
   `deletingACustomStore_fromThePicker_deletesItsCardsToo`.
