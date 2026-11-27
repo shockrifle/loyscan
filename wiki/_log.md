@@ -3,6 +3,7 @@
 Append-only, newest first, one self-contained line per entry. Format:
 `- YYYY-MM-DD · <action> · <pages touched> · <trigger>`
 
+- 2026-11-27 · the card form's collapsed barcode type selector, also listing the card's own type when the store doesn't offer it (amendment); a changed type counts for Back · decisions/2026-11-20-barcode-type-per-card, decisions/_index, features/add-card, features/edit-card · #187
 - 2026-11-27 · review of PR #249: an edited scan the store's rule reads starts at the rule's type (the field shows the rule's core), amending the decision; a tautological domain test dropped; a migration test for a rule naming no known format · decisions/2026-11-20-barcode-type-per-card, features/add-card, features/edit-card · #187
 - 2026-11-27 · every card stores its barcode type (schema v6, the first hand-written migration); the store rule applies only in its own type; the card form saves a new, kept, moved or edited-scan card's type; a custom store's new format no longer redraws its cards · decisions/2026-11-20-barcode-type-per-card, decisions/_index, decisions/2026-10-12-data-model-v2, decisions/2026-10-22-custom-stores, features/add-card, features/edit-card, features/edit-store, workflows/database-schema-changes, workflows/tdd, architecture, glossary · #187 slice 1
 - 2026-11-26 · review of PR #248: an Outline closes the gaps of a wordmark across the square logo, recorded as the trade-off of a width relative to the logo · decisions/2026-11-26-logo-treatments · #240

@@ -62,6 +62,12 @@ data class CardFormState(
     /** The number as the card will show it, when that differs from the field's text. */
     val shownAs: String? = null,
     val barcodeFormat: BarcodeFormat? = null,
+    /**
+     * The types the card can be switched to (#187), empty while the number is an untouched scan: the store's
+     * [Store.barcodeFormatChoices], plus the card's own type when it isn't among them (an edited card kept a type
+     * another store offered).
+     */
+    val barcodeFormatChoices: List<BarcodeFormat> = emptyList(),
     /** The number field asks for digits: the store's rule applies to this number and allows digits only (#187). */
     val numberDigitsOnly: Boolean = false,
     val saving: Boolean = false,
@@ -166,6 +172,9 @@ class CardFormViewModel @Inject constructor(
     /** `null` until the number is changed: the untouched scan, the edited card's typed number, or nothing typed. */
     private val typedNumber = savedStateHandle.getStateFlow<String?>(TYPED_NUMBER, null)
 
+    /** `null` until a type is picked (#187): the type [draft] works out. */
+    private val chosenFormat = savedStateHandle.getStateFlow<BarcodeFormat?>(CHOSEN_FORMAT, null)
+
     /**
      * Per side, `null` until the photo is changed: the edited card's, or none. Then the name of a photo picked in this
      * form, which this form deletes if it isn't saved, or [REMOVED].
@@ -211,7 +220,7 @@ class CardFormViewModel @Inject constructor(
      * store has loaded.
      */
     val state: StateFlow<CardFormState> =
-        combine(storeId, storeRepository.getAll(), original, combine(label, note, typedNumber, pickedPhotos, croppingPhoto, ::Inputs), progress) {
+        combine(storeId, storeRepository.getAll(), original, combine(combine(label, note, typedNumber, chosenFormat, ::TextInputs), pickedPhotos, croppingPhoto, ::Inputs), progress) {
                 id, stores, original, inputs, progress ->
             formState(id, stores, original, inputs, progress)
         }.stateIn(
@@ -244,6 +253,18 @@ class CardFormViewModel @Inject constructor(
         val current = state.value
         if (current.store == null || !current.numberEditable) return
         savedStateHandle[TYPED_NUMBER] = number
+    }
+
+    /**
+     * Picks the card's barcode type (#187), one of [CardFormState.barcodeFormatChoices]. Not for an untouched scan, which
+     * is drawn as scanned, nor once saving has started, as [switchStore].
+     */
+    fun onBarcodeFormatChange(format: BarcodeFormat) {
+        val current = state.value
+        if (current.store == null || current.barcodeFormatChoices.isEmpty()) return
+        val progress = progress.value
+        if (progress.saving || progress.savedCardId != null) return
+        savedStateHandle[CHOSEN_FORMAT] = format
     }
 
     /**
@@ -444,7 +465,7 @@ class CardFormViewModel @Inject constructor(
         if (route.cardId != null && original == null) return
         progress.value = Progress(saving = true)
         val now = clock.instant()
-        val draft = draft(store, original, typedNumber.value).copy(
+        val draft = draft(store, original, typedNumber.value, chosenFormat.value).copy(
             label = current.label.trim().ifEmpty { null },
             note = current.note.trim().ifEmpty { null },
             frontPhotoPath = current.frontPhoto,
@@ -515,15 +536,16 @@ class CardFormViewModel @Inject constructor(
      * An edited scan the store's rule reads starts at the rule's type: the field showed the core the rule recovered, so
      * only the rule makes the barcode from it again (#187 review: a Tesco card read without its GS1 mark). Any other
      * edited scan starts at its own format when the store offers it for a typed number, else at the store's starting
-     * type, as a new typed card does.
+     * type, as a new typed card does. A type [chosen] on the form comes first for a typed number, in any store.
      */
-    private fun draft(store: Store, original: LoyaltyCard?, typed: String?): LoyaltyCard {
+    private fun draft(store: Store, original: LoyaltyCard?, typed: String?, chosen: BarcodeFormat?): LoyaltyCard {
         val typedNumber = typedOrNull(original, typed)
         val scan = scan(original)
         val untouchedScan = scan?.takeIf { typedNumber == null }
         val rule = store.cardNumberRule
         val ruleReadsScan = scan != null && rule != null && CardNumberEngine.match(scan.first, scan.second, rule) != null
         val barcodeFormat = untouchedScan?.second
+            ?: chosen
             ?: original?.takeIf { it.scannedFormat == null }?.barcodeFormat
             ?: rule?.format?.takeIf { ruleReadsScan }
             ?: scan?.second?.takeIf { it in store.barcodeFormatChoices }
@@ -544,9 +566,10 @@ class CardFormViewModel @Inject constructor(
         progress: Progress,
     ): CardFormState {
         val editing = route.cardId != null
-        val label = inputs.label ?: original?.label.orEmpty()
-        val note = inputs.note ?: original?.note.orEmpty()
-        val changedNumber = inputs.typedNumber
+        val label = inputs.text.label ?: original?.label.orEmpty()
+        val note = inputs.text.note ?: original?.note.orEmpty()
+        val changedNumber = inputs.text.typedNumber
+        val chosenFormat = inputs.text.chosenFormat
         val typed = typedOrNull(original, changedNumber)
         val store = stores.firstOrNull { it.id == storeId }
         // Nothing to show until the store has loaded, and the edited card (which may be gone). The stores have loaded
@@ -557,7 +580,7 @@ class CardFormViewModel @Inject constructor(
                 cropping = inputs.cropping,
             )
         }
-        val draft = draft(store, original, changedNumber)
+        val draft = draft(store, original, changedNumber, chosenFormat)
         val scannedFormat = draft.scannedFormat
         val rule = store.cardNumberRule
         // A typed number goes by the rule only while the card is in the rule's type (#187).
@@ -586,9 +609,10 @@ class CardFormViewModel @Inject constructor(
         val showPhotoOnWidget = frontPhoto != null && (inputs.photos.showOnWidget ?: original?.showPhotoOnWidget ?: false)
         // What the form opened with (#209): the edited card, or the routed store and scan. Both come from the route and
         // the repository, so they outlast process death with nothing saved for them. Text is compared as save trims it.
-        val opening = draft(store, original, typed = null) // its number and scan; the store is compared by id
+        val opening = draft(store, original, typed = null, chosen = null) // its number, scan and type; the store by id
         val changed = store.id != (original?.store?.id ?: route.storeId) ||
             draft.number != opening.number || draft.scannedFormat != opening.scannedFormat ||
+            draft.barcodeFormat != opening.barcodeFormat ||
             label.trim() != original?.label.orEmpty().trim() || note.trim() != original?.note.orEmpty().trim() ||
             frontPhoto != original?.frontPhotoPath || backPhoto != original?.backPhotoPath ||
             showPhotoOnList != (original?.frontPhotoPath != null && original.showPhotoOnList) ||
@@ -604,6 +628,11 @@ class CardFormViewModel @Inject constructor(
             check = check,
             shownAs = draft.displayNumber.takeIf { check != NumberCheck.Empty && it != number.trim() },
             barcodeFormat = draft.barcodeFormat,
+            barcodeFormatChoices = if (scannedFormat != null) {
+                emptyList()
+            } else {
+                (store.barcodeFormatChoices + draft.barcodeFormat).distinct()
+            },
             numberDigitsOnly = (if (scannedFormat == null) typedRule else rule)?.charset == CardNumberRule.Charset.DIGITS,
             saving = progress.saving,
             saveFailed = progress.saveFailed,
@@ -659,12 +688,13 @@ class CardFormViewModel @Inject constructor(
 
     /** What the user changed, each `null` until changed. */
     private data class Inputs(
-        val label: String?,
-        val note: String?,
-        val typedNumber: String?,
+        val text: TextInputs,
         val photos: PickedPhotos,
         val cropping: CardFormState.Cropping?,
     )
+
+    /** The label, note, number and type (#187) as changed, each `null` until changed. */
+    private data class TextInputs(val label: String?, val note: String?, val typedNumber: String?, val chosenFormat: BarcodeFormat?)
 
     /** Per side, as [pickedPhotos] says; [showOnList] (#184) and [showOnWidget] (#185) are `null` until their switch is changed. */
     private data class PickedPhotos(val front: String?, val back: String?, val showOnList: Boolean?, val showOnWidget: Boolean?)
@@ -676,6 +706,7 @@ class CardFormViewModel @Inject constructor(
         const val LABEL = "label"
         const val NOTE = "note"
         const val TYPED_NUMBER = "typedNumber"
+        const val CHOSEN_FORMAT = "chosenFormat"
         const val FRONT_PHOTO = "frontPhoto"
         const val BACK_PHOTO = "backPhoto"
         const val SHOW_PHOTO_ON_LIST = "showPhotoOnList"

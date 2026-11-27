@@ -110,6 +110,7 @@
     <string name="looks_like_card_from">It looks like a card from:</string>
     <string name="scanned_format">Scanned · %1$s</string>
     <string name="typed_number_barcode">Barcode: %1$s</string>
+    <string name="change_barcode_type">Change barcode type</string>
     <string name="label_optional">Label (optional)</string>
     <string name="note_optional">Note (optional)</string>
     <string name="add_front_photo">Add front photo</string>
