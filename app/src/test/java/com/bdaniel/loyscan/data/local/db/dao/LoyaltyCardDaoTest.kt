@@ -155,6 +155,7 @@ class LoyaltyCardDaoTest {
                 label = null,
                 number = "777",
                 scannedFormat = null,
+                barcodeFormat = BarcodeFormat.ITF,
                 note = "PIN hint: birthday",
                 frontPhotoPath = "new-front",
                 backPhotoPath = null,
@@ -170,6 +171,7 @@ class LoyaltyCardDaoTest {
                 label = null,
                 number = "777",
                 scannedFormat = null,
+                barcodeFormat = BarcodeFormat.ITF,
                 note = "PIN hint: birthday",
                 frontPhotoPath = "new-front",
                 backPhotoPath = null,
@@ -186,7 +188,7 @@ class LoyaltyCardDaoTest {
         db.storeDao().insert(aStoreEntity())
         dao.insert(aLoyaltyCardEntity(id = cardId(1), frontPhotoPath = "front", backPhotoPath = "back"))
         val edit = aLoyaltyCardEntity(id = cardId(1)).let {
-            LoyaltyCardEdit(it.id, it.storeId, it.label, it.number, it.scannedFormat, it.note, "new-front", "back", it.showPhotoOnList, it.showPhotoOnWidget, it.updatedAt)
+            LoyaltyCardEdit(it.id, it.storeId, it.label, it.number, it.scannedFormat, it.barcodeFormat, it.note, "new-front", "back", it.showPhotoOnList, it.showPhotoOnWidget, it.updatedAt)
         }
 
         val dropped = dao.updateReturningDroppedPhotos(edit)

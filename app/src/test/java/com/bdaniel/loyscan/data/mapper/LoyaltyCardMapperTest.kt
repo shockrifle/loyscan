@@ -26,6 +26,8 @@ class LoyaltyCardMapperTest {
             label = "Gold card",
             number = "0042",
             scannedFormat = BarcodeFormat.EAN_13,
+            // Not the scan's format: a mapper that copied the scanned format into it would fail (#187).
+            barcodeFormat = BarcodeFormat.UPC_A,
             createdAt = Instant.ofEpochMilli(1),
             lastUsedAt = Instant.ofEpochMilli(2),
             useCount = 7,
@@ -76,6 +78,7 @@ class LoyaltyCardMapperTest {
                 label = "Gold card",
                 number = "0042",
                 scannedFormat = BarcodeFormat.EAN_13,
+                barcodeFormat = BarcodeFormat.UPC_A,
                 createdAt = Instant.ofEpochMilli(1),
                 lastUsedAt = Instant.ofEpochMilli(2),
                 useCount = 7,
@@ -102,7 +105,7 @@ class LoyaltyCardMapperTest {
     }
 
     @Test
-    fun toEdit_copiesTheFieldsAnEditChanges() { // #8, photos: #10, photo on the list: #184, on the widget: #185
+    fun toEdit_copiesTheFieldsAnEditChanges() { // #8, photos: #10, photo on the list: #184, on the widget: #185, type: #187
         val card = withStore.toDomainModel()
 
         assertThat(card.toEdit()).isEqualTo(
@@ -112,6 +115,7 @@ class LoyaltyCardMapperTest {
                 label = card.label,
                 number = card.number,
                 scannedFormat = card.scannedFormat,
+                barcodeFormat = card.barcodeFormat,
                 note = card.note,
                 frontPhotoPath = card.frontPhotoPath,
                 backPhotoPath = card.backPhotoPath,

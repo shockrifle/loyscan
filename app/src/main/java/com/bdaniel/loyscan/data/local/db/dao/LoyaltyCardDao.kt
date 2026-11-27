@@ -28,6 +28,7 @@ data class LoyaltyCardEdit(
     val label: String?,
     val number: String,
     val scannedFormat: BarcodeFormat?,
+    val barcodeFormat: BarcodeFormat,
     val note: String?,
     val frontPhotoPath: String?,
     val backPhotoPath: String?,

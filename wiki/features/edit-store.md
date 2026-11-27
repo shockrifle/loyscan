@@ -26,10 +26,9 @@ Catalogue stores have no Edit button and can't be renamed, recoloured or deleted
   `updatedAt` (now). `StoreDao.updateCustom` is an `UPDATE … WHERE id = :id AND isCustom = 1`, so a catalogue store
   is never changed through it, whatever the caller passes; the catalogue loader owns those rows ([[store-catalogue]]).
   Then the form goes back to the picker (`CustomStoreDirections.toBack`), which lists the store under its new name.
-- **What a new format changes.** A card has no format of its own: a typed number is drawn in the store's
-  `defaultBarcodeFormat` (a custom store has no rule), a scan in its `scannedFormat` ([[2026-10-12-data-model-v2]]).
-  So after the edit the store's typed cards are drawn in the new format and its scanned cards stay as scanned. A typed
-  number the new format can't hold is drawn in a fallback, and the detail screen says "Shown as …" ([[card-detail]]).
+- **What a new format changes.** Since #187 every card keeps the type it was saved in
+  ([[2026-11-20-barcode-type-per-card]]), so the store's existing cards stay as they are; the format is only where a
+  new typed card of the store starts. Until #187 a typed card had no format of its own and was redrawn in the new one.
 - A failed save keeps the form open with "The store couldn't be saved. Try again.", as when creating.
 - **Deleting.** The top bar's Delete icon (edit mode only, once the store has loaded) asks "Delete <name>?", naming
   the store as saved, not an unsaved rename in the field. The text says what goes with it: "It has no cards.", "Its
@@ -91,11 +90,11 @@ Catalogue stores have no Edit button and can't be renamed, recoloured or deleted
   `CustomStoreScreenTest`: `editingAStore_…`, `editingAStoreThatIsGone_…`, `deletingAStore…` (the three card-count
   texts, Cancel), `theDeleteDialog_namesTheStoreAsSaved_…`, `aDeleteThatFails_…`, `aNewStore_hasNoDeleteAction`.
 - `RoomStoreRepositoryTest`: `update_savesACustomStoresNameColourAndFormat`, `update_leavesACatalogueStoreAsItIs`,
-  `aCustomStoresNewFormat_drawsItsTypedCards_butNotItsScannedOnes`, `delete_removesACustomStore_andItsCards`,
+  `aCustomStoresNewFormat_leavesItsCardsInTheTypesTheyWereSavedIn`, `delete_removesACustomStore_andItsCards`,
   `delete_leavesACatalogueStoreAndItsCards`; `RoomLoyaltyCardRepositoryTest.countForStore_…`.
 - `StorePickerScreenTest.aCustomStoresEditButton_…`; `AddCardDirectionsTest.editingACustomStore_opensItsFormOverThePicker`.
-- A new format reaching the card: `DetailViewModelTest.aStoreFormatChange_redrawsATypedCard_butNotAScannedOne`, and
-  end to end `AppNavigationTest.aCustomStoresNewFormat_redrawsItsTypedCard` (4242 switched to EAN-13 is drawn in the
-  fallback, so the detail says "Shown as Code 128").
+- A new format not reaching the cards (#187): `DetailViewModelTest.aStoreFormatChange_redrawsNeitherATypedCardNorAScannedOne`,
+  and end to end `AppNavigationTest.aCustomStoresNewFormat_leavesItsTypedCardInTheTypeItWasSavedIn` (4242, saved in
+  Code 128, isn't redrawn in EAN-13, so the detail says no "Shown as").
 - `AppNavigationTest.editingACustomStore_fromThePicker_renamesItForItsCards`,
   `deletingACustomStore_fromThePicker_deletesItsCardsToo`.

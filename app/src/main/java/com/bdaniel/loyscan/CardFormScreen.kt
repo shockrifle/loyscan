@@ -56,7 +56,6 @@ import coil.compose.AsyncImage
 import com.bdaniel.loyscan.ui.theme.CardShape
 import com.bdaniel.loyscan.ui.theme.Spacing
 import com.bdaniel.loyscan.CardFormState.NumberCheck
-import com.bdaniel.loyscan.domain.cardnumber.CardNumberRule
 import com.bdaniel.loyscan.domain.cardnumber.Validation
 import com.bdaniel.loyscan.ui.CARD_ASPECT_RATIO
 import com.bdaniel.loyscan.ui.CardPhoto
@@ -152,7 +151,7 @@ fun CardFormScreen(
                 supportingText = (problem ?: shownAs)?.let { { Text(it) } },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(
-                    keyboardType = if (store.cardNumberRule?.charset == CardNumberRule.Charset.DIGITS) {
+                    keyboardType = if (state.numberDigitsOnly) {
                         KeyboardType.Number
                     } else {
                         KeyboardType.Text

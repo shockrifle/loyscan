@@ -15,7 +15,7 @@ All paths below are under `app/src/main/java/com/bdaniel/loyscan/` unless writte
 | **Persistence** | `data/local/db/` — `AppDatabase`, `entity/*Entity`, `dao/*Dao` | Room tables, queries returning `Flow` | Entities never leave `data/`. A card's store is loaded with `@Relation` (see `LoyaltyCardWithStore`). `Converters` maps lists, rules and `Instant`s to columns. |
 | **Mapping** | `data/mapper/LoyaltyCardMapper.kt` | `LoyaltyCardWithStore.toDomainModel()`, `StoreEntity.toDomainModel()`; `LoyaltyCard.toEntity()` | Extension functions: DB → domain for reads, domain → entity for writes. |
 | **Repository** | `data/repository/` — `LoyaltyCardRepository`, `StoreRepository` and `UserPreferencesRepository` (interfaces) + `RoomLoyaltyCardRepository` / `RoomStoreRepository` / `DataStoreUserPreferencesRepository` (`@Singleton` impls; preferences: [[2026-10-28-datastore-for-user-preferences]]) | Exposes `Flow<domain>` | ViewModels depend on the **interface**, so tests pass a fake (see Testing seams). Reads return domain models. |
-| **Domain** | `domain/` — `LoyaltyCard`, `Store`, `BarcodeFormat`; `domain/cardnumber/` — card-number rule engine ([[2026-10-09-card-number-rule-engine]]) | Plain data classes with an `EMPTY` sentinel; pure-Kotlin logic. Barcode content, display number and barcode format are derived on read (`LoyaltyCard`), never stored ([[2026-10-12-data-model-v2]]) | No Android/Room imports — unit-tested on the JVM. |
+| **Domain** | `domain/` — `LoyaltyCard`, `Store`, `BarcodeFormat`; `domain/cardnumber/` — card-number rule engine ([[2026-10-09-card-number-rule-engine]]) | Plain data classes with an `EMPTY` sentinel; pure-Kotlin logic. Barcode content and display number are derived on read (`LoyaltyCard`), never stored ([[2026-10-12-data-model-v2]]); the barcode format is stored per card since #187 ([[2026-11-20-barcode-type-per-card]]) | No Android/Room imports — unit-tested on the JVM. |
 | **Presentation state** | root package — one `*ViewModel` per screen, e.g. `ListViewModel`, `DetailViewModel` (`ScannerViewModel` holds UI state only, no repository) | `@HiltViewModel`; turn repository Flows into `StateFlow` via `stateIn(viewModelScope, WhileSubscribed(5_000), initial)` | Route args read with `savedStateHandle.toRoute<Route>()`. |
 | **UI** | root package — one `*Screen` per destination, e.g. `ListScreen`, `DetailScreen`; `ui/` — theme and the shared design values ([[design-system]]: `Spacing`, shapes, `CardShape`), icons, `hiltImageLoader()`; `ui/barcode/` — ZXing encoding and barcode drawing ([[zxing-core]]); `ui/scanner/` — camera, permission and zxing-cpp decoding for `ScannerScreen` ([[zxing-cpp]]) | Composables, extensions on `SharedTransitionScope` | Screens receive a `*Directions` object, never a `NavController`. Texts come from string resources (`stringResource`, `pluralStringResource`), English by default and Hungarian in `values-hu` ([[add-a-string]], #72), on every screen; `StringResourcesTest` checks each default string has a Hungarian one. |
 | **Navigation** | `Navigation.kt`, `MainActivity.kt` (`AppNavigation`) | `@Serializable` routes + `NavController.*Directions(entry)` factories | See [[2025-12-09-type-safe-navigation-directions]]. |
@@ -48,7 +48,7 @@ terms, with domain→entity mappers. Time comes from an injected `java.time.Cloc
   on every open through the raw database: `CatalogueDatabaseCallback` writes the catalogue rows, and
   `CardPhotoSweepCallback` deletes old photo files no card names ([[card-photos]]). There are no debug-only demo
   cards any more ([[seed-data]], #55); `DatabaseModuleTest` checks a new database holds only the catalogue. It adds
-  `AppDatabase.MIGRATIONS` (Room adds the `@Database` `autoMigrations`, v2 → v3 since #184, v3 → v4 since #185, v4 → v5 since #240) and no destructive fallback; schemas from v2 on are frozen
+  `AppDatabase.MIGRATIONS` (Room adds the `@Database` `autoMigrations`, v2 → v3 since #184, v3 → v4 since #185, v4 → v5 since #240; the hand-written v5 → v6, `CardBarcodeFormatMigration`, since #187) and no destructive fallback; schemas from v2 on are frozen
   ([[2026-11-05-room-schema-frozen-from-v2]], [[database-schema-changes]]).
 - `PreferencesModule` provides the singleton preferences `DataStore` (file `datastore/user_preferences.preferences_pb`,
   pinned by `PreferencesModuleTest`) behind `UserPreferencesRepository` ([[2026-10-28-datastore-for-user-preferences]]).
@@ -160,8 +160,8 @@ here exist; read them next to the code.
    ([[2026-10-09-missing-card-throws-from-room]]).
 3. **Mapping.** *Test first:* `LoyaltyCardMapperTest.toDomainModel_copiesEveryField`.
    Then `LoyaltyCardWithStore.toDomainModel()` builds `LoyaltyCard(…, store = Store(…))`
-   (`app/src/main/java/com/bdaniel/loyscan/data/mapper/LoyaltyCardMapper.kt`). The derived fields (`barcodeContent`, `displayNumber`,
-   `barcodeFormat`) are computed by `LoyaltyCard` itself; test: `domain/LoyaltyCardTest`.
+   (`app/src/main/java/com/bdaniel/loyscan/data/mapper/LoyaltyCardMapper.kt`). The derived fields (`barcodeContent`, `displayNumber`) are
+   computed by `LoyaltyCard` itself, from the stored `barcodeFormat` among others; test: `domain/LoyaltyCardTest`.
 4. **Repository.** *Test first:* `RoomLoyaltyCardRepositoryTest`: a real in-memory database in, domain cards out.
    Then `RoomLoyaltyCardRepository.getAllWithStore()` = `dao.getAllWithStore().map { it.toDomainModel() }`
    (`app/src/main/java/com/bdaniel/loyscan/data/repository/RoomLoyaltyCardRepository.kt`), behind the `LoyaltyCardRepository` interface. Change

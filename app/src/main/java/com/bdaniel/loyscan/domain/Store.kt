@@ -21,7 +21,7 @@ data class Store(
     val aliases: List<String>,
     /** ISO 3166-1 alpha-2 codes of the countries the store operates in. */
     val countryCodes: List<String>,
-    /** Used when a card wasn't scanned and there is no [cardNumberRule]. */
+    /** The type a new typed card starts at when there is no [cardNumberRule] (#187); each card keeps its own. */
     val defaultBarcodeFormat: BarcodeFormat,
     /** How the store's card numbers become barcode content; `null` means the number is the content. */
     val cardNumberRule: CardNumberRule?,
@@ -32,6 +32,17 @@ data class Store(
     /** How [logo] is drawn on [color] (#240); As is until the user picks another. */
     val logoTreatment: LogoTreatment = LogoTreatment.AS_IS,
 ) {
+    /** The type a new typed card of this store starts at (#187): its rule's, else [defaultBarcodeFormat]. */
+    val startingBarcodeFormat: BarcodeFormat
+        get() = cardNumberRule?.format ?: defaultBarcodeFormat
+
+    /**
+     * The types a typed card of this store can be in (#187): every format a custom store's typed number can be drawn in
+     * ([BarcodeFormat.forCustomStores]), plus [startingBarcodeFormat] when it isn't one of them (a GS1 rule).
+     */
+    val barcodeFormatChoices: List<BarcodeFormat>
+        get() = (BarcodeFormat.forCustomStores + startingBarcodeFormat).distinct()
+
     /** What an initials tile shows: the first letter or digit of the name's first two words, in upper case. */
     val initials: String
         get() = storeInitials(name)

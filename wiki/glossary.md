@@ -13,8 +13,10 @@ card-number rule (`CardNumberEngine.barcodeContent`); equals the raw number when
 See [[2026-10-09-card-number-rule-engine]].
 
 **Barcode format** — The symbology, enum `domain/BarcodeFormat.kt` (ZXing names, plus `DATABAR*` and the `GS1_` formats). A card's
-`barcodeFormat` is derived: `scannedFormat` (column `loyalty_cards.scannedFormat`), else the store rule's
-format, else `Store.defaultBarcodeFormat` ([[2026-10-12-data-model-v2]]). Drawn on the detail screen with ZXing
+`barcodeFormat` is stored (column `loyalty_cards.barcodeFormat`, since #187): a scan's `scannedFormat`, else the type the
+typed number was saved in, which starts at the store rule's format, else `Store.defaultBarcodeFormat`
+(`Store.startingBarcodeFormat`). The rule makes a typed number's barcode only while the card is in the rule's format
+([[2026-11-20-barcode-type-per-card]]). Drawn on the detail screen with ZXing
 core, falling back to `CODE_128`, then QR (GS1 data: `GS1_128`, then `GS1_QR_CODE`), when the format can't hold
 the content or has no writer (DataBar):
 [[zxing-core]]. Stored as the enum name. Was a free-form string before #1.

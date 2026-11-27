@@ -106,7 +106,7 @@ class RoomStoreRepositoryTest {
     }
 
     @Test
-    fun aCustomStoresNewFormat_drawsItsTypedCards_butNotItsScannedOnes() = runTest { // #53
+    fun aCustomStoresNewFormat_leavesItsCardsInTheTypesTheyWereSavedIn() = runTest { // #53; since #187 a card keeps its type
         val custom = aStore(id = "custom", name = "Custom Store", countryCodes = emptyList(), isCustom = true)
         repository.add(custom)
         db.loyaltyCardDao().insert(aLoyaltyCardEntity(id = cardId(1), storeId = "custom", number = "4242"))
@@ -117,7 +117,7 @@ class RoomStoreRepositoryTest {
         repository.update(custom.copy(defaultBarcodeFormat = BarcodeFormat.QR_CODE))
 
         val cards = db.loyaltyCardDao().getAllWithStore().first().map { it.toDomainModel() }.associateBy { it.id }
-        assertThat(cards.getValue(cardId(1)).barcodeFormat).isEqualTo(BarcodeFormat.QR_CODE)
+        assertThat(cards.getValue(cardId(1)).barcodeFormat).isEqualTo(BarcodeFormat.CODE_128)
         assertThat(cards.getValue(cardId(2)).barcodeFormat).isEqualTo(BarcodeFormat.EAN_13)
     }
 

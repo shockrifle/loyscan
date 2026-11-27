@@ -198,7 +198,7 @@ class CardFormViewModelTest {
 
     @Test
     fun editingAScannedNumber_makesItATypedNumber() = runTest {
-        val viewModel = viewModel(CardForm("ruled", scannedContent = "12345674", scannedFormat = BarcodeFormat.QR_CODE))
+        val viewModel = viewModel(CardForm("ruled", scannedContent = "12345674", scannedFormat = BarcodeFormat.CODE_128))
 
         viewModel.state.test {
             awaitLoaded()
@@ -209,6 +209,21 @@ class CardFormViewModelTest {
             assertThat(state.scannedFormat).isNull()
             assertThat(state.check).isEqualTo(NumberCheck.Invalid(setOf(Validation.Error.TOO_SHORT)))
             assertThat(state.barcodeFormat).isEqualTo(BarcodeFormat.CODE_128)
+        }
+    }
+
+    @Test
+    fun editingAScanInAnotherTypeThanTheRules_keepsTheScansType_andChecksTheNumberAsTyped() = runTest { // #187
+        val viewModel = viewModel(CardForm("ruled", scannedContent = "12345674", scannedFormat = BarcodeFormat.QR_CODE))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.onNumberChange("1234 567")
+
+            val state = awaitItem()
+            assertThat(state.barcodeFormat).isEqualTo(BarcodeFormat.QR_CODE)
+            assertThat(state.check).isEqualTo(NumberCheck.Valid) // the rule's 8 digits don't apply to a QR code
+            assertThat(state.numberDigitsOnly).isFalse()
         }
     }
 
@@ -2023,6 +2038,159 @@ class CardFormViewModelTest {
     private fun CardFormViewModel.pickAndCrop(side: CardPhotoSide, picture: Uri = PICKED, crop: PhotoCrop = PhotoCrop.WHOLE) {
         onPhotoPicked(side, picture)
         confirmCrop(crop)
+    }
+
+    // The type each card is saved in (#187). qrStore's rule is QR, its default Code 128; plainStore has no rule, default QR.
+
+    @Test
+    fun aNewTypedCard_startsAtItsStoresRuleType_andIsSavedInIt() = runTest { // #187
+        val viewModel = viewModel(CardForm("qr"))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.onNumberChange("12345674")
+            assertThat(expectMostRecentItem().barcodeFormat).isEqualTo(BarcodeFormat.QR_CODE)
+
+            viewModel.save()
+            assertThat(cards.cards.value.single().barcodeFormat).isEqualTo(BarcodeFormat.QR_CODE)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun aNewTypedCard_ofAStoreWithoutARule_isSavedInTheStoresDefault() = runTest { // #187
+        val viewModel = viewModel(CardForm("plain"))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.onNumberChange("ABC-1")
+            viewModel.save()
+
+            assertThat(cards.cards.value.single().barcodeFormat).isEqualTo(BarcodeFormat.QR_CODE)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun editingATypedCard_keepsTheTypeItWasSavedWith_notItsStoresDefault() = runTest { // #187
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = plainStore, number = "ABC-1", barcodeFormat = BarcodeFormat.CODE_39))
+        val viewModel = viewModel(CardForm("plain", cardId = cardId(1)))
+
+        viewModel.state.test {
+            assertThat(awaitLoaded().barcodeFormat).isEqualTo(BarcodeFormat.CODE_39)
+            viewModel.onNumberChange("ABC-2")
+            viewModel.save()
+
+            assertThat(cards.cards.value.single().barcodeFormat).isEqualTo(BarcodeFormat.CODE_39)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun aTypedCardInAnotherTypeThanItsStoresRule_isCheckedAsTyped_notByTheRule() = runTest { // #187
+        // The rule wants 8 digits; in EAN-13 the number is checked as an EAN-13 instead.
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, number = "5901234123457", barcodeFormat = BarcodeFormat.EAN_13))
+        val viewModel = viewModel(CardForm("ruled", cardId = cardId(1)))
+
+        viewModel.state.test {
+            assertThat(awaitLoaded().check).isEqualTo(NumberCheck.Valid)
+            viewModel.onNumberChange("5901234123458") // wrong EAN-13 check digit
+
+            assertThat(expectMostRecentItem().check).isEqualTo(NumberCheck.DoesNotFitFormat(BarcodeFormat.EAN_13))
+        }
+    }
+
+    @Test
+    fun theNumberField_asksForDigits_onlyWhileTheStoresDigitsRuleApplies() = runTest { // #187
+        viewModel(CardForm("ruled")).state.test {
+            assertThat(awaitLoaded().numberDigitsOnly).isTrue()
+        }
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, number = "AB12", barcodeFormat = BarcodeFormat.QR_CODE))
+        viewModel(CardForm("ruled", cardId = cardId(1))).state.test {
+            assertThat(awaitLoaded().numberDigitsOnly).isFalse()
+        }
+    }
+
+    @Test
+    fun editingAScansNumber_startsAtTheScansType_whenTheSelectorOffersIt() = runTest { // #187
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = qrStore, number = "5901234123457", scannedFormat = BarcodeFormat.EAN_13))
+        val viewModel = viewModel(CardForm("qr", cardId = cardId(1)))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.onNumberChange("5901234123464")
+            assertThat(expectMostRecentItem().barcodeFormat).isEqualTo(BarcodeFormat.EAN_13)
+
+            viewModel.save()
+            val saved = cards.cards.value.single()
+            assertThat(saved.scannedFormat).isNull()
+            assertThat(saved.barcodeFormat).isEqualTo(BarcodeFormat.EAN_13)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun editingANewScansNumber_startsAtTheScansType_whenTheSelectorOffersIt() = runTest { // #187
+        val viewModel = viewModel(CardForm("qr", scannedContent = "5901234123457", scannedFormat = BarcodeFormat.EAN_13))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.onNumberChange("5901234123464")
+            viewModel.save()
+
+            assertThat(cards.cards.value.single().barcodeFormat).isEqualTo(BarcodeFormat.EAN_13)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun editingAGs1ScansNumber_startsAtTheStoresStartingType() = runTest { // #187: the selector offers no GS1 type
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = qrStore, number = "12345674", scannedFormat = BarcodeFormat.GS1_128))
+        val viewModel = viewModel(CardForm("qr", cardId = cardId(1)))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.onNumberChange("12345682")
+            viewModel.save()
+
+            assertThat(cards.cards.value.single().barcodeFormat).isEqualTo(BarcodeFormat.QR_CODE)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun aScan_isSavedInItsScannedFormat_alsoAfterASwitchToAnotherStore() = runTest { // #187
+        val viewModel = viewModel(CardForm("ruled", scannedContent = "12345674", scannedFormat = BarcodeFormat.CODE_39))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.switchStore("qr")
+            viewModel.save()
+
+            val saved = cards.cards.value.single()
+            assertThat(saved.scannedFormat).isEqualTo(BarcodeFormat.CODE_39)
+            assertThat(saved.barcodeFormat).isEqualTo(BarcodeFormat.CODE_39)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun movingATypedCardToAnotherStore_keepsItsType() = runTest { // #187, the owner's choice
+        // eanStore has no rule and starts at EAN-13: in that type "12345674" wouldn't fit, in Code 128 it does.
+        cards.cards.value = listOf(aLoyaltyCard(id = cardId(1), store = store, number = "12345674", barcodeFormat = BarcodeFormat.CODE_128))
+        val viewModel = viewModel(CardForm("ruled", cardId = cardId(1)))
+
+        viewModel.state.test {
+            awaitLoaded()
+            viewModel.switchStore("ean")
+            val state = expectMostRecentItem()
+            assertThat(state.barcodeFormat).isEqualTo(BarcodeFormat.CODE_128)
+            assertThat(state.check).isEqualTo(NumberCheck.Valid)
+
+            viewModel.save()
+            assertThat(cards.cards.value.single().barcodeFormat).isEqualTo(BarcodeFormat.CODE_128)
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
     private fun viewModel(route: CardForm) = viewModel(SavedStateHandle(route = route))
